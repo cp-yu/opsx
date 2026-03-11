@@ -16,6 +16,7 @@ I'll create a change with artifacts:
 - proposal.md (what & why)
 - design.md (how)
 - tasks.md (implementation steps)
+- opsx-delta.yaml (project OPSX delta, generated after specs are clear)
 
 When ready to implement, run /opsx:apply
 
@@ -80,6 +81,13 @@ When ready to implement, run /opsx:apply
       - Use **AskUserQuestion tool** to clarify
       - Then continue with creation
 
+   d. **After the \`specs\` artifact is complete in a spec-driven change, generate \`opsx-delta.yaml\`**
+      - Read \`proposal.md\` to extract the capability list
+      - Read all delta specs in \`openspec/changes/<name>/specs/*/spec.md\`
+      - Read \`openspec/project.opsx.yaml\` if it exists for current-system context
+      - Generate \`openspec/changes/<name>/opsx-delta.yaml\` using ADDED / MODIFIED / REMOVED sections
+      - Keep this agent-driven: capture merge intent in the YAML, not in programmatic code
+
 5. **Show final status**
    \`\`\`bash
    openspec status --change "<name>"
@@ -127,6 +135,7 @@ I'll create a change with artifacts:
 - proposal.md (what & why)
 - design.md (how)
 - tasks.md (implementation steps)
+- opsx-delta.yaml (project OPSX delta, generated after specs are clear)
 
 When ready to implement, run /opsx:apply
 
@@ -190,6 +199,13 @@ When ready to implement, run /opsx:apply
    c. **If an artifact requires user input** (unclear context):
       - Use **AskUserQuestion tool** to clarify
       - Then continue with creation
+
+   d. **After the \`specs\` artifact is complete in a spec-driven change, generate \`opsx-delta.yaml\`**
+      - Read \`proposal.md\` to extract the capability list
+      - Read all delta specs in \`openspec/changes/<name>/specs/*/spec.md\`
+      - Read \`openspec/project.opsx.yaml\` if it exists for current-system context
+      - Generate \`openspec/changes/<name>/opsx-delta.yaml\` using ADDED / MODIFIED / REMOVED sections
+      - Keep this agent-driven: capture merge intent in the YAML, not in programmatic code
 
 5. **Show final status**
    \`\`\`bash

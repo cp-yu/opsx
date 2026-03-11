@@ -92,6 +92,9 @@ This tells you:
 - Their names, schemas, and status
 - What the user might be working on
 
+If \`openspec/project.opsx.yaml\` exists at the project root, read it before diving into individual files.
+Use the OPSX graph to move from domains → capabilities → code_refs, then confirm the details in source.
+
 ### When no change exists
 
 Think freely. When insights crystallize, you might offer:
@@ -387,6 +390,9 @@ This tells you:
 - If there are active changes
 - Their names, schemas, and status
 - What the user might be working on
+
+If \`openspec/project.opsx.yaml\` exists at the project root, read it before diving into individual files.
+Use the OPSX graph to move from domains → capabilities → code_refs, then confirm the details in source.
 
 If the user mentioned a specific change name, read its artifacts for context.
 

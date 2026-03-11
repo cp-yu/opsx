@@ -12,6 +12,8 @@ export function getFfChangeSkillTemplate(): SkillTemplate {
     description: 'Fast-forward through OpenSpec artifact creation. Use when the user wants to quickly create all artifacts needed for implementation without stepping through each one individually.',
     instructions: `Fast-forward through artifact creation - generate everything needed to start implementation in one go.
 
+This flow should also generate \`opsx-delta.yaml\` once the change specs are clear.
+
 **Input**: The user's request should include a change name (kebab-case) OR a description of what they want to build.
 
 **Steps**
@@ -70,6 +72,13 @@ export function getFfChangeSkillTemplate(): SkillTemplate {
    c. **If an artifact requires user input** (unclear context):
       - Use **AskUserQuestion tool** to clarify
       - Then continue with creation
+
+   d. **After the \`specs\` artifact is complete in a spec-driven change, generate \`opsx-delta.yaml\`**
+      - Read \`proposal.md\` to extract the capability list
+      - Read all delta specs in \`openspec/changes/<name>/specs/*/spec.md\`
+      - Read \`openspec/project.opsx.yaml\` if it exists for current-system context
+      - Generate \`openspec/changes/<name>/opsx-delta.yaml\` using ADDED / MODIFIED / REMOVED sections
+      - Keep this agent-driven: capture merge intent in the YAML, not in programmatic code
 
 5. **Show final status**
    \`\`\`bash
@@ -172,6 +181,13 @@ export function getOpsxFfCommandTemplate(): CommandTemplate {
    c. **If an artifact requires user input** (unclear context):
       - Use **AskUserQuestion tool** to clarify
       - Then continue with creation
+
+   d. **After the \`specs\` artifact is complete in a spec-driven change, generate \`opsx-delta.yaml\`**
+      - Read \`proposal.md\` to extract the capability list
+      - Read all delta specs in \`openspec/changes/<name>/specs/*/spec.md\`
+      - Read \`openspec/project.opsx.yaml\` if it exists for current-system context
+      - Generate \`openspec/changes/<name>/opsx-delta.yaml\` using ADDED / MODIFIED / REMOVED sections
+      - Keep this agent-driven: capture merge intent in the YAML, not in programmatic code
 
 5. **Show final status**
    \`\`\`bash

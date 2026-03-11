@@ -90,6 +90,16 @@ export function getVerifyChangeSkillTemplate(): SkillTemplate {
        - Add WARNING: "Scenario not covered: <scenario name>"
        - Recommendation: "Add test or implementation for scenario: <description>"
 
+   **OPSX Alignment** (if \`opsx-delta.yaml\` exists):
+   - Check if \`opsx-delta.yaml\` exists in \`openspec/changes/<name>/\`
+   - If exists, verify OPSX alignment:
+     - **ADDED capabilities**: Should have \`code_refs\` pointing to implementation
+     - **MODIFIED capabilities**: Should reflect changes in code (status, spec_refs)
+     - **REMOVED capabilities**: Should be gone from codebase or marked deprecated
+   - If misalignment detected:
+     - Add WARNING: "OPSX delta not reflected in code: <capability>"
+     - Recommendation: "Update code or revise opsx-delta.yaml"
+
 7. **Verify Coherence**
 
    **Design Adherence**:
@@ -258,6 +268,16 @@ export function getOpsxVerifyCommandTemplate(): CommandTemplate {
      - If scenario appears uncovered:
        - Add WARNING: "Scenario not covered: <scenario name>"
        - Recommendation: "Add test or implementation for scenario: <description>"
+
+   **OPSX Alignment** (if \`opsx-delta.yaml\` exists):
+   - Check if \`opsx-delta.yaml\` exists in \`openspec/changes/<name>/\`
+   - If exists, verify OPSX alignment:
+     - **ADDED capabilities**: Should have \`code_refs\` pointing to implementation
+     - **MODIFIED capabilities**: Should reflect changes in code (status, spec_refs)
+     - **REMOVED capabilities**: Should be gone from codebase or marked deprecated
+   - If misalignment detected:
+     - Add WARNING: "OPSX delta not reflected in code: <capability>"
+     - Recommendation: "Update code or revise opsx-delta.yaml"
 
 7. **Verify Coherence**
 

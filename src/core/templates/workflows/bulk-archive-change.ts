@@ -12,7 +12,7 @@ export function getBulkArchiveChangeSkillTemplate(): SkillTemplate {
     description: 'Archive multiple completed changes at once. Use when archiving several parallel changes.',
     instructions: `Archive multiple completed changes in a single operation.
 
-This skill allows you to batch-archive changes, handling spec conflicts intelligently by checking the codebase to determine what's actually implemented.
+This skill allows you to batch-archive changes, handling spec and OPSX conflicts intelligently by checking the codebase to determine what's actually implemented.
 
 **Input**: None required (prompts for selection)
 
@@ -49,7 +49,11 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
       - List which capability specs exist
       - For each, extract requirement names (lines matching \`### Requirement: <name>\`)
 
-4. **Detect spec conflicts**
+   d. **OPSX delta** - Check for \`openspec/changes/<name>/opsx-delta.yaml\`
+      - Note whether the change updates capability metadata in \`openspec/project.opsx.yaml\`
+      - Track which capabilities are ADDED / MODIFIED / REMOVED
+
+4. **Detect spec and OPSX conflicts**
 
    Build a map of \`capability -> [changes that touch it]\`:
 
@@ -58,7 +62,7 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
    api  -> [change-c]            <- OK (only 1 change)
    \`\`\`
 
-   A conflict exists when 2+ selected changes have delta specs for the same capability.
+   A conflict exists when 2+ selected changes touch the same capability in delta specs or OPSX deltas.
 
 5. **Resolve conflicts agentically**
 
@@ -152,8 +156,9 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
    Skipped 1 change:
    - add-verify-skill (user chose not to archive incomplete)
 
-   Spec sync summary:
+   Sync summary:
    - 4 delta specs synced to main specs
+   - 2 OPSX deltas merged into openspec/project.opsx.yaml
    - 1 conflict resolved (auth: applied both in chronological order)
    \`\`\`
 
@@ -205,9 +210,10 @@ Archived N changes:
 - <change-1> -> archive/YYYY-MM-DD-<change-1>/
 - <change-2> -> archive/YYYY-MM-DD-<change-2>/
 
-Spec sync summary:
+Sync summary:
 - N delta specs synced to main specs
-- No conflicts (or: M conflicts resolved)
+- M OPSX deltas merged into openspec/project.opsx.yaml
+- No conflicts (or: K conflicts resolved)
 \`\`\`
 
 **Output On Partial Success**
@@ -296,7 +302,11 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
       - List which capability specs exist
       - For each, extract requirement names (lines matching \`### Requirement: <name>\`)
 
-4. **Detect spec conflicts**
+   d. **OPSX delta** - Check for \`openspec/changes/<name>/opsx-delta.yaml\`
+      - Note whether the change updates capability metadata in \`openspec/project.opsx.yaml\`
+      - Track which capabilities are ADDED / MODIFIED / REMOVED
+
+4. **Detect spec and OPSX conflicts**
 
    Build a map of \`capability -> [changes that touch it]\`:
 
@@ -305,7 +315,7 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
    api  -> [change-c]            <- OK (only 1 change)
    \`\`\`
 
-   A conflict exists when 2+ selected changes have delta specs for the same capability.
+   A conflict exists when 2+ selected changes touch the same capability in delta specs or OPSX deltas.
 
 5. **Resolve conflicts agentically**
 
@@ -399,8 +409,9 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
    Skipped 1 change:
    - add-verify-skill (user chose not to archive incomplete)
 
-   Spec sync summary:
+   Sync summary:
    - 4 delta specs synced to main specs
+   - 2 OPSX deltas merged into openspec/project.opsx.yaml
    - 1 conflict resolved (auth: applied both in chronological order)
    \`\`\`
 
@@ -452,9 +463,10 @@ Archived N changes:
 - <change-1> -> archive/YYYY-MM-DD-<change-1>/
 - <change-2> -> archive/YYYY-MM-DD-<change-2>/
 
-Spec sync summary:
+Sync summary:
 - N delta specs synced to main specs
-- No conflicts (or: M conflicts resolved)
+- M OPSX deltas merged into openspec/project.opsx.yaml
+- No conflicts (or: K conflicts resolved)
 \`\`\`
 
 **Output On Partial Success**
