@@ -501,7 +501,7 @@ See [Customization](customization.md) for full details on creating and using cus
 
 ## Archive
 
-Archiving completes a change by merging its delta specs into the main specs and preserving the change for history.
+Archiving completes a change by merging its delta specs into the main specs, merging opsx-delta into `project.opsx.yaml` (if present), and preserving the change for history.
 
 ### What Happens When You Archive
 
@@ -541,7 +541,7 @@ openspec/
 
 ### The Archive Process
 
-1. **Merge deltas.** Each delta spec section (ADDED/MODIFIED/REMOVED) is applied to the corresponding main spec.
+1. **Merge deltas.** Each delta spec section (ADDED/MODIFIED/REMOVED) is applied to the corresponding main spec. If `opsx-delta.yaml` exists, it is also merged into `project.opsx.yaml`.
 
 2. **Move to archive.** The change folder moves to `changes/archive/` with a date prefix for chronological ordering.
 

@@ -42,9 +42,9 @@ openspec/
 
 **Two key directories:**
 
-- **`specs/`** - The source of truth. These specs describe how your system currently behaves. Organized by domain (e.g., `specs/auth/`, `specs/payments/`).
+- **`specs/`** - The source of truth for behavioral specs. These specs describe how your system currently behaves. Together with `project.opsx.yaml` (if present), they form the accepted current truth. Organized by domain (e.g., `specs/auth/`, `specs/payments/`).
 
-- **`changes/`** - Proposed modifications. Each change gets its own folder with all related artifacts. When a change is complete, its specs merge into the main `specs/` directory.
+- **`changes/`** - Proposed modifications. Each change gets its own folder with all related artifacts. When a change is complete, its delta specs merge into the main `specs/` directory (and opsx-delta merges into `project.opsx.yaml`).
 
 ## Understanding Artifacts
 

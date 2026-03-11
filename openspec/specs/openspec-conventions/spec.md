@@ -434,12 +434,12 @@ This explicit format compensates for not having inline diffs and ensures reviewe
 
 The change process SHALL follow these states:
 
-1. **Propose**: AI creates change with future state specs and explicit proposal
-2. **Review**: Humans review proposal and future state
+1. **Propose**: AI creates change with delta specs (ADDED/MODIFIED/REMOVED) and explicit proposal
+2. **Review**: Humans review proposal and delta specs
 3. **Approve**: Change is approved for implementation
 4. **Implement**: Follow tasks.md checklist (can span multiple PRs)
 5. **Deploy**: Changes are deployed to production
-6. **Update**: Specs in `specs/` are updated to match deployed reality
+6. **Update**: Delta specs are merged into main `specs/`; opsx-delta is merged into `project.opsx.yaml`
 7. **Archive**: Change is moved to `archive/YYYY-MM-DD-[name]/`
 
 ## Viewing Changes
@@ -484,8 +484,8 @@ A proposal is NOT required for:
 
 ## Why This Approach
 
-Clean future state storage provides:
-- **Readability**: No diff syntax pollution
+Delta-based change storage provides:
+- **Readability**: Clear indication of what changes (ADDED/MODIFIED/REMOVED)
 - **AI-compatibility**: Standard markdown that AI tools understand
 - **Simplicity**: No special parsing or processing needed
 - **Tool-agnostic**: Any diff tool can show changes

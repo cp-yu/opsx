@@ -1,0 +1,342 @@
+# openspec/project.opsx.zh-CN.yaml — 项目语义图谱（T_current 的 OPSX 视图）
+# 层级：L0 项目 | L1 领域 | L2 能力 + 不变量 + 接口 + 决策
+
+# --- L0: 项目标识 ---
+
+project:
+  id: proj.openspec
+  name: OpenSpec
+  intent: >-
+    AI 原生的规约驱动开发框架。
+    在人类意图与 AI 代码生成之间建立轻量级规约层，
+    确保代码编写前的意图对齐。
+  truth: >-
+    覆盖 OpenSpec CLI（@fission-ai/openspec v1.x）及其规约引擎、
+    变更工作流、Schema 系统和 AI 工具集成。
+    不覆盖使用 OpenSpec 的下游项目。
+  roots:
+    - path: .
+
+# --- L1: 领域拓扑 ---
+
+domains:
+  - id: domain.spec-engine
+    name: 规约引擎
+    intent: 核心引擎 — 制品依赖图、配置加载和面向 AI 消费的指令组装。
+    boundary: 拥有图解析和配置解析。不拥有 CLI 输出格式化或技能编排。
+
+  - id: domain.change-workflow
+    name: 变更工作流
+    intent: 管理完整变更生命周期 — 创建、增量规约操作、归档及合并到主规约。
+    boundary: 拥有变更目录和增量合并逻辑。不拥有规约内容验证规则。
+
+  - id: domain.schema
+    name: Schema 系统
+    intent: 定义、解析和管理控制制品类型、依赖关系和构建顺序的工作流 Schema。
+    boundary: 拥有 Schema YAML 解析和三层解析逻辑。不拥有制品内容生成。
+
+  - id: domain.cli
+    name: 命令行界面
+    intent: 面向用户的命令行界面，将所有 OpenSpec 操作暴露为可组合的子命令。
+    boundary: 拥有终端 I/O 和命令路由。将所有领域逻辑委托给核心模块。
+
+  - id: domain.ai-integration
+    name: AI 集成
+    intent: 多工具 AI 支持 — 为 25+ AI 工具生成特定工具的技能文件、斜杠命令和面向 Agent 的工作流。
+    boundary: 拥有工具适配器注册表和技能定义。不拥有核心规约/变更逻辑。
+
+  - id: domain.platform
+    name: 平台
+    intent: 横切基础设施 — 遥测、CI 验证和遗留迁移。
+
+# --- L2: 能力 ---
+
+capabilities:
+  # spec-engine
+  - id: cap.artifact-graph
+    name: 制品图
+    intent: 基于 DAG 的制品依赖解析、拓扑构建排序、循环检测，以及通过文件系统追踪完成状态。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/artifact-graph/spec.md
+
+  - id: cap.config
+    name: 配置
+    intent: 使用 Zod Schema 加载并验证项目配置（openspec/config.yaml）和用户全局配置（~/.config/openspec/），提供安全降级。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/config-loading/spec.md
+      - path: openspec/specs/global-config/spec.md
+
+  - id: cap.instruction-assembly
+    name: 指令组装
+    intent: 加载 Schema 模板，注入项目上下文和各制品规则，丰富依赖状态供 AI 消费。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/instruction-loader/spec.md
+      - path: openspec/specs/context-injection/spec.md
+      - path: openspec/specs/rules-injection/spec.md
+
+  - id: cap.conventions
+    name: 规约约定
+    intent: 元规约格式 — BDD 需求（SHALL）、增量操作符（ADDED/MODIFIED/REMOVED/RENAMED）、头部标准化匹配、变更生命周期。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/openspec-conventions/spec.md
+
+  # change-workflow
+  - id: cap.change-create
+    name: 变更创建
+    intent: 创建经过验证的变更目录，包含 Schema 绑定、kebab-case 命名和 .openspec.yaml 元数据。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/change-creation/spec.md
+
+  - id: cap.change-archive
+    name: 变更归档
+    intent: 验证完整性，将增量规约操作和 OPSX 增量原子地应用到主规约和 project.opsx.yaml，将变更移动到 archive/ 并添加 YYYY-MM-DD 前缀。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/cli-archive/spec.md
+      - path: openspec/specs/opsx-archive-skill/spec.md
+
+  - id: cap.specs-sync
+    name: 真相同步
+    intent: 幂等地从活动变更中协调并应用增量规约更改到主规约目录，同时将 opsx-delta 合并到 project.opsx.yaml，作为 7 阶段变更生命周期 Update 步骤的原子操作。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/specs-sync-skill/spec.md
+
+  # schema
+  - id: cap.schema-resolution
+    name: Schema 解析
+    intent: 三层 Schema 查找（项目 > 用户 > 包），配合 CLI 标志 > .openspec.yaml > config.yaml > "spec-driven" 降级链。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/schema-resolution/spec.md
+
+  - id: cap.schema-authoring
+    name: Schema 编写
+    intent: 创建骨架 Schema（init）、克隆现有 Schema（fork）、验证结构和 DAG（validate）、检查解析来源（which）。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/schema-init-command/spec.md
+      - path: openspec/specs/schema-fork-command/spec.md
+      - path: openspec/specs/schema-validate-command/spec.md
+      - path: openspec/specs/schema-which-command/spec.md
+
+  # cli
+  - id: cap.cli-init
+    name: CLI 初始化与更新
+    intent: 初始化 openspec/ 目录，为 25+ 工具生成 AI 工具技能文件，并在更新时刷新指令文件。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/cli-init/spec.md
+      - path: openspec/specs/cli-update/spec.md
+
+  - id: cap.cli-change-ops
+    name: 变更与规约操作
+    intent: 检查变更和规约 — show、list、validate — 支持 JSON 输出、交互式选择和批量处理。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/cli-change/spec.md
+      - path: openspec/specs/cli-spec/spec.md
+      - path: openspec/specs/cli-show/spec.md
+      - path: openspec/specs/cli-list/spec.md
+      - path: openspec/specs/cli-validate/spec.md
+
+  - id: cap.cli-artifact-workflow
+    name: 制品工作流
+    intent: 追踪制品完成状态，获取带有丰富上下文的创建指令，定位模板路径。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/cli-artifact-workflow/spec.md
+
+  - id: cap.cli-dashboard
+    name: 仪表板
+    intent: 交互式视图 — 规约清单、活动/已完成/草稿变更、带颜色编码的进度条。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/cli-view/spec.md
+
+  - id: cap.cli-admin
+    name: CLI 管理
+    intent: 配置管理（get/set/unset/reset/edit）、Shell 补全（zsh/bash/fish/pwsh）、通过 GitHub 提交反馈。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/cli-config/spec.md
+      - path: openspec/specs/cli-completion/spec.md
+      - path: openspec/specs/cli-feedback/spec.md
+
+  # ai-integration
+  - id: cap.tool-adapters
+    name: 工具适配器
+    intent: 工具无关的 CommandContent 配合各工具适配器；为 Claude、Cursor、Windsurf、Codex 等 20+ 工具生成技能文件和斜杠命令。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/command-generation/spec.md
+      - path: openspec/specs/ai-tool-paths/spec.md
+
+  - id: cap.agent-skills
+    name: Agent 技能
+    intent: 面向 AI 的工作流 — propose、apply、verify（对齐检查）、onboard（引导首次运行）。Archive 和 sync 是独立能力。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/opsx-onboard-skill/spec.md
+      - path: openspec/specs/opsx-verify-skill/spec.md
+
+  - id: cap.agent-docs
+    name: Agent 文档
+    intent: 生成 AGENTS.md，包含快速参考、可直接复制的模板、预检清单和渐进式披露。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/docs-agent-instructions/spec.md
+
+  # platform
+  - id: cap.telemetry
+    name: 遥测
+    intent: 匿名 PostHog 遥测，可通过 OPENSPEC_TELEMETRY=0、DO_NOT_TRACK=1 或 CI=true 选择退出。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/telemetry/spec.md
+
+  - id: cap.ci-validation
+    name: CI 验证
+    intent: GitHub Actions 中的 Nix flake 构建验证，配合确定性缓存。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/ci-nix-validation/spec.md
+
+  - id: cap.legacy-cleanup
+    name: 遗留清理
+    intent: 在初始化期间检测并精准移除遗留配置文件（CLAUDE.md 标记、.cursorrules 等）。
+    status: implemented
+    spec_refs:
+      - path: openspec/specs/legacy-cleanup/spec.md
+
+# --- L2: 不变量 ---
+
+invariants:
+  - id: inv.cross-platform-paths
+    statement: 所有文件路径操作必须使用 path.join()/path.resolve()；禁止硬编码分隔符。
+    scope: all
+    severity: critical
+
+  - id: inv.spec-bdd-format
+    statement: 所有规约必须使用 BDD 格式（### Requirement + #### Scenario + WHEN/THEN），包含 SHALL 关键字。
+    scope: openspec/specs/
+    severity: critical
+
+  - id: inv.delta-isolation
+    statement: 增量规约必须位于 changes/<name>/specs/，opsx-delta 必须位于 changes/<name>/opsx-delta.yaml；主规约和 project.opsx.yaml 仅通过 Update（truth-sync）或 archive 修改。
+    scope: change-workflow
+    severity: critical
+
+  - id: inv.schema-priority
+    statement: "Schema 解析必须遵循：CLI --schema > .openspec.yaml > config.yaml > spec-driven 默认值。"
+    scope: schema
+    severity: high
+
+  - id: inv.idempotent-merge
+    statement: 两次应用相同的增量操作必须产生相同结果。
+    scope: change-workflow
+    severity: high
+
+# --- L2: 接口 ---
+
+interfaces:
+  - id: iface.cli
+    kind: cli
+    surface: "openspec <command> [options]"
+    contract: Commander.js CLI；退出码 0 表示成功，非零表示错误；--json 用于机器输出。
+
+  - id: iface.ai-skills
+    kind: ai-skill
+    surface: "/opsx:* 斜杠命令"
+    contract: 每个 AI 工具 9 个技能文件；编排 propose → apply → archive 工作流。
+
+  - id: iface.npm
+    kind: package
+    surface: "@fission-ai/openspec"
+    contract: "通过 npm/pnpm 全局安装；Node.js >=20.19.0；仅支持 ESM。"
+
+  - id: iface.schema-format
+    kind: data
+    surface: schema.yaml
+    contract: "YAML：name（字符串）、version（整数）、artifacts[]（{id, generates, template, requires}）、可选 apply 块。"
+
+# --- L2: 决策 ---
+
+decisions:
+  - id: dec.yaml-not-dsl
+    statement: 所有数据格式使用结构化 YAML，不使用自定义 DSL。最小化学习曲线，利用现有工具链。
+    status: accepted
+
+  - id: dec.delta-in-changes
+    statement: 增量规约放在变更目录中，而非主规约。防止并行变更间的合并冲突。
+    status: accepted
+
+  - id: dec.adapter-pattern
+    statement: 工具无关的 CommandContent 配合各工具适配器。支持 25+ AI 工具而不产生 N×M 爆炸。
+    status: accepted
+
+  - id: dec.bdd-specs
+    statement: 规约中使用 Given/When/Then 行为场景。规约描述可观察行为，而非实现细节。
+    status: accepted
+
+  - id: dec.capability-granularity
+    statement: 规约粒度面向能力（用户可见的行为单元），而非单个函数。
+    status: accepted
+
+# --- 关系 ---
+
+relations:
+  # contains（领域 → 能力）
+  - { from: domain.spec-engine, type: contains, to: cap.artifact-graph }
+  - { from: domain.spec-engine, type: contains, to: cap.config }
+  - { from: domain.spec-engine, type: contains, to: cap.instruction-assembly }
+  - { from: domain.spec-engine, type: contains, to: cap.conventions }
+  - { from: domain.change-workflow, type: contains, to: cap.change-create }
+  - { from: domain.change-workflow, type: contains, to: cap.change-archive }
+  - { from: domain.change-workflow, type: contains, to: cap.specs-sync }
+  - { from: domain.schema, type: contains, to: cap.schema-resolution }
+  - { from: domain.schema, type: contains, to: cap.schema-authoring }
+  - { from: domain.cli, type: contains, to: cap.cli-init }
+  - { from: domain.cli, type: contains, to: cap.cli-change-ops }
+  - { from: domain.cli, type: contains, to: cap.cli-artifact-workflow }
+  - { from: domain.cli, type: contains, to: cap.cli-dashboard }
+  - { from: domain.cli, type: contains, to: cap.cli-admin }
+  - { from: domain.ai-integration, type: contains, to: cap.tool-adapters }
+  - { from: domain.ai-integration, type: contains, to: cap.agent-skills }
+  - { from: domain.ai-integration, type: contains, to: cap.agent-docs }
+  - { from: domain.platform, type: contains, to: cap.telemetry }
+  - { from: domain.platform, type: contains, to: cap.ci-validation }
+  - { from: domain.platform, type: contains, to: cap.legacy-cleanup }
+
+  # depends_on（能力 → 能力）
+  - { from: cap.change-create, type: depends_on, to: cap.schema-resolution }
+  - { from: cap.change-archive, type: depends_on, to: cap.specs-sync }
+  - { from: cap.change-archive, type: depends_on, to: cap.conventions }
+  - { from: cap.specs-sync, type: depends_on, to: cap.conventions }
+  - { from: cap.instruction-assembly, type: depends_on, to: cap.config }
+  - { from: cap.instruction-assembly, type: depends_on, to: cap.artifact-graph }
+  - { from: cap.cli-init, type: depends_on, to: cap.tool-adapters }
+  - { from: cap.cli-init, type: depends_on, to: cap.config }
+  - { from: cap.cli-artifact-workflow, type: depends_on, to: cap.artifact-graph }
+  - { from: cap.cli-artifact-workflow, type: depends_on, to: cap.instruction-assembly }
+  - { from: cap.agent-skills, type: depends_on, to: cap.artifact-graph }
+  - { from: cap.agent-skills, type: depends_on, to: cap.change-create }
+  - { from: cap.schema-authoring, type: depends_on, to: cap.schema-resolution }
+  - { from: cap.legacy-cleanup, type: depends_on, to: cap.tool-adapters }
+
+  # constrains（不变量 → 能力）
+  - { from: inv.cross-platform-paths, type: constrains, to: cap.config }
+  - { from: inv.cross-platform-paths, type: constrains, to: cap.tool-adapters }
+  - { from: inv.cross-platform-paths, type: constrains, to: cap.schema-resolution }
+  - { from: inv.spec-bdd-format, type: constrains, to: cap.conventions }
+  - { from: inv.delta-isolation, type: constrains, to: cap.change-create }
+  - { from: inv.delta-isolation, type: constrains, to: cap.change-archive }
+  - { from: inv.delta-isolation, type: constrains, to: cap.specs-sync }
+  - { from: inv.schema-priority, type: constrains, to: cap.schema-resolution }
+  - { from: inv.idempotent-merge, type: constrains, to: cap.specs-sync }
+  - { from: inv.idempotent-merge, type: constrains, to: cap.change-archive }
