@@ -38,7 +38,7 @@
 - [x] 3.6 Create PBT test suite for spec_refs bidirectional alignment (4 properties)
 - [ ] 3.7 Add integration tests for full workflow: propose → sync → verify → apply
 - [ ] 3.8 Add integration tests for bootstrap workflow
-- [ ] 3.9 Add edge case tests: empty delta, concurrent modifications, malformed YAML
+- [x] 3.9 Add edge case tests: empty delta, concurrent modifications, malformed YAML
 
 ## Phase 4: Documentation and Migration
 
