@@ -2,36 +2,36 @@
 
 ## Phase 1: Programmatic Infrastructure
 
-- [ ] 1.1 Create `src/utils/opsx-utils.ts` with path constants and basic structure
-- [ ] 1.2 Define Zod schemas: `OpsxNodeSchema`, `OpsxRelationSchema`, `OpsxDeltaSchema`, `ProjectOpsxSchema`
-- [ ] 1.3 Implement YAML parse/serialize functions using `yaml` library
-- [ ] 1.4 Implement referential integrity validation (check all relation from/to references exist)
-- [ ] 1.5 Implement spec_refs path existence validation
-- [ ] 1.6 Implement atomic write with temporary file + rename pattern
-- [ ] 1.7 Implement line counting and sharding logic (by domain)
-- [ ] 1.8 Implement `readProjectOpsx` with transparent shard handling
-- [ ] 1.9 Implement `writeProjectOpsx` with auto-sharding when exceeding max_lines
-- [ ] 1.10 Add unit tests for opsx-utils.ts (target >90% coverage)
+- [x] 1.1 Create `src/utils/opsx-utils.ts` with path constants and basic structure
+- [x] 1.2 Define Zod schemas: `OpsxNodeSchema`, `OpsxRelationSchema`, `OpsxDeltaSchema`, `ProjectOpsxSchema`
+- [x] 1.3 Implement YAML parse/serialize functions using `yaml` library
+- [x] 1.4 Implement referential integrity validation (check all relation from/to references exist)
+- [x] 1.5 Implement spec_refs path existence validation
+- [x] 1.6 Implement atomic write with temporary file + rename pattern
+- [x] 1.7 Implement line counting and sharding logic (by domain)
+- [x] 1.8 Implement `readProjectOpsx` with transparent shard handling
+- [x] 1.9 Implement `writeProjectOpsx` with auto-sharding when exceeding max_lines
+- [x] 1.10 Add unit tests for opsx-utils.ts (target >90% coverage)
 
 ## Phase 2: Workflow Template Integration
 
-- [ ] 2.1 Extract shared OPSX instruction fragments to reduce template duplication
-- [ ] 2.2 Modify `propose.ts`: add opsx-delta generation step after specs creation
-- [ ] 2.3 Modify `ff-change.ts`: add opsx-delta generation (same logic as propose)
-- [ ] 2.4 Modify `sync-specs.ts`: add opsx-delta merging step with programmatic validation
-- [ ] 2.5 Modify `archive-change.ts`: add opsx-delta sync check before archiving
-- [ ] 2.6 Modify `bulk-archive-change.ts`: add opsx-delta sync check for all changes
-- [ ] 2.7 Modify `verify-change.ts`: add OPSX alignment verification (spec_refs bidirectional, referential integrity)
-- [ ] 2.8 Modify `apply-change.ts`: insert OPSX context loading protocol (L0→L1→L2 hierarchy)
-- [ ] 2.9 Modify `explore.ts`: add OPSX-first navigation guidance
-- [ ] 2.10 Review and update `bootstrap-opsx.ts`: ensure [DRAFT] marking and 3 checkpoint flow
-- [ ] 2.11 Register bootstrap-opsx in `skill-templates.ts` and `skill-generation.ts` (if not already done)
-- [ ] 2.12 Update all templates to use unified OPSX path constant from opsx-utils
+- [x] 2.1 Extract shared OPSX instruction fragments to reduce template duplication
+- [x] 2.2 Modify `propose.ts`: add opsx-delta generation step after specs creation
+- [x] 2.3 Modify `ff-change.ts`: add opsx-delta generation (same logic as propose)
+- [x] 2.4 Modify `sync-specs.ts`: add opsx-delta merging step with programmatic validation
+- [x] 2.5 Modify `archive-change.ts`: add opsx-delta sync check before archiving
+- [x] 2.6 Modify `bulk-archive-change.ts`: add opsx-delta sync check for all changes
+- [x] 2.7 Modify `verify-change.ts`: add OPSX alignment verification (spec_refs bidirectional, referential integrity)
+- [x] 2.8 Modify `apply-change.ts`: insert OPSX context loading protocol (L0→L1→L2 hierarchy)
+- [x] 2.9 Modify `explore.ts`: add OPSX-first navigation guidance
+- [x] 2.10 Review and update `bootstrap-opsx.ts`: ensure [DRAFT] marking and 3 checkpoint flow
+- [x] 2.11 Register bootstrap-opsx in `skill-templates.ts` and `skill-generation.ts` (if not already done)
+- [x] 2.12 Update all templates to use unified OPSX path constant from opsx-utils
 
 ## Phase 3: Property-Based Testing
 
-- [ ] 3.1 Create PBT test suite for YAML structure preservation (3 properties)
-- [ ] 3.2 Create PBT test suite for relation referential integrity (4 properties)
+- [x] 3.1 Create PBT test suite for YAML structure preservation (3 properties)
+- [x] 3.2 Create PBT test suite for relation referential integrity (4 properties)
 - [ ] 3.3 Create PBT test suite for merge idempotency (3 properties)
 - [ ] 3.4 Create PBT test suite for file size boundaries (4 properties)
 - [ ] 3.5 Create PBT test suite for atomic write guarantees (3 properties)
