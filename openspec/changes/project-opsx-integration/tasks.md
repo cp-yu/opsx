@@ -32,10 +32,10 @@
 
 - [x] 3.1 Create PBT test suite for YAML structure preservation (3 properties)
 - [x] 3.2 Create PBT test suite for relation referential integrity (4 properties)
-- [ ] 3.3 Create PBT test suite for merge idempotency (3 properties)
-- [ ] 3.4 Create PBT test suite for file size boundaries (4 properties)
-- [ ] 3.5 Create PBT test suite for atomic write guarantees (3 properties)
-- [ ] 3.6 Create PBT test suite for spec_refs bidirectional alignment (4 properties)
+- [x] 3.3 Create PBT test suite for merge idempotency (3 properties)
+- [x] 3.4 Create PBT test suite for file size boundaries (4 properties)
+- [x] 3.5 Create PBT test suite for atomic write guarantees (3 properties)
+- [x] 3.6 Create PBT test suite for spec_refs bidirectional alignment (4 properties)
 - [ ] 3.7 Add integration tests for full workflow: propose → sync → verify → apply
 - [ ] 3.8 Add integration tests for bootstrap workflow
 - [ ] 3.9 Add edge case tests: empty delta, concurrent modifications, malformed YAML
