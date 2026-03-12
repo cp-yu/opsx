@@ -1,0 +1,142 @@
+# OPSX Delta: Add User Authentication
+
+ADDED:
+  domains:
+    - id: dom.auth
+      type: domain
+      intent: User authentication and authorization system
+      spec_refs:
+        - path: openspec/changes/example-opsx-workflow/specs/auth/register.md
+        - path: openspec/changes/example-opsx-workflow/specs/auth/login.md
+
+  capabilities:
+    - id: cap.auth.register
+      type: capability
+      intent: Register new user with email and password
+      spec_refs:
+        - path: openspec/changes/example-opsx-workflow/specs/auth/register.md
+      code_refs:
+        - path: src/auth/service.ts
+          line_start: 15
+          line_end: 45
+
+    - id: cap.auth.login
+      type: capability
+      intent: Authenticate user with email and password
+      spec_refs:
+        - path: openspec/changes/example-opsx-workflow/specs/auth/login.md
+      code_refs:
+        - path: src/auth/service.ts
+          line_start: 50
+          line_end: 95
+
+    - id: cap.auth.logout
+      type: capability
+      intent: Invalidate user session and logout
+      code_refs:
+        - path: src/auth/service.ts
+          line_start: 100
+          line_end: 115
+
+    - id: cap.auth.validate
+      type: capability
+      intent: Validate JWT token and verify session
+      code_refs:
+        - path: src/auth/middleware.ts
+          line_start: 10
+          line_end: 40
+
+    - id: cap.auth.hash-password
+      type: capability
+      intent: Securely hash password using bcrypt
+      code_refs:
+        - path: src/auth/service.ts
+          line_start: 120
+          line_end: 125
+
+    - id: cap.auth.verify-password
+      type: capability
+      intent: Verify password against stored hash
+      code_refs:
+        - path: src/auth/service.ts
+          line_start: 130
+          line_end: 135
+
+    - id: cap.auth.generate-token
+      type: capability
+      intent: Generate JWT token for authenticated user
+      code_refs:
+        - path: src/utils/jwt.ts
+          line_start: 5
+          line_end: 15
+
+    - id: cap.auth.rate-limit
+      type: capability
+      intent: Rate limit authentication attempts to prevent brute force
+      code_refs:
+        - path: src/utils/rate-limit.ts
+          line_start: 10
+          line_end: 35
+
+  relations:
+    # Domain containment
+    - from: cap.auth.register
+      to: dom.auth
+      type: contains
+
+    - from: cap.auth.login
+      to: dom.auth
+      type: contains
+
+    - from: cap.auth.logout
+      to: dom.auth
+      type: contains
+
+    - from: cap.auth.validate
+      to: dom.auth
+      type: contains
+
+    - from: cap.auth.hash-password
+      to: dom.auth
+      type: contains
+
+    - from: cap.auth.verify-password
+      to: dom.auth
+      type: contains
+
+    - from: cap.auth.generate-token
+      to: dom.auth
+      type: contains
+
+    - from: cap.auth.rate-limit
+      to: dom.auth
+      type: contains
+
+    # Dependencies
+    - from: cap.auth.register
+      to: cap.auth.hash-password
+      type: depends_on
+
+    - from: cap.auth.register
+      to: cap.auth.generate-token
+      type: depends_on
+
+    - from: cap.auth.register
+      to: cap.auth.rate-limit
+      type: depends_on
+
+    - from: cap.auth.login
+      to: cap.auth.verify-password
+      type: depends_on
+
+    - from: cap.auth.login
+      to: cap.auth.generate-token
+      type: depends_on
+
+    - from: cap.auth.login
+      to: cap.auth.rate-limit
+      type: depends_on
+
+    - from: cap.auth.validate
+      to: cap.auth.generate-token
+      type: depends_on

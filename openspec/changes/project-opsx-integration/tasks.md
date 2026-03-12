@@ -42,13 +42,13 @@
 
 ## Phase 4: Documentation and Migration
 
-- [ ] 4.1 Update main README with OPSX integration overview
-- [ ] 4.2 Create OPSX workflow guide (how to use opsx-delta in changes)
-- [ ] 4.3 Create bootstrap workflow guide with examples
-- [ ] 4.4 Document PBT properties and their guarantees
-- [ ] 4.5 Add migration guide for projects with old path (root project.opsx.yaml → openspec/)
-- [ ] 4.6 Update CLAUDE.md or project conventions with OPSX best practices
-- [ ] 4.7 Create example change demonstrating full OPSX workflow
+- [x] 4.1 Update main README with OPSX integration overview
+- [x] 4.2 Create OPSX workflow guide (how to use opsx-delta in changes)
+- [x] 4.3 Create bootstrap workflow guide with examples
+- [x] 4.4 Document PBT properties and their guarantees
+- [x] 4.5 Add migration guide for projects with old path (root project.opsx.yaml → openspec/)
+- [x] 4.6 Update CLAUDE.md or project conventions with OPSX best practices
+- [x] 4.7 Create example change demonstrating full OPSX workflow
 
 ## Phase 5: Validation and Cleanup
 
