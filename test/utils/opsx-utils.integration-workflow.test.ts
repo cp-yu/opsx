@@ -5,21 +5,13 @@ import os from 'os';
 import { randomUUID } from 'crypto';
 import { stringify as stringifyYaml } from 'yaml';
 import {
-  OPSX_PATHS,
+  OPSX_SCHEMA_VERSION,
   readProjectOpsx,
   writeProjectOpsx,
   validateReferentialIntegrity,
-  validateSpecRefs,
-  type ProjectOpsx,
+  type ProjectOpsxBundle,
   type OpsxDelta,
 } from '../../src/utils/opsx-utils.js';
-
-/**
- * Integration Tests for Full Workflow
- *
- * Tests the complete workflow: propose → sync → verify → apply
- * These tests simulate the core functions used by CLI commands.
- */
 
 describe('Integration: Full Workflow', () => {
   let testDir: string;
@@ -35,30 +27,36 @@ describe('Integration: Full Workflow', () => {
     await fs.rm(testDir, { recursive: true, force: true });
   });
 
+  const mkBundle = (overrides: Partial<ProjectOpsxBundle> = {}): ProjectOpsxBundle => ({
+    schema_version: OPSX_SCHEMA_VERSION,
+    project: { id: 'test-project', name: 'test-project' },
+    domains: [],
+    capabilities: [],
+    relations: [],
+    code_map: [],
+    ...overrides,
+  });
+
   describe('Workflow: propose → sync → verify', () => {
     it('should complete full workflow successfully', async () => {
-      // ============================================================
-      // Step 1: PROPOSE - Create change structure and delta
-      // ============================================================
+      // Step 1: PROPOSE
       const changeDir = path.join(testDir, 'openspec', 'changes', changeName);
       await fs.mkdir(changeDir, { recursive: true });
 
-      // Create proposal
       await fs.writeFile(
         path.join(changeDir, 'proposal.md'),
-        '# Add Auth Feature\n\nAdd authentication capabilities.'
+        '# Add Auth Feature\n\nAdd authentication capabilities.',
       );
 
-      // Create spec
       const specsDir = path.join(changeDir, 'specs', 'auth');
       await fs.mkdir(specsDir, { recursive: true });
       await fs.writeFile(
         path.join(specsDir, 'spec.md'),
-        '# Auth Spec\n\n## Capabilities\n- cap.auth.login\n- cap.auth.logout'
+        '# Auth Spec\n\n## Capabilities\n- cap.auth.login\n- cap.auth.logout',
       );
 
-      // Generate opsx-delta.yaml (simulating what propose workflow does)
       const delta: OpsxDelta = {
+        schema_version: OPSX_SCHEMA_VERSION,
         ADDED: {
           domains: [
             { id: 'dom.auth', type: 'domain', intent: 'Authentication domain' },
@@ -77,104 +75,59 @@ describe('Integration: Full Workflow', () => {
       const deltaPath = path.join(changeDir, 'opsx-delta.yaml');
       await fs.writeFile(deltaPath, stringifyYaml(delta));
 
-      // Verify delta was created
-      const deltaExists = await fs.access(deltaPath).then(() => true).catch(() => false);
-      expect(deltaExists).toBe(true);
-
-      // ============================================================
-      // Step 2: SYNC - Merge delta into project.opsx.yaml
-      // ============================================================
-
-      // Read existing project.opsx.yaml (or create initial one)
-      let projectOpsx = await readProjectOpsx(testDir);
-      if (!projectOpsx) {
-        projectOpsx = {
-          project: { name: 'test-project', version: '1.0.0' },
-          domains: [],
-          capabilities: [],
-          relations: [],
-        };
+      // Step 2: SYNC
+      let bundle = await readProjectOpsx(testDir);
+      if (!bundle) {
+        bundle = mkBundle();
       }
 
-      // Read delta
-      const deltaContent = await fs.readFile(deltaPath, 'utf-8');
-      const parsedDelta = stringifyYaml(deltaContent);
-
-      // Merge ADDED nodes
       if (delta.ADDED) {
         if (delta.ADDED.domains) {
-          projectOpsx.domains = [...(projectOpsx.domains || []), ...delta.ADDED.domains];
+          bundle.domains = [...bundle.domains, ...delta.ADDED.domains];
         }
         if (delta.ADDED.capabilities) {
-          projectOpsx.capabilities = [...(projectOpsx.capabilities || []), ...delta.ADDED.capabilities];
+          bundle.capabilities = [...bundle.capabilities, ...delta.ADDED.capabilities];
         }
         if (delta.ADDED.relations) {
-          projectOpsx.relations = [...(projectOpsx.relations || []), ...delta.ADDED.relations];
+          bundle.relations = [...bundle.relations, ...delta.ADDED.relations];
         }
       }
 
-      // Write merged project.opsx.yaml
-      await writeProjectOpsx(testDir, projectOpsx);
+      await writeProjectOpsx(testDir, bundle);
 
-      // Verify merge
-      const mergedOpsx = await readProjectOpsx(testDir);
-      expect(mergedOpsx).not.toBeNull();
-      expect(mergedOpsx!.domains).toHaveLength(1);
-      expect(mergedOpsx!.capabilities).toHaveLength(2);
-      expect(mergedOpsx!.relations).toHaveLength(2);
+      // Step 3: VERIFY
+      const merged = await readProjectOpsx(testDir);
+      expect(merged).not.toBeNull();
+      expect(merged!.domains).toHaveLength(1);
+      expect(merged!.capabilities).toHaveLength(2);
+      expect(merged!.relations).toHaveLength(2);
 
-      // ============================================================
-      // Step 3: VERIFY - Validate referential integrity
-      // ============================================================
-
-      // Validate referential integrity
-      const integrityResult = validateReferentialIntegrity(mergedOpsx!);
+      const integrityResult = validateReferentialIntegrity(merged!);
       expect(integrityResult.valid).toBe(true);
-      expect(integrityResult.errors).toHaveLength(0);
 
-      // Validate spec_refs (if any)
-      const specRefsResult = await validateSpecRefs(testDir, mergedOpsx!);
-      expect(specRefsResult.valid).toBe(true);
+      expect(merged!.domains.find(d => d.id === 'dom.auth')).toBeDefined();
+      expect(merged!.capabilities.find(c => c.id === 'cap.auth.login')).toBeDefined();
+      expect(merged!.capabilities.find(c => c.id === 'cap.auth.logout')).toBeDefined();
 
-      // ============================================================
-      // Step 4: Verify final state
-      // ============================================================
-
-      // Check that all nodes are present
-      expect(mergedOpsx!.domains!.find(d => d.id === 'dom.auth')).toBeDefined();
-      expect(mergedOpsx!.capabilities!.find(c => c.id === 'cap.auth.login')).toBeDefined();
-      expect(mergedOpsx!.capabilities!.find(c => c.id === 'cap.auth.logout')).toBeDefined();
-
-      // Check relations
-      const loginRelation = mergedOpsx!.relations!.find(
-        r => r.from === 'cap.auth.login' && r.to === 'dom.auth'
+      const loginRel = merged!.relations.find(
+        r => r.from === 'cap.auth.login' && r.to === 'dom.auth',
       );
-      expect(loginRelation).toBeDefined();
-      expect(loginRelation!.type).toBe('contains');
+      expect(loginRel).toBeDefined();
+      expect(loginRel!.type).toBe('contains');
     });
 
     it('should handle MODIFIED nodes in delta', async () => {
-      // ============================================================
-      // Setup: Create initial project.opsx.yaml
-      // ============================================================
-      const initialOpsx: ProjectOpsx = {
-        project: { name: 'test-project', version: '1.0.0' },
-        domains: [
-          { id: 'dom.auth', type: 'domain', intent: 'Old intent' },
-        ],
-        capabilities: [
-          { id: 'cap.auth.login', type: 'capability', intent: 'Old login' },
-        ],
-      };
-      await writeProjectOpsx(testDir, initialOpsx);
+      const initial = mkBundle({
+        domains: [{ id: 'dom.auth', type: 'domain', intent: 'Old intent' }],
+        capabilities: [{ id: 'cap.auth.login', type: 'capability', intent: 'Old login' }],
+      });
+      await writeProjectOpsx(testDir, initial);
 
-      // ============================================================
-      // Step 1: Create delta with MODIFIED nodes
-      // ============================================================
       const changeDir = path.join(testDir, 'openspec', 'changes', changeName);
       await fs.mkdir(changeDir, { recursive: true });
 
       const delta: OpsxDelta = {
+        schema_version: OPSX_SCHEMA_VERSION,
         MODIFIED: {
           domains: [
             { id: 'dom.auth', type: 'domain', intent: 'Updated authentication domain' },
@@ -185,58 +138,34 @@ describe('Integration: Full Workflow', () => {
         },
       };
 
-      const deltaPath = path.join(changeDir, 'opsx-delta.yaml');
-      await fs.writeFile(deltaPath, stringifyYaml(delta));
+      await fs.writeFile(path.join(changeDir, 'opsx-delta.yaml'), stringifyYaml(delta));
 
-      // ============================================================
-      // Step 2: Merge MODIFIED nodes
-      // ============================================================
-      let projectOpsx = await readProjectOpsx(testDir);
-      expect(projectOpsx).not.toBeNull();
+      let bundle = await readProjectOpsx(testDir);
+      expect(bundle).not.toBeNull();
 
-      if (delta.MODIFIED) {
-        // Update domains
-        if (delta.MODIFIED.domains) {
-          delta.MODIFIED.domains.forEach(modifiedDomain => {
-            const index = projectOpsx!.domains!.findIndex(d => d.id === modifiedDomain.id);
-            if (index !== -1) {
-              projectOpsx!.domains![index] = modifiedDomain;
-            }
-          });
+      if (delta.MODIFIED?.domains) {
+        for (const mod of delta.MODIFIED.domains) {
+          const idx = bundle!.domains.findIndex(d => d.id === mod.id);
+          if (idx !== -1) bundle!.domains[idx] = mod;
         }
-
-        // Update capabilities
-        if (delta.MODIFIED.capabilities) {
-          delta.MODIFIED.capabilities.forEach(modifiedCap => {
-            const index = projectOpsx!.capabilities!.findIndex(c => c.id === modifiedCap.id);
-            if (index !== -1) {
-              projectOpsx!.capabilities![index] = modifiedCap;
-            }
-          });
+      }
+      if (delta.MODIFIED?.capabilities) {
+        for (const mod of delta.MODIFIED.capabilities) {
+          const idx = bundle!.capabilities.findIndex(c => c.id === mod.id);
+          if (idx !== -1) bundle!.capabilities[idx] = mod;
         }
       }
 
-      await writeProjectOpsx(testDir, projectOpsx!);
+      await writeProjectOpsx(testDir, bundle!);
 
-      // ============================================================
-      // Step 3: Verify modifications
-      // ============================================================
-      const mergedOpsx = await readProjectOpsx(testDir);
-      expect(mergedOpsx).not.toBeNull();
-
-      const updatedDomain = mergedOpsx!.domains!.find(d => d.id === 'dom.auth');
-      expect(updatedDomain!.intent).toBe('Updated authentication domain');
-
-      const updatedCap = mergedOpsx!.capabilities!.find(c => c.id === 'cap.auth.login');
-      expect(updatedCap!.intent).toBe('Updated user login');
+      const merged = await readProjectOpsx(testDir);
+      expect(merged).not.toBeNull();
+      expect(merged!.domains.find(d => d.id === 'dom.auth')!.intent).toBe('Updated authentication domain');
+      expect(merged!.capabilities.find(c => c.id === 'cap.auth.login')!.intent).toBe('Updated user login');
     });
 
     it('should handle REMOVED nodes in delta', async () => {
-      // ============================================================
-      // Setup: Create initial project.opsx.yaml
-      // ============================================================
-      const initialOpsx: ProjectOpsx = {
-        project: { name: 'test-project', version: '1.0.0' },
+      const initial = mkBundle({
         domains: [
           { id: 'dom.auth', type: 'domain' },
           { id: 'dom.core', type: 'domain' },
@@ -245,64 +174,44 @@ describe('Integration: Full Workflow', () => {
           { id: 'cap.auth.login', type: 'capability' },
           { id: 'cap.core.init', type: 'capability' },
         ],
-      };
-      await writeProjectOpsx(testDir, initialOpsx);
+      });
+      await writeProjectOpsx(testDir, initial);
 
-      // ============================================================
-      // Step 1: Create delta with REMOVED nodes
-      // ============================================================
       const changeDir = path.join(testDir, 'openspec', 'changes', changeName);
       await fs.mkdir(changeDir, { recursive: true });
 
       const delta: OpsxDelta = {
+        schema_version: OPSX_SCHEMA_VERSION,
         REMOVED: {
-          domains: [
-            { id: 'dom.auth', type: 'domain' },
-          ],
-          capabilities: [
-            { id: 'cap.auth.login', type: 'capability' },
-          ],
+          domains: [{ id: 'dom.auth', type: 'domain' }],
+          capabilities: [{ id: 'cap.auth.login', type: 'capability' }],
         },
       };
 
-      const deltaPath = path.join(changeDir, 'opsx-delta.yaml');
-      await fs.writeFile(deltaPath, stringifyYaml(delta));
+      await fs.writeFile(path.join(changeDir, 'opsx-delta.yaml'), stringifyYaml(delta));
 
-      // ============================================================
-      // Step 2: Remove nodes
-      // ============================================================
-      let projectOpsx = await readProjectOpsx(testDir);
-      expect(projectOpsx).not.toBeNull();
+      let bundle = await readProjectOpsx(testDir);
+      expect(bundle).not.toBeNull();
 
-      if (delta.REMOVED) {
-        // Remove domains
-        if (delta.REMOVED.domains) {
-          const idsToRemove = new Set(delta.REMOVED.domains.map(d => d.id));
-          projectOpsx!.domains = projectOpsx!.domains!.filter(d => !idsToRemove.has(d.id));
-        }
-
-        // Remove capabilities
-        if (delta.REMOVED.capabilities) {
-          const idsToRemove = new Set(delta.REMOVED.capabilities.map(c => c.id));
-          projectOpsx!.capabilities = projectOpsx!.capabilities!.filter(c => !idsToRemove.has(c.id));
-        }
+      if (delta.REMOVED?.domains) {
+        const ids = new Set(delta.REMOVED.domains.map(d => d.id));
+        bundle!.domains = bundle!.domains.filter(d => !ids.has(d.id));
+      }
+      if (delta.REMOVED?.capabilities) {
+        const ids = new Set(delta.REMOVED.capabilities.map(c => c.id));
+        bundle!.capabilities = bundle!.capabilities.filter(c => !ids.has(c.id));
       }
 
-      await writeProjectOpsx(testDir, projectOpsx!);
+      await writeProjectOpsx(testDir, bundle!);
 
-      // ============================================================
-      // Step 3: Verify removals
-      // ============================================================
-      const mergedOpsx = await readProjectOpsx(testDir);
-      expect(mergedOpsx).not.toBeNull();
-
-      expect(mergedOpsx!.domains).toHaveLength(1);
-      expect(mergedOpsx!.domains!.find(d => d.id === 'dom.auth')).toBeUndefined();
-      expect(mergedOpsx!.domains!.find(d => d.id === 'dom.core')).toBeDefined();
-
-      expect(mergedOpsx!.capabilities).toHaveLength(1);
-      expect(mergedOpsx!.capabilities!.find(c => c.id === 'cap.auth.login')).toBeUndefined();
-      expect(mergedOpsx!.capabilities!.find(c => c.id === 'cap.core.init')).toBeDefined();
+      const merged = await readProjectOpsx(testDir);
+      expect(merged).not.toBeNull();
+      expect(merged!.domains).toHaveLength(1);
+      expect(merged!.domains.find(d => d.id === 'dom.auth')).toBeUndefined();
+      expect(merged!.domains.find(d => d.id === 'dom.core')).toBeDefined();
+      expect(merged!.capabilities).toHaveLength(1);
+      expect(merged!.capabilities.find(c => c.id === 'cap.auth.login')).toBeUndefined();
+      expect(merged!.capabilities.find(c => c.id === 'cap.core.init')).toBeDefined();
     });
   });
 });

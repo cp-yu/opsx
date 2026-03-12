@@ -6,13 +6,17 @@ import { randomUUID } from 'crypto';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import {
   OPSX_PATHS,
-  OPSX_CONFIG,
-  ProjectOpsxSchema,
+  OPSX_SCHEMA_VERSION,
+  ProjectOpsxFileSchema,
   validateReferentialIntegrity,
-  validateSpecRefs,
+  validateCodeMapIntegrity,
+  normalizeFromLegacy,
   readProjectOpsx,
+  readProjectOpsxFile,
+  readProjectOpsxRelations,
+  readProjectOpsxCodeMap,
   writeProjectOpsx,
-  type ProjectOpsx,
+  type ProjectOpsxBundle,
 } from '../../src/utils/opsx-utils.js';
 
 describe('opsx-utils', () => {
@@ -27,19 +31,30 @@ describe('opsx-utils', () => {
     await fs.rm(testDir, { recursive: true, force: true });
   });
 
+  const mkBundle = (overrides: Partial<ProjectOpsxBundle> = {}): ProjectOpsxBundle => ({
+    schema_version: OPSX_SCHEMA_VERSION,
+    project: { id: 'test', name: 'test' },
+    domains: [],
+    capabilities: [],
+    relations: [],
+    code_map: [],
+    ...overrides,
+  });
+
   describe('YAML parse/serialize', () => {
-    it('should parse valid YAML', () => {
+    it('should parse valid YAML with new schema', () => {
       const yaml = `
+schema_version: 1
 project:
+  id: test
   name: test
-  version: "1.0"
 domains:
   - id: dom.core
     type: domain
     intent: Core domain
 `;
       const data = parseYaml(yaml);
-      const result = ProjectOpsxSchema.safeParse(data);
+      const result = ProjectOpsxFileSchema.safeParse(data);
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.domains).toHaveLength(1);
@@ -54,15 +69,16 @@ domains:
     type: domain
 `;
       const data = parseYaml(yaml);
-      const result = ProjectOpsxSchema.safeParse(data);
+      const result = ProjectOpsxFileSchema.safeParse(data);
       expect(result.success).toBe(false);
     });
 
     it('should serialize to valid YAML', () => {
-      const data: ProjectOpsx = {
-        project: { name: 'test', version: '1.0' },
+      const data = {
+        schema_version: 1,
+        project: { id: 'test', name: 'test' },
         domains: [
-          { id: 'dom.core', type: 'domain', intent: 'Core domain' },
+          { id: 'dom.core', type: 'domain' as const, intent: 'Core domain' },
         ],
       };
       const yaml = stringifyYaml(data);
@@ -71,18 +87,19 @@ domains:
     });
 
     it('should round-trip parse and serialize', () => {
-      const original: ProjectOpsx = {
-        project: { name: 'test', version: '1.0' },
+      const original = {
+        schema_version: 1,
+        project: { id: 'test', name: 'test' },
         domains: [
-          { id: 'dom.core', type: 'domain', intent: 'Core' },
+          { id: 'dom.core', type: 'domain' as const, intent: 'Core' },
         ],
         capabilities: [
-          { id: 'cap.auth', type: 'capability', intent: 'Auth' },
+          { id: 'cap.auth', type: 'capability' as const, intent: 'Auth' },
         ],
       };
       const yaml = stringifyYaml(original);
       const data = parseYaml(yaml);
-      const result = ProjectOpsxSchema.safeParse(data);
+      const result = ProjectOpsxFileSchema.safeParse(data);
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.domains).toHaveLength(1);
@@ -93,126 +110,122 @@ domains:
 
   describe('referential integrity validation', () => {
     it('should pass with valid references', () => {
-      const data: ProjectOpsx = {
-        project: { name: 'test', version: '1.0' },
-        domains: [
-          { id: 'dom.core', type: 'domain' },
-        ],
-        capabilities: [
-          { id: 'cap.auth', type: 'capability' },
-        ],
-        relations: [
-          { from: 'cap.auth', to: 'dom.core', type: 'belongs_to' },
-        ],
-      };
-      const result = validateReferentialIntegrity(data);
+      const bundle = mkBundle({
+        domains: [{ id: 'dom.core', type: 'domain' }],
+        capabilities: [{ id: 'cap.auth', type: 'capability' }],
+        relations: [{ from: 'cap.auth', to: 'dom.core', type: 'contains' }],
+      });
+      const result = validateReferentialIntegrity(bundle);
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
 
     it('should fail with missing from reference', () => {
-      const data: ProjectOpsx = {
-        project: { name: 'test', version: '1.0' },
-        domains: [
-          { id: 'dom.core', type: 'domain' },
-        ],
-        relations: [
-          { from: 'cap.missing', to: 'dom.core', type: 'belongs_to' },
-        ],
-      };
-      const result = validateReferentialIntegrity(data);
+      const bundle = mkBundle({
+        domains: [{ id: 'dom.core', type: 'domain' }],
+        relations: [{ from: 'cap.missing', to: 'dom.core', type: 'contains' }],
+      });
+      const result = validateReferentialIntegrity(bundle);
       expect(result.valid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
       expect(result.errors[0]).toContain('cap.missing');
     });
 
     it('should fail with missing to reference', () => {
-      const data: ProjectOpsx = {
-        project: { name: 'test', version: '1.0' },
-        capabilities: [
-          { id: 'cap.auth', type: 'capability' },
-        ],
-        relations: [
-          { from: 'cap.auth', to: 'dom.missing', type: 'belongs_to' },
-        ],
-      };
-      const result = validateReferentialIntegrity(data);
+      const bundle = mkBundle({
+        capabilities: [{ id: 'cap.auth', type: 'capability' }],
+        relations: [{ from: 'cap.auth', to: 'dom.missing', type: 'contains' }],
+      });
+      const result = validateReferentialIntegrity(bundle);
       expect(result.valid).toBe(false);
       expect(result.errors[0]).toContain('dom.missing');
     });
 
     it('should handle empty relations', () => {
-      const data: ProjectOpsx = {
-        project: { name: 'test', version: '1.0' },
-        domains: [
-          { id: 'dom.core', type: 'domain' },
-        ],
-      };
-      const result = validateReferentialIntegrity(data);
+      const bundle = mkBundle({
+        domains: [{ id: 'dom.core', type: 'domain' }],
+      });
+      const result = validateReferentialIntegrity(bundle);
       expect(result.valid).toBe(true);
     });
   });
 
-  describe('spec_refs validation', () => {
-    it('should pass with existing spec files', async () => {
-      const specPath = path.join(testDir, 'spec.md');
-      await fs.writeFile(specPath, '# Spec');
-
-      const data: ProjectOpsx = {
-        project: { name: 'test', version: '1.0' },
-        domains: [
-          {
-            id: 'dom.core',
-            type: 'domain',
-            spec_refs: [{ path: 'spec.md' }],
-          },
-        ],
-      };
-      const result = await validateSpecRefs(testDir, data);
+  describe('code-map integrity validation', () => {
+    it('should pass with valid code_map references', () => {
+      const bundle = mkBundle({
+        capabilities: [{ id: 'cap.auth', type: 'capability' }],
+        code_map: [{ id: 'cap.auth', refs: [{ path: 'src/auth.ts' }] }],
+      });
+      const result = validateCodeMapIntegrity(bundle);
       expect(result.valid).toBe(true);
     });
 
-    it('should fail with non-existent spec files', async () => {
-      const data: ProjectOpsx = {
-        project: { name: 'test', version: '1.0' },
-        domains: [
-          {
-            id: 'dom.core',
-            type: 'domain',
-            spec_refs: [{ path: 'missing.md' }],
-          },
-        ],
-      };
-      const result = await validateSpecRefs(testDir, data);
+    it('should fail with dangling code_map reference', () => {
+      const bundle = mkBundle({
+        code_map: [{ id: 'cap.missing', refs: [{ path: 'src/missing.ts' }] }],
+      });
+      const result = validateCodeMapIntegrity(bundle);
       expect(result.valid).toBe(false);
-      expect(result.errors[0]).toContain('missing.md');
+      expect(result.errors[0]).toContain('cap.missing');
+    });
+  });
+
+  describe('legacy normalization', () => {
+    it('should convert implemented status to active', () => {
+      const legacy = {
+        project: { id: 'test', name: 'test' },
+        domains: [{ id: 'dom.core', type: 'domain', status: 'implemented' }],
+        capabilities: [{ id: 'cap.auth', type: 'capability', status: 'implemented' }],
+      };
+      const bundle = normalizeFromLegacy(legacy);
+      expect(bundle.schema_version).toBe(OPSX_SCHEMA_VERSION);
+      expect(bundle.domains[0].status).toBe('active');
+      expect(bundle.capabilities[0].status).toBe('active');
     });
 
-    it('should handle nodes without spec_refs', async () => {
-      const data: ProjectOpsx = {
-        project: { name: 'test', version: '1.0' },
-        domains: [
-          { id: 'dom.core', type: 'domain' },
-        ],
+    it('should extract code_refs into code_map', () => {
+      const legacy = {
+        project: { id: 'test', name: 'test' },
+        capabilities: [{
+          id: 'cap.auth',
+          type: 'capability',
+          code_refs: [{ path: 'src/auth.ts', line_start: 10, line_end: 50 }],
+        }],
       };
-      const result = await validateSpecRefs(testDir, data);
-      expect(result.valid).toBe(true);
+      const bundle = normalizeFromLegacy(legacy);
+      expect(bundle.code_map).toHaveLength(1);
+      expect(bundle.code_map[0].id).toBe('cap.auth');
+      expect(bundle.code_map[0].refs[0].path).toBe('src/auth.ts');
+    });
+
+    it('should strip spec_refs from nodes', () => {
+      const legacy = {
+        project: { id: 'test', name: 'test' },
+        domains: [{
+          id: 'dom.core',
+          type: 'domain',
+          spec_refs: [{ path: 'docs/spec.md' }],
+        }],
+      };
+      const bundle = normalizeFromLegacy(legacy);
+      expect((bundle.domains[0] as any).spec_refs).toBeUndefined();
     });
   });
 
   describe('readProjectOpsx', () => {
-    it('should read single file', async () => {
-      const opsxPath = path.join(testDir, OPSX_PATHS.SINGLE_FILE);
-      await fs.mkdir(path.dirname(opsxPath), { recursive: true });
-      const data: ProjectOpsx = {
-        project: { name: 'test', version: '1.0' },
+    it('should read three-file bundle', async () => {
+      const bundle = mkBundle({
         domains: [{ id: 'dom.core', type: 'domain' }],
-      };
-      await fs.writeFile(opsxPath, stringifyYaml(data));
+        relations: [{ from: 'dom.core', to: 'dom.core', type: 'relates_to' }],
+        code_map: [{ id: 'dom.core', refs: [{ path: 'src/core/' }] }],
+      });
+      await writeProjectOpsx(testDir, bundle);
 
       const result = await readProjectOpsx(testDir);
       expect(result).not.toBeNull();
-      expect(result?.domains).toHaveLength(1);
+      expect(result!.domains).toHaveLength(1);
+      expect(result!.relations).toHaveLength(1);
+      expect(result!.code_map).toHaveLength(1);
     });
 
     it('should return null if file does not exist', async () => {
@@ -220,102 +233,88 @@ domains:
       expect(result).toBeNull();
     });
 
-    it('should handle sharded files', async () => {
-      const shardedDir = path.join(testDir, OPSX_PATHS.SHARDED_DIR);
-      await fs.mkdir(shardedDir, { recursive: true });
-
-      const meta = {
-        project: { name: 'test' },
-        shard_manifest: ['dom.core.yaml'],
+    it('should handle legacy format via normalizer', async () => {
+      const legacyData = {
+        project: { id: 'test', name: 'test' },
+        domains: [{ id: 'dom.core', type: 'domain', status: 'implemented' }],
       };
+      const opsxDir = path.join(testDir, 'openspec');
+      await fs.mkdir(opsxDir, { recursive: true });
       await fs.writeFile(
-        path.join(shardedDir, '_meta.yaml'),
-        stringifyYaml(meta)
-      );
-
-      const shard: ProjectOpsx = {
-        domains: [{ id: 'dom.core', type: 'domain' }],
-      };
-      await fs.writeFile(
-        path.join(shardedDir, 'dom.core.yaml'),
-        stringifyYaml(shard)
+        path.join(testDir, OPSX_PATHS.PROJECT_FILE),
+        stringifyYaml(legacyData),
       );
 
       const result = await readProjectOpsx(testDir);
       expect(result).not.toBeNull();
-      expect(result?.domains).toHaveLength(1);
+      expect(result!.schema_version).toBe(OPSX_SCHEMA_VERSION);
+      expect(result!.domains[0].status).toBe('active');
+    });
+
+    it('should return empty arrays for missing companion files', async () => {
+      const mainData = {
+        schema_version: 1,
+        project: { id: 'test', name: 'test' },
+        domains: [{ id: 'dom.core', type: 'domain' }],
+      };
+      const opsxDir = path.join(testDir, 'openspec');
+      await fs.mkdir(opsxDir, { recursive: true });
+      await fs.writeFile(
+        path.join(testDir, OPSX_PATHS.PROJECT_FILE),
+        stringifyYaml(mainData),
+      );
+
+      const result = await readProjectOpsx(testDir);
+      expect(result).not.toBeNull();
+      expect(result!.relations).toEqual([]);
+      expect(result!.code_map).toEqual([]);
     });
   });
 
   describe('writeProjectOpsx', () => {
-    it('should write single file when under threshold', async () => {
-      const data: ProjectOpsx = {
-        project: { name: 'test', version: '1.0' },
+    it('should write three files', async () => {
+      const bundle = mkBundle({
         domains: [{ id: 'dom.core', type: 'domain' }],
-      };
+      });
+      await writeProjectOpsx(testDir, bundle);
 
-      await writeProjectOpsx(testDir, data);
-
-      const opsxPath = path.join(testDir, OPSX_PATHS.SINGLE_FILE);
-      const exists = await fs.access(opsxPath).then(() => true).catch(() => false);
-      expect(exists).toBe(true);
-
-      const content = await fs.readFile(opsxPath, 'utf-8');
-      expect(content).toContain('dom.core');
+      const mainExists = await fs.access(path.join(testDir, OPSX_PATHS.PROJECT_FILE)).then(() => true).catch(() => false);
+      const relExists = await fs.access(path.join(testDir, OPSX_PATHS.RELATIONS_FILE)).then(() => true).catch(() => false);
+      const mapExists = await fs.access(path.join(testDir, OPSX_PATHS.CODE_MAP_FILE)).then(() => true).catch(() => false);
+      expect(mainExists).toBe(true);
+      expect(relExists).toBe(true);
+      expect(mapExists).toBe(true);
     });
 
-    it('should use atomic write pattern', async () => {
-      const data: ProjectOpsx = {
-        project: { name: 'test', version: '1.0' },
+    it('should use atomic write pattern (no tmp files remain)', async () => {
+      const bundle = mkBundle({
         domains: [{ id: 'dom.core', type: 'domain' }],
-      };
+      });
+      await writeProjectOpsx(testDir, bundle);
 
-      await writeProjectOpsx(testDir, data);
-
-      const opsxPath = path.join(testDir, OPSX_PATHS.SINGLE_FILE);
-      const tempFiles = await fs.readdir(path.dirname(opsxPath));
-      const hasTempFile = tempFiles.some(f => f.includes('.tmp'));
-      expect(hasTempFile).toBe(false);
-    });
-
-    it('should create shards when exceeding threshold', async () => {
-      const largeDomains = Array.from({ length: 50 }, (_, i) => ({
-        id: `dom.domain${i}`,
-        type: 'domain' as const,
-        intent: `Domain ${i} with some description to increase line count`,
-      }));
-
-      const data: ProjectOpsx = {
-        project: { name: 'test', version: '1.0' },
-        domains: largeDomains,
-      };
-
-      await writeProjectOpsx(testDir, data, { maxLines: 100 });
-
-      const shardedDir = path.join(testDir, OPSX_PATHS.SHARDED_DIR);
-      const exists = await fs.access(shardedDir).then(() => true).catch(() => false);
-      expect(exists).toBe(true);
+      const opsxDir = path.join(testDir, 'openspec');
+      const files = await fs.readdir(opsxDir);
+      const hasTmpFile = files.some(f => f.includes('.tmp'));
+      expect(hasTmpFile).toBe(false);
     });
   });
 
   describe('path constants', () => {
-    it('should have correct single file path', () => {
-      expect(OPSX_PATHS.SINGLE_FILE).toBe('openspec/project.opsx.yaml');
+    it('should have correct project file path', () => {
+      expect(OPSX_PATHS.PROJECT_FILE).toBe('openspec/project.opsx.yaml');
     });
 
-    it('should have correct sharded dir path', () => {
-      expect(OPSX_PATHS.SHARDED_DIR).toBe('openspec/project.opsx');
+    it('should have correct relations file path', () => {
+      expect(OPSX_PATHS.RELATIONS_FILE).toBe('openspec/project.opsx.relations.yaml');
+    });
+
+    it('should have correct code-map file path', () => {
+      expect(OPSX_PATHS.CODE_MAP_FILE).toBe('openspec/project.opsx.code-map.yaml');
     });
 
     it('should generate correct delta path', () => {
       const deltaPath = OPSX_PATHS.deltaPath('my-change');
       expect(deltaPath).toBe('openspec/changes/my-change/opsx-delta.yaml');
-    });
-  });
-
-  describe('config constants', () => {
-    it('should have default max lines', () => {
-      expect(OPSX_CONFIG.MAX_LINES).toBe(1000);
     });
   });
 });

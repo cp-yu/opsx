@@ -1,27 +1,30 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import {
+  OPSX_SCHEMA_VERSION,
   validateReferentialIntegrity,
-  type ProjectOpsx,
+  type ProjectOpsxBundle,
 } from '../../src/utils/opsx-utils.js';
 
-/**
- * Property-Based Tests for Relation Referential Integrity
- *
- * These tests verify that referential integrity validation correctly
- * identifies valid and invalid references in relations.
- */
-
-// Arbitraries
 const nodeIdArb = fc.oneof(
-  fc.constantFrom('cap', 'dom', 'inv', 'ifc', 'dec', 'evd')
+  fc.constantFrom('cap', 'dom')
     .chain(prefix => fc.string({ minLength: 1, maxLength: 20 })
       .map(suffix => `${prefix}.${suffix.replace(/[^a-z0-9-]/gi, '-')}`))
 );
 
 const projectMetadataArb = fc.record({
+  id: fc.string({ minLength: 1, maxLength: 50 }),
   name: fc.string({ minLength: 1, maxLength: 50 }),
-  version: fc.string({ minLength: 1, maxLength: 20 }),
+});
+
+const mkBundle = (overrides: Partial<ProjectOpsxBundle>): ProjectOpsxBundle => ({
+  schema_version: OPSX_SCHEMA_VERSION,
+  project: { id: 'test', name: 'test' },
+  domains: [],
+  capabilities: [],
+  relations: [],
+  code_map: [],
+  ...overrides,
 });
 
 describe('PBT: Relation Referential Integrity', () => {
@@ -32,23 +35,19 @@ describe('PBT: Relation Referential Integrity', () => {
         fc.array(nodeIdArb.filter(id => id.startsWith('dom.')), { minLength: 1, maxLength: 5 }),
         fc.array(nodeIdArb.filter(id => id.startsWith('cap.')), { minLength: 1, maxLength: 5 }),
         (project, domainIds, capIds) => {
-          const allIds = [...domainIds, ...capIds];
-
-          const data: ProjectOpsx = {
+          const bundle = mkBundle({
             project,
             domains: domainIds.map(id => ({ id, type: 'domain' as const })),
             capabilities: capIds.map(id => ({ id, type: 'capability' as const })),
-            relations: [
-              { from: capIds[0], to: domainIds[0], type: 'belongs_to' },
-            ],
-          };
+            relations: [{ from: capIds[0], to: domainIds[0], type: 'contains' }],
+          });
 
-          const result = validateReferentialIntegrity(data);
+          const result = validateReferentialIntegrity(bundle);
           expect(result.valid).toBe(true);
           expect(result.errors).toHaveLength(0);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -59,22 +58,19 @@ describe('PBT: Relation Referential Integrity', () => {
         fc.array(nodeIdArb.filter(id => id.startsWith('dom.')), { minLength: 1, maxLength: 5 }),
         nodeIdArb.filter(id => id.startsWith('cap.')),
         (project, domainIds, invalidCapId) => {
-          // Ensure invalidCapId is not in the capabilities list
-          const data: ProjectOpsx = {
+          const bundle = mkBundle({
             project,
             domains: domainIds.map(id => ({ id, type: 'domain' as const })),
-            relations: [
-              { from: invalidCapId, to: domainIds[0], type: 'belongs_to' },
-            ],
-          };
+            relations: [{ from: invalidCapId, to: domainIds[0], type: 'contains' }],
+          });
 
-          const result = validateReferentialIntegrity(data);
+          const result = validateReferentialIntegrity(bundle);
           expect(result.valid).toBe(false);
           expect(result.errors.length).toBeGreaterThan(0);
           expect(result.errors[0]).toContain(invalidCapId);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -85,22 +81,19 @@ describe('PBT: Relation Referential Integrity', () => {
         fc.array(nodeIdArb.filter(id => id.startsWith('cap.')), { minLength: 1, maxLength: 5 }),
         nodeIdArb.filter(id => id.startsWith('dom.')),
         (project, capIds, invalidDomId) => {
-          // Ensure invalidDomId is not in the domains list
-          const data: ProjectOpsx = {
+          const bundle = mkBundle({
             project,
             capabilities: capIds.map(id => ({ id, type: 'capability' as const })),
-            relations: [
-              { from: capIds[0], to: invalidDomId, type: 'belongs_to' },
-            ],
-          };
+            relations: [{ from: capIds[0], to: invalidDomId, type: 'contains' }],
+          });
 
-          const result = validateReferentialIntegrity(data);
+          const result = validateReferentialIntegrity(bundle);
           expect(result.valid).toBe(false);
           expect(result.errors.length).toBeGreaterThan(0);
           expect(result.errors[0]).toContain(invalidDomId);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -110,18 +103,18 @@ describe('PBT: Relation Referential Integrity', () => {
         projectMetadataArb,
         fc.array(nodeIdArb, { minLength: 0, maxLength: 10 }),
         (project, nodeIds) => {
-          const data: ProjectOpsx = {
+          const bundle = mkBundle({
             project,
             domains: nodeIds.filter(id => id.startsWith('dom.')).map(id => ({ id, type: 'domain' as const })),
             capabilities: nodeIds.filter(id => id.startsWith('cap.')).map(id => ({ id, type: 'capability' as const })),
-          };
+          });
 
-          const result = validateReferentialIntegrity(data);
+          const result = validateReferentialIntegrity(bundle);
           expect(result.valid).toBe(true);
           expect(result.errors).toHaveLength(0);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 });

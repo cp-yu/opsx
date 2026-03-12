@@ -2,30 +2,30 @@
 
 ## Patch 1: Schema + IO (opsx-utils.ts)
 
-- [ ] 1.1 Replace OPSX_PATHS and OPSX_CONFIG constants with fixed three-file paths (PROJECT_FILE, RELATIONS_FILE, CODE_MAP_FILE) and OPSX_SCHEMA_VERSION = 1. Remove SHARDED_DIR, SHARDED_META, MAX_LINES. File: `src/utils/opsx-utils.ts:13-33`
-- [ ] 1.2 Rewrite ProjectMetadataSchema to `id/name/intent/scope/roots`. Rewrite BaseNodeSchema: status `draft|active` only, add `progress: { phase: implementing|verifying }.optional()`, remove `code_refs` and `spec_refs`. Add CodeRefSchema with `path/line_start/line_end`. File: `src/utils/opsx-utils.ts:39-116`
-- [ ] 1.3 Create three disk-file schemas: ProjectOpsxFileSchema (schema_version + project + domains + capabilities), ProjectOpsxRelationsFileSchema (schema_version + relations), ProjectOpsxCodeMapFileSchema (schema_version + generated_at + nodes[{id, refs}]). Create runtime ProjectOpsxBundle type. File: `src/utils/opsx-utils.ts:118-160`
-- [ ] 1.4 Rewrite OpsxDeltaSchema.REMOVED from `node_ids/relation_ids` to `domains/capabilities/relations` arrays. Add schema_version to delta schema. File: `src/utils/opsx-utils.ts:130-154`
-- [ ] 1.5 Add legacy normalizer function: normalizeFromLegacy(raw) → converts `implemented→active`, extracts embedded code_refs to code_map, strips spec_refs, adds schema_version. Pure function, no IO. File: `src/utils/opsx-utils.ts` (new function near line 170)
-- [ ] 1.6 Implement three independent readers: readProjectOpsxFile(), readProjectOpsxRelations(), readProjectOpsxCodeMap(). Each does schema validation and returns typed result. Missing companion files return empty arrays. File: `src/utils/opsx-utils.ts:176-245` (replace readShardedOpsx)
-- [ ] 1.7 Rewrite readProjectOpsx() as bundle assembler: calls three readers, detects legacy format (no schema_version), applies normalizer if needed. Delete readShardedOpsx(). File: `src/utils/opsx-utils.ts:176-200`
-- [ ] 1.8 Rewrite write path: writeProjectOpsxFile(), writeProjectOpsxRelations(), writeProjectOpsxCodeMap(). Coordinator writeProjectOpsx(root, bundle) splits bundle into 3 files, writes all via tmp+rename. Delete writeSingleFileOpsx(), writeShardedOpsx(), shardByDomain(), estimateLines(). File: `src/utils/opsx-utils.ts:248-371`
-- [ ] 1.9 Update validateReferentialIntegrity() to work with bundle (nodes from domains+capabilities only). Add validateCodeMapIntegrity(). Delete validateSpecRefs() and all its imports. File: `src/utils/opsx-utils.ts:379-457`
-- [ ] 1.10 Fix hidden bug: writeProjectOpsx signature accepts `number` as 3rd param but tests pass `{ maxLines }` object. New signature: `writeProjectOpsx(root, bundle)` only. File: `src/utils/opsx-utils.ts:255`
+- [x] 1.1 Replace OPSX_PATHS and OPSX_CONFIG constants with fixed three-file paths (PROJECT_FILE, RELATIONS_FILE, CODE_MAP_FILE) and OPSX_SCHEMA_VERSION = 1. Remove SHARDED_DIR, SHARDED_META, MAX_LINES. File: `src/utils/opsx-utils.ts:13-33`
+- [x] 1.2 Rewrite ProjectMetadataSchema to `id/name/intent/scope/roots`. Rewrite BaseNodeSchema: status `draft|active` only, add `progress: { phase: implementing|verifying }.optional()`, remove `code_refs` and `spec_refs`. Add CodeRefSchema with `path/line_start/line_end`. File: `src/utils/opsx-utils.ts:39-116`
+- [x] 1.3 Create three disk-file schemas: ProjectOpsxFileSchema (schema_version + project + domains + capabilities), ProjectOpsxRelationsFileSchema (schema_version + relations), ProjectOpsxCodeMapFileSchema (schema_version + generated_at + nodes[{id, refs}]). Create runtime ProjectOpsxBundle type. File: `src/utils/opsx-utils.ts:118-160`
+- [x] 1.4 Rewrite OpsxDeltaSchema.REMOVED from `node_ids/relation_ids` to `domains/capabilities/relations` arrays. Add schema_version to delta schema. File: `src/utils/opsx-utils.ts:130-154`
+- [x] 1.5 Add legacy normalizer function: normalizeFromLegacy(raw) → converts `implemented→active`, extracts embedded code_refs to code_map, strips spec_refs, adds schema_version. Pure function, no IO. File: `src/utils/opsx-utils.ts` (new function near line 170)
+- [x] 1.6 Implement three independent readers: readProjectOpsxFile(), readProjectOpsxRelations(), readProjectOpsxCodeMap(). Each does schema validation and returns typed result. Missing companion files return empty arrays. File: `src/utils/opsx-utils.ts:176-245` (replace readShardedOpsx)
+- [x] 1.7 Rewrite readProjectOpsx() as bundle assembler: calls three readers, detects legacy format (no schema_version), applies normalizer if needed. Delete readShardedOpsx(). File: `src/utils/opsx-utils.ts:176-200`
+- [x] 1.8 Rewrite write path: writeProjectOpsxFile(), writeProjectOpsxRelations(), writeProjectOpsxCodeMap(). Coordinator writeProjectOpsx(root, bundle) splits bundle into 3 files, writes all via tmp+rename. Delete writeSingleFileOpsx(), writeShardedOpsx(), shardByDomain(), estimateLines(). File: `src/utils/opsx-utils.ts:248-371`
+- [x] 1.9 Update validateReferentialIntegrity() to work with bundle (nodes from domains+capabilities only). Add validateCodeMapIntegrity(). Delete validateSpecRefs() and all its imports. File: `src/utils/opsx-utils.ts:379-457`
+- [x] 1.10 Fix hidden bug: writeProjectOpsx signature accepts `number` as 3rd param but tests pass `{ maxLines }` object. New signature: `writeProjectOpsx(root, bundle)` only. File: `src/utils/opsx-utils.ts:255`
 
 ## Patch 2: Tests
 
-- [ ] 2.1 Update unit test fixtures: all `{ name, version }` → `{ id, name, intent, scope, roots }`. All `belongs_to` → `contains`. Remove spec_refs validation tests. Add legacy normalization tests, missing companion file tests. File: `test/utils/opsx-utils.test.ts:30-321`
-- [ ] 2.2 Update edge-case tests: replace "large data triggers sharding" with "large data still produces fixed three files". Remove sharded test scenarios. File: `test/utils/opsx-utils.edge-cases.test.ts:37-230`
-- [ ] 2.3 Rewrite PBT yaml-structure: new generators for schema_version, new metadata, status draft|active, progress.phase, independent code_map. File: `test/utils/opsx-utils.pbt.yaml-structure.test.ts:17-150`
-- [ ] 2.4 Rewrite PBT atomic-write: from "single-file/shard no tmp" to "three-file no tmp". File: `test/utils/opsx-utils.pbt.atomic-write.test.ts:35-113`
-- [ ] 2.5 Rewrite PBT file-size-boundaries: from "triggers sharding" to "fixed three-file layout regardless of size". File: `test/utils/opsx-utils.pbt.file-size-boundaries.test.ts:15-175`
-- [ ] 2.6 Rewrite PBT merge-idempotency: read/write objects are bundles, not legacy single-file. File: `test/utils/opsx-utils.pbt.merge-idempotency.test.ts:32-129`
-- [ ] 2.7 Rewrite PBT referential-integrity: ID generators only produce `dom.`/`cap.`, no `inv.`. Validate across split files. File: `test/utils/opsx-utils.pbt.referential-integrity.test.ts:15-126`
-- [ ] 2.8 Rename PBT spec-refs-alignment to code-map-roundtrip: verify path/line_start/line_end preservation. File: `test/utils/opsx-utils.pbt.spec-refs-alignment.test.ts:12-173`
-- [ ] 2.9 Update integration-bootstrap: remove code_refs/spec_refs assertions from nodes, add code-map file assertions. File: `test/utils/opsx-utils.integration-bootstrap.test.ts:32-276`
-- [ ] 2.10 Update integration-workflow: add schema_version to all delta fixtures, REMOVED uses collection arrays, remove validateSpecRefs imports. Fix dead code at lines 99-102. File: `test/utils/opsx-utils.integration-workflow.test.ts:38-308`
-- [ ] 2.11 Add real-file regression test: read actual `openspec/project.opsx.yaml` from repo, assert readProjectOpsx() returns non-null bundle. File: new test file or add to integration tests
+- [x] 2.1 Update unit test fixtures: all `{ name, version }` → `{ id, name, intent, scope, roots }`. All `belongs_to` → `contains`. Remove spec_refs validation tests. Add legacy normalization tests, missing companion file tests. File: `test/utils/opsx-utils.test.ts:30-321`
+- [x] 2.2 Update edge-case tests: replace "large data triggers sharding" with "large data still produces fixed three files". Remove sharded test scenarios. File: `test/utils/opsx-utils.edge-cases.test.ts:37-230`
+- [x] 2.3 Rewrite PBT yaml-structure: new generators for schema_version, new metadata, status draft|active, progress.phase, independent code_map. File: `test/utils/opsx-utils.pbt.yaml-structure.test.ts:17-150`
+- [x] 2.4 Rewrite PBT atomic-write: from "single-file/shard no tmp" to "three-file no tmp". File: `test/utils/opsx-utils.pbt.atomic-write.test.ts:35-113`
+- [x] 2.5 Rewrite PBT file-size-boundaries: from "triggers sharding" to "fixed three-file layout regardless of size". File: `test/utils/opsx-utils.pbt.file-size-boundaries.test.ts:15-175`
+- [x] 2.6 Rewrite PBT merge-idempotency: read/write objects are bundles, not legacy single-file. File: `test/utils/opsx-utils.pbt.merge-idempotency.test.ts:32-129`
+- [x] 2.7 Rewrite PBT referential-integrity: ID generators only produce `dom.`/`cap.`, no `inv.`. Validate across split files. File: `test/utils/opsx-utils.pbt.referential-integrity.test.ts:15-126`
+- [x] 2.8 Rename PBT spec-refs-alignment to code-map-roundtrip: verify path/line_start/line_end preservation. File: `test/utils/opsx-utils.pbt.spec-refs-alignment.test.ts:12-173`
+- [x] 2.9 Update integration-bootstrap: remove code_refs/spec_refs assertions from nodes, add code-map file assertions. File: `test/utils/opsx-utils.integration-bootstrap.test.ts:32-276`
+- [x] 2.10 Update integration-workflow: add schema_version to all delta fixtures, REMOVED uses collection arrays, remove validateSpecRefs imports. Fix dead code at lines 99-102. File: `test/utils/opsx-utils.integration-workflow.test.ts:38-308`
+- [x] 2.11 Add real-file regression test: read actual `openspec/project.opsx.yaml` from repo, assert readProjectOpsx() returns non-null bundle. File: new test file or add to integration tests
 
 ## Patch 3: Templates + Docs
 

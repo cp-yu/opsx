@@ -5,21 +5,13 @@ import os from 'os';
 import { randomUUID } from 'crypto';
 import * as fc from 'fast-check';
 import {
-  OPSX_PATHS,
-  OPSX_CONFIG,
+  OPSX_SCHEMA_VERSION,
   readProjectOpsx,
   writeProjectOpsx,
-  type ProjectOpsx,
+  type ProjectOpsxBundle,
 } from '../../src/utils/opsx-utils.js';
 
-/**
- * Property-Based Tests for File Size Boundaries
- *
- * These tests verify that sharding logic correctly handles file size thresholds
- * and that data remains accessible regardless of sharding state.
- */
-
-describe('PBT: File Size Boundaries', () => {
+describe('PBT: Fixed Three-File Layout', () => {
   let testDir: string;
 
   beforeEach(async () => {
@@ -32,8 +24,8 @@ describe('PBT: File Size Boundaries', () => {
   });
 
   const projectMetadataArb = fc.record({
+    id: fc.string({ minLength: 1, maxLength: 50 }),
     name: fc.string({ minLength: 1, maxLength: 50 }),
-    version: fc.string({ minLength: 1, maxLength: 20 }),
   });
 
   const nodeIdArb = fc.oneof(
@@ -54,122 +46,110 @@ describe('PBT: File Size Boundaries', () => {
     intent: fc.option(fc.string({ minLength: 50, maxLength: 200 }), { nil: undefined }),
   });
 
-  it('Property 1: Small data stays in single file', async () => {
+  const mkBundle = (overrides: Partial<ProjectOpsxBundle>): ProjectOpsxBundle => ({
+    schema_version: OPSX_SCHEMA_VERSION,
+    project: { id: 'test', name: 'test' },
+    domains: [],
+    capabilities: [],
+    relations: [],
+    code_map: [],
+    ...overrides,
+  });
+
+  it('Property 1: Small data produces exactly three files', async () => {
     await fc.assert(
       fc.asyncProperty(
         projectMetadataArb,
         fc.array(domainNodeArb, { minLength: 1, maxLength: 3 }),
         async (project, domains) => {
-          const data: ProjectOpsx = { project, domains };
+          const bundle = mkBundle({ project, domains });
+          await writeProjectOpsx(testDir, bundle);
 
-          await writeProjectOpsx(testDir, data);
+          const opsxDir = path.join(testDir, 'openspec');
+          const files = await fs.readdir(opsxDir);
+          const opsxFiles = files.filter(f => f.startsWith('project.opsx'));
+          expect(opsxFiles).toHaveLength(3);
 
-          // Should create single file
-          const singleFilePath = path.join(testDir, OPSX_PATHS.SINGLE_FILE);
-          const singleFileExists = await fs.access(singleFilePath).then(() => true).catch(() => false);
-          expect(singleFileExists).toBe(true);
-
-          // Should NOT create sharded directory
-          const shardedDirPath = path.join(testDir, OPSX_PATHS.SHARDED_DIR);
-          const shardedDirExists = await fs.access(shardedDirPath).then(() => true).catch(() => false);
-          expect(shardedDirExists).toBe(false);
-
-          // Data should be readable
           const result = await readProjectOpsx(testDir);
           expect(result).not.toBeNull();
-          expect(result!.domains?.length).toBe(domains.length);
-        }
+          expect(result!.domains).toHaveLength(domains.length);
+        },
       ),
-      { numRuns: 30 }
+      { numRuns: 30 },
     );
   });
 
-  it('Property 2: Large data triggers sharding', async () => {
+  it('Property 2: Large data still produces exactly three files', async () => {
     await fc.assert(
       fc.asyncProperty(
         projectMetadataArb,
         fc.array(domainNodeArb, { minLength: 50, maxLength: 100 }),
         fc.array(capabilityNodeArb, { minLength: 50, maxLength: 100 }),
         async (project, domains, capabilities) => {
-          const data: ProjectOpsx = { project, domains, capabilities };
+          const bundle = mkBundle({ project, domains, capabilities });
+          await writeProjectOpsx(testDir, bundle);
 
-          await writeProjectOpsx(testDir, data, { maxLines: 50 });
+          const opsxDir = path.join(testDir, 'openspec');
+          const files = await fs.readdir(opsxDir);
+          const opsxFiles = files.filter(f => f.startsWith('project.opsx'));
+          expect(opsxFiles).toHaveLength(3);
 
-          // Should create sharded directory
-          const shardedDirPath = path.join(testDir, OPSX_PATHS.SHARDED_DIR);
-          const shardedDirExists = await fs.access(shardedDirPath).then(() => true).catch(() => false);
-          expect(shardedDirExists).toBe(true);
-
-          // Should have _meta.yaml
-          const metaPath = path.join(testDir, OPSX_PATHS.SHARDED_META);
-          const metaExists = await fs.access(metaPath).then(() => true).catch(() => false);
-          expect(metaExists).toBe(true);
-
-          // Data should be readable
           const result = await readProjectOpsx(testDir);
           expect(result).not.toBeNull();
-          expect(result!.domains?.length).toBe(domains.length);
-          expect(result!.capabilities?.length).toBe(capabilities.length);
-        }
+          expect(result!.domains).toHaveLength(domains.length);
+          expect(result!.capabilities).toHaveLength(capabilities.length);
+        },
       ),
-      { numRuns: 20 }
+      { numRuns: 20 },
     );
   });
 
-  it('Property 3: Data is readable regardless of sharding', async () => {
+  it('Property 3: Data is always readable regardless of size', async () => {
     await fc.assert(
       fc.asyncProperty(
         projectMetadataArb,
-        fc.array(domainNodeArb, { minLength: 1, maxLength: 20 }),
-        fc.integer({ min: 10, max: 200 }),
-        async (project, domains, maxLines) => {
-          const data: ProjectOpsx = { project, domains };
+        fc.array(domainNodeArb, { minLength: 1, maxLength: 50 }),
+        async (project, domains) => {
+          const bundle = mkBundle({ project, domains });
+          await writeProjectOpsx(testDir, bundle);
 
-          // Write with custom threshold
-          await writeProjectOpsx(testDir, data, { maxLines });
-
-          // Should always be readable
           const result = await readProjectOpsx(testDir);
           expect(result).not.toBeNull();
           expect(result!.project.name).toBe(project.name);
-          expect(result!.domains?.length).toBe(domains.length);
-        }
+          expect(result!.domains).toHaveLength(domains.length);
+        },
       ),
-      { numRuns: 30 }
+      { numRuns: 30 },
     );
   });
 
-  it('Property 4: Sharding preserves all data', async () => {
+  it('Property 4: Three-file layout preserves all data', async () => {
     await fc.assert(
       fc.asyncProperty(
         projectMetadataArb,
         fc.array(domainNodeArb, { minLength: 10, maxLength: 30 }),
         fc.array(capabilityNodeArb, { minLength: 10, maxLength: 30 }),
         async (project, domains, capabilities) => {
-          const data: ProjectOpsx = { project, domains, capabilities };
-
-          // Force sharding with low threshold
-          await writeProjectOpsx(testDir, data, { maxLines: 20 });
+          const bundle = mkBundle({ project, domains, capabilities });
+          await writeProjectOpsx(testDir, bundle);
 
           const result = await readProjectOpsx(testDir);
           expect(result).not.toBeNull();
 
-          // All domains should be present
-          expect(result!.domains?.length).toBe(domains.length);
+          expect(result!.domains).toHaveLength(domains.length);
           const domainIds = new Set(domains.map(d => d.id));
-          result!.domains?.forEach(d => {
+          result!.domains.forEach(d => {
             expect(domainIds.has(d.id)).toBe(true);
           });
 
-          // All capabilities should be present
-          expect(result!.capabilities?.length).toBe(capabilities.length);
+          expect(result!.capabilities).toHaveLength(capabilities.length);
           const capIds = new Set(capabilities.map(c => c.id));
-          result!.capabilities?.forEach(c => {
+          result!.capabilities.forEach(c => {
             expect(capIds.has(c.id)).toBe(true);
           });
-        }
+        },
       ),
-      { numRuns: 20 }
+      { numRuns: 20 },
     );
   });
 });
