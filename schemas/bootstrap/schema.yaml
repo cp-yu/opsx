@@ -1,0 +1,115 @@
+name: bootstrap
+version: 1
+description: Structured bootstrap workflow — discover and map existing architecture from code
+
+artifacts:
+  - id: init
+    generates: .bootstrap.yaml
+    description: Initialize bootstrap workspace with scope configuration
+    template: init.md
+    instruction: |
+      Create the bootstrap workspace under openspec/bootstrap/.
+
+      Run: openspec bootstrap init [--mode full|seed] [--scope src/]
+
+      This creates:
+      - .bootstrap.yaml — metadata (phase, mode, created_at)
+      - scope.yaml — user configuration (mode, include/exclude paths, granularity)
+
+      Confirm the scope configuration with the user before proceeding.
+    requires: []
+
+  - id: scan
+    generates: evidence.yaml
+    description: Scan codebase for domains, entrypoints, and structural evidence
+    template: evidence.md
+    instruction: |
+      Scan the codebase to identify candidate domains.
+
+      For each candidate domain, record:
+      - id: domain ID following dom.<area> convention
+      - confidence: high | medium | low
+      - sources: list of evidence (spec:<path>, code:<path>, readme:<section>)
+      - intent: one-sentence description of the domain boundary
+
+      Use repository evidence only. Do not fabricate domains.
+      Prefer fewer domains with solid evidence over exhaustive noise.
+
+      Gates (scan → map):
+      - All domain IDs follow dom.<name> convention
+      - No duplicate domain IDs
+    requires:
+      - init
+
+  - id: map
+    generates: "domain-map/*.yaml"
+    description: Map capabilities, relations, and code-refs per domain
+    template: domain-map.md
+    instruction: |
+      For each domain in evidence.yaml, create a domain-map/<domain-id>.yaml file.
+
+      Each file contains:
+      - domain: the domain node definition
+      - capabilities: list of capabilities under this domain
+      - relations: contains/depends_on relationships
+      - code_refs: code reference entries for each node
+
+      This phase can be done incrementally — map one domain at a time.
+      Run openspec bootstrap status to see per-domain progress.
+
+      Gates (map → review):
+      - All domains in evidence.yaml have a corresponding domain-map/*.yaml
+      - Capability IDs follow cap.<domain>.<action> convention
+      - Code-ref paths exist on disk
+    requires:
+      - scan
+
+  - id: review
+    generates: review.md
+    description: Human review and correction of mapped architecture
+    template: review.md
+    instruction: |
+      Assemble candidate OPSX files from domain-map/*.yaml and generate review.md.
+
+      Run: openspec bootstrap validate
+
+      The review checklist includes per-domain checkboxes:
+      - [ ] dom.xxx — N capabilities, confidence: high/medium/low
+
+      Review workflow:
+      1. Verify domain boundaries match your mental model
+      2. Check capability coverage and naming
+      3. Validate code references point to correct files
+      4. Check or fix each domain checkbox
+
+      Gates (review → promote):
+      - All review.md checkboxes checked
+      - Referential integrity passes
+      - Code-map integrity passes
+    requires:
+      - map
+
+  - id: promote
+    generates: .promoted
+    description: Validate, write formal OPSX files, clean workspace
+    template: promote.md
+    instruction: |
+      Run: openspec bootstrap promote
+
+      This command:
+      1. Validates all gate conditions
+      2. Assembles candidate OPSX bundle from domain-map files
+      3. Writes formal OPSX three-file bundle (project.opsx.yaml, relations, code-map)
+      4. Cleans up openspec/bootstrap/ workspace
+
+      Confirm before writing to formal OPSX files.
+    requires:
+      - review
+
+apply:
+  requires: [review]
+  tracks: review.md
+  instruction: |
+    Review the mapped architecture in review.md.
+    Check each domain checkbox after verifying its boundaries, capabilities, and code refs.
+    When all checkboxes are checked, run openspec bootstrap promote.

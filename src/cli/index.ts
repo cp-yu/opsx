@@ -17,6 +17,18 @@ import { FeedbackCommand } from '../commands/feedback.js';
 import { registerConfigCommand } from '../commands/config.js';
 import { registerSchemaCommand } from '../commands/schema.js';
 import {
+  bootstrapInitCommand,
+  bootstrapStatusCommand,
+  bootstrapInstructionsCommand,
+  bootstrapValidateCommand,
+  bootstrapPromoteCommand,
+  type BootstrapInitOptions,
+  type BootstrapStatusOptions,
+  type BootstrapInstructionsOptions,
+  type BootstrapValidateOptions,
+  type BootstrapPromoteOptions,
+} from '../commands/bootstrap.js';
+import {
   statusCommand,
   instructionsCommand,
   applyInstructionsCommand,
@@ -500,6 +512,85 @@ newCmd
   .action(async (name: string, options: NewChangeOptions) => {
     try {
       await newChangeCommand(name, options);
+    } catch (error) {
+      console.log();
+      ora().fail(`Error: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// ═══════════════════════════════════════════════════════════
+// Bootstrap Commands
+// ═══════════════════════════════════════════════════════════
+
+const bootstrapCmd = program
+  .command('bootstrap')
+  .description('Structured bootstrap workflow — discover and map existing architecture');
+
+bootstrapCmd
+  .command('init')
+  .description('Initialize bootstrap workspace')
+  .option('--mode <mode>', 'Bootstrap mode: full or seed (default: full)')
+  .option('--scope <paths>', 'Comma-separated paths to include in scan')
+  .action(async (options: BootstrapInitOptions) => {
+    try {
+      await bootstrapInitCommand(options);
+    } catch (error) {
+      console.log();
+      ora().fail(`Error: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+bootstrapCmd
+  .command('status')
+  .description('Show bootstrap phase progress and per-domain status')
+  .option('--json', 'Output as JSON')
+  .action(async (options: BootstrapStatusOptions) => {
+    try {
+      await bootstrapStatusCommand(options);
+    } catch (error) {
+      console.log();
+      ora().fail(`Error: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+bootstrapCmd
+  .command('instructions [phase]')
+  .description('Get agent instructions for a bootstrap phase')
+  .option('--json', 'Output as JSON')
+  .action(async (phase: string | undefined, options: BootstrapInstructionsOptions) => {
+    try {
+      await bootstrapInstructionsCommand(phase, options);
+    } catch (error) {
+      console.log();
+      ora().fail(`Error: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+bootstrapCmd
+  .command('validate')
+  .description('Run gate validation for current bootstrap phase')
+  .option('--json', 'Output as JSON')
+  .action(async (options: BootstrapValidateOptions) => {
+    try {
+      await bootstrapValidateCommand(options);
+    } catch (error) {
+      console.log();
+      ora().fail(`Error: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+bootstrapCmd
+  .command('promote')
+  .description('Validate, write formal OPSX files, and clean workspace')
+  .option('-y, --yes', 'Skip confirmation')
+  .action(async (options: BootstrapPromoteOptions) => {
+    try {
+      await bootstrapPromoteCommand(options);
     } catch (error) {
       console.log();
       ora().fail(`Error: ${(error as Error).message}`);

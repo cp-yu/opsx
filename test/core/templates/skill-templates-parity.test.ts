@@ -55,8 +55,8 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getOpsxProposeSkillTemplate: '746501f841e6e691ef9280542adeb7da965d9b88f1f7dd99ef8caed8823cf228',
   getOpsxProposeCommandTemplate: '11516b1040177b33a342d9d845bf7b970f7e3f4f39dc4d2de69e0e6a9a745604',
   getFeedbackSkillTemplate: 'd7d83c5f7fc2b92fe8f4588a5bf2d9cb315e4c73ec19bcd5ef28270906319a0d',
-  getBootstrapOpsxSkillTemplate: '04408753ab3d32301c000248168d1c4540b5b3e04305a65325c873e6814334b4',
-  getOpsxBootstrapCommandTemplate: '8d43135390803833571e8c3f662e35ef1061d846fc7d2b72d6d9983be0ea1b9b',
+  getBootstrapOpsxSkillTemplate: '8ae63702d6634faa646524d707faba375e65c67ea128f1f9471891149648c568',
+  getOpsxBootstrapCommandTemplate: '7a8832b0d0fe3f06fee60d4ca021f2b30a333641e465e60babe99e97573bca0a',
 };
 
 const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
