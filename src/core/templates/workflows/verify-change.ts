@@ -93,8 +93,8 @@ export function getVerifyChangeSkillTemplate(): SkillTemplate {
    **OPSX Alignment** (if \`opsx-delta.yaml\` exists):
    - Check if \`opsx-delta.yaml\` exists in \`openspec/changes/<name>/\`
    - If exists, verify OPSX alignment:
-     - **ADDED capabilities**: Should have \`code_refs\` pointing to implementation
-     - **MODIFIED capabilities**: Should reflect changes in code (status, spec_refs)
+     - **Referential integrity**: All relation from/to references must exist in the delta or project.opsx.yaml
+     - **Code-map integrity**: All code-map node IDs must reference existing domains or capabilities
      - **REMOVED capabilities**: Should be gone from codebase or marked deprecated
    - If misalignment detected:
      - Add WARNING: "OPSX delta not reflected in code: <capability>"
@@ -272,8 +272,8 @@ export function getOpsxVerifyCommandTemplate(): CommandTemplate {
    **OPSX Alignment** (if \`opsx-delta.yaml\` exists):
    - Check if \`opsx-delta.yaml\` exists in \`openspec/changes/<name>/\`
    - If exists, verify OPSX alignment:
-     - **ADDED capabilities**: Should have \`code_refs\` pointing to implementation
-     - **MODIFIED capabilities**: Should reflect changes in code (status, spec_refs)
+     - **Referential integrity**: All relation from/to references must exist in the delta or project.opsx.yaml
+     - **Code-map integrity**: All code-map node IDs must reference existing domains or capabilities
      - **REMOVED capabilities**: Should be gone from codebase or marked deprecated
    - If misalignment detected:
      - Add WARNING: "OPSX delta not reflected in code: <capability>"

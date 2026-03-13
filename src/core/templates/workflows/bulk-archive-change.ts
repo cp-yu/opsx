@@ -50,7 +50,7 @@ This skill allows you to batch-archive changes, handling spec and OPSX conflicts
       - For each, extract requirement names (lines matching \`### Requirement: <name>\`)
 
    d. **OPSX delta** - Check for \`openspec/changes/<name>/opsx-delta.yaml\`
-      - Note whether the change updates capability metadata in \`openspec/project.opsx.yaml\`
+      - Note whether the change updates capability metadata in the OPSX files
       - Track which capabilities are ADDED / MODIFIED / REMOVED
 
 4. **Detect spec and OPSX conflicts**
@@ -158,7 +158,7 @@ This skill allows you to batch-archive changes, handling spec and OPSX conflicts
 
    Sync summary:
    - 4 delta specs synced to main specs
-   - 2 OPSX deltas merged into openspec/project.opsx.yaml
+   - 2 OPSX deltas merged into OPSX files
    - 1 conflict resolved (auth: applied both in chronological order)
    \`\`\`
 
@@ -212,7 +212,7 @@ Archived N changes:
 
 Sync summary:
 - N delta specs synced to main specs
-- M OPSX deltas merged into openspec/project.opsx.yaml
+- M OPSX deltas merged into OPSX files
 - No conflicts (or: K conflicts resolved)
 \`\`\`
 
@@ -303,7 +303,7 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
       - For each, extract requirement names (lines matching \`### Requirement: <name>\`)
 
    d. **OPSX delta** - Check for \`openspec/changes/<name>/opsx-delta.yaml\`
-      - Note whether the change updates capability metadata in \`openspec/project.opsx.yaml\`
+      - Note whether the change updates capability metadata in the OPSX files
       - Track which capabilities are ADDED / MODIFIED / REMOVED
 
 4. **Detect spec and OPSX conflicts**
@@ -411,7 +411,7 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
 
    Sync summary:
    - 4 delta specs synced to main specs
-   - 2 OPSX deltas merged into openspec/project.opsx.yaml
+   - 2 OPSX deltas merged into OPSX files
    - 1 conflict resolved (auth: applied both in chronological order)
    \`\`\`
 
@@ -465,7 +465,7 @@ Archived N changes:
 
 Sync summary:
 - N delta specs synced to main specs
-- M OPSX deltas merged into openspec/project.opsx.yaml
+- M OPSX deltas merged into OPSX files
 - No conflicts (or: K conflicts resolved)
 \`\`\`
 

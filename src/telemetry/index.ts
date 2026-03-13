@@ -27,7 +27,9 @@ let anonymousId: string | null = null;
  * Disabled when:
  * - OPENSPEC_TELEMETRY=0
  * - DO_NOT_TRACK=1
- * - CI=true (any CI environment)
+ * - OPEN_SPEC_INTERACTIVE=0
+ * - CI is set (any CI environment)
+ * - stdin is not a TTY
  */
 export function isTelemetryEnabled(): boolean {
   // Check explicit opt-out
@@ -40,8 +42,18 @@ export function isTelemetryEnabled(): boolean {
     return false;
   }
 
+  // Auto-disable in non-interactive automation runs
+  if (process.env.OPEN_SPEC_INTERACTIVE === '0') {
+    return false;
+  }
+
   // Auto-disable in CI environments
-  if (process.env.CI === 'true') {
+  if ('CI' in process.env) {
+    return false;
+  }
+
+  // Auto-disable when running without an interactive terminal
+  if (!process.stdin.isTTY) {
     return false;
   }
 

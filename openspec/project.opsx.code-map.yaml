@@ -1,0 +1,232 @@
+schema_version: 1
+generated_at: 2026-03-12T13:10:41.631Z
+nodes:
+  - id: cap.cli.init
+    refs:
+      - path: src/core/init.ts
+      - path: src/cli/index.ts
+        line_start: 90
+        line_end: 120
+  - id: cap.cli.update
+    refs:
+      - path: src/core/update.ts
+      - path: src/cli/index.ts
+        line_start: 122
+        line_end: 145
+  - id: cap.cli.list
+    refs:
+      - path: src/core/list.ts
+      - path: src/cli/index.ts
+        line_start: 147
+        line_end: 165
+  - id: cap.cli.view
+    refs:
+      - path: src/core/view.ts
+      - path: src/cli/index.ts
+        line_start: 167
+        line_end: 180
+  - id: cap.cli.change
+    refs:
+      - path: src/commands/change.ts
+      - path: src/cli/index.ts
+        line_start: 182
+        line_end: 195
+  - id: cap.cli.archive
+    refs:
+      - path: src/core/archive.ts
+      - path: src/cli/index.ts
+        line_start: 197
+        line_end: 215
+  - id: cap.cli.spec
+    refs:
+      - path: src/commands/spec.ts
+      - path: src/cli/index.ts
+        line_start: 217
+        line_end: 230
+  - id: cap.cli.config
+    refs:
+      - path: src/commands/config.ts
+      - path: src/cli/index.ts
+        line_start: 232
+        line_end: 245
+  - id: cap.cli.schema
+    refs:
+      - path: src/commands/schema.ts
+      - path: src/cli/index.ts
+        line_start: 247
+        line_end: 265
+  - id: cap.cli.validate
+    refs:
+      - path: src/commands/validate.ts
+      - path: src/cli/index.ts
+        line_start: 267
+        line_end: 285
+  - id: cap.cli.show
+    refs:
+      - path: src/commands/show.ts
+      - path: src/cli/index.ts
+        line_start: 287
+        line_end: 305
+  - id: cap.cli.feedback
+    refs:
+      - path: src/commands/feedback.ts
+      - path: src/cli/index.ts
+        line_start: 307
+        line_end: 325
+  - id: cap.cli.completion
+    refs:
+      - path: src/commands/completion.ts
+      - path: src/cli/index.ts
+        line_start: 327
+        line_end: 345
+  - id: cap.cli.status
+    refs:
+      - path: src/commands/workflow/status.ts
+      - path: src/cli/index.ts
+        line_start: 347
+        line_end: 365
+  - id: cap.cli.instructions
+    refs:
+      - path: src/commands/workflow/instructions.ts
+      - path: src/cli/index.ts
+        line_start: 367
+        line_end: 390
+  - id: cap.cli.templates
+    refs:
+      - path: src/commands/workflow/templates.ts
+      - path: src/cli/index.ts
+        line_start: 392
+        line_end: 410
+  - id: cap.cli.schemas
+    refs:
+      - path: src/commands/workflow/schemas.ts
+      - path: src/cli/index.ts
+        line_start: 412
+        line_end: 430
+  - id: cap.cli.new-change
+    refs:
+      - path: src/commands/workflow/new-change.ts
+      - path: src/cli/index.ts
+        line_start: 432
+        line_end: 455
+  - id: cap.artifact-graph.parse
+    refs:
+      - path: src/core/artifact-graph/graph.ts
+      - path: src/core/artifact-graph/resolver.ts
+  - id: cap.artifact-graph.instruction-loader
+    refs:
+      - path: src/core/artifact-graph/instruction-loader.ts
+  - id: cap.artifact-graph.state-tracking
+    refs:
+      - path: src/core/artifact-graph/state.ts
+  - id: cap.artifact-graph.schema-resolution
+    refs:
+      - path: src/core/artifact-graph/schema.ts
+  - id: cap.change.create
+    refs:
+      - path: src/commands/workflow/new-change.ts
+      - path: src/utils/change-utils.ts
+  - id: cap.change.archive
+    refs:
+      - path: src/core/archive.ts
+  - id: cap.change.specs-sync
+    refs:
+      - path: src/core/specs-apply.ts
+  - id: cap.change.metadata
+    refs:
+      - path: src/utils/change-metadata.ts
+  - id: cap.change.discovery
+    refs:
+      - path: src/utils/item-discovery.ts
+  - id: cap.schema.parse
+    refs:
+      - path: src/core/schemas/
+  - id: cap.schema.validate
+    refs:
+      - path: src/core/schemas/
+  - id: cap.schema.init
+    refs:
+      - path: src/commands/schema.ts
+  - id: cap.schema.fork
+    refs:
+      - path: src/commands/schema.ts
+  - id: cap.ai.tool-adapters
+    refs:
+      - path: src/core/config.ts
+      - path: src/core/available-tools.ts
+  - id: cap.ai.skill-generation
+    refs:
+      - path: src/core/shared/skill-generation.ts
+      - path: src/core/init.ts
+  - id: cap.ai.command-generation
+    refs:
+      - path: src/core/command-generation/
+  - id: cap.ai.workflow-templates
+    refs:
+      - path: src/core/templates/workflows/
+      - path: src/core/templates/skill-templates.ts
+  - id: cap.ai.agent-docs
+    refs:
+      - path: src/core/artifact-graph/instruction-loader.ts
+  - id: cap.config.project
+    refs:
+      - path: src/core/project-config.ts
+      - path: src/core/config-schema.ts
+  - id: cap.config.global
+    refs:
+      - path: src/core/global-config.ts
+  - id: cap.config.schema-validation
+    refs:
+      - path: src/core/config-schema.ts
+  - id: cap.config.migration
+    refs:
+      - path: src/core/migration.ts
+  - id: cap.validation.change
+    refs:
+      - path: src/core/validation/
+      - path: src/commands/validate.ts
+  - id: cap.validation.spec
+    refs:
+      - path: src/core/validation/
+  - id: cap.validation.opsx
+    refs:
+      - path: src/utils/opsx-utils.ts
+      - path: src/commands/validate.ts
+  - id: cap.opsx.yaml-operations
+    refs:
+      - path: src/utils/opsx-utils.ts
+        line_start: 50
+        line_end: 120
+  - id: cap.opsx.referential-integrity
+    refs:
+      - path: src/utils/opsx-utils.ts
+        line_start: 150
+        line_end: 200
+  - id: cap.opsx.spec-refs-validation
+    refs:
+      - path: src/utils/opsx-utils.ts
+        line_start: 200
+        line_end: 250
+  - id: cap.opsx.atomic-write
+    refs:
+      - path: src/utils/opsx-utils.ts
+        line_start: 300
+        line_end: 350
+  - id: cap.opsx.sharding
+    refs:
+      - path: src/utils/opsx-utils.ts
+        line_start: 400
+        line_end: 500
+  - id: cap.opsx.read-transparent
+    refs:
+      - path: src/utils/opsx-utils.ts
+        line_start: 250
+        line_end: 300
+  - id: cap.opsx.delta-merge
+    refs:
+      - path: src/utils/opsx-utils.ts
+        line_start: 500
+        line_end: 600
+  - id: cap.opsx.bootstrap
+    refs:
+      - path: src/core/templates/workflows/bootstrap-opsx.ts

@@ -30,15 +30,18 @@ This is an **agent-driven** workflow. Do not add schema artifacts or runtime mer
 3. **Infer the OPSX graph**
    - Create a single project node from repository metadata
    - Group capabilities under inferred domains
-   - Attach \`code_refs\` that point to concrete files, modules, tests, or interfaces
+   - Collect code references (file paths, line ranges) for a separate code-map file
    - Prefer a small, defensible graph over exhaustive noise
 
-4. **Write \`openspec/openspec/project.opsx.yaml\` as a draft**
-   - Mark the file clearly as \`[DRAFT]\`
+4. **Write the three OPSX files as a draft**
+   - \`openspec/project.opsx.yaml\` — schema_version, project, domains, capabilities
+   - \`openspec/project.opsx.relations.yaml\` — schema_version, relations
+   - \`openspec/project.opsx.code-map.yaml\` — schema_version, generated_at, node code refs
+   - Mark the files clearly as \`[DRAFT]\`
    - Include exactly three human review checkpoints:
      1. project/domain structure
      2. capability descriptions and boundaries
-     3. \`code_refs\` accuracy and coverage
+     3. code-map accuracy and coverage
    - Keep comments focused on why human review is needed
    - If information is missing, mark it as TBD instead of inventing detail
 
@@ -52,7 +55,7 @@ This is an **agent-driven** workflow. Do not add schema artifacts or runtime mer
 - Start from \`openspec/specs/\` when available, then confirm against code
 - Use repository evidence, not guesswork
 - Keep naming stable and boring; avoid taxonomy churn
-- Prefer fewer capabilities with solid \`code_refs\` over a bloated graph
+- Prefer fewer capabilities with solid code references over a bloated graph
 - The output is a draft map of the current system, not a future design
 
 **Output On Success**
@@ -60,21 +63,21 @@ This is an **agent-driven** workflow. Do not add schema artifacts or runtime mer
 \`\`\`
 ## OPSX Bootstrap Complete
 
-Created: \`openspec/openspec/project.opsx.yaml\`
+Created: three OPSX files in \`openspec/\`
 
 Status: [DRAFT]
 
 Human review checkpoints:
 1. Project/domain structure
 2. Capability boundaries
-3. Code reference coverage
+3. Code-map coverage
 
 Review the draft, then refine any uncertain domains or capability mappings.
 \`\`\`
 
 **Guardrails**
 - Do NOT introduce runtime code for OPSX handling
-- Do NOT fabricate \`code_refs\`
+- Do NOT fabricate code references
 - Do NOT treat the draft as authoritative until a human reviews it
 - Keep the first version small enough to audit in one sitting`,
     license: 'MIT',
@@ -99,21 +102,20 @@ This is an **agent-driven** workflow. Do not add schema artifacts or runtime mer
 
 1. Check whether \`openspec/project.opsx.yaml\` already exists. If it does, ask whether to overwrite it, refresh it in place, or stop.
 2. Read \`package.json\`, \`README\`, OpenSpec config files, and \`openspec/specs/\` for project/domain/capability context.
-3. Scan the codebase for implementation evidence and derive concrete \`code_refs\`.
-4. Draft \`openspec/project.opsx.yaml\` with:
-   - a single project node
-   - inferred domains
-   - capabilities grouped under those domains
-   - concrete \`code_refs\`
-5. Mark the file as \`[DRAFT]\` and include exactly three human review checkpoints:
+3. Scan the codebase for implementation evidence and derive code references.
+4. Draft the three OPSX files:
+   - \`openspec/project.opsx.yaml\` — schema_version, project, domains, capabilities
+   - \`openspec/project.opsx.relations.yaml\` — schema_version, relations
+   - \`openspec/project.opsx.code-map.yaml\` — schema_version, generated_at, node code refs
+5. Mark the files as \`[DRAFT]\` and include exactly three human review checkpoints:
    1. project/domain structure
    2. capability descriptions and boundaries
-   3. \`code_refs\` accuracy and coverage
+   3. code-map accuracy and coverage
 6. Summarize the draft and highlight uncertain mappings.
 
 **Guardrails**
 - Do NOT introduce runtime code for OPSX handling
-- Do NOT fabricate \`code_refs\`
+- Do NOT fabricate code references
 - Do NOT treat the draft as authoritative until a human reviews it
 - Keep the first version small enough to audit in one sitting`
   };

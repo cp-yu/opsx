@@ -57,7 +57,7 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
 
    **If any delta exists:**
    - Compare each delta spec with its corresponding main spec at \`openspec/specs/<capability>/spec.md\`
-   - If \`opsx-delta.yaml\` exists, compare it with \`openspec/project.opsx.yaml\` and determine ADDED / MODIFIED / REMOVED capability changes
+   - If \`opsx-delta.yaml\` exists, compare it with the three OPSX files (\`project.opsx.yaml\`, \`project.opsx.relations.yaml\`, \`project.opsx.code-map.yaml\`) and determine ADDED / MODIFIED / REMOVED capability changes
    - Show a combined summary before prompting
 
    **Prompt options:**
@@ -173,7 +173,7 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 
    **If any delta exists:**
    - Compare each delta spec with its corresponding main spec at \`openspec/specs/<capability>/spec.md\`
-   - If \`opsx-delta.yaml\` exists, compare it with \`openspec/project.opsx.yaml\` and determine ADDED / MODIFIED / REMOVED capability changes
+   - If \`opsx-delta.yaml\` exists, compare it with the three OPSX files (\`project.opsx.yaml\`, \`project.opsx.relations.yaml\`, \`project.opsx.code-map.yaml\`) and determine ADDED / MODIFIED / REMOVED capability changes
    - Show a combined summary before prompting
 
    **Prompt options:**

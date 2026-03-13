@@ -72,11 +72,53 @@ describe('telemetry/index', () => {
       expect(isTelemetryEnabled()).toBe(false);
     });
 
-    it('should return true when no opt-out is set', () => {
+    it('should return false when CI is set to 1', () => {
+      process.env.CI = '1';
+      expect(isTelemetryEnabled()).toBe(false);
+    });
+
+    it('should return false when OPEN_SPEC_INTERACTIVE=0', () => {
+      process.env.OPEN_SPEC_INTERACTIVE = '0';
+      expect(isTelemetryEnabled()).toBe(false);
+    });
+
+    it('should return false when stdin is not a TTY', () => {
+      const originalIsTTY = process.stdin.isTTY;
+      Object.defineProperty(process.stdin, 'isTTY', {
+        configurable: true,
+        value: false,
+      });
+
+      try {
+        expect(isTelemetryEnabled()).toBe(false);
+      } finally {
+        Object.defineProperty(process.stdin, 'isTTY', {
+          configurable: true,
+          value: originalIsTTY,
+        });
+      }
+    });
+
+    it('should return true when no opt-out is set and stdin is a TTY', () => {
       delete process.env.OPENSPEC_TELEMETRY;
       delete process.env.DO_NOT_TRACK;
       delete process.env.CI;
-      expect(isTelemetryEnabled()).toBe(true);
+      delete process.env.OPEN_SPEC_INTERACTIVE;
+
+      const originalIsTTY = process.stdin.isTTY;
+      Object.defineProperty(process.stdin, 'isTTY', {
+        configurable: true,
+        value: true,
+      });
+
+      try {
+        expect(isTelemetryEnabled()).toBe(true);
+      } finally {
+        Object.defineProperty(process.stdin, 'isTTY', {
+          configurable: true,
+          value: originalIsTTY,
+        });
+      }
     });
 
     it('should prioritize OPENSPEC_TELEMETRY=0 over other settings', () => {
@@ -106,14 +148,35 @@ describe('telemetry/index', () => {
       expect(PostHog).not.toHaveBeenCalled();
     });
 
+    it('should not track when OPEN_SPEC_INTERACTIVE=0', async () => {
+      process.env.OPEN_SPEC_INTERACTIVE = '0';
+
+      await trackCommand('test', '1.0.0');
+
+      expect(PostHog).not.toHaveBeenCalled();
+    });
+
     it('should track when telemetry is enabled', async () => {
       delete process.env.OPENSPEC_TELEMETRY;
       delete process.env.DO_NOT_TRACK;
       delete process.env.CI;
+      delete process.env.OPEN_SPEC_INTERACTIVE;
 
-      await trackCommand('test', '1.0.0');
+      const originalIsTTY = process.stdin.isTTY;
+      Object.defineProperty(process.stdin, 'isTTY', {
+        configurable: true,
+        value: true,
+      });
 
-      expect(PostHog).toHaveBeenCalled();
+      try {
+        await trackCommand('test', '1.0.0');
+        expect(PostHog).toHaveBeenCalled();
+      } finally {
+        Object.defineProperty(process.stdin, 'isTTY', {
+          configurable: true,
+          value: originalIsTTY,
+        });
+      }
     });
   });
 

@@ -53,8 +53,8 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
 4. **Read context files**
 
    Before reading \`contextFiles\`, check whether \`openspec/project.opsx.yaml\` exists.
-   - If it exists, read it first
-   - Use it to navigate the codebase via domains → capabilities → code_refs
+   - If it exists, read it first for domains → capabilities structure
+   - Check \`openspec/project.opsx.code-map.yaml\` for code location references
    - Treat it as navigation context, not as a replacement for change artifacts
 
    Read the files listed in \`contextFiles\` from the apply instructions output.

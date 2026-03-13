@@ -1,0 +1,200 @@
+schema_version: 1
+relations:
+  - from: dom.cli
+    to: cap.cli.init
+    type: contains
+  - from: dom.cli
+    to: cap.cli.update
+    type: contains
+  - from: dom.cli
+    to: cap.cli.list
+    type: contains
+  - from: dom.cli
+    to: cap.cli.view
+    type: contains
+  - from: dom.cli
+    to: cap.cli.change
+    type: contains
+  - from: dom.cli
+    to: cap.cli.archive
+    type: contains
+  - from: dom.cli
+    to: cap.cli.spec
+    type: contains
+  - from: dom.cli
+    to: cap.cli.config
+    type: contains
+  - from: dom.cli
+    to: cap.cli.schema
+    type: contains
+  - from: dom.cli
+    to: cap.cli.validate
+    type: contains
+  - from: dom.cli
+    to: cap.cli.show
+    type: contains
+  - from: dom.cli
+    to: cap.cli.feedback
+    type: contains
+  - from: dom.cli
+    to: cap.cli.completion
+    type: contains
+  - from: dom.cli
+    to: cap.cli.status
+    type: contains
+  - from: dom.cli
+    to: cap.cli.instructions
+    type: contains
+  - from: dom.cli
+    to: cap.cli.templates
+    type: contains
+  - from: dom.cli
+    to: cap.cli.schemas
+    type: contains
+  - from: dom.cli
+    to: cap.cli.new-change
+    type: contains
+  - from: dom.artifact-graph
+    to: cap.artifact-graph.parse
+    type: contains
+  - from: dom.artifact-graph
+    to: cap.artifact-graph.instruction-loader
+    type: contains
+  - from: dom.artifact-graph
+    to: cap.artifact-graph.state-tracking
+    type: contains
+  - from: dom.artifact-graph
+    to: cap.artifact-graph.schema-resolution
+    type: contains
+  - from: dom.change-workflow
+    to: cap.change.create
+    type: contains
+  - from: dom.change-workflow
+    to: cap.change.archive
+    type: contains
+  - from: dom.change-workflow
+    to: cap.change.specs-sync
+    type: contains
+  - from: dom.change-workflow
+    to: cap.change.metadata
+    type: contains
+  - from: dom.change-workflow
+    to: cap.change.discovery
+    type: contains
+  - from: dom.schema
+    to: cap.schema.parse
+    type: contains
+  - from: dom.schema
+    to: cap.schema.validate
+    type: contains
+  - from: dom.schema
+    to: cap.schema.init
+    type: contains
+  - from: dom.schema
+    to: cap.schema.fork
+    type: contains
+  - from: dom.ai-integration
+    to: cap.ai.tool-adapters
+    type: contains
+  - from: dom.ai-integration
+    to: cap.ai.skill-generation
+    type: contains
+  - from: dom.ai-integration
+    to: cap.ai.command-generation
+    type: contains
+  - from: dom.ai-integration
+    to: cap.ai.workflow-templates
+    type: contains
+  - from: dom.ai-integration
+    to: cap.ai.agent-docs
+    type: contains
+  - from: dom.config
+    to: cap.config.project
+    type: contains
+  - from: dom.config
+    to: cap.config.global
+    type: contains
+  - from: dom.config
+    to: cap.config.schema-validation
+    type: contains
+  - from: dom.config
+    to: cap.config.migration
+    type: contains
+  - from: dom.validation
+    to: cap.validation.change
+    type: contains
+  - from: dom.validation
+    to: cap.validation.spec
+    type: contains
+  - from: dom.validation
+    to: cap.validation.opsx
+    type: contains
+  - from: dom.opsx
+    to: cap.opsx.yaml-operations
+    type: contains
+  - from: dom.opsx
+    to: cap.opsx.referential-integrity
+    type: contains
+  - from: dom.opsx
+    to: cap.opsx.spec-refs-validation
+    type: contains
+  - from: dom.opsx
+    to: cap.opsx.atomic-write
+    type: contains
+  - from: dom.opsx
+    to: cap.opsx.sharding
+    type: contains
+  - from: dom.opsx
+    to: cap.opsx.read-transparent
+    type: contains
+  - from: dom.opsx
+    to: cap.opsx.delta-merge
+    type: contains
+  - from: dom.opsx
+    to: cap.opsx.bootstrap
+    type: contains
+  - from: cap.change.create
+    to: cap.artifact-graph.schema-resolution
+    type: depends_on
+  - from: cap.change.archive
+    to: cap.change.specs-sync
+    type: depends_on
+  - from: cap.change.archive
+    to: cap.opsx.delta-merge
+    type: depends_on
+  - from: cap.artifact-graph.instruction-loader
+    to: cap.config.project
+    type: depends_on
+  - from: cap.artifact-graph.instruction-loader
+    to: cap.artifact-graph.parse
+    type: depends_on
+  - from: cap.cli.init
+    to: cap.ai.tool-adapters
+    type: depends_on
+  - from: cap.cli.init
+    to: cap.ai.skill-generation
+    type: depends_on
+  - from: cap.cli.init
+    to: cap.config.project
+    type: depends_on
+  - from: cap.cli.status
+    to: cap.artifact-graph.parse
+    type: depends_on
+  - from: cap.cli.instructions
+    to: cap.artifact-graph.instruction-loader
+    type: depends_on
+  - from: cap.ai.skill-generation
+    to: cap.ai.workflow-templates
+    type: depends_on
+  - from: cap.opsx.delta-merge
+    to: cap.opsx.referential-integrity
+    type: depends_on
+  - from: cap.opsx.delta-merge
+    to: cap.opsx.atomic-write
+    type: depends_on
+  - from: cap.validation.opsx
+    to: cap.opsx.referential-integrity
+    type: depends_on
+  - from: cap.validation.opsx
+    to: cap.opsx.spec-refs-validation
+    type: depends_on

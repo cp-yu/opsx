@@ -11,8 +11,9 @@
  */
 export const OPSX_READ_CONTEXT = `
 Before reading other context files, check whether \`openspec/project.opsx.yaml\` exists.
-- If it exists, read it first
-- Use it to navigate the codebase via domains → capabilities → code_refs
+- If it exists, read it first for domains → capabilities structure
+- Check \`openspec/project.opsx.code-map.yaml\` for code location references
+- Check \`openspec/specs/\` for behavior documentation
 - Treat it as navigation context, not as a replacement for change artifacts
 `.trim();
 
@@ -26,6 +27,7 @@ export const OPSX_GENERATE_DELTA = `
 - Read all delta specs in \`openspec/changes/<name>/specs/*/spec.md\`
 - Read \`openspec/project.opsx.yaml\` if it exists for current-system context
 - Generate \`openspec/changes/<name>/opsx-delta.yaml\` using ADDED / MODIFIED / REMOVED sections
+- Delta nodes contain only id, type, intent, status — no code_refs or spec_refs
 - Keep this agent-driven: capture merge intent in the YAML, not in programmatic code
 `.trim();
 
@@ -37,9 +39,8 @@ export const OPSX_VERIFY_ALIGNMENT = `
 **OPSX Alignment** (if \`opsx-delta.yaml\` exists):
 - Check if \`opsx-delta.yaml\` exists in \`openspec/changes/<name>/\`
 - If exists, verify OPSX alignment:
-  - **spec_refs bidirectional**: Each capability in opsx-delta should reference relevant specs, and vice versa
   - **Referential integrity**: All relation from/to references must exist in the delta or project.opsx.yaml
-  - **Code alignment**: Check if capabilities in ADDED/MODIFIED have corresponding code_refs
+  - **Code-map integrity**: All code-map node IDs must reference existing domains or capabilities
   - If misalignment found:
     - Add WARNING: "OPSX delta not reflected in code: <capability>"
     - Recommendation: "Update code or revise opsx-delta.yaml"
@@ -52,12 +53,13 @@ export const OPSX_VERIFY_ALIGNMENT = `
 export const OPSX_SYNC_DELTA = `
 **Sync OPSX delta** (if \`opsx-delta.yaml\` exists):
 - Check for \`openspec/changes/<name>/opsx-delta.yaml\`
-- If exists, merge into \`openspec/project.opsx.yaml\`:
-  - Apply ADDED nodes (domains, capabilities, invariants, etc.)
+- If exists, merge into the three OPSX files:
+  - Apply ADDED nodes (domains, capabilities) to \`project.opsx.yaml\`
+  - Apply ADDED relations to \`project.opsx.relations.yaml\`
   - Apply MODIFIED nodes (update existing entries)
-  - Apply REMOVED nodes (delete from project.opsx.yaml)
+  - Apply REMOVED nodes (delete from respective files)
   - Validate referential integrity after merge
-  - Use atomic write pattern (temp file + rename)
+  - Use atomic write pattern (temp file + rename) for all three files
 `.trim();
 
 /**
@@ -67,11 +69,10 @@ export const OPSX_SYNC_DELTA = `
 export const OPSX_NAVIGATION_GUIDANCE = `
 **OPSX-first navigation**:
 If \`openspec/project.opsx.yaml\` exists:
-- Start with L0 (domains) → L1 (capabilities) → L2 (code_refs) hierarchy
-- Use domains to understand system boundaries
-- Use capabilities to identify feature areas
-- Use code_refs to locate implementation files
-- Cross-reference with spec_refs for documentation
+- Use \`project.opsx.yaml\` for domains → capabilities structure
+- Use \`project.opsx.code-map.yaml\` to locate implementation files
+- Use \`openspec/specs/\` for behavior documentation
+- Cross-reference domains to understand system boundaries
 `.trim();
 
 /**
@@ -99,7 +100,8 @@ export const OPSX_ARTIFACT_LIST = `
  */
 export const OPSX_PATH_REFERENCE = `
 **OPSX Path Constants** (from \`src/utils/opsx-utils.ts\`):
-- Single file: \`openspec/project.opsx.yaml\`
-- Sharded dir: \`openspec/project.opsx/\`
+- Structure: \`openspec/project.opsx.yaml\`
+- Relations: \`openspec/project.opsx.relations.yaml\`
+- Code map: \`openspec/project.opsx.code-map.yaml\`
 - Delta: \`openspec/changes/<name>/opsx-delta.yaml\`
 `.trim();

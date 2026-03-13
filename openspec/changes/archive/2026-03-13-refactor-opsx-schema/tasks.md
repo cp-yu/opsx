@@ -29,20 +29,20 @@
 
 ## Patch 3: Templates + Docs
 
-- [ ] 3.1 Update OPSX_READ_CONTEXT: navigation is "domains → capabilities" for structure + "code-map.yaml" for code location + "specs/" for behavior docs. File: `src/core/templates/fragments/opsx-fragments.ts:12-17`
-- [ ] 3.2 Update OPSX_GENERATE_DELTA: delta no longer includes code_refs/spec_refs. File: `src/core/templates/fragments/opsx-fragments.ts:23-30`
-- [ ] 3.3 Update OPSX_VERIFY_ALIGNMENT: remove spec_refs bidirectional check, add code-map integrity check. File: `src/core/templates/fragments/opsx-fragments.ts:36-46`
-- [ ] 3.4 Update OPSX_SYNC_DELTA: sync writes to three files, not single file. File: `src/core/templates/fragments/opsx-fragments.ts:52-61`
-- [ ] 3.5 Update OPSX_NAVIGATION_GUIDANCE: replace L0→L1→L2 with new three-file navigation. File: `src/core/templates/fragments/opsx-fragments.ts:67-75`
-- [ ] 3.6 Update OPSX_PATH_REFERENCE: add relations and code-map paths. File: `src/core/templates/fragments/opsx-fragments.ts:100-105`
-- [ ] 3.7 Update workflow templates that reference OPSX: bootstrap-opsx.ts, apply-change.ts, propose.ts, ff-change.ts, verify-change.ts, archive-change.ts, explore.ts, bulk-archive-change.ts. Remove sharding references, update navigation text.
-- [ ] 3.8 Update CLAUDE.md: file organization section, code references section, sharding section, validation section. Add cross-platform-paths and spec-bdd-format as rules (moved from invariants).
-- [ ] 3.9 Update example opsx-delta: add schema_version, remove code_refs/spec_refs from capability nodes. File: `openspec/changes/example-opsx-workflow/opsx-delta.yaml`
+- [x] 3.1 Update OPSX_READ_CONTEXT: navigation is "domains → capabilities" for structure + "code-map.yaml" for code location + "specs/" for behavior docs. File: `src/core/templates/fragments/opsx-fragments.ts:12-17`
+- [x] 3.2 Update OPSX_GENERATE_DELTA: delta no longer includes code_refs/spec_refs. File: `src/core/templates/fragments/opsx-fragments.ts:23-30`
+- [x] 3.3 Update OPSX_VERIFY_ALIGNMENT: remove spec_refs bidirectional check, add code-map integrity check. File: `src/core/templates/fragments/opsx-fragments.ts:36-46`
+- [x] 3.4 Update OPSX_SYNC_DELTA: sync writes to three files, not single file. File: `src/core/templates/fragments/opsx-fragments.ts:52-61`
+- [x] 3.5 Update OPSX_NAVIGATION_GUIDANCE: replace L0→L1→L2 with new three-file navigation. File: `src/core/templates/fragments/opsx-fragments.ts:67-75`
+- [x] 3.6 Update OPSX_PATH_REFERENCE: add relations and code-map paths. File: `src/core/templates/fragments/opsx-fragments.ts:100-105`
+- [x] 3.7 Update workflow templates that reference OPSX: bootstrap-opsx.ts, apply-change.ts, propose.ts, ff-change.ts, verify-change.ts, archive-change.ts, explore.ts, bulk-archive-change.ts. Remove sharding references, update navigation text.
+- [x] 3.8 Update CLAUDE.md: file organization section, code references section, sharding section, validation section. Add cross-platform-paths and spec-bdd-format as rules (moved from invariants).
+- [x] 3.9 Update example opsx-delta: add schema_version, remove code_refs/spec_refs from capability nodes. File: `openspec/changes/example-opsx-workflow/opsx-delta.yaml`
 
 ## Patch 4: Repo YAML Migration
 
-- [ ] 4.1 Migrate project.opsx.yaml: add schema_version: 1, keep project+domains+capabilities, change all `status: implemented` → `active`, strip all code_refs and spec_refs from nodes, remove entire invariants section.
-- [ ] 4.2 Create project.opsx.relations.yaml: extract all relations from old file, add schema_version: 1, remove relations originating from `inv.*` nodes.
-- [ ] 4.3 Create project.opsx.code-map.yaml: extract all code_refs from old capability nodes, index by node id, add schema_version: 1 and generated_at timestamp. Normalize all paths to POSIX forward slashes.
-- [ ] 4.4 Move invariant rules to CLAUDE.md: add `cross-platform-paths` and `spec-bdd-format` as explicit rules in the OPSX Best Practices section.
-- [ ] 4.5 Run full test suite (`pnpm test`) and verify all pass. Run `openspec validate` if available.
+- [x] 4.1 Migrate project.opsx.yaml: add schema_version: 1, keep project+domains+capabilities, change all `status: implemented` → `active`, strip all code_refs and spec_refs from nodes, remove entire invariants section.
+- [x] 4.2 Create project.opsx.relations.yaml: extract all relations from old file, add schema_version: 1, remove relations originating from `inv.*` nodes.
+- [x] 4.3 Create project.opsx.code-map.yaml: extract all code_refs from old capability nodes, index by node id, add schema_version: 1 and generated_at timestamp. Normalize all paths to POSIX forward slashes.
+- [x] 4.4 Move invariant rules to CLAUDE.md: add `cross-platform-paths` and `spec-bdd-format` as explicit rules in the OPSX Best Practices section.
+- [x] 4.5 Run full test suite (`pnpm test`) and verify all pass. Run `openspec validate` if available.
