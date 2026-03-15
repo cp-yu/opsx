@@ -530,7 +530,7 @@ const bootstrapCmd = program
 bootstrapCmd
   .command('init')
   .description('Initialize bootstrap workspace')
-  .option('--mode <mode>', 'Bootstrap mode: full or seed (default: full)')
+  .option('--mode <mode>', 'Bootstrap mode: full or opsx-first (default: full)')
   .option('--scope <paths>', 'Comma-separated paths to include in scan')
   .action(async (options: BootstrapInitOptions) => {
     try {
@@ -598,4 +598,4 @@ bootstrapCmd
     }
   });
 
-program.parse();
+await program.parseAsync(process.argv);

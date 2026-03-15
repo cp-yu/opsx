@@ -1,10 +1,15 @@
 import { promises as fs } from 'fs';
+import { createHash } from 'crypto';
 import path from 'path';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { z } from 'zod';
 import { FileSystemUtils } from './file-system.js';
 import {
   OPSX_SCHEMA_VERSION,
+  OPSX_PATHS,
+  ProjectOpsxFileSchema,
+  ProjectOpsxRelationsFileSchema,
+  ProjectOpsxCodeMapFileSchema,
   writeProjectOpsx,
   validateReferentialIntegrity,
   validateCodeMapIntegrity,
@@ -20,23 +25,38 @@ export const BOOTSTRAP_DIR = 'openspec/bootstrap';
 export const BOOTSTRAP_PHASES = ['init', 'scan', 'map', 'review', 'promote'] as const;
 export type BootstrapPhase = typeof BOOTSTRAP_PHASES[number];
 
-export const BOOTSTRAP_MODES = ['full', 'seed'] as const;
+export const BOOTSTRAP_MODES = ['full', 'opsx-first'] as const;
 export type BootstrapMode = typeof BOOTSTRAP_MODES[number];
+
+export const BOOTSTRAP_BASELINE_TYPES = [
+  'no-spec',
+  'specs-only',
+  'formal-opsx',
+  'invalid-partial-opsx',
+] as const;
+export type BootstrapBaselineType = typeof BOOTSTRAP_BASELINE_TYPES[number];
 
 // ─── Zod Schemas ─────────────────────────────────────────────────────────────
 
-const BootstrapMetadataSchema = z.object({
+const BootstrapDiskModeSchema = z.union([z.enum(BOOTSTRAP_MODES), z.literal('seed')]);
+
+const BootstrapMetadataDiskSchema = z.object({
   phase: z.enum(BOOTSTRAP_PHASES),
-  mode: z.enum(BOOTSTRAP_MODES),
+  baseline_type: z.enum(BOOTSTRAP_BASELINE_TYPES).optional(),
+  mode: BootstrapDiskModeSchema,
   created_at: z.string(),
+  source_fingerprint: z.string().nullable().optional(),
+  candidate_fingerprint: z.string().nullable().optional(),
+  review_fingerprint: z.string().nullable().optional(),
 });
 
-const ScopeConfigSchema = z.object({
-  mode: z.enum(BOOTSTRAP_MODES),
+const ScopeConfigDiskSchema = z.object({
+  mode: BootstrapDiskModeSchema,
   include: z.array(z.string()).default([]),
   exclude: z.array(z.string()).default([]),
   granularity: z.enum(['coarse', 'fine']).default('coarse'),
 });
+
 
 const EvidenceDomainSchema = z.object({
   id: z.string().regex(/^dom\./),
@@ -88,8 +108,22 @@ const DomainMapFileSchema = z.object({
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type BootstrapMetadata = z.infer<typeof BootstrapMetadataSchema>;
-export type ScopeConfig = z.infer<typeof ScopeConfigSchema>;
+export interface BootstrapMetadata {
+  phase: BootstrapPhase;
+  baseline_type: BootstrapBaselineType;
+  mode: BootstrapMode;
+  created_at: string;
+  source_fingerprint: string | null;
+  candidate_fingerprint: string | null;
+  review_fingerprint: string | null;
+}
+
+export interface ScopeConfig {
+  mode: BootstrapMode;
+  include: string[];
+  exclude: string[];
+  granularity: 'coarse' | 'fine';
+}
 export type EvidenceDomain = z.infer<typeof EvidenceDomainSchema>;
 export type EvidenceFile = z.infer<typeof EvidenceFileSchema>;
 export type DomainMapFile = z.infer<typeof DomainMapFileSchema>;
@@ -102,15 +136,32 @@ export interface BootstrapState {
   reviewExists: boolean;
 }
 
-export interface BootstrapStatus {
+export interface BootstrapInitializedStatus {
+  initialized: true;
   phase: BootstrapPhase;
+  baselineType: BootstrapBaselineType;
   mode: BootstrapMode;
+  nextAction: BootstrapPhase | null;
   created_at: string;
   domains: DomainStatus[];
   totalDomains: number;
   mappedDomains: number;
   reviewedDomains: number;
+  candidateState: 'missing' | 'current' | 'stale';
+  reviewState: 'missing' | 'current' | 'stale';
+  reviewApproved: boolean;
 }
+
+export interface BootstrapPreInitStatus {
+  initialized: false;
+  baselineType: BootstrapBaselineType;
+  supported: boolean;
+  allowedModes: BootstrapMode[];
+  nextAction: 'init' | null;
+  reason: string;
+}
+
+export type BootstrapStatus = BootstrapInitializedStatus | BootstrapPreInitStatus;
 
 export interface DomainStatus {
   id: string;
@@ -125,10 +176,262 @@ export interface GateResult {
   errors: string[];
 }
 
+interface DerivedBootstrapArtifacts {
+  bundle: ProjectOpsxBundle | null;
+  sourceFingerprint: string | null;
+  candidateFingerprint: string | null;
+  candidateState: 'missing' | 'current' | 'stale';
+  reviewState: 'missing' | 'current' | 'stale';
+  reviewApproved: boolean;
+  checkedDomains: Set<string>;
+}
+
 // ─── Path Helpers ────────────────────────────────────────────────────────────
 
 function bootstrapPath(projectRoot: string, ...segments: string[]): string {
   return FileSystemUtils.joinPath(projectRoot, BOOTSTRAP_DIR, ...segments);
+}
+
+function normalizeBootstrapMode(mode: BootstrapMode | 'seed'): BootstrapMode {
+  return mode === 'seed' ? 'opsx-first' : mode;
+}
+
+const DOMAIN_CONFIDENCE_ORDER: Record<EvidenceDomain['confidence'], number> = {
+  low: 0,
+  medium: 1,
+  high: 2,
+};
+
+async function inferLegacyBaselineType(projectRoot: string): Promise<BootstrapBaselineType> {
+  const specsDir = FileSystemUtils.joinPath(projectRoot, 'openspec/specs');
+  return await FileSystemUtils.directoryExists(specsDir) ? 'specs-only' : 'no-spec';
+}
+
+function parseBootstrapMetadata(
+  raw: unknown,
+  fallbackBaselineType: BootstrapBaselineType
+): BootstrapMetadata {
+  const parsed = BootstrapMetadataDiskSchema.parse(raw);
+  return {
+    phase: parsed.phase,
+    baseline_type: parsed.baseline_type ?? fallbackBaselineType,
+    mode: normalizeBootstrapMode(parsed.mode),
+    created_at: parsed.created_at,
+    source_fingerprint: parsed.source_fingerprint ?? null,
+    candidate_fingerprint: parsed.candidate_fingerprint ?? null,
+    review_fingerprint: parsed.review_fingerprint ?? null,
+  };
+}
+
+function parseScopeConfig(raw: unknown): ScopeConfig {
+  const parsed = ScopeConfigDiskSchema.parse(raw);
+  return {
+    mode: normalizeBootstrapMode(parsed.mode),
+    include: parsed.include,
+    exclude: parsed.exclude,
+    granularity: parsed.granularity,
+  };
+}
+
+function formalOpsxPaths(projectRoot: string): string[] {
+  return [
+    FileSystemUtils.joinPath(projectRoot, OPSX_PATHS.PROJECT_FILE),
+    FileSystemUtils.joinPath(projectRoot, OPSX_PATHS.RELATIONS_FILE),
+    FileSystemUtils.joinPath(projectRoot, OPSX_PATHS.CODE_MAP_FILE),
+  ];
+}
+
+function candidatePath(projectRoot: string, fileName: string): string {
+  return bootstrapPath(projectRoot, 'candidate', fileName);
+}
+
+function compareConfidence(a: EvidenceDomain['confidence'], b: EvidenceDomain['confidence']): number {
+  return DOMAIN_CONFIDENCE_ORDER[a] - DOMAIN_CONFIDENCE_ORDER[b];
+}
+
+function compareEvidenceDomains(a: EvidenceDomain, b: EvidenceDomain): number {
+  const confidenceComparison = compareConfidence(a.confidence, b.confidence);
+  return confidenceComparison !== 0 ? confidenceComparison : a.id.localeCompare(b.id);
+}
+
+function normalizeEvidenceForFingerprint(evidence: EvidenceFile): EvidenceFile {
+  return {
+    domains: [...evidence.domains]
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map((domain) => ({
+        ...domain,
+        sources: [...domain.sources].sort(),
+      })),
+  };
+}
+
+function normalizeDomainMapForFingerprint(mapFile: DomainMapFile): DomainMapFile {
+  return {
+    domain: { ...mapFile.domain },
+    capabilities: [...mapFile.capabilities].sort((a, b) => a.id.localeCompare(b.id)),
+    relations: [...mapFile.relations].sort((a, b) => {
+      const fromComparison = a.from.localeCompare(b.from);
+      if (fromComparison !== 0) return fromComparison;
+      const typeComparison = a.type.localeCompare(b.type);
+      return typeComparison !== 0 ? typeComparison : a.to.localeCompare(b.to);
+    }),
+    code_refs: [...mapFile.code_refs]
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map((entry) => ({
+        ...entry,
+        refs: [...entry.refs].sort((a, b) => {
+          const pathComparison = a.path.localeCompare(b.path);
+          if (pathComparison !== 0) return pathComparison;
+          const startComparison = (a.line_start ?? 0) - (b.line_start ?? 0);
+          return startComparison !== 0 ? startComparison : (a.line_end ?? 0) - (b.line_end ?? 0);
+        }),
+      })),
+  };
+}
+
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(',')}]`;
+  }
+
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, entryValue]) => entryValue !== undefined)
+      .sort(([left], [right]) => left.localeCompare(right));
+    return `{${entries.map(([key, entryValue]) => `${JSON.stringify(key)}:${stableStringify(entryValue)}`).join(',')}}`;
+  }
+
+  return JSON.stringify(value);
+}
+
+function fingerprintValue(value: unknown): string {
+  return createHash('sha256').update(stableStringify(value)).digest('hex');
+}
+
+async function countExistingFormalOpsxFiles(projectRoot: string): Promise<number> {
+  const results = await Promise.all(formalOpsxPaths(projectRoot).map((filePath) => FileSystemUtils.fileExists(filePath)));
+  return results.filter(Boolean).length;
+}
+
+async function validateYamlFile(filePath: string, schema: z.ZodTypeAny): Promise<boolean> {
+  try {
+    const content = await fs.readFile(filePath, 'utf-8');
+    return schema.safeParse(parseYaml(content)).success;
+  } catch {
+    return false;
+  }
+}
+
+export async function detectBootstrapBaseline(projectRoot: string): Promise<BootstrapBaselineType> {
+  const formalOpsxCount = await countExistingFormalOpsxFiles(projectRoot);
+  if (formalOpsxCount === 3) {
+    const [mainPath, relationsPath, codeMapPath] = formalOpsxPaths(projectRoot);
+    const [mainValid, relationsValid, codeMapValid] = await Promise.all([
+      validateYamlFile(mainPath, ProjectOpsxFileSchema),
+      validateYamlFile(relationsPath, ProjectOpsxRelationsFileSchema),
+      validateYamlFile(codeMapPath, ProjectOpsxCodeMapFileSchema),
+    ]);
+    return mainValid && relationsValid && codeMapValid ? 'formal-opsx' : 'invalid-partial-opsx';
+  }
+  if (formalOpsxCount > 0) {
+    return 'invalid-partial-opsx';
+  }
+
+  const specsDir = FileSystemUtils.joinPath(projectRoot, 'openspec/specs');
+  if (await FileSystemUtils.directoryExists(specsDir)) {
+    return 'specs-only';
+  }
+
+  return 'no-spec';
+}
+
+export function getAllowedBootstrapModes(baselineType: BootstrapBaselineType): BootstrapMode[] {
+  switch (baselineType) {
+    case 'no-spec':
+      return ['full', 'opsx-first'];
+    case 'specs-only':
+      return ['full'];
+    case 'formal-opsx':
+    case 'invalid-partial-opsx':
+      return [];
+  }
+}
+
+export function getBootstrapBaselineReason(baselineType: BootstrapBaselineType): string {
+  switch (baselineType) {
+    case 'no-spec':
+      return 'Repository has no specs or formal OPSX files.';
+    case 'specs-only':
+      return 'Repository has specs but no formal OPSX files.';
+    case 'formal-opsx':
+      return 'Bootstrap does not support repositories with existing formal OPSX files.';
+    case 'invalid-partial-opsx':
+      return 'Bootstrap does not support repositories with partial or invalid formal OPSX files.';
+  }
+}
+
+export function buildBootstrapPreInitStatus(baselineType: BootstrapBaselineType): BootstrapPreInitStatus {
+  const allowedModes = getAllowedBootstrapModes(baselineType);
+  return {
+    initialized: false,
+    baselineType,
+    supported: allowedModes.length > 0,
+    allowedModes,
+    nextAction: allowedModes.length > 0 ? 'init' : null,
+    reason: getBootstrapBaselineReason(baselineType),
+  };
+}
+
+export async function getBootstrapPreInitStatus(projectRoot: string): Promise<BootstrapPreInitStatus> {
+  return buildBootstrapPreInitStatus(await detectBootstrapBaseline(projectRoot));
+}
+
+function formatAllowedModes(allowedModes: BootstrapMode[]): string {
+  return allowedModes.length > 0 ? allowedModes.join(', ') : '(none)';
+}
+
+function assertBootstrapModeAllowed(baselineType: BootstrapBaselineType, mode: BootstrapMode): void {
+  const allowedModes = getAllowedBootstrapModes(baselineType);
+  if (!allowedModes.includes(mode)) {
+    throw new Error(
+      `Bootstrap mode '${mode}' is not supported for baseline '${baselineType}'. Valid modes: ${formatAllowedModes(allowedModes)}`
+    );
+  }
+}
+
+function getNextBootstrapAction(phase: BootstrapPhase): BootstrapPhase | null {
+  const currentIdx = BOOTSTRAP_PHASES.indexOf(phase);
+  return currentIdx >= 0 && currentIdx < BOOTSTRAP_PHASES.length - 1
+    ? BOOTSTRAP_PHASES[currentIdx + 1]
+    : null;
+}
+
+async function candidateFilesExist(projectRoot: string): Promise<boolean> {
+  const results = await Promise.all([
+    FileSystemUtils.fileExists(candidatePath(projectRoot, 'project.opsx.yaml')),
+    FileSystemUtils.fileExists(candidatePath(projectRoot, 'project.opsx.relations.yaml')),
+    FileSystemUtils.fileExists(candidatePath(projectRoot, 'project.opsx.code-map.yaml')),
+  ]);
+  return results.every(Boolean);
+}
+
+function collectReviewChecks(reviewContent: string): { checkedDomains: Set<string>; uncheckedItems: string[] } {
+  const checkedDomains = new Set<string>();
+  const uncheckedItems: string[] = [];
+
+  for (const rawLine of reviewContent.split('\n')) {
+    const line = rawLine.trim();
+    const checkedMatch = line.match(/^-\s+\[x\]\s+(dom\.\S+)/i);
+    if (checkedMatch) {
+      checkedDomains.add(checkedMatch[1]);
+    }
+
+    if (/^-\s+\[\s\]/.test(line)) {
+      uncheckedItems.push(line);
+    }
+  }
+
+  return { checkedDomains, uncheckedItems };
 }
 
 // ─── Core Functions ──────────────────────────────────────────────────────────
@@ -144,12 +447,22 @@ export async function initBootstrap(
   }
 
   const mode = options.mode ?? 'full';
+  const baselineType = await detectBootstrapBaseline(projectRoot);
+  const preInitStatus = buildBootstrapPreInitStatus(baselineType);
+  if (!preInitStatus.supported) {
+    throw new Error(preInitStatus.reason);
+  }
+  assertBootstrapModeAllowed(baselineType, mode);
   const now = new Date().toISOString();
 
   const metadata: BootstrapMetadata = {
     phase: 'init',
+    baseline_type: baselineType,
     mode,
     created_at: now,
+    source_fingerprint: null,
+    candidate_fingerprint: null,
+    review_fingerprint: null,
   };
 
   const scope: ScopeConfig = {
@@ -178,13 +491,14 @@ export async function readBootstrapState(projectRoot: string): Promise<Bootstrap
     throw new Error('No bootstrap workspace found. Run `openspec bootstrap init` first.');
   }
 
+  const fallbackBaselineType = await inferLegacyBaselineType(projectRoot);
   const metaRaw = await readYaml(bootstrapPath(projectRoot, '.bootstrap.yaml'));
-  const metadata = BootstrapMetadataSchema.parse(metaRaw);
+  const metadata = parseBootstrapMetadata(metaRaw, fallbackBaselineType);
 
   let scope: ScopeConfig | null = null;
   try {
     const scopeRaw = await readYaml(bootstrapPath(projectRoot, 'scope.yaml'));
-    scope = ScopeConfigSchema.parse(scopeRaw);
+    scope = parseScopeConfig(scopeRaw);
   } catch { /* scope may not exist yet */ }
 
   let evidence: EvidenceFile | null = null;
@@ -216,8 +530,9 @@ export async function readBootstrapState(projectRoot: string): Promise<Bootstrap
 
 export async function advancePhase(projectRoot: string, targetPhase: BootstrapPhase): Promise<void> {
   const metaPath = bootstrapPath(projectRoot, '.bootstrap.yaml');
+  const fallbackBaselineType = await inferLegacyBaselineType(projectRoot);
   const metaRaw = await readYaml(metaPath);
-  const metadata = BootstrapMetadataSchema.parse(metaRaw);
+  const metadata = parseBootstrapMetadata(metaRaw, fallbackBaselineType);
 
   const currentIdx = BOOTSTRAP_PHASES.indexOf(metadata.phase);
   const targetIdx = BOOTSTRAP_PHASES.indexOf(targetPhase);
@@ -245,44 +560,42 @@ export async function updateDomainProgress(
 }
 
 export async function getBootstrapStatus(projectRoot: string): Promise<BootstrapStatus> {
-  const state = await readBootstrapState(projectRoot);
-  const domains: DomainStatus[] = [];
-
-  // Read review.md for checked domains
-  const checkedDomains = new Set<string>();
-  if (state.reviewExists) {
-    try {
-      const reviewContent = await fs.readFile(
-        bootstrapPath(projectRoot, 'review.md'), 'utf-8'
-      );
-      for (const line of reviewContent.split('\n')) {
-        const match = line.match(/^-\s+\[x\]\s+(dom\.\S+)/i);
-        if (match) checkedDomains.add(match[1]);
-      }
-    } catch { /* ignore */ }
+  if (!await FileSystemUtils.directoryExists(bootstrapPath(projectRoot))) {
+    return getBootstrapPreInitStatus(projectRoot);
   }
 
+  const state = await readBootstrapState(projectRoot);
+  const derived = await deriveBootstrapArtifacts(projectRoot, state);
+  const domains: DomainStatus[] = [];
+
   if (state.evidence) {
-    for (const dom of state.evidence.domains) {
+    const orderedDomains = [...state.evidence.domains].sort(compareEvidenceDomains);
+    for (const dom of orderedDomains) {
       const mapFile = state.domainMaps.get(dom.id);
       domains.push({
         id: dom.id,
         confidence: dom.confidence,
         mapped: !!mapFile,
         capabilityCount: mapFile?.capabilities.length ?? 0,
-        reviewed: checkedDomains.has(dom.id),
+        reviewed: derived.reviewState === 'current' && derived.checkedDomains.has(dom.id),
       });
     }
   }
 
   return {
+    initialized: true,
     phase: state.metadata.phase,
+    baselineType: state.metadata.baseline_type,
     mode: state.metadata.mode,
+    nextAction: getNextBootstrapAction(state.metadata.phase),
     created_at: state.metadata.created_at,
     domains,
     totalDomains: domains.length,
     mappedDomains: domains.filter(d => d.mapped).length,
     reviewedDomains: domains.filter(d => d.reviewed).length,
+    candidateState: derived.candidateState,
+    reviewState: derived.reviewState,
+    reviewApproved: derived.reviewApproved,
   };
 }
 
@@ -341,23 +654,31 @@ export async function validateGate(
       break;
     }
     case 'review_to_promote': {
-      // Check all review checkboxes
+      const scanGate = await validateGate(projectRoot, 'scan_to_map');
+      const mapGate = await validateGate(projectRoot, 'map_to_review');
+      errors.push(...scanGate.errors, ...mapGate.errors);
+
+      const derived = await deriveBootstrapArtifacts(projectRoot, state);
       if (!state.reviewExists) {
         errors.push('review.md not found');
-        break;
-      }
-      const reviewContent = await fs.readFile(
-        bootstrapPath(projectRoot, 'review.md'), 'utf-8'
-      );
-      const lines = reviewContent.split('\n');
-      for (const line of lines) {
-        if (/^-\s+\[\s\]/.test(line)) {
-          errors.push(`Unchecked review item: ${line.trim()}`);
-        }
+      } else if (derived.reviewState !== 'current') {
+        errors.push('Review approval is stale. Run `openspec bootstrap validate` to regenerate review.md and re-approve it.');
       }
 
-      // Run referential integrity + code-map integrity on candidate
-      const bundle = assembleBundle(state);
+      if (!derived.bundle || !derived.candidateFingerprint) {
+        errors.push('Candidate OPSX artifacts are unavailable. Run `openspec bootstrap validate` after scan/map are complete.');
+        break;
+      }
+
+      const reviewContent = state.reviewExists
+        ? await fs.readFile(bootstrapPath(projectRoot, 'review.md'), 'utf-8')
+        : '';
+      const { uncheckedItems } = collectReviewChecks(reviewContent);
+      for (const item of uncheckedItems) {
+        errors.push(`Unchecked review item: ${item}`);
+      }
+
+      const bundle = derived.bundle;
       const refResult = validateReferentialIntegrity(bundle);
       errors.push(...refResult.errors);
       const mapResult = validateCodeMapIntegrity(bundle);
@@ -377,7 +698,11 @@ function assembleBundle(state: BootstrapState): ProjectOpsxBundle {
   const relations: OpsxRelation[] = [];
   const code_map: CodeMapEntry[] = [];
 
-  for (const [, mapFile] of state.domainMaps) {
+  const sortedDomainMaps = [...state.domainMaps.entries()]
+    .sort(([leftId], [rightId]) => leftId.localeCompare(rightId))
+    .map(([, mapFile]) => mapFile);
+
+  for (const mapFile of sortedDomainMaps) {
     domains.push({
       id: mapFile.domain.id,
       type: 'domain',
@@ -428,11 +753,30 @@ function assembleBundle(state: BootstrapState): ProjectOpsxBundle {
   };
 }
 
-export async function assembleCandidate(projectRoot: string): Promise<ProjectOpsxBundle> {
-  const state = await readBootstrapState(projectRoot);
-  const bundle = assembleBundle(state);
+function computeSourceFingerprint(state: BootstrapState): string | null {
+  if (!state.evidence) {
+    return null;
+  }
 
-  // Write candidate files for inspection
+  const normalizedDomainMaps = [...state.domainMaps.entries()]
+    .sort(([leftId], [rightId]) => leftId.localeCompare(rightId))
+    .map(([, mapFile]) => normalizeDomainMapForFingerprint(mapFile));
+
+  return fingerprintValue({
+    evidence: normalizeEvidenceForFingerprint(state.evidence),
+    domainMaps: normalizedDomainMaps,
+  });
+}
+
+function computeCandidateFingerprint(bundle: ProjectOpsxBundle): string {
+  return fingerprintValue(bundle);
+}
+
+async function writeBootstrapMetadata(projectRoot: string, metadata: BootstrapMetadata): Promise<void> {
+  await writeYaml(bootstrapPath(projectRoot, '.bootstrap.yaml'), metadata);
+}
+
+async function writeCandidateFiles(projectRoot: string, bundle: ProjectOpsxBundle): Promise<void> {
   const candidateDir = bootstrapPath(projectRoot, 'candidate');
   await FileSystemUtils.createDirectory(candidateDir);
 
@@ -450,23 +794,24 @@ export async function assembleCandidate(projectRoot: string): Promise<ProjectOps
   };
 
   await Promise.all([
-    writeYaml(path.join(candidateDir, 'project.opsx.yaml'), mainData),
-    writeYaml(path.join(candidateDir, 'project.opsx.relations.yaml'), relData),
-    writeYaml(path.join(candidateDir, 'project.opsx.code-map.yaml'), mapData),
+    writeYaml(candidatePath(projectRoot, 'project.opsx.yaml'), mainData),
+    writeYaml(candidatePath(projectRoot, 'project.opsx.relations.yaml'), relData),
+    writeYaml(candidatePath(projectRoot, 'project.opsx.code-map.yaml'), mapData),
   ]);
-
-  return bundle;
 }
 
-export async function generateReview(projectRoot: string): Promise<string> {
-  const state = await readBootstrapState(projectRoot);
-  if (!state.evidence) throw new Error('No evidence.yaml found. Run scan phase first.');
+function buildReviewContent(state: BootstrapState): string {
+  if (!state.evidence) {
+    throw new Error('No evidence.yaml found. Run scan phase first.');
+  }
 
   const lines: string[] = ['# Bootstrap Review', ''];
   lines.push('Review the mapped architecture before promoting to formal OPSX files.', '');
+  lines.push('This file is derived from evidence.yaml and domain-map/*.yaml. If either changes, regenerate review via `openspec bootstrap validate`.', '');
   lines.push('## Domain Checklist', '');
 
-  for (const dom of state.evidence.domains) {
+  const orderedDomains = [...state.evidence.domains].sort(compareEvidenceDomains);
+  for (const dom of orderedDomains) {
     const mapFile = state.domainMaps.get(dom.id);
     const capCount = mapFile?.capabilities.length ?? 0;
     const status = mapFile ? `${capCount} capabilities` : 'unmapped';
@@ -474,18 +819,144 @@ export async function generateReview(projectRoot: string): Promise<string> {
   }
 
   lines.push('', '## Validation', '');
+  lines.push('- [ ] Review matches current candidate output');
   lines.push('- [ ] Referential integrity passes');
   lines.push('- [ ] Code-map paths exist on disk');
   lines.push('- [ ] Domain boundaries match mental model');
   lines.push('');
 
-  const content = lines.join('\n');
+  return lines.join('\n');
+}
+
+async function deriveBootstrapArtifacts(projectRoot: string, state: BootstrapState): Promise<DerivedBootstrapArtifacts> {
+  const reviewContent = state.reviewExists
+    ? await fs.readFile(bootstrapPath(projectRoot, 'review.md'), 'utf-8').catch(() => '')
+    : '';
+  const { checkedDomains, uncheckedItems } = collectReviewChecks(reviewContent);
+
+  const sourceFingerprint = computeSourceFingerprint(state);
+  const bundle = sourceFingerprint ? assembleBundle(state) : null;
+  const candidateFingerprint = bundle ? computeCandidateFingerprint(bundle) : null;
+  const candidateExists = await candidateFilesExist(projectRoot);
+
+  const candidateState = !candidateFingerprint || !candidateExists
+    ? 'missing'
+    : state.metadata.source_fingerprint === sourceFingerprint
+      && state.metadata.candidate_fingerprint === candidateFingerprint
+      ? 'current'
+      : 'stale';
+
+  const reviewState = !candidateFingerprint || !candidateExists || !state.reviewExists
+    ? 'missing'
+    : state.metadata.source_fingerprint === sourceFingerprint
+      && state.metadata.review_fingerprint === candidateFingerprint
+      ? 'current'
+      : 'stale';
+
+  return {
+    bundle,
+    sourceFingerprint,
+    candidateFingerprint,
+    candidateState,
+    reviewState,
+    reviewApproved: reviewState === 'current' && uncheckedItems.length === 0,
+    checkedDomains,
+  };
+}
+
+export async function assembleCandidate(projectRoot: string): Promise<ProjectOpsxBundle> {
+  const state = await readBootstrapState(projectRoot);
+  const derived = await deriveBootstrapArtifacts(projectRoot, state);
+  if (!derived.bundle || !derived.sourceFingerprint || !derived.candidateFingerprint) {
+    throw new Error('No evidence.yaml found. Run scan phase first.');
+  }
+
+  await writeCandidateFiles(projectRoot, derived.bundle);
+  await writeBootstrapMetadata(projectRoot, {
+    ...state.metadata,
+    source_fingerprint: derived.sourceFingerprint,
+    candidate_fingerprint: derived.candidateFingerprint,
+  });
+
+  return derived.bundle;
+}
+
+export async function generateReview(projectRoot: string): Promise<string> {
+  const state = await readBootstrapState(projectRoot);
+  const derived = await deriveBootstrapArtifacts(projectRoot, state);
+  if (!derived.candidateFingerprint) {
+    throw new Error('No evidence.yaml found. Run scan phase first.');
+  }
+
+  const content = buildReviewContent(state);
   await fs.writeFile(bootstrapPath(projectRoot, 'review.md'), content, 'utf-8');
+  await writeBootstrapMetadata(projectRoot, {
+    ...state.metadata,
+    source_fingerprint: derived.sourceFingerprint,
+    candidate_fingerprint: derived.candidateFingerprint,
+    review_fingerprint: derived.candidateFingerprint,
+  });
+
   return content;
 }
 
+export async function refreshBootstrapDerivedArtifacts(
+  projectRoot: string
+): Promise<{ candidateUpdated: boolean; reviewUpdated: boolean }> {
+  const state = await readBootstrapState(projectRoot);
+  const derived = await deriveBootstrapArtifacts(projectRoot, state);
+  if (!derived.bundle || !derived.sourceFingerprint || !derived.candidateFingerprint) {
+    return { candidateUpdated: false, reviewUpdated: false };
+  }
+
+  const candidateUpdated = derived.candidateState !== 'current';
+  const reviewUpdated = derived.reviewState !== 'current';
+
+  if (candidateUpdated) {
+    await writeCandidateFiles(projectRoot, derived.bundle);
+  }
+
+  if (reviewUpdated) {
+    await fs.writeFile(bootstrapPath(projectRoot, 'review.md'), buildReviewContent(state), 'utf-8');
+  }
+
+  if (candidateUpdated || reviewUpdated) {
+    await writeBootstrapMetadata(projectRoot, {
+      ...state.metadata,
+      source_fingerprint: derived.sourceFingerprint,
+      candidate_fingerprint: derived.candidateFingerprint,
+      review_fingerprint: reviewUpdated ? derived.candidateFingerprint : state.metadata.review_fingerprint,
+    });
+  }
+
+  return { candidateUpdated, reviewUpdated };
+}
+
+async function writeBootstrapSpecStarter(projectRoot: string, state: BootstrapState): Promise<void> {
+  if (state.metadata.mode !== 'full' || state.metadata.baseline_type !== 'no-spec') {
+    return;
+  }
+
+  const specsReadmePath = FileSystemUtils.joinPath(projectRoot, 'openspec/specs/README.md');
+  if (await FileSystemUtils.fileExists(specsReadmePath)) {
+    return;
+  }
+
+  const content = `# Specs Starter
+
+This repository was bootstrapped in \`full\` mode.
+
+- Formal OPSX files were generated from the bootstrap workflow.
+- Add behavior specs incrementally with normal OpenSpec changes.
+- Create focused specs under \`openspec/specs/<capability>/spec.md\` as features evolve.
+`;
+
+  await FileSystemUtils.writeFile(specsReadmePath, content);
+}
+
 export async function promoteBootstrap(projectRoot: string): Promise<void> {
-  // Validate review gate
+  await refreshBootstrapDerivedArtifacts(projectRoot);
+
   const gate = await validateGate(projectRoot, 'review_to_promote');
   if (!gate.passed) {
     throw new Error(`Cannot promote: gate validation failed.\n${gate.errors.join('\n')}`);
@@ -508,9 +979,7 @@ export async function promoteBootstrap(projectRoot: string): Promise<void> {
 
   // Write formal OPSX files
   await writeProjectOpsx(projectRoot, bundle);
-
-  // Mark phase as promote
-  await advancePhase(projectRoot, 'promote');
+  await writeBootstrapSpecStarter(projectRoot, state);
 
   // Clean up workspace
   const bsDir = bootstrapPath(projectRoot);
