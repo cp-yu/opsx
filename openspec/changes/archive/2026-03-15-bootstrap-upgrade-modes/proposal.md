@@ -1,24 +1,21 @@
 # Proposal: Bootstrap Upgrade Modes
 
-## Problem Statement
+## Why
 
-The current bootstrap flow has the right high-level direction, but its lifecycle and upgrade semantics are not safe enough to support real project adoption.
+The bootstrap workflow was directionally correct, but its lifecycle and upgrade semantics were still loose enough to produce unsafe results.
 
-Current gaps:
+The core failures were practical, not theoretical:
 
-1. **Phase progression conflict** — `validate` can advance review workspaces to `promote`, and a later `promote -y` can attempt to advance phase again after writing files, causing partial-success failure states.
-2. **Incomplete promotion gate** — promotion currently relies too heavily on `review.md` checkbox state and does not fully re-assert upstream completeness.
-3. **Broken pre-init UX** — `openspec bootstrap status --json` and `instructions` do not return structured pre-init states, which breaks first-run workflows.
-4. **Stale review artifacts** — `review.md` is not refreshed when evidence or mappings change, so review state can silently drift from candidate output.
-5. **Schema/template contract drift** — bootstrap schema, workflow template, CLI behavior, and generated artifact expectations are inconsistent.
-6. **Missing upgrade-path semantics** — bootstrap does not yet cleanly support the required repository baselines:
-   - specs-only → specs+opsx
-   - no-spec → opsx-first
-   - no-spec → full
+1. `validate` and `promote -y` could both advance lifecycle state, which allowed a write to succeed and the command to fail afterward.
+2. Promotion trusted `review.md` too much and did not fully re-check upstream completeness before writing formal OPSX files.
+3. Pre-init `status --json` and `instructions --json` did not return structured state, which made automation brittle.
+4. Review artifacts could drift from current evidence or mappings because refresh rules were incomplete.
+5. CLI help, templates, and schema semantics had diverged, so surfaces described different behavior.
+6. Required upgrade paths were not explicit, especially for `specs-only -> specs+opsx`, `no-spec -> opsx-first`, and `no-spec -> full`.
 
-Without fixing these issues, bootstrap can produce formal OPSX files while still failing the command, can promote incomplete maps, and cannot serve as a reliable upgrade entry point.
+That combination meant bootstrap was not yet a trustworthy upgrade entry point.
 
-## Proposed Solution
+## What Changes
 
 Refactor bootstrap into a baseline-aware lifecycle with explicit mode constraints and deterministic promotion rules.
 
