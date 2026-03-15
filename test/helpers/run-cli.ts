@@ -90,9 +90,6 @@ export async function runCLI(args: string[] = [], options: RunCLIOptions = {}): 
       windowsHide: true,
     });
 
-    // Prevent child process from keeping the event loop alive
-    child.unref();
-
     let stdout = '';
     let stderr = '';
     let timedOut = false;
