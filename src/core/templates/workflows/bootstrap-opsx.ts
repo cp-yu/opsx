@@ -31,6 +31,11 @@ This is a **structured, multi-phase** workflow. Each phase produces intermediate
    openspec bootstrap init --mode full
    \`\`\`
    Creates workspace at \`openspec/bootstrap/\` with scope configuration.
+   Supported upgrade paths:
+   - \`specs-only -> full\`
+   - \`no-spec -> full\`
+   - \`no-spec -> opsx-first\`
+   Use \`opsx-first\` only for \`no-spec\` repositories when you want formal OPSX now and specs later.
 
    **Phase: scan**
    - Read \`package.json\`, \`README\`, OpenSpec config, \`openspec/specs/\`
@@ -73,16 +78,21 @@ This is a **structured, multi-phase** workflow. Each phase produces intermediate
    - Run \`openspec bootstrap validate\` after all domains mapped
 
    **Phase: review**
-   - Validate generates review.md and candidate OPSX files
+   - Validate regenerates review.md and candidate OPSX files from current \`evidence.yaml\` and \`domain-map/*.yaml\`
    - Review each domain checkbox in review.md
    - Check all validation checkboxes
-   - Low-confidence domains need priority review
+   - If evidence or domain maps change, rerun validate and re-approve the regenerated review
+   - Low-confidence domains appear first for priority review
 
    **Phase: promote**
    \`\`\`bash
    openspec bootstrap promote -y
    \`\`\`
-   Writes formal OPSX three-file bundle and cleans up workspace.
+   Re-validates all upstream gates before writing.
+   - \`opsx-first\`: writes only the formal OPSX three-file bundle
+   - \`full\` on \`no-spec\`: also creates a starter \`openspec/specs/\` structure
+   - \`full\` on \`specs-only\`: preserves existing specs and adds OPSX output
+   Cleans up the bootstrap workspace on success.
 
 3. **After each phase action**
    - Run \`openspec bootstrap validate\` to verify gate conditions
@@ -105,7 +115,7 @@ This is a **structured, multi-phase** workflow. Each phase produces intermediate
 - Do NOT write directly to formal OPSX files — use the bootstrap workspace
 - Do NOT fabricate code references
 - Do NOT skip the review phase
-- Do NOT treat draft mappings as authoritative until reviewed
+- Do NOT treat stale review.md checkboxes as approval after evidence or mappings change
 - Keep the graph small enough to audit in one sitting`,
     license: 'MIT',
     compatibility: 'Requires openspec CLI.',
@@ -145,10 +155,10 @@ Each phase produces intermediate artifacts in \`openspec/bootstrap/\`.
 The workspace is cleaned up after promote.
 
 **Key Commands**
-- \`openspec bootstrap init [--mode full|seed] [--scope src/]\` — create workspace
+- \`openspec bootstrap init [--mode full|opsx-first] [--scope src/]\` — create workspace
 - \`openspec bootstrap status [--json]\` — phase progress + per-domain status
 - \`openspec bootstrap instructions [phase] [--json]\` — phase-specific guidance
 - \`openspec bootstrap validate [--json]\` — gate validation + auto-advance
-- \`openspec bootstrap promote [-y]\` — write formal OPSX + cleanup`
+- \`openspec bootstrap promote [-y]\` — re-validate, write formal OPSX, then cleanup`
   };
 }

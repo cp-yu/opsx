@@ -2,7 +2,17 @@
 
 ## Overview
 
-The bootstrap workflow generates an initial `project.opsx.yaml` structure from your existing codebase. This is useful for:
+The bootstrap workflow upgrades an existing repository into formal OPSX tracking through a five-phase workspace under `openspec/bootstrap/`:
+
+`init -> scan -> map -> review -> promote`
+
+On successful promotion it writes the formal OPSX three-file bundle:
+
+- `openspec/project.opsx.yaml`
+- `openspec/project.opsx.relations.yaml`
+- `openspec/project.opsx.code-map.yaml`
+
+This is useful for:
 
 - **Existing projects** — add OPSX tracking to brownfield codebases
 - **Migration** — transition from manual documentation to automated tracking
@@ -12,29 +22,61 @@ The bootstrap workflow generates an initial `project.opsx.yaml` structure from y
 
 **Use bootstrap when:**
 - Starting with OpenSpec on an existing project
-- You have code but no OPSX structure
+- You have code but no formal OPSX structure
 - You want to document current architecture
 
 **Don't use bootstrap when:**
 - Starting a new project (use `/opsx:propose` instead)
-- You already have `project.opsx.yaml`
+- You already have the formal OPSX bundle
 - You prefer manual structure creation
+
+Supported upgrade paths:
+
+- `specs-only -> full`
+- `no-spec -> full`
+- `no-spec -> opsx-first`
+
+`opsx-first` is intentionally narrow: it writes formal OPSX now and leaves behavior specs to be added later through normal change workflows.
 
 ## Running Bootstrap
 
 ```bash
-# In your AI coding assistant
-/opsx:bootstrap
+# Inspect the current repository baseline
+openspec bootstrap status --json
+
+# Initialize the workspace
+openspec bootstrap init --mode full
+
+# Or, on a no-spec repository only:
+openspec bootstrap init --mode opsx-first
+
+# Follow phase instructions
+openspec bootstrap instructions --json
+
+# Rebuild candidate/review artifacts and validate gates
+openspec bootstrap validate
+
+# After review is current and approved
+openspec bootstrap promote -y
 ```
 
-The AI will:
-1. **Analyze codebase** — scan directory structure, exports, imports
-2. **Discover domains** — identify logical boundaries
-3. **Find capabilities** — detect functions, classes, APIs
-4. **Generate structure** — create `[DRAFT] project.opsx.yaml`
-5. **Request review** — ask you to verify and refine
+Key behavior:
+1. `validate` regenerates `review.md` and candidate OPSX files from current `evidence.yaml` and `domain-map/*.yaml`
+2. If evidence or mappings change, previous review approval becomes stale and must be redone
+3. `promote -y` re-checks scan, map, and review gates before any formal write
 
 ## What Gets Generated
+
+- `opsx-first`
+  - Writes only the formal OPSX bundle on promote
+  - Does not create placeholder specs
+  - You add specs later through normal OpenSpec changes
+- `full` on `no-spec`
+  - Writes the formal OPSX bundle
+  - Creates a starter `openspec/specs/README.md`
+- `full` on `specs-only`
+  - Preserves existing specs
+  - Adds the formal OPSX bundle aligned to those specs
 
 ### Minimal Example
 
@@ -275,9 +317,9 @@ openspec verify --change document-orders-domain
 
 Once you've reviewed and refined:
 
-1. **Remove [DRAFT] marker** — edit `project.opsx.yaml` and remove `[DRAFT]` from description
-2. **Commit the structure** — `git add openspec/project.opsx.yaml && git commit`
-3. **Start using OPSX** — new changes will now update this structure
+1. **Commit the structure** — `git add openspec/project.opsx*.yaml openspec/specs && git commit`
+2. **Start using OPSX** — new changes will now update this structure
+3. **For opsx-first repositories** — add specs incrementally later with normal `/opsx:propose` and `/opsx:archive` workflows
 
 ## Maintenance
 

@@ -10,11 +10,19 @@ artifacts:
     instruction: |
       Create the bootstrap workspace under openspec/bootstrap/.
 
-      Run: openspec bootstrap init [--mode full|seed] [--scope src/]
+      Run: openspec bootstrap init [--mode full|opsx-first] [--scope src/]
 
       This creates:
-      - .bootstrap.yaml — metadata (phase, mode, created_at)
+      - .bootstrap.yaml — metadata (phase, baseline, mode, fingerprints, created_at)
       - scope.yaml — user configuration (mode, include/exclude paths, granularity)
+
+      Supported upgrade paths:
+      - specs-only -> full
+      - no-spec -> full
+      - no-spec -> opsx-first
+
+      Use opsx-first only when the repository has no existing specs and you want formal OPSX first.
+      In that path, add specs later through normal change workflows.
 
       Confirm the scope configuration with the user before proceeding.
     requires: []
@@ -81,11 +89,14 @@ artifacts:
       2. Check capability coverage and naming
       3. Validate code references point to correct files
       4. Check or fix each domain checkbox
+      5. Re-run validate after any evidence.yaml or domain-map edit because review.md is regenerated from current inputs
 
       Gates (review → promote):
+      - review.md matches the current candidate fingerprint
       - All review.md checkboxes checked
       - Referential integrity passes
       - Code-map integrity passes
+      - Upstream scan/map completeness still passes
     requires:
       - map
 
@@ -94,13 +105,14 @@ artifacts:
     description: Validate, write formal OPSX files, clean workspace
     template: promote.md
     instruction: |
-      Run: openspec bootstrap promote
+      Run: openspec bootstrap promote -y
 
       This command:
-      1. Validates all gate conditions
+      1. Re-validates scan, map, and review gate conditions
       2. Assembles candidate OPSX bundle from domain-map files
       3. Writes formal OPSX three-file bundle (project.opsx.yaml, relations, code-map)
-      4. Cleans up openspec/bootstrap/ workspace
+      4. In full mode on a no-spec baseline, creates a starter openspec/specs/ structure
+      5. Cleans up openspec/bootstrap/ workspace
 
       Confirm before writing to formal OPSX files.
     requires:
@@ -112,4 +124,5 @@ apply:
   instruction: |
     Review the mapped architecture in review.md.
     Check each domain checkbox after verifying its boundaries, capabilities, and code refs.
-    When all checkboxes are checked, run openspec bootstrap promote.
+    If evidence.yaml or domain-map files change, run openspec bootstrap validate to regenerate review.md and re-approve it.
+    When all checkboxes are checked, run openspec bootstrap promote -y.
