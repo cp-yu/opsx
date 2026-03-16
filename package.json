@@ -9,10 +9,10 @@
     "ai",
     "development"
   ],
-  "homepage": "https://github.com/Fission-AI/OpenSpec",
+  "homepage": "https://github.com/cp-yu/opsx",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Fission-AI/OpenSpec"
+    "url": "git+https://github.com/cp-yu/opsx.git"
   },
   "license": "MIT",
   "author": "OpenSpec Contributors",
@@ -48,8 +48,8 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:postinstall": "node scripts/postinstall.js",
-    "prepare": "pnpm run build",
-    "prepublishOnly": "pnpm run build",
+    "prepare": "node build.js",
+    "prepublishOnly": "node build.js",
     "postinstall": "node scripts/postinstall.js",
     "check:pack-version": "node scripts/pack-version-check.mjs",
     "release": "pnpm run release:ci",

@@ -152,8 +152,8 @@ openspec update [path] [options]
 **Example:**
 
 ```bash
-# Update instruction files after npm upgrade
-npm update @fission-ai/openspec
+# Reinstall the latest fork revision from GitHub
+npm install -g git+https://github.com/cp-yu/opsx.git
 openspec update
 ```
 

@@ -4,44 +4,30 @@
 
 - **Node.js 20.19.0 or higher** — Check your version: `node --version`
 
-## Package Managers
+## GitHub Install
 
-### npm
-
-```bash
-npm install -g @fission-ai/openspec@latest
-```
-
-### pnpm
+Install directly from this repository:
 
 ```bash
-pnpm add -g @fission-ai/openspec@latest
+npm install -g git+https://github.com/cp-yu/opsx.git
 ```
 
-### yarn
+If you prefer another package manager, use the same Git URL syntax it supports.
 
-```bash
-yarn global add @fission-ai/openspec@latest
-```
-
-### bun
-
-```bash
-bun add -g @fission-ai/openspec@latest
-```
+This repository builds correctly during Git installs because the package `prepare` step runs `node build.js` directly instead of requiring `pnpm`.
 
 ## Nix
 
 Run OpenSpec directly without installation:
 
 ```bash
-nix run github:Fission-AI/OpenSpec -- init
+nix run github:cp-yu/opsx -- init
 ```
 
 Or install to your profile:
 
 ```bash
-nix profile install github:Fission-AI/OpenSpec
+nix profile install github:cp-yu/opsx
 ```
 
 Or add to your development environment in `flake.nix`:
@@ -50,7 +36,7 @@ Or add to your development environment in `flake.nix`:
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    openspec.url = "github:Fission-AI/OpenSpec";
+    openspec.url = "github:cp-yu/opsx";
   };
 
   outputs = { nixpkgs, openspec, ... }: {

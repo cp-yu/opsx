@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/Fission-AI/OpenSpec">
+  <a href="https://github.com/cp-yu/opsx">
     <picture>
       <source srcset="assets/openspec_bg.png">
       <img src="assets/openspec_bg.png" alt="OpenSpec logo">
@@ -8,8 +8,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Fission-AI/OpenSpec/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Fission-AI/OpenSpec/actions/workflows/ci.yml/badge.svg" /></a>
-  <a href="https://www.npmjs.com/package/@fission-ai/openspec"><img alt="npm version" src="https://img.shields.io/npm/v/@fission-ai/openspec?style=flat-square" /></a>
+  <a href="https://github.com/cp-yu/opsx/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/cp-yu/opsx/actions/workflows/ci.yml/badge.svg" /></a>
   <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" /></a>
   <a href="https://discord.gg/YctCnvvshC"><img alt="Discord" src="https://img.shields.io/discord/1411657095639601154?style=flat-square&logo=discord&logoColor=white&label=Discord&suffix=%20online" /></a>
 </p>
@@ -17,9 +16,8 @@
 <details>
 <summary><strong>The most loved spec framework.</strong></summary>
 
-[![Stars](https://img.shields.io/github/stars/Fission-AI/OpenSpec?style=flat-square&label=Stars)](https://github.com/Fission-AI/OpenSpec/stargazers)
-[![Downloads](https://img.shields.io/npm/dm/@fission-ai/openspec?style=flat-square&label=Downloads/mo)](https://www.npmjs.com/package/@fission-ai/openspec)
-[![Contributors](https://img.shields.io/github/contributors/Fission-AI/OpenSpec?style=flat-square&label=Contributors)](https://github.com/Fission-AI/OpenSpec/graphs/contributors)
+[![Stars](https://img.shields.io/github/stars/cp-yu/opsx?style=flat-square&label=Stars)](https://github.com/cp-yu/opsx/stargazers)
+[![Contributors](https://img.shields.io/github/contributors/cp-yu/opsx?style=flat-square&label=Contributors)](https://github.com/cp-yu/opsx/graphs/contributors)
 
 </details>
 <p></p>
@@ -85,10 +83,10 @@ AI:  Archived to openspec/changes/archive/2025-01-23-add-dark-mode/
 
 **Requires Node.js 20.19.0 or higher.**
 
-Install OpenSpec globally:
+Install this fork globally from GitHub:
 
 ```bash
-npm install -g @fission-ai/openspec@latest
+npm install -g git+https://github.com/cp-yu/opsx.git
 ```
 
 Then navigate to your project directory and initialize:
@@ -105,7 +103,7 @@ If you want the expanded workflow (`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/
 > [!NOTE]
 > Not sure if your tool is supported? [View the full list](docs/supported-tools.md) – we support 20+ tools and growing.
 >
-> Also works with pnpm, yarn, bun, and nix. [See installation options](docs/installation.md).
+> Also works with Nix. [See installation options](docs/installation.md).
 
 ## Docs
 
@@ -139,10 +137,10 @@ AI coding assistants are powerful but unpredictable when requirements live only 
 
 ## Updating OpenSpec
 
-**Upgrade the package**
+**Reinstall from GitHub**
 
 ```bash
-npm install -g @fission-ai/openspec@latest
+npm install -g git+https://github.com/cp-yu/opsx.git
 ```
 
 **Refresh agent instructions**
