@@ -1,7 +1,7 @@
 # bootstrap Specification
 
 ## Purpose
-TBD - created by archiving change bootstrap-upgrade-modes. Update Purpose after archive.
+Define the bootstrap workflow for classifying repository baseline, generating formal OPSX artifacts, and promoting validated bootstrap output into the source-of-truth project structure.
 ## Requirements
 ### Requirement: Bootstrap SHALL classify repository baseline before initialization
 The bootstrap flow SHALL detect repository baseline before creating a bootstrap workspace and SHALL use that classification to determine whether bootstrap is supported.
@@ -142,4 +142,3 @@ Bootstrap schema, CLI behavior, workflow templates, and generated instructions S
 - **WHEN** the bootstrap schema, workflow template, and CLI instruction output are inspected
 - **THEN** each SHALL explain that `opsx-first` creates formal OPSX now
 - **AND** specs are created later through normal change workflows
-
