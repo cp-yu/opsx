@@ -20,6 +20,7 @@ import {
 import { PALETTE } from './styles/palette.js';
 import { isInteractive } from '../utils/interactive.js';
 import { serializeConfig } from './config-prompts.js';
+import { readProjectConfig } from './project-config.js';
 import {
   generateCommands,
   CommandAdapterRegistry,
@@ -45,6 +46,7 @@ import { getGlobalConfig, type Delivery, type Profile } from './global-config.js
 import { getProfileWorkflows, CORE_WORKFLOWS, ALL_WORKFLOWS } from './profiles.js';
 import { getAvailableTools } from './available-tools.js';
 import { migrateIfNeeded } from './migration.js';
+import { isMap, parseDocument } from 'yaml';
 
 const require = createRequire(import.meta.url);
 const { version: OPENSPEC_VERSION } = require('../../package.json');
@@ -133,6 +135,8 @@ export class InitCommand {
     // The resolved value is consumed later when generation reads effective config.
     this.resolveProfileOverride();
 
+    const docLanguage = await this.promptForDocLanguage(projectPath);
+
     // Get tool states before processing
     const toolStates = getToolStates(projectPath);
 
@@ -149,10 +153,10 @@ export class InitCommand {
     const results = await this.generateSkillsAndCommands(projectPath, validatedTools);
 
     // Create config.yaml if needed
-    const configStatus = await this.createConfig(openspecPath, extendMode);
+    const configStatus = await this.createConfig(openspecPath, docLanguage);
 
     // Display success message
-    this.displaySuccessMessage(projectPath, validatedTools, results, configStatus);
+    this.displaySuccessMessage(projectPath, validatedTools, results, configStatus, docLanguage);
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -596,14 +600,63 @@ export class InitCommand {
   // CONFIG FILE
   // ═══════════════════════════════════════════════════════════
 
-  private async createConfig(openspecPath: string, extendMode: boolean): Promise<'created' | 'exists' | 'skipped'> {
+  private async promptForDocLanguage(projectPath: string): Promise<string | undefined> {
+    if (!this.canPromptInteractively()) {
+      return undefined;
+    }
+
+    const currentDocLanguage = readProjectConfig(projectPath)?.docLanguage;
+    const { input } = await import('@inquirer/prompts');
+    const response = await input({
+      message: 'OpenSpec document language (optional, e.g. en, zh-CN, pt-BR)',
+      default: currentDocLanguage ?? '',
+      validate: (value: string) => {
+        if (value.trim().length === 0) {
+          return true;
+        }
+        return value.trim().length > 0 || 'Enter a non-empty language or leave it blank';
+      },
+    });
+
+    const normalized = response.trim();
+    return normalized.length > 0 ? normalized : undefined;
+  }
+
+  private async writeDocLanguage(
+    configPath: string,
+    docLanguage: string
+  ): Promise<void> {
+    const content = await fs.promises.readFile(configPath, 'utf-8');
+    const document = parseDocument(content);
+
+    if (document.errors.length > 0) {
+      throw new Error(`Failed to parse existing ${path.basename(configPath)}`);
+    }
+
+    if (!document.contents || !isMap(document.contents)) {
+      throw new Error(`${path.basename(configPath)} must contain a YAML object`);
+    }
+
+    document.set('docLanguage', docLanguage);
+    await FileSystemUtils.writeFile(configPath, String(document));
+  }
+
+  private async createConfig(
+    openspecPath: string,
+    docLanguage?: string
+  ): Promise<'created' | 'updated' | 'exists' | 'skipped'> {
     const configPath = path.join(openspecPath, 'config.yaml');
     const configYmlPath = path.join(openspecPath, 'config.yml');
     const configYamlExists = fs.existsSync(configPath);
     const configYmlExists = fs.existsSync(configYmlPath);
+    const existingConfigPath = configYamlExists ? configPath : configYmlExists ? configYmlPath : null;
 
-    if (configYamlExists || configYmlExists) {
-      return 'exists';
+    if (existingConfigPath) {
+      if (!docLanguage) {
+        return 'exists';
+      }
+      await this.writeDocLanguage(existingConfigPath, docLanguage);
+      return 'updated';
     }
 
     // In non-interactive mode without --force, skip config creation
@@ -612,7 +665,7 @@ export class InitCommand {
     }
 
     try {
-      const yamlContent = serializeConfig({ schema: DEFAULT_SCHEMA });
+      const yamlContent = serializeConfig({ schema: DEFAULT_SCHEMA, docLanguage });
       await FileSystemUtils.writeFile(configPath, yamlContent);
       return 'created';
     } catch {
@@ -635,7 +688,8 @@ export class InitCommand {
       removedCommandCount: number;
       removedSkillCount: number;
     },
-    configStatus: 'created' | 'exists' | 'skipped'
+    configStatus: 'created' | 'updated' | 'exists' | 'skipped',
+    docLanguage?: string
   ): void {
     console.log();
     console.log(chalk.bold('OpenSpec Setup Complete'));
@@ -686,7 +740,10 @@ export class InitCommand {
 
     // Config status
     if (configStatus === 'created') {
-      console.log(`Config: openspec/config.yaml (schema: ${DEFAULT_SCHEMA})`);
+      const details = docLanguage ? `schema: ${DEFAULT_SCHEMA}, docLanguage: ${docLanguage}` : `schema: ${DEFAULT_SCHEMA}`;
+      console.log(`Config: openspec/config.yaml (${details})`);
+    } else if (configStatus === 'updated') {
+      console.log(`Config: openspec/config.yaml (updated docLanguage: ${docLanguage})`);
     } else if (configStatus === 'exists') {
       // Show actual filename (config.yaml or config.yml)
       const configYaml = path.join(projectPath, OPENSPEC_DIR_NAME, 'config.yaml');

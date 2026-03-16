@@ -20,6 +20,20 @@ The AI instructions SHALL begin with a quick-reference section that surfaces req
 - **THEN** provide fenced Markdown templates that match the required structure (`## Why`, `## ADDED Requirements`, `#### Scenario:` etc.)
 - **AND** accompany each template with a brief example showing correct header usage and scenario bullets
 
+### Requirement: Respect Configured Documentation Language
+OpenSpec agent instructions SHALL require agents to read `openspec/config.yaml` before generating or updating OpenSpec artifacts and apply `docLanguage` only to natural-language prose.
+
+#### Scenario: Documentation language is configured
+- **WHEN** `openspec/config.yaml` defines `docLanguage`
+- **THEN** the instructions direct the agent to write artifact prose in that language
+- **AND** preserve template headings, identifiers, and other structured tokens unchanged
+
+#### Scenario: Filling templates under language constraints
+- **WHEN** an agent creates or updates a proposal, design, tasks file, or spec delta
+- **THEN** the instructions direct the agent to follow the existing template structure rather than inventing a new layout
+- **AND** only the natural-language prose follows `docLanguage`
+- **AND** IDs, schema keys, and protocol keywords remain canonical
+
 ### Requirement: Pre-validation Checklist
 `openspec/AGENTS.md` SHALL offer a concise pre-validation checklist that highlights common formatting mistakes before running `openspec validate`.
 

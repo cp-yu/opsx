@@ -13,6 +13,17 @@ export function serializeConfig(config: Partial<ProjectConfig>): string {
   lines.push(`schema: ${config.schema}`);
   lines.push('');
 
+  // Document language with comments
+  lines.push('# OpenSpec document prose language (optional)');
+  lines.push('# Applies only to natural-language body text in artifacts.');
+  lines.push('# Keep template headings, IDs, schema keys, commands, and code tokens unchanged.');
+  lines.push('# Example:');
+  lines.push('#   docLanguage: zh-CN');
+  if (config.docLanguage) {
+    lines.push(`docLanguage: ${config.docLanguage}`);
+  }
+  lines.push('');
+
   // Context section with comments
   lines.push('# Project context (optional)');
   lines.push('# This is shown to AI when creating artifacts.');

@@ -5,6 +5,7 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
+import { ARTIFACT_DOC_LANGUAGE_CONTRACT } from '../fragments/opsx-fragments.js';
 
 export function getApplyChangeSkillTemplate(): SkillTemplate {
   return {
@@ -61,6 +62,8 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
    The files depend on the schema being used:
    - **spec-driven**: proposal, specs, design, tasks
    - Other schemas: follow the contextFiles from CLI output
+
+${ARTIFACT_DOC_LANGUAGE_CONTRACT}
 
 5. **Show current progress**
 
@@ -218,6 +221,8 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
    The files depend on the schema being used:
    - **spec-driven**: proposal, specs, design, tasks
    - Other schemas: follow the contextFiles from CLI output
+
+${ARTIFACT_DOC_LANGUAGE_CONTRACT}
 
 5. **Show current progress**
 

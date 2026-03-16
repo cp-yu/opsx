@@ -5,6 +5,7 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
+import { ARTIFACT_DOC_LANGUAGE_CONTRACT } from '../fragments/opsx-fragments.js';
 
 export function getContinueChangeSkillTemplate(): SkillTemplate {
   return {
@@ -95,6 +96,8 @@ After each invocation, show:
 **Artifact Creation Guidelines**
 
 The artifact types and their purpose depend on the schema. Use the \`instruction\` field from the instructions output to understand what to create.
+
+${ARTIFACT_DOC_LANGUAGE_CONTRACT}
 
 Common artifact patterns:
 
@@ -214,6 +217,8 @@ After each invocation, show:
 **Artifact Creation Guidelines**
 
 The artifact types and their purpose depend on the schema. Use the \`instruction\` field from the instructions output to understand what to create.
+
+${ARTIFACT_DOC_LANGUAGE_CONTRACT}
 
 Common artifact patterns:
 

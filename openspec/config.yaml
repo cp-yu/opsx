@@ -17,7 +17,8 @@ rules:
     - Include scenarios for Windows path handling when dealing with file paths
     - Requirements involving paths must specify cross-platform behavior
     - Be explicit about mechanisms, not just outcomes (say HOW, not just WHAT)
-    - If we generate artifacts, specify deletion/modification by explicit list lookup, not pattern matching
+    - If we generate artifacts, specify deletion/modification by explicit list
+      lookup, not pattern matching
   tasks:
     - Add Windows CI verification as a task when changes involve file paths
     - Include cross-platform testing considerations
@@ -27,3 +28,4 @@ rules:
     - Use existing constants and lists - don't invent detection mechanisms
     - Prefer explicit lookups over pattern matching or regex
     - If we generate it, we track it by name in a constant
+docLanguage: zh-CN

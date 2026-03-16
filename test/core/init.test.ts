@@ -5,14 +5,16 @@ import os from 'os';
 import { InitCommand } from '../../src/core/init.js';
 import { saveGlobalConfig, getGlobalConfig } from '../../src/core/global-config.js';
 
-const { confirmMock, showWelcomeScreenMock, searchableMultiSelectMock } = vi.hoisted(() => ({
+const { confirmMock, inputMock, showWelcomeScreenMock, searchableMultiSelectMock } = vi.hoisted(() => ({
   confirmMock: vi.fn(),
+  inputMock: vi.fn(),
   showWelcomeScreenMock: vi.fn().mockResolvedValue(undefined),
   searchableMultiSelectMock: vi.fn(),
 }));
 
 vi.mock('@inquirer/prompts', () => ({
   confirm: confirmMock,
+  input: inputMock,
 }));
 
 vi.mock('../../src/ui/welcome-screen.js', () => ({
@@ -41,6 +43,8 @@ describe('InitCommand', () => {
     vi.spyOn(console, 'log').mockImplementation(() => { });
     confirmMock.mockReset();
     confirmMock.mockResolvedValue(true);
+    inputMock.mockReset();
+    inputMock.mockResolvedValue('');
     showWelcomeScreenMock.mockClear();
     searchableMultiSelectMock.mockReset();
   });
@@ -75,6 +79,20 @@ describe('InitCommand', () => {
 
       const content = await fs.readFile(configPath, 'utf-8');
       expect(content).toContain('schema: spec-driven');
+    });
+
+    it('should write docLanguage to config.yaml during interactive init', async () => {
+      const initCommand = new InitCommand({ force: true });
+      vi.spyOn(initCommand as any, 'canPromptInteractively').mockReturnValue(true);
+      vi.spyOn(initCommand as any, 'getSelectedTools').mockResolvedValue(['claude']);
+      inputMock.mockResolvedValue('zh-CN');
+
+      await initCommand.execute(testDir);
+
+      const configPath = path.join(testDir, 'openspec', 'config.yaml');
+      const content = await fs.readFile(configPath, 'utf-8');
+      expect(content).toContain('schema: spec-driven');
+      expect(content).toContain('docLanguage: zh-CN');
     });
 
     it('should create core profile skills for Claude Code by default', async () => {
@@ -276,6 +294,29 @@ describe('InitCommand', () => {
       expect(await fileExists(cursorSkill)).toBe(true);
     });
 
+    it('should update existing config.yaml with docLanguage in extend mode', async () => {
+      const openspecDir = path.join(testDir, 'openspec');
+      await fs.mkdir(openspecDir, { recursive: true });
+      await fs.writeFile(
+        path.join(openspecDir, 'config.yaml'),
+        `schema: spec-driven
+context: |
+  Existing project context
+`
+      );
+
+      const initCommand = new InitCommand({ force: true });
+      vi.spyOn(initCommand as any, 'canPromptInteractively').mockReturnValue(true);
+      vi.spyOn(initCommand as any, 'getSelectedTools').mockResolvedValue(['claude']);
+      inputMock.mockResolvedValue('ja');
+
+      await initCommand.execute(testDir);
+
+      const content = await fs.readFile(path.join(openspecDir, 'config.yaml'), 'utf-8');
+      expect(content).toContain('docLanguage: ja');
+      expect(content).toContain('Existing project context');
+    });
+
     it('should refresh skills on re-run for the same tool', async () => {
       const initCommand1 = new InitCommand({ tools: 'claude', force: true });
       await initCommand1.execute(testDir);
@@ -342,6 +383,8 @@ describe('InitCommand', () => {
       const content = await fs.readFile(skillFile, 'utf-8');
 
       expect(content).toContain('name: openspec-apply-change');
+      expect(content).toContain('docLanguage');
+      expect(content).toContain('Keep template headings, IDs, schema keys');
     });
 
     it('should embed generatedBy version in skill files', async () => {
@@ -479,6 +522,8 @@ describe('InitCommand - profile and detection features', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
     confirmMock.mockReset();
     confirmMock.mockResolvedValue(true);
+    inputMock.mockReset();
+    inputMock.mockResolvedValue('');
     showWelcomeScreenMock.mockClear();
     searchableMultiSelectMock.mockReset();
   });

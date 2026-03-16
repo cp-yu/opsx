@@ -50,20 +50,20 @@ Archive a completed change in the experimental workflow.
 
    **If no tasks file exists:** Proceed without task-related warning.
 
-4. **Assess delta spec sync state**
+4. **Assess delta sync state**
 
-   Check for delta specs at `openspec/changes/<name>/specs/`. If none exist, proceed without sync prompt.
+   Check for delta specs at `openspec/changes/<name>/specs/` and for `openspec/changes/<name>/opsx-delta.yaml`. If neither exists, proceed without sync prompt.
 
-   **If delta specs exist:**
+   **If any delta exists:**
    - Compare each delta spec with its corresponding main spec at `openspec/specs/<capability>/spec.md`
-   - Determine what changes would be applied (adds, modifications, removals, renames)
+   - If `opsx-delta.yaml` exists, compare it with the three OPSX files (`project.opsx.yaml`, `project.opsx.relations.yaml`, `project.opsx.code-map.yaml`) and determine ADDED / MODIFIED / REMOVED capability changes
    - Show a combined summary before prompting
 
    **Prompt options:**
    - If changes needed: "Sync now (recommended)", "Archive without syncing"
    - If already synced: "Archive now", "Sync anyway", "Cancel"
 
-   If user chooses sync, use Task tool (subagent_type: "general-purpose", prompt: "Use Skill tool to invoke openspec-sync-specs for change '<name>'. Delta spec analysis: <include the analyzed delta spec summary>"). Proceed to archive regardless of choice.
+   If user chooses sync, use Task tool (subagent_type: "general-purpose", prompt: "Use Skill tool to invoke openspec-sync-specs for change '<name>'. Delta analysis: <include the analyzed delta spec + OPSX summary>"). Proceed to archive regardless of choice.
 
 5. **Perform the archive**
 
@@ -88,7 +88,7 @@ Archive a completed change in the experimental workflow.
    - Change name
    - Schema that was used
    - Archive location
-   - Whether specs were synced (if applicable)
+   - Whether specs / OPSX were synced (if applicable)
    - Note about any warnings (incomplete artifacts/tasks)
 
 **Output On Success**
@@ -99,7 +99,7 @@ Archive a completed change in the experimental workflow.
 **Change:** <change-name>
 **Schema:** <schema-name>
 **Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs:** ✓ Synced to main specs (or "No delta specs" or "Sync skipped")
+**Specs / OPSX:** ✓ Synced to main specs and project OPSX (or "No deltas" or "Sync skipped")
 
 All artifacts complete. All tasks complete.
 ```
@@ -110,5 +110,6 @@ All artifacts complete. All tasks complete.
 - Don't block archive on warnings - just inform and confirm
 - Preserve .openspec.yaml when moving to archive (it moves with the directory)
 - Show clear summary of what happened
-- If sync is requested, use openspec-sync-specs approach (agent-driven)
+- If sync is requested, use the Skill tool to invoke `openspec-sync-specs` (agent-driven)
+- If delta specs exist, always run the sync assessment and show the combined summary before prompting
 - If delta specs exist, always run the sync assessment and show the combined summary before prompting

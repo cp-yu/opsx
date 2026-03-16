@@ -6,7 +6,7 @@ Define how `openspec/config.yaml` is discovered, parsed, validated, and exposed 
 ## Requirements
 ### Requirement: Load project config from openspec/config.yaml
 
-The system SHALL read and parse the project configuration file located at `openspec/config.yaml` relative to the project root.
+The system SHALL read and parse the project configuration file located at `openspec/config.yaml` relative to the project root, including optional top-level fields such as `docLanguage`.
 
 #### Scenario: Valid config file exists
 - **WHEN** `openspec/config.yaml` exists with valid YAML content
@@ -64,6 +64,18 @@ The system SHALL parse each config field independently, collecting valid fields 
 - **WHEN** config contains `context: 123` (number instead of string)
 - **THEN** warning is logged and context field is not included in returned config
 
+#### Scenario: docLanguage field is valid
+- **WHEN** config contains `docLanguage: "zh-CN"`
+- **THEN** docLanguage field is included in returned config
+
+#### Scenario: docLanguage field is missing
+- **WHEN** config lacks the `docLanguage` field
+- **THEN** no warning is logged and the returned config does not include a documentation language override
+
+#### Scenario: docLanguage field is invalid type
+- **WHEN** config contains `docLanguage: 123` (number instead of string)
+- **THEN** warning is logged and docLanguage field is not included in returned config
+
 #### Scenario: Rules field has valid structure
 - **WHEN** config contains `rules: { proposal: ["Rule 1"], specs: ["Rule 2"] }`
 - **THEN** rules field is included in returned config with valid rules
@@ -119,4 +131,3 @@ The system SHALL continue operation with default values when config loading or p
 #### Scenario: Warning is visible to user
 - **WHEN** config loading fails
 - **THEN** system outputs warning message to stderr with details about the failure
-

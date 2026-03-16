@@ -30,6 +30,7 @@ describe('project-config', () => {
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
           `schema: spec-driven
+docLanguage: zh-CN
 context: |
   Tech stack: TypeScript, React
   API style: RESTful
@@ -46,6 +47,7 @@ rules:
 
         expect(config).toEqual({
           schema: 'spec-driven',
+          docLanguage: 'zh-CN',
           context: 'Tech stack: TypeScript, React\nAPI style: RESTful\n',
           rules: {
             proposal: ['Include rollback plan', 'Identify affected teams'],
@@ -117,6 +119,28 @@ rules:
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
           expect.stringContaining("Invalid 'context' field")
+        );
+      });
+
+      it('should return partial config when docLanguage is invalid', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+docLanguage: 123
+context: Valid context
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          context: 'Valid context',
+        });
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("Invalid 'docLanguage' field")
         );
       });
 

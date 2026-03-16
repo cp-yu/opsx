@@ -15,6 +15,7 @@ OpenSpec provides three levels of customization:
 The `openspec/config.yaml` file is the easiest way to customize OpenSpec for your team. It lets you:
 
 - **Set a default schema** - Skip `--schema` on every command
+- **Set document prose language** - Tell OpenSpec which language to use for natural-language artifact body text
 - **Inject project context** - AI sees your tech stack, conventions, etc.
 - **Add per-artifact rules** - Custom rules for specific artifacts
 
@@ -29,6 +30,7 @@ This walks you through creating a config interactively. Or create one manually:
 ```yaml
 # openspec/config.yaml
 schema: spec-driven
+docLanguage: zh-CN
 
 context: |
   Tech stack: TypeScript, React, Node.js, PostgreSQL
@@ -44,6 +46,8 @@ rules:
     - Use Given/When/Then format
     - Reference existing patterns before inventing new ones
 ```
+
+`docLanguage` only applies to natural-language prose in OpenSpec artifacts. Template headings, IDs, schema keys, relation types, BDD keywords, file paths, commands, and code identifiers stay in their canonical form.
 
 ### How It Works
 

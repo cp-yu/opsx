@@ -119,6 +119,20 @@ The command SHALL use consistent exit codes to indicate different failure modes.
 - **AND** leave existing tool configuration files unchanged except for managed sections that need refreshing
 - **AND** exit with code 0 and display a success summary highlighting the newly added tool files
 
+### Requirement: Documentation Language Capture
+`openspec init` SHALL collect the documentation language for OpenSpec artifacts during interactive initialization and persist it to `openspec/config.yaml`.
+
+#### Scenario: Setting documentation language during first-time init
+- **WHEN** the user runs `openspec init` interactively in a new project and provides a documentation language value
+- **THEN** the generated `openspec/config.yaml` includes that `docLanguage` value
+- **AND** the value becomes the default language for OpenSpec artifact prose
+
+#### Scenario: Updating documentation language in an existing project
+- **GIVEN** an `openspec/` directory already exists
+- **WHEN** the user runs `openspec init` interactively and provides a new documentation language value
+- **THEN** the command updates `openspec/config.yaml` to store the new `docLanguage`
+- **AND** the existing OpenSpec structure and configured tools remain unchanged
+
 ### Requirement: Success Output Enhancements
 `openspec init` SHALL summarize tool actions when initialization or extend mode completes.
 

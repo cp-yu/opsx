@@ -4,69 +4,54 @@ Configure OpenSpec to generate artifacts in languages other than English.
 
 ## Quick Setup
 
-Add a language instruction to your `openspec/config.yaml`:
+Set `docLanguage` in your `openspec/config.yaml`:
 
 ```yaml
 schema: spec-driven
+docLanguage: pt-BR
 
 context: |
-  Language: Portuguese (pt-BR)
-  All artifacts must be written in Brazilian Portuguese.
-
-  # Your other project context below...
   Tech stack: TypeScript, React, Node.js
 ```
 
-That's it. All generated artifacts will now be in Portuguese.
+That localizes natural-language prose in generated OpenSpec artifacts. Template headings, IDs, schema keys, BDD keywords, file paths, commands, and code identifiers remain unchanged.
 
 ## Language Examples
 
 ### Portuguese (Brazil)
 
 ```yaml
-context: |
-  Language: Portuguese (pt-BR)
-  All artifacts must be written in Brazilian Portuguese.
+docLanguage: pt-BR
 ```
 
 ### Spanish
 
 ```yaml
-context: |
-  Idioma: Español
-  Todos los artefactos deben escribirse en español.
+docLanguage: es
 ```
 
 ### Chinese (Simplified)
 
 ```yaml
-context: |
-  语言：中文（简体）
-  所有产出物必须用简体中文撰写。
+docLanguage: zh-CN
 ```
 
 ### Japanese
 
 ```yaml
-context: |
-  言語：日本語
-  すべての成果物は日本語で作成してください。
+docLanguage: ja
 ```
 
 ### French
 
 ```yaml
-context: |
-  Langue : Français
-  Tous les artefacts doivent être rédigés en français.
+docLanguage: fr
 ```
 
 ### German
 
 ```yaml
-context: |
-  Sprache: Deutsch
-  Alle Artefakte müssen auf Deutsch verfasst werden.
+docLanguage: de
 ```
 
 ## Tips
@@ -76,11 +61,10 @@ context: |
 Decide how to handle technical terminology:
 
 ```yaml
+docLanguage: ja
+
 context: |
-  Language: Japanese
-  Write in Japanese, but:
-  - Keep technical terms like "API", "REST", "GraphQL" in English
-  - Code examples and file paths remain in English
+  Keep technical terms like "API", "REST", and "GraphQL" in English.
 ```
 
 ### Combine with Other Context
@@ -89,11 +73,9 @@ Language settings work alongside your other project context:
 
 ```yaml
 schema: spec-driven
+docLanguage: pt-BR
 
 context: |
-  Language: Portuguese (pt-BR)
-  All artifacts must be written in Brazilian Portuguese.
-
   Tech stack: TypeScript, React 18, Node.js 20
   Database: PostgreSQL with Prisma ORM
 ```
@@ -103,10 +85,10 @@ context: |
 To verify your language config is working:
 
 ```bash
-# Check the instructions - should show your language context
+# Check the instructions and generated workflow guidance
 openspec instructions proposal --change my-change
 
-# Output will include your language context
+# Agents should read openspec/config.yaml and apply docLanguage to artifact prose
 ```
 
 ## Related Documentation

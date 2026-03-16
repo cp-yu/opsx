@@ -91,6 +91,9 @@ This tells you:
 - Their names, schemas, and status
 - What the user might be working on
 
+If `openspec/project.opsx.yaml` exists at the project root, read it before diving into individual files.
+Use the OPSX structure: domains → capabilities for architecture, `project.opsx.code-map.yaml` for code locations.
+
 If the user mentioned a specific change name, read its artifacts for context.
 
 ### When no change exists

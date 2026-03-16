@@ -49,6 +49,13 @@ Implement tasks from an OpenSpec change.
    - **spec-driven**: proposal, specs, design, tasks
    - Other schemas: follow the contextFiles from CLI output
 
+**Document Language Contract**:
+- Before creating or updating any OpenSpec artifact, read `openspec/config.yaml` if it exists
+- If it defines `docLanguage`, use it only for natural-language prose you write in the artifact body
+- Follow the existing template structure exactly; do not invent a different layout because the prose language changes
+- Keep template headings, IDs, schema keys, relation types, BDD keywords, file paths, commands, and code identifiers in their canonical form
+- If `docLanguage` is missing, keep the default writing behavior for prose
+
 5. **Show current progress**
 
    Display:

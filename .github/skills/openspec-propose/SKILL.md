@@ -15,6 +15,7 @@ I'll create a change with artifacts:
 - proposal.md (what & why)
 - design.md (how)
 - tasks.md (implementation steps)
+- opsx-delta.yaml (project OPSX delta, generated after specs are clear)
 
 When ready to implement, run /opsx:apply
 
@@ -79,6 +80,13 @@ When ready to implement, run /opsx:apply
       - Use **AskUserQuestion tool** to clarify
       - Then continue with creation
 
+   d. **After the `specs` artifact is complete in a spec-driven change, generate `opsx-delta.yaml`**
+      - Read `proposal.md` to extract the capability list
+      - Read all delta specs in `openspec/changes/<name>/specs/*/spec.md`
+      - Read `openspec/project.opsx.yaml` if it exists for current-system context
+      - Generate `openspec/changes/<name>/opsx-delta.yaml` using ADDED / MODIFIED / REMOVED sections
+      - Keep this agent-driven: capture merge intent in the YAML, not in programmatic code
+
 5. **Show final status**
    ```bash
    openspec status --change "<name>"
@@ -98,6 +106,14 @@ After completing all artifacts, summarize:
 - The schema defines what each artifact should contain - follow it
 - Read dependency artifacts for context before creating new ones
 - Use `template` as the structure for your output file - fill in its sections
+
+**Document Language Contract**:
+- Before creating or updating any OpenSpec artifact, read `openspec/config.yaml` if it exists
+- If it defines `docLanguage`, use it only for natural-language prose you write in the artifact body
+- Follow the existing template structure exactly; do not invent a different layout because the prose language changes
+- Keep template headings, IDs, schema keys, relation types, BDD keywords, file paths, commands, and code identifiers in their canonical form
+- If `docLanguage` is missing, keep the default writing behavior for prose
+
 - **IMPORTANT**: `context` and `rules` are constraints for YOU, not content for the file
   - Do NOT copy `<context>`, `<rules>`, `<project_context>` blocks into the artifact
   - These guide what you write, but should never appear in the output

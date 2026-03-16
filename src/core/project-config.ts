@@ -23,6 +23,13 @@ export const ProjectConfigSchema = z.object({
     .min(1)
     .describe('The workflow schema to use (e.g., "spec-driven")'),
 
+  // Optional: natural-language prose language for OpenSpec artifacts
+  docLanguage: z
+    .string()
+    .min(1)
+    .optional()
+    .describe('Language for natural-language prose in OpenSpec artifacts'),
+
   // Optional: project context (injected into all artifact instructions)
   // Max size: 50KB (enforced during parsing)
   context: z
@@ -91,6 +98,18 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
       config.schema = schemaResult.data;
     } else if (raw.schema !== undefined) {
       console.warn(`Invalid 'schema' field in config (must be non-empty string)`);
+    }
+
+    // Parse docLanguage field using Zod
+    if (raw.docLanguage !== undefined) {
+      const docLanguageField = z.string().min(1);
+      const docLanguageResult = docLanguageField.safeParse(raw.docLanguage);
+
+      if (docLanguageResult.success) {
+        config.docLanguage = docLanguageResult.data;
+      } else {
+        console.warn(`Invalid 'docLanguage' field in config (must be non-empty string)`);
+      }
     }
 
     // Parse context field with size limit
