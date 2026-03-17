@@ -7,6 +7,7 @@ import type { CommandContent, ToolCommandAdapter } from '../../../src/core/comma
 describe('command-generation/generator', () => {
   const sampleContent: CommandContent = {
     id: 'explore',
+    commandSlug: 'explore',
     name: 'OpenSpec Explore',
     description: 'Enter explore mode',
     category: 'Workflow',
@@ -34,11 +35,12 @@ describe('command-generation/generator', () => {
       expect(result.fileContent).toContain('Command body here.');
     });
 
-    it('should use command id for path', () => {
-      const content: CommandContent = { ...sampleContent, id: 'custom-cmd' };
+    it('should use command slug for path', () => {
+      const content: CommandContent = { ...sampleContent, id: 'bootstrap-opsx', commandSlug: 'bootstrap' };
       const result = generateCommand(content, claudeAdapter);
 
-      expect(result.path).toContain('custom-cmd.md');
+      expect(result.path).toContain('bootstrap.md');
+      expect(result.path).not.toContain('bootstrap-opsx.md');
     });
 
     it('should work with custom adapter', () => {
@@ -58,9 +60,9 @@ describe('command-generation/generator', () => {
   describe('generateCommands', () => {
     it('should generate multiple commands', () => {
       const contents: CommandContent[] = [
-        { ...sampleContent, id: 'explore', name: 'Explore' },
-        { ...sampleContent, id: 'new', name: 'New' },
-        { ...sampleContent, id: 'apply', name: 'Apply' },
+        { ...sampleContent, id: 'explore', commandSlug: 'explore', name: 'Explore' },
+        { ...sampleContent, id: 'new', commandSlug: 'new', name: 'New' },
+        { ...sampleContent, id: 'apply', commandSlug: 'apply', name: 'Apply' },
       ];
 
       const results = generateCommands(contents, claudeAdapter);
@@ -78,9 +80,9 @@ describe('command-generation/generator', () => {
 
     it('should preserve order of input', () => {
       const contents: CommandContent[] = [
-        { ...sampleContent, id: 'c', name: 'C' },
-        { ...sampleContent, id: 'a', name: 'A' },
-        { ...sampleContent, id: 'b', name: 'B' },
+        { ...sampleContent, id: 'c', commandSlug: 'c', name: 'C' },
+        { ...sampleContent, id: 'a', commandSlug: 'a', name: 'A' },
+        { ...sampleContent, id: 'b', commandSlug: 'b', name: 'B' },
       ];
 
       const results = generateCommands(contents, claudeAdapter);
@@ -92,8 +94,8 @@ describe('command-generation/generator', () => {
 
     it('should generate each command independently', () => {
       const contents: CommandContent[] = [
-        { id: 'a', name: 'A', description: 'DA', category: 'C1', tags: ['t1'], body: 'B1' },
-        { id: 'b', name: 'B', description: 'DB', category: 'C2', tags: ['t2'], body: 'B2' },
+        { id: 'a', commandSlug: 'a', name: 'A', description: 'DA', category: 'C1', tags: ['t1'], body: 'B1' },
+        { id: 'b', commandSlug: 'b', name: 'B', description: 'DB', category: 'C2', tags: ['t2'], body: 'B2' },
       ];
 
       const results = generateCommands(contents, claudeAdapter);

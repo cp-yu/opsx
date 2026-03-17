@@ -23,6 +23,7 @@ import {
   getCommandContents,
   generateSkillContent,
   getToolsWithSkillsDir,
+  getCommandSlug,
   type ToolVersionStatus,
 } from './shared/index.js';
 import {
@@ -438,7 +439,7 @@ export class UpdateCommand {
     if (!adapter) return 0;
 
     for (const workflow of ALL_WORKFLOWS) {
-      const cmdPath = adapter.getFilePath(workflow);
+      const cmdPath = adapter.getFilePath(getCommandSlug(workflow));
       const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
 
       try {
@@ -472,7 +473,7 @@ export class UpdateCommand {
 
     for (const workflow of ALL_WORKFLOWS) {
       if (desiredSet.has(workflow)) continue;
-      const cmdPath = adapter.getFilePath(workflow);
+      const cmdPath = adapter.getFilePath(getCommandSlug(workflow));
       const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
 
       try {

@@ -40,6 +40,9 @@ Supported upgrade paths:
 
 ## Running Bootstrap
 
+The user-facing agent command is `/opsx:bootstrap`.
+It is a CLI-backed workflow wrapper around the real `openspec bootstrap` subcommands shown below.
+
 ```bash
 # Inspect the current repository baseline
 openspec bootstrap status --json
@@ -256,31 +259,32 @@ intent: Manage user profiles including avatar, bio, preferences, and privacy set
 
 ## Incremental Bootstrap
 
-For large codebases, bootstrap in phases:
+For large codebases, bootstrap incrementally by changing the supported CLI inputs and workspace artifacts between validation runs.
 
-### Phase 1: Core Domains
+### Phase 1: Scoped initialization
 
 ```bash
 # Focus on main business logic first
-/opsx:bootstrap --focus src/core src/api
+openspec bootstrap init --mode full --scope src/core --scope src/api
 ```
 
-### Phase 2: Add Capabilities
+### Phase 2: Refine evidence and domain maps
 
-After reviewing domains, add capabilities:
+After reviewing domains, update the bootstrap workspace artifacts and validate again:
 
 ```bash
-# Discover capabilities within domains
-/opsx:bootstrap --extend --capabilities
+# Recompute review artifacts from current workspace data
+openspec bootstrap validate
 ```
 
-### Phase 3: Map Relations
+### Phase 3: Review and promote
 
-Finally, map dependencies:
+Once evidence and mappings are complete:
 
 ```bash
-# Analyze imports and calls
-/opsx:bootstrap --extend --relations
+# Review current phase state, then promote after approval
+openspec bootstrap status
+openspec bootstrap promote -y
 ```
 
 ## Integration with Existing Specs
@@ -334,8 +338,8 @@ Once you've reviewed and refined:
 # Check for drift
 openspec verify --all
 
-# Regenerate if needed
-/opsx:bootstrap --refresh
+# Rebuild bootstrap review artifacts from current workspace data when needed
+openspec bootstrap validate
 ```
 
 ### Handling Refactors

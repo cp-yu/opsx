@@ -6,6 +6,7 @@ describe('command-generation/types', () => {
     it('should allow creating valid command content', () => {
       const content: CommandContent = {
         id: 'explore',
+        commandSlug: 'explore',
         name: 'OpenSpec Explore',
         description: 'Enter explore mode for thinking',
         category: 'Workflow',
@@ -14,6 +15,7 @@ describe('command-generation/types', () => {
       };
 
       expect(content.id).toBe('explore');
+      expect(content.commandSlug).toBe('explore');
       expect(content.name).toBe('OpenSpec Explore');
       expect(content.description).toBe('Enter explore mode for thinking');
       expect(content.category).toBe('Workflow');
@@ -24,6 +26,7 @@ describe('command-generation/types', () => {
     it('should allow empty tags array', () => {
       const content: CommandContent = {
         id: 'test',
+        commandSlug: 'test',
         name: 'Test',
         description: 'Test command',
         category: 'Test',
@@ -39,8 +42,8 @@ describe('command-generation/types', () => {
     it('should implement adapter with getFilePath and formatFile', () => {
       const mockAdapter: ToolCommandAdapter = {
         toolId: 'test-tool',
-        getFilePath(commandId: string): string {
-          return `.test/${commandId}.md`;
+        getFilePath(commandSlug: string): string {
+          return `.test/${commandSlug}.md`;
         },
         formatFile(content: CommandContent): string {
           return `---\nname: ${content.name}\n---\n\n${content.body}\n`;
@@ -52,6 +55,7 @@ describe('command-generation/types', () => {
 
       const content: CommandContent = {
         id: 'test',
+        commandSlug: 'test',
         name: 'Test Command',
         description: 'Desc',
         category: 'Cat',

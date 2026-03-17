@@ -9,6 +9,8 @@ export {
   type SkillName,
   COMMAND_IDS,
   type CommandId,
+  WORKFLOW_TO_COMMAND_SLUG,
+  getCommandSlug,
   type ToolSkillStatus,
   type ToolVersionStatus,
   getToolsWithSkillsDir,

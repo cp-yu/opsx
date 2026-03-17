@@ -216,7 +216,7 @@ capabilities:
 For existing projects without OPSX structure:
 
 ```bash
-# Generate initial project.opsx.yaml from codebase
+# Start the CLI-backed bootstrap workflow for an existing codebase
 /opsx:bootstrap
 ```
 

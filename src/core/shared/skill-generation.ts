@@ -32,6 +32,7 @@ import {
   type SkillTemplate,
 } from '../templates/skill-templates.js';
 import type { CommandContent } from '../command-generation/index.js';
+import { getCommandSlug, type CommandId } from './tool-detection.js';
 
 /**
  * Skill template with directory name and workflow ID mapping.
@@ -47,7 +48,8 @@ export interface SkillTemplateEntry {
  */
 export interface CommandTemplateEntry {
   template: ReturnType<typeof getOpsxExploreCommandTemplate>;
-  id: string;
+  id: CommandId;
+  commandSlug: string;
 }
 
 /**
@@ -84,18 +86,18 @@ export function getSkillTemplates(workflowFilter?: readonly string[]): SkillTemp
  */
 export function getCommandTemplates(workflowFilter?: readonly string[]): CommandTemplateEntry[] {
   const all: CommandTemplateEntry[] = [
-    { template: getOpsxExploreCommandTemplate(), id: 'explore' },
-    { template: getOpsxNewCommandTemplate(), id: 'new' },
-    { template: getOpsxContinueCommandTemplate(), id: 'continue' },
-    { template: getOpsxApplyCommandTemplate(), id: 'apply' },
-    { template: getOpsxFfCommandTemplate(), id: 'ff' },
-    { template: getOpsxSyncCommandTemplate(), id: 'sync' },
-    { template: getOpsxArchiveCommandTemplate(), id: 'archive' },
-    { template: getOpsxBulkArchiveCommandTemplate(), id: 'bulk-archive' },
-    { template: getOpsxVerifyCommandTemplate(), id: 'verify' },
-    { template: getOpsxOnboardCommandTemplate(), id: 'onboard' },
-    { template: getOpsxProposeCommandTemplate(), id: 'propose' },
-    { template: getOpsxBootstrapCommandTemplate(), id: 'bootstrap-opsx' },
+    { template: getOpsxExploreCommandTemplate(), id: 'explore', commandSlug: getCommandSlug('explore') },
+    { template: getOpsxNewCommandTemplate(), id: 'new', commandSlug: getCommandSlug('new') },
+    { template: getOpsxContinueCommandTemplate(), id: 'continue', commandSlug: getCommandSlug('continue') },
+    { template: getOpsxApplyCommandTemplate(), id: 'apply', commandSlug: getCommandSlug('apply') },
+    { template: getOpsxFfCommandTemplate(), id: 'ff', commandSlug: getCommandSlug('ff') },
+    { template: getOpsxSyncCommandTemplate(), id: 'sync', commandSlug: getCommandSlug('sync') },
+    { template: getOpsxArchiveCommandTemplate(), id: 'archive', commandSlug: getCommandSlug('archive') },
+    { template: getOpsxBulkArchiveCommandTemplate(), id: 'bulk-archive', commandSlug: getCommandSlug('bulk-archive') },
+    { template: getOpsxVerifyCommandTemplate(), id: 'verify', commandSlug: getCommandSlug('verify') },
+    { template: getOpsxOnboardCommandTemplate(), id: 'onboard', commandSlug: getCommandSlug('onboard') },
+    { template: getOpsxProposeCommandTemplate(), id: 'propose', commandSlug: getCommandSlug('propose') },
+    { template: getOpsxBootstrapCommandTemplate(), id: 'bootstrap-opsx', commandSlug: getCommandSlug('bootstrap-opsx') },
   ];
 
   if (!workflowFilter) return all;
@@ -111,8 +113,9 @@ export function getCommandTemplates(workflowFilter?: readonly string[]): Command
  */
 export function getCommandContents(workflowFilter?: readonly string[]): CommandContent[] {
   const commandTemplates = getCommandTemplates(workflowFilter);
-  return commandTemplates.map(({ template, id }) => ({
+  return commandTemplates.map(({ template, id, commandSlug }) => ({
     id,
+    commandSlug,
     name: template.name,
     description: template.description,
     category: template.category,

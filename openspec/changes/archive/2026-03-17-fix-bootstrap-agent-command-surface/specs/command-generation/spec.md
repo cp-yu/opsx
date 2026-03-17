@@ -1,9 +1,5 @@
-# command-generation Specification
+## MODIFIED Requirements
 
-## Purpose
-Define tool-agnostic command content and adapter contracts for generating tool-specific OpenSpec command files.
-
-## Requirements
 ### Requirement: CommandContent interface
 
 系统 SHALL 定义一个工具无关的 `CommandContent` 接口来表示命令数据。
@@ -32,24 +28,6 @@ Define tool-agnostic command content and adapter contracts for generating tool-s
   - `getFilePath(commandSlug: string)`: returns file path for the external command slug (relative from project root, or absolute for global-scoped tools like Codex)
   - `formatFile(content: CommandContent)`: returns complete file content with frontmatter
 
-#### Scenario: Claude adapter formatting
-
-- **WHEN** formatting a command for Claude Code
-- **THEN** the adapter SHALL output YAML frontmatter with `name`, `description`, `category`, `tags` fields
-- **AND** file path SHALL follow pattern `.claude/commands/opsx/<id>.md`
-
-#### Scenario: Cursor adapter formatting
-
-- **WHEN** formatting a command for Cursor
-- **THEN** the adapter SHALL output YAML frontmatter with `name` as `/opsx-<id>`, `id`, `category`, `description` fields
-- **AND** file path SHALL follow pattern `.cursor/commands/opsx-<id>.md`
-
-#### Scenario: Windsurf adapter formatting
-
-- **WHEN** formatting a command for Windsurf
-- **THEN** the adapter SHALL output YAML frontmatter with `name`, `description`, `category`, `tags` fields
-- **AND** file path SHALL follow pattern `.windsurf/workflows/opsx-<id>.md`
-
 ### Requirement: Command generator function
 
 系统 SHALL 提供 `generateCommand` 函数来组合 command content 与 adapter。
@@ -66,33 +44,3 @@ Define tool-agnostic command content and adapter contracts for generating tool-s
 - **WHEN** generating all opsx commands for a tool
 - **THEN** the system SHALL iterate over command contents and generate each using the tool's adapter
 - **AND** workflows with custom external command slugs SHALL still preserve their internal IDs in command metadata used by higher-level workflow selection logic
-
-### Requirement: CommandAdapterRegistry
-
-The system SHALL provide a registry for looking up tool adapters.
-
-#### Scenario: Get adapter by tool ID
-
-- **WHEN** calling `CommandAdapterRegistry.get('cursor')`
-- **THEN** it SHALL return the Cursor adapter or undefined if not registered
-
-#### Scenario: Get all adapters
-
-- **WHEN** calling `CommandAdapterRegistry.getAll()`
-- **THEN** it SHALL return array of all registered adapters
-
-#### Scenario: Adapter not found
-
-- **WHEN** looking up an adapter for unregistered tool
-- **THEN** `CommandAdapterRegistry.get()` SHALL return undefined
-- **AND** caller SHALL handle missing adapter appropriately
-
-### Requirement: Shared command body content
-
-The body content of commands SHALL be shared across all tools.
-
-#### Scenario: Same instructions across tools
-
-- **WHEN** generating the 'explore' command for Claude and Cursor
-- **THEN** both SHALL use the same `body` content
-- **AND** only the frontmatter and file path SHALL differ

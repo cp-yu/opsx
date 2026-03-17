@@ -119,6 +119,13 @@ describe('skill-generation', () => {
       expect(ids).toContain('bootstrap-opsx');
     });
 
+    it('should preserve workflow id while exposing mapped bootstrap command slug', () => {
+      const bootstrap = getCommandTemplates().find(t => t.id === 'bootstrap-opsx');
+      expect(bootstrap).toBeDefined();
+      expect(bootstrap?.id).toBe('bootstrap-opsx');
+      expect(bootstrap?.commandSlug).toBe('bootstrap');
+    });
+
     it('should filter by workflow IDs when provided', () => {
       const filtered = getCommandTemplates(['propose', 'explore', 'apply', 'archive']);
       expect(filtered).toHaveLength(4);
@@ -154,6 +161,7 @@ describe('skill-generation', () => {
 
       for (const content of contents) {
         expect(content.id).toBeTruthy();
+        expect(content.commandSlug).toBeTruthy();
         expect(content.name).toBeTruthy();
         expect(content.description).toBeTruthy();
         expect(content.body).toBeTruthy();
@@ -168,6 +176,12 @@ describe('skill-generation', () => {
       const contentIds = contents.map(c => c.id).sort();
 
       expect(contentIds).toEqual(templateIds);
+    });
+
+    it('should map bootstrap workflow to bootstrap command slug', () => {
+      const bootstrap = getCommandContents().find(c => c.id === 'bootstrap-opsx');
+      expect(bootstrap).toBeDefined();
+      expect(bootstrap?.commandSlug).toBe('bootstrap');
     });
 
     it('should filter by workflow IDs when provided', () => {

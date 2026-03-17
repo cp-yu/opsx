@@ -1,0 +1,29 @@
+schema_version: 1
+ADDED:
+  capabilities:
+    - id: cap.ai.command-slugs
+      type: capability
+      intent: 建立内部 workflow ID 到外部用户命令 slug 的映射，使生成、检测、迁移和清理命令制品时都遵循同一套命名契约
+  relations:
+    - from: cap.ai.command-slugs
+      to: dom.ai-integration
+      type: contains
+    - from: cap.ai.command-generation
+      to: cap.ai.command-slugs
+      type: depends_on
+    - from: cap.cli.init
+      to: cap.ai.command-slugs
+      type: depends_on
+    - from: cap.cli.update
+      to: cap.ai.command-slugs
+      type: depends_on
+MODIFIED:
+  capabilities:
+    - id: cap.opsx.bootstrap
+      intent: 提供基于现有 CLI 的 bootstrap 工作流，并让面向 agent 的 `/opsx:bootstrap` 指引与结构化五阶段生命周期保持一致
+    - id: cap.ai.command-generation
+      intent: 为 AI 工具生成 slash command 定义时，使用显式的外部 command slug，而不是假设 workflow ID 总是等于磁盘上的命令文件名
+    - id: cap.cli.init
+      intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品，其中 slash command 输出路径遵循显式 workflow→command slug 映射
+    - id: cap.cli.update
+      intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品，同时通过显式 command slug 映射保持 workflow 选择语义稳定

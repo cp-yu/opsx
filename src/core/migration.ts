@@ -10,6 +10,7 @@ import { getGlobalConfig, getGlobalConfigPath, saveGlobalConfig, type Delivery }
 import { CommandAdapterRegistry } from './command-generation/index.js';
 import { WORKFLOW_TO_SKILL_DIR } from './profile-sync-drift.js';
 import { ALL_WORKFLOWS } from './profiles.js';
+import { getCommandSlug } from './shared/index.js';
 import path from 'path';
 import * as fs from 'fs';
 
@@ -44,7 +45,7 @@ function scanInstalledWorkflowArtifacts(
     if (!adapter) continue;
 
     for (const workflowId of ALL_WORKFLOWS) {
-      const commandPath = adapter.getFilePath(workflowId);
+      const commandPath = adapter.getFilePath(getCommandSlug(workflowId));
       const fullPath = path.isAbsolute(commandPath)
         ? commandPath
         : path.join(projectPath, commandPath);

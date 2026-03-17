@@ -17,7 +17,7 @@ export function generateCommand(
   adapter: ToolCommandAdapter
 ): GeneratedCommand {
   return {
-    path: adapter.getFilePath(content.id),
+    path: adapter.getFilePath(content.commandSlug),
     fileContent: adapter.formatFile(content),
   };
 }

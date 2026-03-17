@@ -6,6 +6,7 @@ import {
   hasProjectConfigDrift,
   WORKFLOW_TO_SKILL_DIR,
 } from '../../src/core/profile-sync-drift.js';
+import { getCommandSlug } from '../../src/core/shared/index.js';
 import { CORE_WORKFLOWS } from '../../src/core/profiles.js';
 import { CommandAdapterRegistry } from '../../src/core/command-generation/index.js';
 
@@ -19,7 +20,7 @@ function writeSkill(projectDir: string, workflowId: string): void {
 function writeCommand(projectDir: string, workflowId: string): void {
   const adapter = CommandAdapterRegistry.get('claude');
   if (!adapter) throw new Error('Claude adapter unavailable in test environment');
-  const cmdPath = adapter.getFilePath(workflowId);
+  const cmdPath = adapter.getFilePath(getCommandSlug(workflowId as Parameters<typeof getCommandSlug>[0]));
   const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectDir, cmdPath);
   fs.mkdirSync(path.dirname(fullPath), { recursive: true });
   fs.writeFileSync(fullPath, `# ${workflowId}\n`);

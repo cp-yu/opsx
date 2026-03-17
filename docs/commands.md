@@ -26,6 +26,7 @@ For workflow patterns and when to use each command, see [Workflows](workflows.md
 | `/opsx:sync` | Merge delta specs into main specs |
 | `/opsx:bulk-archive` | Archive multiple changes at once |
 | `/opsx:onboard` | Guided tutorial through the complete workflow |
+| `/opsx:bootstrap` | Bootstrap OPSX architecture tracking from an existing codebase via the CLI-backed workflow |
 
 The default global profile is `core`. To enable expanded workflow commands, run `openspec config profile`, select workflows, then run `openspec update` in your project.
 

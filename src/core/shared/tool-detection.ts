@@ -29,7 +29,7 @@ export const SKILL_NAMES = [
 export type SkillName = (typeof SKILL_NAMES)[number];
 
 /**
- * IDs of command templates created by openspec init.
+ * Internal workflow IDs for command templates created by openspec init.
  */
 export const COMMAND_IDS = [
   'explore',
@@ -47,6 +47,28 @@ export const COMMAND_IDS = [
 ] as const;
 
 export type CommandId = (typeof COMMAND_IDS)[number];
+
+/**
+ * Maps internal workflow IDs to user-facing command slugs.
+ */
+export const WORKFLOW_TO_COMMAND_SLUG: Record<CommandId, string> = {
+  'explore': 'explore',
+  'new': 'new',
+  'continue': 'continue',
+  'apply': 'apply',
+  'ff': 'ff',
+  'sync': 'sync',
+  'archive': 'archive',
+  'bulk-archive': 'bulk-archive',
+  'verify': 'verify',
+  'onboard': 'onboard',
+  'propose': 'propose',
+  'bootstrap-opsx': 'bootstrap',
+};
+
+export function getCommandSlug(workflowId: CommandId): string {
+  return WORKFLOW_TO_COMMAND_SLUG[workflowId];
+}
 
 /**
  * Status of skill configuration for a tool.

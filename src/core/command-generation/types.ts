@@ -10,8 +10,10 @@
  * Represents the content of a command without any tool-specific formatting.
  */
 export interface CommandContent {
-  /** Command identifier (e.g., 'explore', 'apply', 'new') */
+  /** Internal workflow-linked identifier (e.g., 'explore', 'bootstrap-opsx') */
   id: string;
+  /** External user-facing command slug used for command file generation */
+  commandSlug: string;
   /** Human-readable name (e.g., 'OpenSpec Explore') */
   name: string;
   /** Brief description of command purpose */
@@ -34,11 +36,11 @@ export interface ToolCommandAdapter {
   toolId: string;
   /**
    * Returns the file path for a command.
-   * @param commandId - The command identifier (e.g., 'explore')
+   * @param commandSlug - The external command slug (e.g., 'explore', 'bootstrap')
    * @returns Path from project root (e.g., '.claude/commands/opsx/explore.md').
    *          May be absolute for tools with global-scoped prompts (e.g., Codex).
    */
-  getFilePath(commandId: string): string;
+  getFilePath(commandSlug: string): string;
   /**
    * Formats the complete file content including frontmatter.
    * @param content - The tool-agnostic command content

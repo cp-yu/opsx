@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { UpdateCommand, scanInstalledWorkflows } from '../../src/core/update.js';
+import { getCommandSlug } from '../../src/core/shared/index.js';
 import { InitCommand } from '../../src/core/init.js';
 import { FileSystemUtils } from '../../src/utils/file-system.js';
 import { OPENSPEC_MARKERS } from '../../src/core/config.js';
@@ -250,6 +251,28 @@ Old instructions content
         expect(exists).toBe(false);
       }
     });
+
+    it('should remove mapped bootstrap command when workflow is deselected', async () => {
+      const skillsDir = path.join(testDir, '.claude', 'skills');
+      await fs.mkdir(path.join(skillsDir, 'openspec-explore'), { recursive: true });
+      await fs.writeFile(path.join(skillsDir, 'openspec-explore', 'SKILL.md'), 'old content');
+
+      const bootstrapCmd = path.join(testDir, '.claude', 'commands', 'opsx', getCommandSlug('bootstrap-opsx') + '.md');
+      await fs.mkdir(path.dirname(bootstrapCmd), { recursive: true });
+      await fs.writeFile(bootstrapCmd, 'legacy bootstrap command');
+
+      setMockConfig({
+        featureFlags: {},
+        profile: 'core',
+        delivery: 'commands',
+      });
+
+      await updateCommand.execute(testDir);
+
+      expect(await FileSystemUtils.fileExists(bootstrapCmd)).toBe(false);
+      expect(await FileSystemUtils.fileExists(path.join(testDir, '.claude', 'commands', 'opsx', 'explore.md'))).toBe(true);
+    });
+
   });
 
   describe('multi-tool support', () => {

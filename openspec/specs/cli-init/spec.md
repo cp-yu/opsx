@@ -192,45 +192,36 @@ The command SHALL support non-interactive operation through command-line options
 - **THEN** fail with exit code 1
 - **AND** instruct to use `--tools all`, `--tools none`, or explicit tool IDs
 
-### Requirement: Skill Generation
-
-The command SHALL generate Agent Skills for selected AI tools.
-
-#### Scenario: Generating skills for a tool
+### Requirement: Generating skills for a tool SHALL preserve workflow-linked bootstrap skill identity
+The command SHALL generate skill directories under `.<tool>/skills/` for workflows included in the active profile while preserving the internal workflow identity for bootstrap.
 
 - **WHEN** a tool is selected during initialization
-- **THEN** create 9 skill directories under `.<tool>/skills/`:
-  - `openspec-explore/SKILL.md`
-  - `openspec-new-change/SKILL.md`
-  - `openspec-continue-change/SKILL.md`
-  - `openspec-apply-change/SKILL.md`
-  - `openspec-ff-change/SKILL.md`
-  - `openspec-verify-change/SKILL.md`
-  - `openspec-sync-specs/SKILL.md`
-  - `openspec-archive-change/SKILL.md`
-  - `openspec-bulk-archive-change/SKILL.md`
+- **THEN** create skill directories under `.<tool>/skills/` for workflows included in the active profile
+- **AND** the generated skill set SHALL include `openspec-bootstrap-opsx` when workflow `bootstrap-opsx` is selected
 - **AND** each SKILL.md SHALL contain YAML frontmatter with name and description
 - **AND** each SKILL.md SHALL contain the skill instructions
 
-### Requirement: Slash Command Generation
+#### Scenario: Custom profile includes bootstrap skill
+- **WHEN** the active profile includes workflow `bootstrap-opsx`
+- **THEN** initialization SHALL generate the bootstrap skill directory `openspec-bootstrap-opsx`
+- **AND** the generated skill SHALL remain associated with workflow `bootstrap-opsx`
 
-The command SHALL generate opsx slash commands for selected AI tools.
+### Requirement: Slash Command Generation SHALL derive bootstrap artifacts from explicit command slug mapping
+The command SHALL generate opsx slash commands for selected AI tools using an explicit workflow-to-command-slug mapping.
 
 #### Scenario: Generating slash commands for a tool
 
 - **WHEN** a tool is selected during initialization
-- **THEN** create 9 slash command files using the tool's command adapter:
-  - `/opsx:explore`
-  - `/opsx:new`
-  - `/opsx:continue`
-  - `/opsx:apply`
-  - `/opsx:ff`
-  - `/opsx:verify`
-  - `/opsx:sync`
-  - `/opsx:archive`
-  - `/opsx:bulk-archive`
+- **THEN** create slash command files for all workflows included in the active profile using the tool's command adapter
+- **AND** the generated command set SHALL include `/opsx:bootstrap` when workflow `bootstrap-opsx` is selected
+- **AND** command artifact paths SHALL be derived from an explicit workflow-to-command-slug mapping rather than assuming workflow ID equals file basename
 - **AND** use tool-specific path conventions (e.g., `.claude/commands/opsx/` for Claude)
 - **AND** include tool-specific frontmatter format
+
+#### Scenario: Bootstrap command path is cross-platform safe
+- **WHEN** the bootstrap command artifact is generated for any supported operating system
+- **THEN** the path SHALL be constructed using platform-safe path utilities
+- **AND** path-sensitive verification SHALL use path-aware assertions rather than hardcoded separators
 
 ### Requirement: Config File Generation
 

@@ -129,7 +129,7 @@ export function getOpsxBootstrapCommandTemplate(): CommandTemplate {
     description: 'Bootstrap OPSX architecture map from existing codebase using structured five-phase workflow',
     category: 'Workflow',
     tags: ['workflow', 'opsx', 'bootstrap'],
-    content: `Bootstrap the OPSX architecture map using the structured workflow.
+    content: `Run the CLI-backed /opsx:bootstrap workflow to bootstrap the OPSX architecture map.
 
 **Phases**: init → scan → map → review → promote
 
@@ -155,6 +155,7 @@ Each phase produces intermediate artifacts in \`openspec/bootstrap/\`.
 The workspace is cleaned up after promote.
 
 **Key Commands**
+- \/opsx:bootstrap — user-facing agent command that drives the CLI-backed workflow
 - \`openspec bootstrap init [--mode full|opsx-first] [--scope src/]\` — create workspace
 - \`openspec bootstrap status [--json]\` — phase progress + per-domain status
 - \`openspec bootstrap instructions [phase] [--json]\` — phase-specific guidance

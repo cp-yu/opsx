@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
 import { InitCommand } from '../../src/core/init.js';
+import { getCommandSlug } from '../../src/core/shared/index.js';
 import { saveGlobalConfig, getGlobalConfig } from '../../src/core/global-config.js';
 
 const { confirmMock, inputMock, showWelcomeScreenMock, searchableMultiSelectMock } = vi.hoisted(() => ({
@@ -422,6 +423,23 @@ context: |
 
       const content = await fs.readFile(cmdFile, 'utf-8');
       expect(content).toMatch(/^---\n/);
+    });
+
+    it('should generate mapped bootstrap command path for custom workflow selection', async () => {
+      saveGlobalConfig({
+        featureFlags: {},
+        profile: 'custom',
+        delivery: 'commands',
+        workflows: ['bootstrap-opsx'],
+      });
+
+      const initCommand = new InitCommand({ tools: 'claude', force: true });
+      await initCommand.execute(testDir);
+
+      const bootstrapCmd = path.join(testDir, '.claude', 'commands', 'opsx', getCommandSlug('bootstrap-opsx') + '.md');
+      const legacyBootstrapCmd = path.join(testDir, '.claude', 'commands', 'opsx', 'bootstrap-opsx.md');
+      expect(await fileExists(bootstrapCmd)).toBe(true);
+      expect(await fileExists(legacyBootstrapCmd)).toBe(false);
     });
   });
 

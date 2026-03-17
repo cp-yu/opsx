@@ -7,6 +7,7 @@ import { promises as fsp } from 'node:fs';
 import { AI_TOOLS, type AIToolOption } from '../../src/core/config.js';
 import { CommandAdapterRegistry } from '../../src/core/command-generation/index.js';
 import { saveGlobalConfig, getGlobalConfigPath } from '../../src/core/global-config.js';
+import { getCommandSlug } from '../../src/core/shared/index.js';
 import { migrateIfNeeded, scanInstalledWorkflows } from '../../src/core/migration.js';
 
 const CLAUDE_TOOL = AI_TOOLS.find((tool) => tool.value === 'claude') as AIToolOption | undefined;
@@ -29,7 +30,7 @@ async function writeManagedCommand(projectPath: string, workflowId: string): Pro
   if (!adapter) {
     throw new Error('Claude adapter not found');
   }
-  const commandPath = adapter.getFilePath(workflowId);
+  const commandPath = adapter.getFilePath(getCommandSlug(workflowId as Parameters<typeof getCommandSlug>[0]));
   const fullPath = path.isAbsolute(commandPath)
     ? commandPath
     : path.join(projectPath, commandPath);

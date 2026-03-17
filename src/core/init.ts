@@ -39,6 +39,7 @@ import {
   getToolStates,
   getSkillTemplates,
   getCommandContents,
+  getCommandSlug,
   generateSkillContent,
   type ToolSkillStatus,
 } from './shared/index.js';
@@ -819,7 +820,7 @@ export class InitCommand {
     if (!adapter) return 0;
 
     for (const workflow of ALL_WORKFLOWS) {
-      const cmdPath = adapter.getFilePath(workflow);
+      const cmdPath = adapter.getFilePath(getCommandSlug(workflow));
       const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
 
       try {

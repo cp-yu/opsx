@@ -1,1 +1,5 @@
 修改项目中关于Fission-AI的网址
+[] 现在init无法正常修改extend模式，疑似有问题。
+[] 现在的文档语言控制还不够，不仅仅desin proposal需要指定语言，specs也需要指定的语言。仅仅关键词是模板一致即可。
+[] 原版有specs sync，但是没有opsx delta的sync
+[] 项目缺少了openspec sync 这个cli command

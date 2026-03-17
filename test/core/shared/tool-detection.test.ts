@@ -5,6 +5,9 @@ import os from 'os';
 import { randomUUID } from 'crypto';
 import {
   SKILL_NAMES,
+  COMMAND_IDS,
+  WORKFLOW_TO_COMMAND_SLUG,
+  getCommandSlug,
   getToolsWithSkillsDir,
   getToolSkillStatus,
   getToolStates,
@@ -41,6 +44,18 @@ describe('tool-detection', () => {
       expect(SKILL_NAMES).toContain('openspec-onboard');
       expect(SKILL_NAMES).toContain('openspec-propose');
       expect(SKILL_NAMES).toContain('openspec-bootstrap-opsx');
+    });
+  });
+
+  describe('command slug mapping', () => {
+    it('should expose all command workflow ids', () => {
+      expect(COMMAND_IDS).toHaveLength(12);
+      expect(COMMAND_IDS).toContain('bootstrap-opsx');
+    });
+
+    it('should map bootstrap workflow id to bootstrap command slug', () => {
+      expect(WORKFLOW_TO_COMMAND_SLUG['bootstrap-opsx']).toBe('bootstrap');
+      expect(getCommandSlug('bootstrap-opsx')).toBe('bootstrap');
     });
   });
 
