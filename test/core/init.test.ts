@@ -395,7 +395,7 @@ context: |
       const content = await fs.readFile(skillFile, 'utf-8');
 
       // Should contain generatedBy field with a version string
-      expect(content).toMatch(/generatedBy:\s*["']?\d+\.\d+\.\d+["']?/);
+      expect(content).toMatch(/generatedBy:\s*["']?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?["']?/);
     });
   });
 
