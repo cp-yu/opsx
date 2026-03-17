@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Define the bootstrap workflow contract: how `openspec bootstrap` CLI subcommands guide users through initializing and promoting OPSX architecture files.
+
+## Requirements
 
 ### Requirement: Bootstrap docs and workflow templates SHALL describe only the CLI-backed five-phase flow
 Bootstrap 文档、workflow templates 与生成的命令指引 SHALL 仅将 bootstrap 描述为由现有 `openspec bootstrap` CLI 子命令驱动的结构化流程。
@@ -17,8 +21,6 @@ Bootstrap 文档、workflow templates 与生成的命令指引 SHALL 仅将 boot
 - **WHEN** bootstrap docs are updated for the structured CLI-backed workflow
 - **THEN** they SHALL NOT describe unsupported command forms such as `/opsx:bootstrap --focus`, `/opsx:bootstrap --extend --capabilities`, `/opsx:bootstrap --extend --relations`, or `/opsx:bootstrap --refresh`
 - **AND** the docs SHALL direct scoped initialization to supported CLI parameters such as `openspec bootstrap init --scope ...`
-
-## MODIFIED Requirements
 
 ### Requirement: Bootstrap contract surfaces SHALL stay consistent
 Bootstrap schema、CLI behavior、workflow templates、generated instructions 与 user-facing docs SHALL 描述同一套生命周期合同。

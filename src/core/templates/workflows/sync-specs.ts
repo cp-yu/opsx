@@ -5,6 +5,7 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
+import { OPSX_SYNC_DELTA } from '../fragments/opsx-fragments.js';
 
 export function getSyncSpecsSkillTemplate(): SkillTemplate {
   return {
@@ -71,11 +72,18 @@ This is an **agent-driven** operation - you will read delta specs and directly e
       - Add Purpose section (can be brief, mark as TBD)
       - Add Requirements section with the ADDED requirements
 
-4. **Show summary**
+4. **Sync OPSX delta**
+
+${OPSX_SYNC_DELTA}
+
+   - If no \`opsx-delta.yaml\` exists, skip this step silently.
+
+5. **Show summary**
 
    After applying all changes, summarize:
    - Which capabilities were updated
    - What changes were made (requirements added/modified/removed/renamed)
+   - OPSX delta sync results (if applicable): nodes added/modified/removed, relations added/modified/removed
 
 **Delta Spec Format Reference**
 
@@ -127,6 +135,10 @@ Updated main specs:
 **<capability-2>**:
 - Created new spec file
 - Added requirement: "Another Feature"
+
+OPSX delta synced:
+- Nodes: X added, Y modified, Z removed
+- Relations: X added, Y modified, Z removed
 
 Main specs are now updated. The change remains active - archive when implementation is complete.
 \`\`\`
@@ -210,11 +222,18 @@ This is an **agent-driven** operation - you will read delta specs and directly e
       - Add Purpose section (can be brief, mark as TBD)
       - Add Requirements section with the ADDED requirements
 
-4. **Show summary**
+4. **Sync OPSX delta**
+
+${OPSX_SYNC_DELTA}
+
+   - If no \`opsx-delta.yaml\` exists, skip this step silently.
+
+5. **Show summary**
 
    After applying all changes, summarize:
    - Which capabilities were updated
    - What changes were made (requirements added/modified/removed/renamed)
+   - OPSX delta sync results (if applicable): nodes added/modified/removed, relations added/modified/removed
 
 **Delta Spec Format Reference**
 
@@ -266,6 +285,10 @@ Updated main specs:
 **<capability-2>**:
 - Created new spec file
 - Added requirement: "Another Feature"
+
+OPSX delta synced:
+- Nodes: X added, Y modified, Z removed
+- Relations: X added, Y modified, Z removed
 
 Main specs are now updated. The change remains active - archive when implementation is complete.
 \`\`\`

@@ -19,6 +19,11 @@
 - [x] 2.2 Modify `propose.ts`: add opsx-delta generation step after specs creation
 - [x] 2.3 Modify `ff-change.ts`: add opsx-delta generation (same logic as propose)
 - [x] 2.4 Modify `sync-specs.ts`: add opsx-delta merging step with programmatic validation
+  - [x] 2.4.1 Import `OPSX_SYNC_DELTA` fragment in `sync-specs.ts`
+  - [x] 2.4.2 Embed fragment into `getSyncSpecsSkillTemplate()` instructions after specs sync steps
+  - [x] 2.4.3 Embed fragment into `getOpsxSyncCommandTemplate()` content after specs sync steps
+  - [x] 2.4.4 Update output template to include OPSX merge summary alongside specs summary
+  - [x] 2.4.5 Update `openspec/specs/specs-sync-skill/spec.md` with OPSX delta sync BDD scenarios
 - [x] 2.5 Modify `archive-change.ts`: add opsx-delta sync check before archiving
 - [x] 2.6 Modify `bulk-archive-change.ts`: add opsx-delta sync check for all changes
 - [x] 2.7 Modify `verify-change.ts`: add OPSX alignment verification (spec_refs bidirectional, referential integrity)
@@ -55,6 +60,6 @@
 - [x] 5.1 Run all tests and ensure 100% pass rate
 - [x] 5.2 Verify no template duplication (shared fragments properly used)
 - [x] 5.3 Check backward compatibility with changes lacking opsx-delta
-- [ ] 5.4 Performance benchmark: YAML parse, validation, atomic write
+- [x] 5.4 Performance benchmark: YAML parse, validation, atomic write
 - [x] 5.5 Code review: ensure consistency with existing OpenSpec patterns
-- [ ] 5.6 Final integration test on real project with multiple changes
+- [x] 5.6 Final integration test on real project with multiple changes
