@@ -41,7 +41,8 @@ jobs:
       - name: Pack tarball
         id: pack
         run: |
-          PACKAGE_FILE=$(npm pack)
+          PACKAGE_FILE=$(node -p "const pkg=require('./package.json'); pkg.name.replace('@', '').replace('/', '-') + '-' + pkg.version + '.tgz'")
+          npm pack
           echo "package_file=$PACKAGE_FILE" >> "$GITHUB_OUTPUT"
 
       - name: Create or update release

@@ -157,3 +157,4 @@ opencode.json
 # Codex
 .codex/
 .ace-tool/
+.npm-cache
