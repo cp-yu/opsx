@@ -4,17 +4,17 @@
 
 - **Node.js 20.19.0 or higher** — Check your version: `node --version`
 
-## GitHub Install
+## GitHub Release Install
 
-Install directly from this repository:
+Install the packaged tarball from a GitHub Release:
 
 ```bash
-npm install -g git+https://github.com/cp-yu/opsx.git
+npm install -g https://github.com/cp-yu/opsx/releases/download/v1.2.0-cpyu.2/fission-ai-openspec-1.2.0-cpyu.2.tgz
 ```
 
-If you prefer another package manager, use the same Git URL syntax it supports.
+Replace `1.2.0-cpyu.2` with the version you want to install.
 
-This repository builds correctly during Git installs because the package `prepare` step runs `node build.js` directly instead of requiring `pnpm`.
+This installs a prebuilt package asset, so users do not need a Git dependency build during installation.
 
 ## Nix
 

@@ -83,11 +83,13 @@ AI:  Archived to openspec/changes/archive/2025-01-23-add-dark-mode/
 
 **Requires Node.js 20.19.0 or higher.**
 
-Install this fork globally from GitHub:
+Install the packaged release tarball from GitHub Releases:
 
 ```bash
-npm install -g git+https://github.com/cp-yu/opsx.git
+npm install -g https://github.com/cp-yu/opsx/releases/download/v1.2.0-cpyu.2/fission-ai-openspec-1.2.0-cpyu.2.tgz
 ```
+
+For future versions, replace both occurrences of `1.2.0-cpyu.2` with the release tag you want to pin.
 
 Then navigate to your project directory and initialize:
 
@@ -137,10 +139,10 @@ AI coding assistants are powerful but unpredictable when requirements live only 
 
 ## Updating OpenSpec
 
-**Reinstall from GitHub**
+**Reinstall from GitHub Releases**
 
 ```bash
-npm install -g git+https://github.com/cp-yu/opsx.git
+npm install -g https://github.com/cp-yu/opsx/releases/download/v1.2.0-cpyu.2/fission-ai-openspec-1.2.0-cpyu.2.tgz
 ```
 
 **Refresh agent instructions**
@@ -150,6 +152,8 @@ Run this inside each project to regenerate AI guidance and ensure the latest sla
 ```bash
 openspec update
 ```
+
+For a newer release, replace the version in the tarball URL and reinstall before running `openspec update`.
 
 ## Usage Notes
 
