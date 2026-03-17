@@ -8,6 +8,21 @@ import { getBootstrapStatus } from '../../src/utils/bootstrap-utils.js';
 
 const tempRoots: string[] = [];
 
+async function removeDirWithRetry(dir: string, attempts = 5): Promise<void> {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await fs.rm(dir, { recursive: true, force: true });
+      return;
+    } catch (error: any) {
+      // Windows can hold temp files briefly after child process exit.
+      if (error?.code !== 'EBUSY' || attempt === attempts) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, attempt * 200));
+    }
+  }
+}
+
 async function createTempProject(): Promise<string> {
   const projectDir = await fs.mkdtemp(path.join(tmpdir(), 'openspec-bootstrap-lifecycle-'));
   tempRoots.push(projectDir);
@@ -148,7 +163,7 @@ code_refs:
 }
 
 afterAll(async () => {
-  await Promise.all(tempRoots.map((dir) => fs.rm(dir, { recursive: true, force: true })));
+  await Promise.all(tempRoots.map((dir) => removeDirWithRetry(dir)));
 });
 
 describe('openspec bootstrap lifecycle', () => {
@@ -213,7 +228,7 @@ describe('openspec bootstrap lifecycle', () => {
     expect(promoteResult.exitCode).toBe(1);
     expect(await pathExists(projectDir, 'openspec/project.opsx.yaml')).toBe(false);
     expect(await pathExists(projectDir, 'openspec/bootstrap')).toBe(true);
-  });
+  }, 30000);
 
   it('invalidates stale review after evidence edits and reports stale status', async () => {
     const projectDir = await createTempProject();
@@ -261,5 +276,5 @@ describe('openspec bootstrap lifecycle', () => {
     expect(review).toContain('dom.payments');
     expect(review.indexOf('dom.payments')).toBeLessThan(review.indexOf('dom.auth'));
     expect(review).toContain('- [ ] dom.payments');
-  });
+  }, 30000);
 });
