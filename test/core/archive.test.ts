@@ -4,6 +4,13 @@ import { Validator } from '../../src/core/validation/validator.js';
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
+import { stringify as stringifyYaml } from 'yaml';
+import {
+  OPSX_SCHEMA_VERSION,
+  readProjectOpsx,
+  writeProjectOpsx,
+  type ProjectOpsxBundle,
+} from '../../src/utils/opsx-utils.js';
 
 // Mock @inquirer/prompts
 vi.mock('@inquirer/prompts', () => ({
@@ -15,6 +22,16 @@ describe('ArchiveCommand', () => {
   let tempDir: string;
   let archiveCommand: ArchiveCommand;
   const originalConsoleLog = console.log;
+
+  const mkBundle = (overrides: Partial<ProjectOpsxBundle> = {}): ProjectOpsxBundle => ({
+    schema_version: OPSX_SCHEMA_VERSION,
+    project: { id: 'test-project', name: 'test-project' },
+    domains: [],
+    capabilities: [],
+    relations: [],
+    code_map: [],
+    ...overrides,
+  });
 
   beforeEach(async () => {
     // Create temp directory
@@ -319,23 +336,53 @@ New feature description.
       const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
       const changeSpecDir = path.join(changeDir, 'specs', 'test-capability');
       await fs.mkdir(changeSpecDir, { recursive: true });
-      
+
+      await writeProjectOpsx(tempDir, mkBundle({
+        domains: [{ id: 'dom.core', type: 'domain', intent: 'Core domain' }],
+        capabilities: [{ id: 'cap.core.init', type: 'capability', intent: 'Init app' }],
+        relations: [{ from: 'cap.core.init', to: 'dom.core', type: 'contains' }],
+      }));
+
       // Create spec in change
-      const specContent = '# Test Capability Spec\n\nTest content';
+      const specContent = `# Test Capability Spec - Changes
+
+## ADDED Requirements
+
+### Requirement: The system SHALL provide test capability
+
+#### Scenario: Basic test
+Given a test condition
+When an action occurs
+Then expected result happens`;
       await fs.writeFile(path.join(changeSpecDir, 'spec.md'), specContent);
-      
+      await fs.writeFile(
+        path.join(changeDir, 'opsx-delta.yaml'),
+        stringifyYaml({
+          schema_version: OPSX_SCHEMA_VERSION,
+          ADDED: {
+            domains: [{ id: 'dom.ops', type: 'domain', intent: 'Operations domain' }],
+            capabilities: [{ id: 'cap.ops.archive', type: 'capability', intent: 'Archive operations' }],
+            relations: [{ from: 'cap.ops.archive', to: 'dom.ops', type: 'contains' }],
+          },
+        })
+      );
+
       // Execute archive with --skip-specs flag and noValidate to skip validation
       await archiveCommand.execute(changeName, { yes: true, skipSpecs: true, noValidate: true });
-      
+
       // Verify skip message was logged
       expect(console.log).toHaveBeenCalledWith(
-        'Skipping spec updates (--skip-specs flag provided).'
+        'Skipping archive-time sync writes (--skip-specs flag provided).'
       );
-      
+
       // Verify spec was NOT copied to main specs
       const mainSpecPath = path.join(tempDir, 'openspec', 'specs', 'test-capability', 'spec.md');
       await expect(fs.access(mainSpecPath)).rejects.toThrow();
-      
+
+      const bundle = await readProjectOpsx(tempDir);
+      expect(bundle?.domains.find((domain) => domain.id === 'dom.ops')).toBeUndefined();
+      expect(bundle?.capabilities.find((capability) => capability.id === 'cap.ops.archive')).toBeUndefined();
+
       // Verify change was still archived
       const archiveDir = path.join(tempDir, 'openspec', 'changes', 'archive');
       const archives = await fs.readdir(archiveDir);
@@ -383,24 +430,17 @@ The system will log all events.
       }
     });
 
-    it('should proceed with archive when user declines spec updates', async () => {
-      const { confirm } = await import('@inquirer/prompts');
-      const mockConfirm = confirm as unknown as ReturnType<typeof vi.fn>;
-      
-      const changeName = 'decline-specs-feature';
+    it('should sync delta specs during archive', async () => {
+      const changeName = 'inline-sync-feature';
       const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
       const changeSpecDir = path.join(changeDir, 'specs', 'test-capability');
       await fs.mkdir(changeSpecDir, { recursive: true });
       
-      // Create valid spec in change
-      const specContent = `# Test Capability Spec
+      const specContent = `# Test Capability Spec - Changes
 
-## Purpose
-This is a test capability specification.
+## ADDED Requirements
 
-## Requirements
-
-### The system SHALL provide test capability
+### Requirement: The system SHALL provide test capability
 
 #### Scenario: Basic test
 Given a test condition
@@ -408,26 +448,11 @@ When an action occurs
 Then expected result happens`;
       await fs.writeFile(path.join(changeSpecDir, 'spec.md'), specContent);
       
-      // Mock confirm to return false (decline spec updates)
-      mockConfirm.mockResolvedValueOnce(false);
-      
-      // Execute archive without --yes flag
-      await archiveCommand.execute(changeName);
-      
-      // Verify user was prompted about specs
-      expect(mockConfirm).toHaveBeenCalledWith({
-        message: 'Proceed with spec updates?',
-        default: true
-      });
-      
-      // Verify skip message was logged
-      expect(console.log).toHaveBeenCalledWith(
-        'Skipping spec updates. Proceeding with archive.'
-      );
-      
-      // Verify spec was NOT copied to main specs
+      await archiveCommand.execute(changeName, { yes: true, noValidate: true });
+
       const mainSpecPath = path.join(tempDir, 'openspec', 'specs', 'test-capability', 'spec.md');
-      await expect(fs.access(mainSpecPath)).rejects.toThrow();
+      const updatedContent = await fs.readFile(mainSpecPath, 'utf-8');
+      expect(updatedContent).toContain('### Requirement: The system SHALL provide test capability');
       
       // Verify change was still archived
       const archiveDir = path.join(tempDir, 'openspec', 'changes', 'archive');
@@ -522,6 +547,145 @@ content D`;
       expect(updated).toContain('### Requirement: D');
       expect(updated).not.toContain('### Requirement: A');
       expect(updated).not.toContain('### Requirement: B');
+    });
+
+    it('should apply opsx-delta during archive when no delta specs exist', async () => {
+      const changeName = 'opsx-only-feature';
+      const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
+      await fs.mkdir(changeDir, { recursive: true });
+
+      await writeProjectOpsx(tempDir, mkBundle({
+        domains: [{ id: 'dom.core', type: 'domain', intent: 'Core domain' }],
+        capabilities: [{ id: 'cap.core.init', type: 'capability', intent: 'Initialize application' }],
+        relations: [{ from: 'cap.core.init', to: 'dom.core', type: 'contains' }],
+      }));
+
+      await fs.writeFile(
+        path.join(changeDir, 'opsx-delta.yaml'),
+        stringifyYaml({
+          schema_version: OPSX_SCHEMA_VERSION,
+          ADDED: {
+            domains: [{ id: 'dom.auth', type: 'domain', intent: 'Authentication domain' }],
+            capabilities: [{ id: 'cap.auth.login', type: 'capability', intent: 'User login' }],
+            relations: [{ from: 'cap.auth.login', to: 'dom.auth', type: 'contains' }],
+          },
+        })
+      );
+
+      await archiveCommand.execute(changeName, { yes: true, noValidate: true });
+
+      const bundle = await readProjectOpsx(tempDir);
+      expect(bundle?.domains.find((domain) => domain.id === 'dom.auth')).toBeDefined();
+      expect(bundle?.capabilities.find((capability) => capability.id === 'cap.auth.login')).toBeDefined();
+      expect(bundle?.relations.find((relation) => relation.from === 'cap.auth.login' && relation.to === 'dom.auth')).toBeDefined();
+    });
+
+    it('should archive safely without standalone sync surface when both delta specs and opsx-delta exist', async () => {
+      const changeName = 'embedded-sync-complete';
+      const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
+      const changeSpecDir = path.join(changeDir, 'specs', 'auth');
+      await fs.mkdir(changeSpecDir, { recursive: true });
+
+      await writeProjectOpsx(tempDir, mkBundle({
+        domains: [{ id: 'dom.core', type: 'domain', intent: 'Core domain' }],
+        capabilities: [{ id: 'cap.core.init', type: 'capability', intent: 'Initialize application' }],
+        relations: [{ from: 'cap.core.init', to: 'dom.core', type: 'contains' }],
+      }));
+
+      await fs.writeFile(path.join(changeSpecDir, 'spec.md'), `# Auth - Changes
+
+## ADDED Requirements
+
+### Requirement: The system SHALL support login
+
+#### Scenario: Login succeeds
+Given valid credentials
+When the user submits the form
+Then the system signs the user in`);
+
+      await fs.writeFile(
+        path.join(changeDir, 'opsx-delta.yaml'),
+        stringifyYaml({
+          schema_version: OPSX_SCHEMA_VERSION,
+          ADDED: {
+            domains: [{ id: 'dom.auth', type: 'domain', intent: 'Authentication domain' }],
+            capabilities: [{ id: 'cap.auth.login', type: 'capability', intent: 'User login' }],
+            relations: [{ from: 'cap.auth.login', to: 'dom.auth', type: 'contains' }],
+          },
+        })
+      );
+
+      await expect(fs.access(path.join(tempDir, '.claude', 'skills', 'openspec-sync-specs'))).rejects.toThrow();
+
+      await archiveCommand.execute(changeName, { yes: true, noValidate: true });
+
+      const mainSpecPath = path.join(tempDir, 'openspec', 'specs', 'auth', 'spec.md');
+      const mainSpec = await fs.readFile(mainSpecPath, 'utf-8');
+      expect(mainSpec).toContain('### Requirement: The system SHALL support login');
+
+      const bundle = await readProjectOpsx(tempDir);
+      expect(bundle?.domains.find((domain) => domain.id === 'dom.auth')).toBeDefined();
+      expect(bundle?.capabilities.find((capability) => capability.id === 'cap.auth.login')).toBeDefined();
+    });
+
+    it('should abort archive and preserve specs plus OPSX when embedded sync validation fails', async () => {
+      const changeName = 'embedded-sync-failure';
+      const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
+      const changeSpecDir = path.join(changeDir, 'specs', 'alpha');
+      const mainSpecDir = path.join(tempDir, 'openspec', 'specs', 'alpha');
+      const mainSpecPath = path.join(mainSpecDir, 'spec.md');
+      await fs.mkdir(changeSpecDir, { recursive: true });
+      await fs.mkdir(mainSpecDir, { recursive: true });
+
+      const originalSpec = `# alpha Specification
+
+## Purpose
+Alpha purpose.
+
+## Requirements
+
+### Requirement: Existing Rule
+Original body.`;
+      await fs.writeFile(mainSpecPath, originalSpec);
+
+      const originalBundle = mkBundle({
+        domains: [{ id: 'dom.core', type: 'domain', intent: 'Core domain' }],
+        capabilities: [{ id: 'cap.core.init', type: 'capability', intent: 'Initialize application' }],
+        relations: [{ from: 'cap.core.init', to: 'dom.core', type: 'contains' }],
+      });
+      await writeProjectOpsx(tempDir, originalBundle);
+
+      await fs.writeFile(path.join(changeSpecDir, 'spec.md'), `# Alpha - Changes
+
+## MODIFIED Requirements
+### Requirement: Existing Rule
+Updated body.`);
+
+      await fs.writeFile(
+        path.join(changeDir, 'opsx-delta.yaml'),
+        stringifyYaml({
+          schema_version: OPSX_SCHEMA_VERSION,
+          ADDED: {
+            relations: [{ from: 'cap.missing', to: 'dom.core', type: 'contains' }],
+          },
+        })
+      );
+
+      await archiveCommand.execute(changeName, { yes: true, noValidate: true });
+
+      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('OPSX referential integrity validation failed'));
+      expect(console.log).toHaveBeenCalledWith('Aborted. No files were changed.');
+
+      const unchangedSpec = await fs.readFile(mainSpecPath, 'utf-8');
+      expect(unchangedSpec).toBe(originalSpec);
+
+      const unchangedBundle = await readProjectOpsx(tempDir);
+      expect(unchangedBundle).toEqual(originalBundle);
+
+      await expect(fs.access(changeDir)).resolves.not.toThrow();
+      const archiveDir = path.join(tempDir, 'openspec', 'changes', 'archive');
+      const archives = await fs.readdir(archiveDir);
+      expect(archives.some((entry) => entry.includes(changeName))).toBe(false);
     });
 
     it('should abort with error when MODIFIED/REMOVED reference non-existent requirements', async () => {

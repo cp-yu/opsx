@@ -19,11 +19,8 @@ import {
 } from './command-generation/index.js';
 import {
   getToolVersionStatus,
-  getSkillTemplates,
-  getCommandContents,
   generateSkillContent,
   getToolsWithSkillsDir,
-  getCommandSlug,
   type ToolVersionStatus,
 } from './shared/index.js';
 import {
@@ -36,14 +33,14 @@ import {
 } from './legacy-cleanup.js';
 import { isInteractive } from '../utils/interactive.js';
 import { getGlobalConfig, type Delivery } from './global-config.js';
-import { getProfileWorkflows, ALL_WORKFLOWS } from './profiles.js';
+import { getProfileWorkflows } from './profiles.js';
 import { getAvailableTools } from './available-tools.js';
 import {
-  WORKFLOW_TO_SKILL_DIR,
   getCommandConfiguredTools,
   getConfiguredToolsForProfileSync,
   getToolsNeedingProfileSync,
 } from './profile-sync-drift.js';
+import { createWorkflowArtifactPlan } from './workflow-installation.js';
 import {
   scanInstalledWorkflows as scanInstalledWorkflowsShared,
   migrateIfNeeded as migrateIfNeededShared,
@@ -99,11 +96,8 @@ export class UpdateCommand {
     const profile = globalConfig.profile ?? 'core';
     const delivery: Delivery = globalConfig.delivery ?? 'both';
     const profileWorkflows = getProfileWorkflows(profile, globalConfig.workflows);
-    const desiredWorkflows = profileWorkflows.filter((workflow): workflow is (typeof ALL_WORKFLOWS)[number] =>
-      (ALL_WORKFLOWS as readonly string[]).includes(workflow)
-    );
-    const shouldGenerateSkills = delivery !== 'commands';
-    const shouldGenerateCommands = delivery !== 'skills';
+    const plan = createWorkflowArtifactPlan(profileWorkflows, delivery);
+    const desiredWorkflows = [...plan.workflows];
 
     // 4. Detect and handle legacy artifacts + upgrade legacy tools using effective config
     const newlyConfiguredTools = await this.handleLegacyCleanup(
@@ -168,9 +162,6 @@ export class UpdateCommand {
     console.log();
 
     // 9. Determine what to generate based on delivery
-    const skillTemplates = shouldGenerateSkills ? getSkillTemplates(desiredWorkflows) : [];
-    const commandContents = shouldGenerateCommands ? getCommandContents(desiredWorkflows) : [];
-
     // 10. Update tools (all if force, otherwise only those needing update)
     const toolsToUpdate = this.force ? configuredTools : [...toolsToUpdateSet];
     const updatedTools: string[] = [];
@@ -190,8 +181,8 @@ export class UpdateCommand {
         const skillsDir = path.join(resolvedProjectPath, tool.skillsDir, 'skills');
 
         // Generate skill files if delivery includes skills
-        if (shouldGenerateSkills) {
-          for (const { template, dirName } of skillTemplates) {
+        if (plan.shouldGenerateSkills) {
+          for (const { template, dirName } of plan.skillTemplates) {
             const skillDir = path.join(skillsDir, dirName);
             const skillFile = path.join(skillDir, 'SKILL.md');
 
@@ -201,19 +192,23 @@ export class UpdateCommand {
             await FileSystemUtils.writeFile(skillFile, skillContent);
           }
 
-          removedDeselectedSkillCount += await this.removeUnselectedSkillDirs(skillsDir, desiredWorkflows);
+          removedDeselectedSkillCount += await this.removeUnselectedSkillDirs(
+            skillsDir,
+            plan.expectedSkillDirNames,
+            plan.managedSkillDirNames
+          );
         }
 
         // Delete skill directories if delivery is commands-only
-        if (!shouldGenerateSkills) {
-          removedSkillCount += await this.removeSkillDirs(skillsDir);
+        if (!plan.shouldGenerateSkills) {
+          removedSkillCount += await this.removeSkillDirs(skillsDir, plan.managedSkillDirNames);
         }
 
         // Generate commands if delivery includes commands
-        if (shouldGenerateCommands) {
+        if (plan.shouldGenerateCommands) {
           const adapter = CommandAdapterRegistry.get(tool.value);
           if (adapter) {
-            const generatedCommands = generateCommands(commandContents, adapter);
+            const generatedCommands = generateCommands(plan.commandContents, adapter);
 
             for (const cmd of generatedCommands) {
               const commandFile = path.isAbsolute(cmd.path) ? cmd.path : path.join(resolvedProjectPath, cmd.path);
@@ -223,14 +218,19 @@ export class UpdateCommand {
             removedDeselectedCommandCount += await this.removeUnselectedCommandFiles(
               resolvedProjectPath,
               toolId,
-              desiredWorkflows
+              plan.expectedCommandSlugs,
+              plan.managedCommandSlugs
             );
           }
         }
 
         // Delete command files if delivery is skills-only
-        if (!shouldGenerateCommands) {
-          removedCommandCount += await this.removeCommandFiles(resolvedProjectPath, toolId);
+        if (!plan.shouldGenerateCommands) {
+          removedCommandCount += await this.removeCommandFiles(
+            resolvedProjectPath,
+            toolId,
+            plan.managedCommandSlugs
+          );
         }
 
         spinner.succeed(`Updated ${tool.name}`);
@@ -374,13 +374,13 @@ export class UpdateCommand {
    * Removes skill directories for workflows when delivery changed to commands-only.
    * Returns the number of directories removed.
    */
-  private async removeSkillDirs(skillsDir: string): Promise<number> {
+  private async removeSkillDirs(
+    skillsDir: string,
+    managedSkillDirNames: readonly string[]
+  ): Promise<number> {
     let removed = 0;
 
-    for (const workflow of ALL_WORKFLOWS) {
-      const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
-      if (!dirName) continue;
-
+    for (const dirName of managedSkillDirNames) {
       const skillDir = path.join(skillsDir, dirName);
       try {
         if (fs.existsSync(skillDir)) {
@@ -401,15 +401,14 @@ export class UpdateCommand {
    */
   private async removeUnselectedSkillDirs(
     skillsDir: string,
-    desiredWorkflows: readonly (typeof ALL_WORKFLOWS)[number][]
+    expectedSkillDirNames: readonly string[],
+    managedSkillDirNames: readonly string[]
   ): Promise<number> {
-    const desiredSet = new Set(desiredWorkflows);
+    const expected = new Set(expectedSkillDirNames);
     let removed = 0;
 
-    for (const workflow of ALL_WORKFLOWS) {
-      if (desiredSet.has(workflow)) continue;
-      const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
-      if (!dirName) continue;
+    for (const dirName of managedSkillDirNames) {
+      if (expected.has(dirName)) continue;
 
       const skillDir = path.join(skillsDir, dirName);
       try {
@@ -432,14 +431,15 @@ export class UpdateCommand {
   private async removeCommandFiles(
     projectPath: string,
     toolId: string,
+    managedCommandSlugs: readonly string[]
   ): Promise<number> {
     let removed = 0;
 
     const adapter = CommandAdapterRegistry.get(toolId);
     if (!adapter) return 0;
 
-    for (const workflow of ALL_WORKFLOWS) {
-      const cmdPath = adapter.getFilePath(getCommandSlug(workflow));
+    for (const commandSlug of managedCommandSlugs) {
+      const cmdPath = adapter.getFilePath(commandSlug);
       const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
 
       try {
@@ -462,18 +462,19 @@ export class UpdateCommand {
   private async removeUnselectedCommandFiles(
     projectPath: string,
     toolId: string,
-    desiredWorkflows: readonly (typeof ALL_WORKFLOWS)[number][]
+    expectedCommandSlugs: readonly string[],
+    managedCommandSlugs: readonly string[]
   ): Promise<number> {
     let removed = 0;
 
     const adapter = CommandAdapterRegistry.get(toolId);
     if (!adapter) return 0;
 
-    const desiredSet = new Set(desiredWorkflows);
+    const expected = new Set(expectedCommandSlugs);
 
-    for (const workflow of ALL_WORKFLOWS) {
-      if (desiredSet.has(workflow)) continue;
-      const cmdPath = adapter.getFilePath(getCommandSlug(workflow));
+    for (const commandSlug of managedCommandSlugs) {
+      if (expected.has(commandSlug)) continue;
+      const cmdPath = adapter.getFilePath(commandSlug);
       const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
 
       try {
@@ -496,7 +497,7 @@ export class UpdateCommand {
    */
   private async handleLegacyCleanup(
     projectPath: string,
-    desiredWorkflows: readonly (typeof ALL_WORKFLOWS)[number][],
+    desiredWorkflows: readonly string[],
     delivery: Delivery
   ): Promise<string[]> {
     // Detect legacy artifacts
@@ -573,7 +574,7 @@ export class UpdateCommand {
     projectPath: string,
     detection: LegacyDetectionResult,
     canPrompt: boolean,
-    desiredWorkflows: readonly (typeof ALL_WORKFLOWS)[number][],
+    desiredWorkflows: readonly string[],
     delivery: Delivery
   ): Promise<string[]> {
     // Get tools that had legacy artifacts
@@ -646,10 +647,7 @@ export class UpdateCommand {
 
     // Create skills/commands for selected tools using effective profile+delivery.
     const newlyConfigured: string[] = [];
-    const shouldGenerateSkills = delivery !== 'commands';
-    const shouldGenerateCommands = delivery !== 'skills';
-    const skillTemplates = shouldGenerateSkills ? getSkillTemplates(desiredWorkflows) : [];
-    const commandContents = shouldGenerateCommands ? getCommandContents(desiredWorkflows) : [];
+    const plan = createWorkflowArtifactPlan(desiredWorkflows, delivery);
 
     for (const toolId of selectedTools) {
       const tool = AI_TOOLS.find((t) => t.value === toolId);
@@ -661,8 +659,8 @@ export class UpdateCommand {
         const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
 
         // Create skill files when delivery includes skills
-        if (shouldGenerateSkills) {
-          for (const { template, dirName } of skillTemplates) {
+        if (plan.shouldGenerateSkills) {
+          for (const { template, dirName } of plan.skillTemplates) {
             const skillDir = path.join(skillsDir, dirName);
             const skillFile = path.join(skillDir, 'SKILL.md');
 
@@ -674,10 +672,10 @@ export class UpdateCommand {
         }
 
         // Create commands when delivery includes commands
-        if (shouldGenerateCommands) {
+        if (plan.shouldGenerateCommands) {
           const adapter = CommandAdapterRegistry.get(tool.value);
           if (adapter) {
-            const generatedCommands = generateCommands(commandContents, adapter);
+            const generatedCommands = generateCommands(plan.commandContents, adapter);
 
             for (const cmd of generatedCommands) {
               const commandFile = path.isAbsolute(cmd.path) ? cmd.path : path.join(projectPath, cmd.path);

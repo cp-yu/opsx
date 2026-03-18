@@ -3,9 +3,7 @@
 ## Purpose
 
 Define the expected behavior for the `/opsx:archive` skill, including readiness checks, spec sync prompting, archive execution, and user-facing output.
-
 ## Requirements
-
 ### Requirement: OPSX Archive Skill
 
 The system SHALL provide an `/opsx:archive` skill that archives completed changes in the experimental workflow.
@@ -67,21 +65,38 @@ The skill SHALL check task completion status from tasks.md before archiving.
 
 ### Requirement: Spec Sync Prompt
 
-The skill SHALL prompt to sync delta specs before archiving if specs exist.
+The skill SHALL handle sync inline during archive in core mode instead of requiring a separate `/opsx:sync` surface.
 
-#### Scenario: Delta specs exist
+#### Scenario: Core mode archives a change with delta specs
+- **WHEN** agent executes `/opsx:archive` in `core` mode
+- **AND** delta specs exist
+- **THEN** the skill SHALL reconcile delta specs to main specs as part of archive
+- **AND** SHALL NOT require an installed separate `/opsx:sync` skill
 
-- **WHEN** agent checks for delta specs
-- **AND** `specs/` directory exists in the change with spec files
-- **THEN** prompt user: "This change has delta specs. Would you like to sync them to main specs before archiving?"
-- **AND** if user confirms, execute `/opsx:sync` logic
-- **AND** proceed with archive regardless of sync choice
+#### Scenario: Core mode archives a change with opsx-delta
+- **WHEN** agent executes `/opsx:archive` in `core` mode
+- **AND** `opsx-delta.yaml` exists
+- **THEN** the skill SHALL apply the OPSX delta during archive
+- **AND** SHALL validate referential integrity before writing
+- **AND** SHALL write updated OPSX files atomically
 
-#### Scenario: No delta specs
+#### Scenario: Embedded sync failure aborts archive
+- **WHEN** inline sync would fail validation or integrity checks
+- **THEN** the skill SHALL abort archive
+- **AND** SHALL leave main specs unchanged
+- **AND** SHALL leave OPSX files unchanged
+- **AND** SHALL leave the change directory in place
 
-- **WHEN** agent checks for delta specs
-- **AND** no `specs/` directory or no spec files exist
-- **THEN** proceed without sync prompt
+#### Scenario: Core mode archive summary reports embedded sync result
+- **WHEN** archive completes in `core` mode
+- **THEN** the summary SHALL report whether archive-time sync updated main specs and OPSX files
+- **AND** SHALL distinguish successful sync from skipped sync
+
+#### Scenario: Expanded mode archive keeps the same sync-state contract
+- **WHEN** agent executes `/opsx:archive` in `expanded` mode
+- **AND** delta specs or `opsx-delta.yaml` are present
+- **THEN** archive SHALL still assess and execute the same embedded sync contract before moving the change
+- **AND** expanded mode MAY separately expose `/opsx:sync` as an optional standalone surface
 
 ### Requirement: Archive Process
 
@@ -126,3 +141,4 @@ The skill SHALL provide clear feedback about the archive operation.
 - **WHEN** archive completes with incomplete artifacts or tasks
 - **THEN** include note about what was incomplete
 - **AND** suggest reviewing if archive was intentional
+

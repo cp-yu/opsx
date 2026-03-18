@@ -15,7 +15,7 @@ For workflow patterns and when to use each command, see [Workflows](workflows.md
 | `/opsx:apply` | Implement tasks from the change |
 | `/opsx:archive` | Archive a completed change |
 
-### Expanded Workflow Commands (custom workflow selection)
+### Expanded Workflow Commands (`expanded` preset)
 
 | Command | Purpose |
 |---------|---------|
@@ -23,12 +23,12 @@ For workflow patterns and when to use each command, see [Workflows](workflows.md
 | `/opsx:continue` | Create the next artifact based on dependencies |
 | `/opsx:ff` | Fast-forward: create all planning artifacts at once |
 | `/opsx:verify` | Validate implementation matches artifacts |
-| `/opsx:sync` | Merge delta specs into main specs |
+| `/opsx:sync` | Sync delta specs and OPSX state without archiving |
 | `/opsx:bulk-archive` | Archive multiple changes at once |
 | `/opsx:onboard` | Guided tutorial through the complete workflow |
 | `/opsx:bootstrap` | Bootstrap OPSX architecture tracking from an existing codebase via the CLI-backed workflow |
 
-The default global profile is `core`. To enable expanded workflow commands, run `openspec config profile`, select workflows, then run `openspec update` in your project.
+The default global profile is `core`. In `core`, `/opsx:archive` performs archive-time spec + OPSX sync inline. To enable the standalone expanded workflow commands, run `openspec config profile`, select `expanded`, then run `openspec update` in your project.
 
 ---
 
@@ -386,7 +386,7 @@ AI:  Verifying add-dark-mode...
 
 ### `/opsx:sync`
 
-**Optional command.** Merge delta specs from a change into main specs. Archive will prompt to sync if needed, so you typically don't need to run this manually.
+**Expanded-only optional command.** Sync delta specs and `opsx-delta` from a change into the main specs and project OPSX files without archiving the change.
 
 **Syntax:**
 ```
@@ -400,8 +400,10 @@ AI:  Verifying add-dark-mode...
 
 **What it does:**
 - Reads delta specs from change folder
+- Reads `opsx-delta.yaml` when present
 - Parses ADDED/MODIFIED/REMOVED/RENAMED sections
 - Merges changes into main `openspec/specs/` directory
+- Applies OPSX delta changes to `project.opsx.yaml`, `project.opsx.relations.yaml`, and `project.opsx.code-map.yaml`
 - Preserves existing content not mentioned in delta
 - Does not archive the change (remains active)
 
@@ -421,6 +423,8 @@ AI:  Syncing add-dark-mode delta specs...
      Merging...
      ✓ openspec/specs/ui/spec.md updated
 
+     ✓ project.opsx.yaml updated
+
      Change remains active. Run /opsx:archive when ready to complete.
 ```
 
@@ -431,13 +435,13 @@ AI:  Syncing add-dark-mode delta specs...
 | Long-running change, want specs in main before archiving | Yes |
 | Multiple parallel changes need the updated base specs | Yes |
 | Want to preview/review the merge separately | Yes |
-| Quick change, going straight to archive | No (archive handles it) |
+| Quick change, going straight to archive | No (archive handles the same sync inline) |
 
 **Tips:**
 - Sync is intelligent, not copy-paste
 - Can add scenarios to existing requirements without duplicating
 - Change stays active after sync (not archived)
-- Most users will never need to call this directly—archive prompts if needed
+- Most users in `core` will never need to call this directly—archive handles the same sync inline
 
 ---
 
@@ -458,7 +462,8 @@ Archive a completed change. Finalizes the change and moves it to the archive fol
 **What it does:**
 - Checks artifact completion status
 - Checks task completion (warns if incomplete)
-- Offers to sync delta specs if not already synced
+- Assesses delta specs and `opsx-delta` before moving the change
+- Syncs both main specs and OPSX files inline unless explicitly skipped by CLI flag
 - Moves change folder to `openspec/changes/archive/YYYY-MM-DD-<name>/`
 - Preserves all artifacts for audit trail
 
@@ -474,12 +479,10 @@ AI:  Archiving add-dark-mode...
      ✓ design.md exists
      ✓ tasks.md exists (8/8 tasks complete)
 
-     Delta specs: Not yet synced
-     → Sync now? (recommended)
-
-You: Yes
+     Archive-time sync: delta specs + OPSX pending
 
 AI:  ✓ Synced specs to openspec/specs/ui/spec.md
+     ✓ Applied opsx-delta to project OPSX files
      ✓ Moved to openspec/changes/archive/2025-01-24-add-dark-mode/
 
      Change archived successfully.
@@ -487,7 +490,7 @@ AI:  ✓ Synced specs to openspec/specs/ui/spec.md
 
 **Tips:**
 - Archive won't block on incomplete tasks, but will warn
-- Delta specs can be synced during archive or beforehand
+- In `core`, archive is the built-in sync path; in `expanded`, `/opsx:sync` stays available if you want to sync earlier
 - Archived changes are preserved for history
 - Use `/opsx:verify` first to catch issues
 

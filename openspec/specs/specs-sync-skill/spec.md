@@ -2,50 +2,29 @@
 
 ## Purpose
 Defines the agent skill for syncing delta specs from changes to main specs.
-
 ## Requirements
-
 ### Requirement: Specs Sync Skill
-The system SHALL provide an `/opsx:sync` skill that syncs delta specs AND opsx-delta from a change to the main specs and OPSX files.
+The system SHALL continue to provide an `/opsx:sync` skill in expanded mode for syncing delta specs AND opsx-delta from a change to the main specs and OPSX files.
 
-#### Scenario: Sync delta specs to main specs
-- **WHEN** agent executes `/opsx:sync` with a change name
-- **THEN** the agent reads delta specs from `openspec/changes/<name>/specs/`
-- **AND** reads corresponding main specs from `openspec/specs/`
-- **AND** reconciles main specs to match what the deltas describe
+#### Scenario: Expanded mode exposes standalone sync surface
+- **WHEN** the active mode is `expanded`
+- **THEN** the generated workflow surface SHALL include `/opsx:sync`
+- **AND** the skill SHALL continue to reconcile delta specs and `opsx-delta` exactly as defined by the sync contract
 
-#### Scenario: Sync opsx-delta to project OPSX files
-- **WHEN** agent executes `/opsx:sync` with a change name
-- **AND** `openspec/changes/<name>/opsx-delta.yaml` exists
-- **THEN** the agent reads the opsx-delta
-- **AND** reads current `project.opsx.yaml`, `project.opsx.relations.yaml`, `project.opsx.code-map.yaml`
-- **AND** applies ADDED nodes/relations to the respective files
-- **AND** applies MODIFIED nodes (updates existing entries by id)
-- **AND** applies REMOVED nodes (deletes from respective files)
-- **AND** validates referential integrity after merge
-- **AND** writes all three files atomically (temp file + rename)
+#### Scenario: Core mode does not expose standalone sync surface
+- **WHEN** the active mode is `core`
+- **THEN** the generated workflow surface SHALL NOT include `/opsx:sync`
+- **AND** sync behavior SHALL remain available through archive-time embedded sync instead
 
-#### Scenario: No opsx-delta present
-- **WHEN** agent executes `/opsx:sync` with a change name
-- **AND** `openspec/changes/<name>/opsx-delta.yaml` does not exist
-- **THEN** the agent skips OPSX delta sync
-- **AND** proceeds with specs-only sync as before
+#### Scenario: Standalone sync and embedded archive sync are semantically aligned
+- **WHEN** a change requires both spec sync and OPSX sync
+- **THEN** running standalone `/opsx:sync` in expanded mode and running archive-time embedded sync in core mode SHALL produce the same resulting main specs and OPSX state
+- **AND** both paths SHALL preserve idempotency and zero-side-effect failure guarantees
 
-#### Scenario: Idempotent operation
-- **WHEN** agent executes `/opsx:sync` multiple times on the same change
-- **THEN** the result is the same as running it once
-- **AND** no duplicate requirements are created
-- **AND** no duplicate nodes or relations are created
-
-#### Scenario: OPSX referential integrity failure
-- **WHEN** opsx-delta merge would produce invalid referential integrity
-- **THEN** the agent aborts OPSX merge with zero side effects
-- **AND** reports which references are broken
-
-#### Scenario: Change selection prompt
-- **WHEN** agent executes `/opsx:sync` without specifying a change
-- **THEN** the agent prompts user to select from available changes
-- **AND** shows changes that have delta specs
+#### Scenario: Standalone sync remains optional in expanded mode
+- **WHEN** an expanded-mode user already ran `/opsx:sync`
+- **THEN** `/opsx:archive` SHALL observe that no archive-time sync writes remain
+- **AND** archive SHALL proceed without requiring the standalone sync surface to run again
 
 ### Requirement: Delta Reconciliation Logic
 The agent SHALL reconcile main specs with delta specs using the delta operation headers.
@@ -114,3 +93,4 @@ The `sync-specs.ts` workflow template SHALL import and embed the `OPSX_SYNC_DELT
 - **GIVEN** `OPSX_SYNC_DELTA` is defined in `opsx-fragments.ts`
 - **WHEN** `getOpsxSyncCommandTemplate()` generates content
 - **THEN** the content includes the OPSX delta sync step after specs sync
+

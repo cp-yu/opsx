@@ -354,7 +354,7 @@ Validating add-dark-mode...
 
 ### `openspec archive`
 
-Archive a completed change and merge delta specs into main specs.
+Archive a completed change and reconcile delta specs plus `opsx-delta` before moving the change.
 
 ```
 openspec archive [change-name] [options]
@@ -371,7 +371,7 @@ openspec archive [change-name] [options]
 | Option | Description |
 |--------|-------------|
 | `-y, --yes` | Skip confirmation prompts |
-| `--skip-specs` | Skip spec updates (for infrastructure/tooling/doc-only changes) |
+| `--skip-specs` | Skip all archive-time sync writes, including main specs and OPSX updates |
 | `--no-validate` | Skip validation (requires confirmation) |
 
 **Examples:**
@@ -395,7 +395,8 @@ openspec archive update-ci-config --skip-specs
 1. Validates the change (unless `--no-validate`)
 2. Prompts for confirmation (unless `--yes`)
 3. Merges delta specs into `openspec/specs/`
-4. Moves change folder to `openspec/changes/archive/YYYY-MM-DD-<name>/`
+4. Applies `opsx-delta` to the project OPSX files when present
+5. Moves change folder to `openspec/changes/archive/YYYY-MM-DD-<name>/`
 
 ---
 

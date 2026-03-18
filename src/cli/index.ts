@@ -107,7 +107,7 @@ program
   .description('Initialize OpenSpec in your project')
   .option('--tools <tools>', toolsOptionDescription)
   .option('--force', 'Auto-cleanup legacy files without prompting')
-  .option('--profile <profile>', 'Override global config profile (core or custom)')
+  .option('--profile <profile>', 'Override global config profile (core, expanded, or custom)')
   .action(async (targetPath = '.', options?: { tools?: string; force?: boolean; profile?: string }) => {
     try {
       // Validate that the path is a valid directory
@@ -279,9 +279,9 @@ changeCmd
 
 program
   .command('archive [change-name]')
-  .description('Archive a completed change and update main specs')
+  .description('Archive a completed change and reconcile main specs plus OPSX state')
   .option('-y, --yes', 'Skip confirmation prompts')
-  .option('--skip-specs', 'Skip spec update operations (useful for infrastructure, tooling, or doc-only changes)')
+  .option('--skip-specs', 'Skip all archive-time sync writes, including main specs and OPSX updates')
   .option('--no-validate', 'Skip validation (not recommended, requires confirmation)')
   .action(async (changeName?: string, options?: { yes?: boolean; skipSpecs?: boolean; noValidate?: boolean; validate?: boolean }) => {
     try {

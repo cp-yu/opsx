@@ -71,6 +71,25 @@ describe('deriveProfileFromWorkflowSelection', () => {
     const { deriveProfileFromWorkflowSelection } = await import('../../src/commands/config.js');
     expect(deriveProfileFromWorkflowSelection(['archive', 'apply', 'explore', 'propose'])).toBe('core');
   });
+
+  it('returns expanded when selection matches the expanded preset exactly', async () => {
+    const { deriveProfileFromWorkflowSelection } = await import('../../src/commands/config.js');
+    expect(
+      deriveProfileFromWorkflowSelection([
+        'archive',
+        'apply',
+        'explore',
+        'propose',
+        'new',
+        'continue',
+        'ff',
+        'verify',
+        'sync',
+        'bulk-archive',
+        'onboard',
+      ])
+    ).toBe('expanded');
+  });
 });
 
 describe('config profile interactive flow', () => {
@@ -202,12 +221,15 @@ describe('config profile interactive flow', () => {
 
     saveGlobalConfig({ featureFlags: {}, profile: 'core', delivery: 'both', workflows: ['propose', 'explore', 'apply', 'archive'] });
     select.mockResolvedValueOnce('workflows');
+    select.mockResolvedValueOnce('custom');
     checkbox.mockResolvedValueOnce(['propose', 'explore']);
 
     await runConfigCommand(['profile']);
 
-    expect(select).toHaveBeenCalledTimes(1);
+    expect(select).toHaveBeenCalledTimes(2);
     expect(checkbox).toHaveBeenCalledTimes(1);
+    const modeCall = select.mock.calls[1][0];
+    expect(modeCall.message).toBe('Workflow mode (which actions are available):');
     const checkboxCall = checkbox.mock.calls[0][0];
     expect(checkboxCall.pageSize).toBe(ALL_WORKFLOWS.length);
     expect(checkboxCall.theme).toEqual({
@@ -246,6 +268,7 @@ describe('config profile interactive flow', () => {
 
     saveGlobalConfig({ featureFlags: {}, profile: 'core', delivery: 'both', workflows: ['propose', 'explore', 'apply', 'archive'] });
     select.mockResolvedValueOnce('workflows');
+    select.mockResolvedValueOnce('custom');
     checkbox.mockResolvedValueOnce(['propose', 'explore', 'apply', 'archive']);
 
     await runConfigCommand(['profile']);
@@ -264,6 +287,36 @@ describe('config profile interactive flow', () => {
         description: 'Run verification checks against a change',
       }),
     ]));
+  });
+
+  it('workflow mode picker should expose expanded as a first-class preset', async () => {
+    const { saveGlobalConfig, getGlobalConfig } = await import('../../src/core/global-config.js');
+    const { select } = await getPromptMocks();
+
+    saveGlobalConfig({ featureFlags: {}, profile: 'core', delivery: 'both', workflows: ['propose', 'explore', 'apply', 'archive'] });
+    select.mockResolvedValueOnce('workflows');
+    select.mockResolvedValueOnce('expanded');
+
+    await runConfigCommand(['profile']);
+
+    const modeCall = select.mock.calls[1][0];
+    expect(modeCall.choices).toEqual(expect.arrayContaining([
+      expect.objectContaining({ value: 'expanded', name: 'Expanded preset', description: 'Core plus new, continue, ff, verify, sync, bulk-archive, and onboard' }),
+    ]));
+    expect(getGlobalConfig().profile).toBe('expanded');
+    expect(getGlobalConfig().workflows).toEqual([
+      'propose',
+      'explore',
+      'new',
+      'continue',
+      'apply',
+      'ff',
+      'sync',
+      'archive',
+      'bulk-archive',
+      'verify',
+      'onboard',
+    ]);
   });
 
   it('selecting current values only should be a no-op and should not ask apply', async () => {

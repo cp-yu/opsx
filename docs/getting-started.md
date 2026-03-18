@@ -12,13 +12,13 @@ OpenSpec helps you and your AI coding assistant agree on what to build before an
 /opsx:propose ──► /opsx:apply ──► /opsx:archive
 ```
 
-**Expanded path (custom workflow selection):**
+**Expanded path (`expanded` preset):**
 
 ```text
 /opsx:new ──► /opsx:ff or /opsx:continue ──► /opsx:apply ──► /opsx:verify ──► /opsx:archive
 ```
 
-The default global profile is `core`, which includes `propose`, `explore`, `apply`, and `archive`. You can enable the expanded workflow commands with `openspec config profile` and then `openspec update`.
+The default global profile is `core`, which includes `propose`, `explore`, `apply`, and `archive`. In `core`, `/opsx:archive` syncs delta specs and `opsx-delta` inline before archiving. You can switch to the `expanded` preset with `openspec config profile` and then `openspec update`.
 
 ## What OpenSpec Creates
 
@@ -133,7 +133,7 @@ AI:  Created openspec/changes/add-dark-mode/
      Ready for implementation!
 ```
 
-If you've enabled the expanded workflow profile, you can also do this as two steps: `/opsx:new` then `/opsx:ff` (or `/opsx:continue` incrementally).
+If you've enabled the `expanded` preset, you can also do this as two steps: `/opsx:new` then `/opsx:ff` (or `/opsx:continue` incrementally).
 
 ### 2. What Gets Created
 

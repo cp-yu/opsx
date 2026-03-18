@@ -2,7 +2,6 @@
 
 ## Purpose
 Define explicit mapping between internal workflow IDs and external user-facing command slugs so generated command artifacts, migration, drift detection, and cleanup all follow the same naming contract.
-
 ## Requirements
 ### Requirement: Agent command generation SHALL support separate external command slugs
 系统 SHALL 支持将外部 command slug 与内部 workflow ID 分离，使生成的命令制品能够暴露稳定的用户可见命令名，而不要求 profile/config 中的 workflow ID 与磁盘上的命令文件名完全一致。
@@ -44,22 +43,20 @@ Define explicit mapping between internal workflow IDs and external user-facing c
 - **AND** cleanup SHALL NOT rely on wildcard pattern matching to discover bootstrap command files
 
 ### Requirement: Generating slash commands for a tool SHALL honor configured external command slugs
-The system SHALL generate slash command files for all workflows included in the active profile using configured external command slugs instead of assuming workflow IDs match file basenames.
 
-#### Scenario: Generating slash commands for a tool
-- **WHEN** a tool is selected during initialization
-- **THEN** the system SHALL generate slash command files for all workflows included in the active profile using the tool's command adapter
-- **AND** each generated command SHALL use the workflow's configured external command slug when computing the output file path
-- **AND** the generated command set SHALL include `/opsx:bootstrap` when workflow `bootstrap-opsx` is selected
-- **AND** use tool-specific path conventions (e.g., `.claude/commands/opsx/` for Claude)
-- **AND** include tool-specific frontmatter format
+The system SHALL generate slash command files for all workflows included in the active mode or custom workflow selection using configured external command slugs instead of assuming workflow IDs match file basenames.
 
-#### Scenario: Core profile excludes bootstrap command by default
-- **WHEN** the active profile is `core`
-- **THEN** generated slash commands SHALL include only the workflows in the core profile
-- **AND** bootstrap command artifacts SHALL NOT be generated unless workflow `bootstrap-opsx` is explicitly selected
+#### Scenario: Mode projection drives command artifact visibility
+- **WHEN** slash commands are generated for a supported tool
+- **THEN** command artifact visibility SHALL be determined by the selected mode or explicit custom workflow set
+- **AND** the same manifest-derived projection SHALL be used by generation, migration, drift detection, and cleanup
 
-#### Scenario: Custom profile includes bootstrap command
-- **WHEN** the active profile includes workflow `bootstrap-opsx`
-- **THEN** initialization SHALL generate the bootstrap command artifact at the tool-specific path mapped from external slug `bootstrap`
-- **AND** restart guidance SHALL continue to apply to the generated command artifact like other slash commands
+#### Scenario: Expanded mode includes standalone sync command artifact
+- **WHEN** the active mode is `expanded`
+- **THEN** initialization SHALL generate the sync command artifact at the tool-specific path mapped from external slug `sync`
+
+#### Scenario: Core mode excludes standalone sync command artifact
+- **WHEN** the active mode is `core`
+- **THEN** generated command artifacts SHALL NOT include the standalone sync command artifact
+- **AND** cleanup SHALL remove previously generated managed sync command artifacts if sync is no longer selected
+

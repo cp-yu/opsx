@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import {
   CORE_WORKFLOWS,
+  EXPANDED_WORKFLOWS,
   ALL_WORKFLOWS,
   getProfileWorkflows,
 } from '../../src/core/profiles.js';
@@ -33,6 +34,24 @@ describe('profiles', () => {
     });
   });
 
+  describe('EXPANDED_WORKFLOWS', () => {
+    it('should contain the fixed expanded preset without bootstrap-opsx', () => {
+      expect(EXPANDED_WORKFLOWS).toEqual([
+        'propose',
+        'explore',
+        'new',
+        'continue',
+        'apply',
+        'ff',
+        'sync',
+        'archive',
+        'bulk-archive',
+        'verify',
+        'onboard',
+      ]);
+    });
+  });
+
   describe('getProfileWorkflows', () => {
     it('should return core workflows for core profile', () => {
       const result = getProfileWorkflows('core');
@@ -48,6 +67,11 @@ describe('profiles', () => {
       const customWorkflows = ['explore', 'new', 'apply', 'ff'];
       const result = getProfileWorkflows('custom', customWorkflows);
       expect(result).toEqual(customWorkflows);
+    });
+
+    it('should return expanded workflows for expanded profile', () => {
+      const result = getProfileWorkflows('expanded');
+      expect(result).toEqual(EXPANDED_WORKFLOWS);
     });
 
     it('should return empty array for custom profile with no customWorkflows', () => {

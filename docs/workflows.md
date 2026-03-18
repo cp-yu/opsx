@@ -44,9 +44,9 @@ Typical flow:
 /opsx:propose ──► /opsx:apply ──► /opsx:archive
 ```
 
-### Expanded/Full Workflow (custom selection)
+### Expanded Workflow (`expanded` preset)
 
-If you want explicit scaffold-and-build commands (`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:sync`, `/opsx:bulk-archive`, `/opsx:onboard`), enable them with:
+If you want explicit scaffold-and-build commands (`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:sync`, `/opsx:bulk-archive`, `/opsx:onboard`), enable the `expanded` preset with:
 
 ```bash
 openspec config profile
@@ -90,7 +90,7 @@ AI:  Working through tasks...
 
 You: /opsx:archive
 
-AI:  ✓ Merged specs
+AI:  ✓ Synced specs and OPSX
      ✓ Archived change
 ```
 
@@ -290,18 +290,16 @@ AI:  Archiving add-auth...
      ✓ design.md exists
      ✓ tasks.md exists (12/12 tasks complete)
 
-     Delta specs: Not yet synced to main
-     → Would you like to sync now?
-
-You: Yes
+     Archive-time sync: delta specs + OPSX pending
 
 AI:  ✓ Synced specs to openspec/specs/auth/spec.md
+     ✓ Applied opsx-delta to project OPSX files
      ✓ Moved to openspec/changes/archive/2025-01-24-add-auth/
 
      Change archived successfully.
 ```
 
-Archive will prompt if specs aren't synced. It won't block on incomplete tasks, but it will warn you.
+In `core`, archive performs sync inline. In `expanded`, `/opsx:sync` remains available as a separate optional step. Archive won't block on incomplete tasks, but it will warn you.
 
 ## When to Use What
 
@@ -440,7 +438,7 @@ For full command details and options, see [Commands](commands.md).
 | `/opsx:ff` | Create all planning artifacts | Expanded mode, clear scope |
 | `/opsx:apply` | Implement tasks | Ready to write code |
 | `/opsx:verify` | Validate implementation | Expanded mode, before archiving |
-| `/opsx:sync` | Merge delta specs | Expanded mode, optional |
+| `/opsx:sync` | Sync delta specs and OPSX state without archiving | Expanded mode, optional |
 | `/opsx:archive` | Complete the change | All work finished |
 | `/opsx:bulk-archive` | Archive multiple changes | Expanded mode, parallel work |
 

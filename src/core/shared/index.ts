@@ -23,6 +23,16 @@ export {
 } from './tool-detection.js';
 
 export {
+  ALL_WORKFLOWS,
+  CORE_WORKFLOWS,
+  EXPANDED_WORKFLOWS,
+  WORKFLOW_TO_SKILL_DIR,
+  getWorkflowPromptMeta,
+  normalizeWorkflowIds,
+  type WorkflowId,
+} from '../workflow-surface.js';
+
+export {
   type SkillTemplateEntry,
   type CommandTemplateEntry,
   getSkillTemplates,

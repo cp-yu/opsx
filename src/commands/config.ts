@@ -19,9 +19,15 @@ import {
   validateConfig,
   DEFAULT_CONFIG,
 } from '../core/config-schema.js';
-import { CORE_WORKFLOWS, ALL_WORKFLOWS, getProfileWorkflows } from '../core/profiles.js';
+import {
+  CORE_WORKFLOWS,
+  ALL_WORKFLOWS,
+  EXPANDED_WORKFLOWS,
+  getProfileWorkflows,
+} from '../core/profiles.js';
 import { OPENSPEC_DIR_NAME } from '../core/config.js';
 import { hasProjectConfigDrift } from '../core/profile-sync-drift.js';
+import { getWorkflowPromptMeta, normalizeWorkflowIds } from '../core/shared/index.js';
 
 type ProfileAction = 'both' | 'delivery' | 'workflows' | 'keep';
 
@@ -35,58 +41,6 @@ interface ProfileStateDiff {
   hasChanges: boolean;
   lines: string[];
 }
-
-interface WorkflowPromptMeta {
-  name: string;
-  description: string;
-}
-
-const WORKFLOW_PROMPT_META: Record<string, WorkflowPromptMeta> = {
-  propose: {
-    name: 'Propose change',
-    description: 'Create proposal, design, and tasks from a request',
-  },
-  explore: {
-    name: 'Explore ideas',
-    description: 'Investigate a problem before implementation',
-  },
-  new: {
-    name: 'New change',
-    description: 'Create a new change scaffold quickly',
-  },
-  continue: {
-    name: 'Continue change',
-    description: 'Resume work on an existing change',
-  },
-  apply: {
-    name: 'Apply tasks',
-    description: 'Implement tasks from the current change',
-  },
-  ff: {
-    name: 'Fast-forward',
-    description: 'Run a faster implementation workflow',
-  },
-  sync: {
-    name: 'Sync specs',
-    description: 'Sync change artifacts with specs',
-  },
-  archive: {
-    name: 'Archive change',
-    description: 'Finalize and archive a completed change',
-  },
-  'bulk-archive': {
-    name: 'Bulk archive',
-    description: 'Archive multiple completed changes together',
-  },
-  verify: {
-    name: 'Verify change',
-    description: 'Run verification checks against a change',
-  },
-  onboard: {
-    name: 'Onboard',
-    description: 'Guided onboarding flow for OpenSpec',
-  },
-};
 
 function isPromptCancellationError(error: unknown): boolean {
   return (
@@ -111,10 +65,21 @@ export function resolveCurrentProfileState(config: GlobalConfig): ProfileState {
  * Derive profile type from selected workflows.
  */
 export function deriveProfileFromWorkflowSelection(selectedWorkflows: string[]): Profile {
-  const isCoreMatch =
-    selectedWorkflows.length === CORE_WORKFLOWS.length &&
-    CORE_WORKFLOWS.every((w) => selectedWorkflows.includes(w));
-  return isCoreMatch ? 'core' : 'custom';
+  const normalized = normalizeWorkflowIds(selectedWorkflows);
+  const normalizedSet = new Set<string>(normalized);
+  const matchesPreset = (presetWorkflows: readonly string[]) =>
+    normalized.length === presetWorkflows.length &&
+    presetWorkflows.every((workflow) => normalizedSet.has(workflow));
+
+  if (matchesPreset(CORE_WORKFLOWS)) {
+    return 'core';
+  }
+
+  if (matchesPreset(EXPANDED_WORKFLOWS)) {
+    return 'expanded';
+  }
+
+  return 'custom';
 }
 
 /**
@@ -454,11 +419,11 @@ export function registerConfigCommand(program: Command): void {
     .command('profile [preset]')
     .description('Configure workflow profile (interactive picker or preset shortcut)')
     .action(async (preset?: string) => {
-      // Preset shortcut: `openspec config profile core`
-      if (preset === 'core') {
+      // Preset shortcut: `openspec config profile core|expanded`
+      if (preset === 'core' || preset === 'expanded') {
         const config = getGlobalConfig();
-        config.profile = 'core';
-        config.workflows = [...CORE_WORKFLOWS];
+        config.profile = preset;
+        config.workflows = [...getProfileWorkflows(preset)];
         // Preserve delivery setting
         saveGlobalConfig(config);
         console.log('Config updated. Run `openspec update` in your projects to apply.');
@@ -466,14 +431,14 @@ export function registerConfigCommand(program: Command): void {
       }
 
       if (preset) {
-        console.error(`Error: Unknown profile preset "${preset}". Available presets: core`);
+        console.error(`Error: Unknown profile preset "${preset}". Available presets: core, expanded`);
         process.exitCode = 1;
         return;
       }
 
       // Non-interactive check
       if (!process.stdout.isTTY) {
-        console.error('Interactive mode required. Use `openspec config profile core` or set config via environment/flags.');
+        console.error('Interactive mode required. Use `openspec config profile core|expanded` or set config via environment/flags.');
         process.exitCode = 1;
         return;
       }
@@ -563,8 +528,40 @@ export function registerConfigCommand(program: Command): void {
         }
 
         if (action === 'both' || action === 'workflows') {
+          const profileChoices: Array<{
+            value: Profile;
+            name: string;
+            description: string;
+          }> = [
+            {
+              value: 'core',
+              name: 'Core preset',
+              description: 'Propose, explore, apply, archive',
+            },
+            {
+              value: 'expanded',
+              name: 'Expanded preset',
+              description: 'Core plus new, continue, ff, verify, sync, bulk-archive, and onboard',
+            },
+            {
+              value: 'custom',
+              name: 'Custom selection',
+              description: 'Choose an explicit workflow set manually',
+            },
+          ];
+
+          const requestedProfile = await select<Profile>({
+            message: 'Workflow mode (which actions are available):',
+            choices: profileChoices.map((choice) => ({
+              ...choice,
+              name: choice.value === currentState.profile ? `${choice.name} [current]` : choice.name,
+            })),
+            default: currentState.profile,
+          });
+
+          if (requestedProfile === 'custom') {
           const formatWorkflowChoice = (workflow: string) => {
-            const metadata = WORKFLOW_PROMPT_META[workflow] ?? {
+            const metadata = getWorkflowPromptMeta(workflow) ?? {
               name: workflow,
               description: `Workflow: ${workflow}`,
             };
@@ -589,8 +586,12 @@ export function registerConfigCommand(program: Command): void {
             },
             choices: ALL_WORKFLOWS.map(formatWorkflowChoice),
           });
-          nextState.workflows = selectedWorkflows;
-          nextState.profile = deriveProfileFromWorkflowSelection(selectedWorkflows);
+            nextState.workflows = normalizeWorkflowIds(selectedWorkflows);
+            nextState.profile = deriveProfileFromWorkflowSelection(nextState.workflows);
+          } else {
+            nextState.profile = requestedProfile;
+            nextState.workflows = [...getProfileWorkflows(requestedProfile)];
+          }
         }
 
         const diff = diffProfileState(currentState, nextState);

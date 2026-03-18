@@ -10,10 +10,12 @@ import { OPSX_SYNC_DELTA } from '../fragments/opsx-fragments.js';
 export function getSyncSpecsSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-sync-specs',
-    description: 'Sync delta specs from a change to main specs. Use when the user wants to update main specs with changes from a delta spec, without archiving the change.',
-    instructions: `Sync delta specs from a change to main specs.
+    description: 'Sync delta specs and OPSX delta from a change to the main specs. Available in expanded mode when the user wants to sync without archiving the change.',
+    instructions: `Sync delta specs and OPSX delta from a change to main specs.
 
 This is an **agent-driven** operation - you will read delta specs and directly edit main specs to apply the changes. This allows intelligent merging (e.g., adding a scenario without copying the entire requirement).
+
+This standalone sync surface is part of the **expanded** workflow. In \`core\` mode, the same sync contract runs inline during \`/opsx:archive\`.
 
 **Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
@@ -158,12 +160,14 @@ Main specs are now updated. The change remains active - archive when implementat
 export function getOpsxSyncCommandTemplate(): CommandTemplate {
   return {
     name: 'OPSX: Sync',
-    description: 'Sync delta specs from a change to main specs',
+    description: 'Sync delta specs and OPSX delta from a change to main specs',
     category: 'Workflow',
     tags: ['workflow', 'specs', 'experimental'],
-    content: `Sync delta specs from a change to main specs.
+    content: `Sync delta specs and OPSX delta from a change to main specs.
 
 This is an **agent-driven** operation - you will read delta specs and directly edit main specs to apply the changes. This allows intelligent merging (e.g., adding a scenario without copying the entire requirement).
+
+This standalone sync surface is part of the **expanded** workflow. In \`core\` mode, the same sync contract runs inline during \`/opsx:archive\`.
 
 **Input**: Optionally specify a change name after \`/opsx:sync\` (e.g., \`/opsx:sync add-auth\`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 

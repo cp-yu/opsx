@@ -4,11 +4,10 @@ import { getTaskProgressForChange, formatTaskStatus } from '../utils/task-progre
 import { Validator } from './validation/validator.js';
 import chalk from 'chalk';
 import {
-  findSpecUpdates,
-  buildUpdatedSpec,
-  writeUpdatedSpec,
-  type SpecUpdate,
-} from './specs-apply.js';
+  assessChangeSyncState,
+  applyPreparedChangeSync,
+  prepareChangeSync,
+} from './change-sync.js';
 
 /**
  * Recursively copy a directory. Used when fs.rename fails (e.g. EPERM on Windows).
@@ -55,8 +54,6 @@ export class ArchiveCommand {
     const targetPath = '.';
     const changesDir = path.join(targetPath, 'openspec', 'changes');
     const archiveDir = path.join(changesDir, 'archive');
-    const mainSpecsDir = path.join(targetPath, 'openspec', 'specs');
-
     // Check if changes directory exists
     try {
       await fs.access(changesDir);
@@ -193,74 +190,32 @@ export class ArchiveCommand {
       }
     }
 
-    // Handle spec updates unless skipSpecs flag is set
+    const syncState = await assessChangeSyncState(targetPath, changeName);
+
+    // Handle archive-time sync unless skipSpecs flag is set
     if (options.skipSpecs) {
-      console.log('Skipping spec updates (--skip-specs flag provided).');
+      console.log('Skipping archive-time sync writes (--skip-specs flag provided).');
     } else {
-      // Find specs to update
-      const specUpdates = await findSpecUpdates(changeDir, mainSpecsDir);
-      
-      if (specUpdates.length > 0) {
-        console.log('\nSpecs to update:');
-        for (const update of specUpdates) {
-          const status = update.exists ? 'update' : 'create';
-          const capability = path.basename(path.dirname(update.target));
-          console.log(`  ${capability}: ${status}`);
+      if (syncState.requiresSync) {
+        const syncTargets: string[] = [];
+        if (syncState.hasDeltaSpecs) {
+          syncTargets.push(`${syncState.specUpdates.length} spec update(s)`);
         }
-
-        let shouldUpdateSpecs = true;
-        if (!options.yes) {
-          const { confirm } = await import('@inquirer/prompts');
-          shouldUpdateSpecs = await confirm({
-            message: 'Proceed with spec updates?',
-            default: true
-          });
-          if (!shouldUpdateSpecs) {
-            console.log('Skipping spec updates. Proceeding with archive.');
-          }
+        if (syncState.hasOpsxDelta) {
+          syncTargets.push('OPSX delta');
         }
+        console.log(`Archive sync state: ${syncTargets.join(' + ')} pending.`);
 
-        if (shouldUpdateSpecs) {
-          // Prepare all updates first (validation pass, no writes)
-          const prepared: Array<{ update: SpecUpdate; rebuilt: string; counts: { added: number; modified: number; removed: number; renamed: number } }> = [];
-          try {
-            for (const update of specUpdates) {
-              const built = await buildUpdatedSpec(update, changeName!);
-              prepared.push({ update, rebuilt: built.rebuilt, counts: built.counts });
-            }
-          } catch (err: any) {
-            console.log(String(err.message || err));
-            console.log('Aborted. No files were changed.');
-            return;
-          }
-
-          // All validations passed; pre-validate rebuilt full spec and then write files and display counts
-          let totals = { added: 0, modified: 0, removed: 0, renamed: 0 };
-          for (const p of prepared) {
-            const specName = path.basename(path.dirname(p.update.target));
-            if (!skipValidation) {
-              const report = await new Validator().validateSpecContent(specName, p.rebuilt);
-              if (!report.valid) {
-                console.log(chalk.red(`\nValidation errors in rebuilt spec for ${specName} (will not write changes):`));
-                for (const issue of report.issues) {
-                  if (issue.level === 'ERROR') console.log(chalk.red(`  ✗ ${issue.message}`));
-                  else if (issue.level === 'WARNING') console.log(chalk.yellow(`  ⚠ ${issue.message}`));
-                }
-                console.log('Aborted. No files were changed.');
-                return;
-              }
-            }
-            await writeUpdatedSpec(p.update, p.rebuilt, p.counts);
-            totals.added += p.counts.added;
-            totals.modified += p.counts.modified;
-            totals.removed += p.counts.removed;
-            totals.renamed += p.counts.renamed;
-          }
-          console.log(
-            `Totals: + ${totals.added}, ~ ${totals.modified}, - ${totals.removed}, → ${totals.renamed}`
-          );
-          console.log('Specs updated successfully.');
+        try {
+          const prepared = await prepareChangeSync(targetPath, syncState, { skipValidation });
+          await applyPreparedChangeSync(targetPath, prepared);
+        } catch (err: any) {
+          console.log(String(err.message || err));
+          console.log('Aborted. No files were changed.');
+          return;
         }
+      } else {
+        console.log('No archive-time sync required.');
       }
     }
 

@@ -8,9 +8,8 @@
 import type { AIToolOption } from './config.js';
 import { getGlobalConfig, getGlobalConfigPath, saveGlobalConfig, type Delivery } from './global-config.js';
 import { CommandAdapterRegistry } from './command-generation/index.js';
-import { WORKFLOW_TO_SKILL_DIR } from './profile-sync-drift.js';
-import { ALL_WORKFLOWS } from './profiles.js';
-import { getCommandSlug } from './shared/index.js';
+import { createWorkflowArtifactPlan } from './workflow-installation.js';
+import { ALL_WORKFLOWS } from './workflow-surface.js';
 import path from 'path';
 import * as fs from 'fs';
 
@@ -24,6 +23,7 @@ function scanInstalledWorkflowArtifacts(
   projectPath: string,
   tools: AIToolOption[]
 ): InstalledWorkflowArtifacts {
+  const managedPlan = createWorkflowArtifactPlan([], 'both');
   const installed = new Set<string>();
   let hasSkills = false;
   let hasCommands = false;
@@ -32,8 +32,8 @@ function scanInstalledWorkflowArtifacts(
     if (!tool.skillsDir) continue;
     const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
 
-    for (const workflowId of ALL_WORKFLOWS) {
-      const skillDirName = WORKFLOW_TO_SKILL_DIR[workflowId];
+    for (const [index, workflowId] of ALL_WORKFLOWS.entries()) {
+      const skillDirName = managedPlan.managedSkillDirNames[index];
       const skillFile = path.join(skillsDir, skillDirName, 'SKILL.md');
       if (fs.existsSync(skillFile)) {
         installed.add(workflowId);
@@ -44,8 +44,8 @@ function scanInstalledWorkflowArtifacts(
     const adapter = CommandAdapterRegistry.get(tool.value);
     if (!adapter) continue;
 
-    for (const workflowId of ALL_WORKFLOWS) {
-      const commandPath = adapter.getFilePath(getCommandSlug(workflowId));
+    for (const [index, workflowId] of ALL_WORKFLOWS.entries()) {
+      const commandPath = adapter.getFilePath(managedPlan.managedCommandSlugs[index]);
       const fullPath = path.isAbsolute(commandPath)
         ? commandPath
         : path.join(projectPath, commandPath);
@@ -84,16 +84,10 @@ function inferDelivery(artifacts: InstalledWorkflowArtifacts): Delivery {
 /**
  * Performs one-time migration if the global config does not yet have a profile field.
  * Called by both init and update before profile resolution.
- *
- * - If no profile field exists and workflows are installed: sets profile to 'custom'
- *   with the detected workflows, preserving the user's existing setup.
- * - If no profile field exists and no workflows are installed: no-op (defaults apply).
- * - If profile field already exists: no-op.
  */
 export function migrateIfNeeded(projectPath: string, tools: AIToolOption[]): void {
   const config = getGlobalConfig();
 
-  // Check raw config file for profile field presence
   const configPath = getGlobalConfigPath();
 
   let rawConfig: Record<string, unknown> = {};
@@ -102,24 +96,20 @@ export function migrateIfNeeded(projectPath: string, tools: AIToolOption[]): voi
       rawConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
     }
   } catch {
-    return; // Can't read config, skip migration
+    return;
   }
 
-  // If profile is already explicitly set, no migration needed
   if (rawConfig.profile !== undefined) {
     return;
   }
 
-  // Scan for installed workflows
   const artifacts = scanInstalledWorkflowArtifacts(projectPath, tools);
   const installedWorkflows = artifacts.workflows;
 
   if (installedWorkflows.length === 0) {
-    // No workflows installed, new user — defaults will apply
     return;
   }
 
-  // Migrate: set profile to custom with detected workflows
   config.profile = 'custom';
   config.workflows = installedWorkflows;
   if (rawConfig.delivery === undefined) {

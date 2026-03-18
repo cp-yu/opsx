@@ -163,6 +163,22 @@ export type ProjectOpsxFile = z.infer<typeof ProjectOpsxFileSchema>;
 export type OpsxDelta = z.infer<typeof OpsxDeltaSchema>;
 export type CodeMapEntry = z.infer<typeof CodeMapEntrySchema>;
 
+interface DeltaCounts {
+  domains: number;
+  capabilities: number;
+  relations: number;
+}
+
+export interface OpsxDeltaApplyResult {
+  bundle: ProjectOpsxBundle;
+  counts: {
+    added: DeltaCounts;
+    modified: DeltaCounts;
+    removed: DeltaCounts;
+  };
+  changed: boolean;
+}
+
 /**
  * Validation result
  */
@@ -361,6 +377,11 @@ export async function writeProjectOpsx(
   const mainTmp = `${mainPath}.tmp`;
   const relTmp = `${relPath}.tmp`;
   const mapTmp = `${mapPath}.tmp`;
+  const originals = await Promise.all([
+    readOptionalTextFile(mainPath),
+    readOptionalTextFile(relPath),
+    readOptionalTextFile(mapPath),
+  ]);
 
   try {
     await FileSystemUtils.createDirectory(path.dirname(mainPath));
@@ -384,8 +405,138 @@ export async function writeProjectOpsx(
     for (const tmp of [mainTmp, relTmp, mapTmp]) {
       try { await fs.unlink(tmp); } catch { /* ignore */ }
     }
+    await Promise.all([
+      restoreOptionalTextFile(mainPath, originals[0]),
+      restoreOptionalTextFile(relPath, originals[1]),
+      restoreOptionalTextFile(mapPath, originals[2]),
+    ]);
     throw err;
   }
+}
+
+export async function readOpsxDelta(projectRoot: string, changeName: string): Promise<OpsxDelta | null> {
+  const deltaPath = FileSystemUtils.joinPath(projectRoot, OPSX_PATHS.deltaPath(changeName));
+  if (!await FileSystemUtils.fileExists(deltaPath)) return null;
+
+  const content = await fs.readFile(deltaPath, 'utf-8');
+  const data = parseYaml(content);
+  const result = OpsxDeltaSchema.safeParse(data);
+  if (!result.success) {
+    throw new Error(`Invalid opsx-delta.yaml for change '${changeName}': ${result.error.message}`);
+  }
+  return result.data;
+}
+
+export function applyOpsxDelta(bundle: ProjectOpsxBundle, delta: OpsxDelta): OpsxDeltaApplyResult {
+  const next: ProjectOpsxBundle = {
+    ...bundle,
+    domains: [...bundle.domains],
+    capabilities: [...bundle.capabilities],
+    relations: [...bundle.relations],
+    code_map: [...bundle.code_map],
+    ...(bundle.invariants ? { invariants: [...bundle.invariants] } : {}),
+    ...(bundle.interfaces ? { interfaces: [...bundle.interfaces] } : {}),
+    ...(bundle.decisions ? { decisions: [...bundle.decisions] } : {}),
+    ...(bundle.evidence ? { evidence: [...bundle.evidence] } : {}),
+  };
+
+  const counts = {
+    added: { domains: 0, capabilities: 0, relations: 0 },
+    modified: { domains: 0, capabilities: 0, relations: 0 },
+    removed: { domains: 0, capabilities: 0, relations: 0 },
+  };
+
+  const relationKey = (relation: OpsxRelation) => `${relation.from}|${relation.to}|${relation.type}`;
+  const relationPairKey = (relation: OpsxRelation) => `${relation.from}|${relation.to}`;
+
+  for (const domain of delta.ADDED?.domains || []) {
+    if (next.domains.some((candidate) => candidate.id === domain.id)) continue;
+    next.domains.push(domain);
+    counts.added.domains += 1;
+  }
+  for (const capability of delta.ADDED?.capabilities || []) {
+    if (next.capabilities.some((candidate) => candidate.id === capability.id)) continue;
+    next.capabilities.push(capability);
+    counts.added.capabilities += 1;
+  }
+  for (const relation of delta.ADDED?.relations || []) {
+    if (next.relations.some((candidate) => relationKey(candidate) === relationKey(relation))) continue;
+    next.relations.push(relation);
+    counts.added.relations += 1;
+  }
+
+  for (const domain of delta.MODIFIED?.domains || []) {
+    const index = next.domains.findIndex((candidate) => candidate.id === domain.id);
+    if (index === -1) {
+      throw new Error(`OPSX MODIFIED failed for domain '${domain.id}' - not found`);
+    }
+    next.domains[index] = domain;
+    counts.modified.domains += 1;
+  }
+  for (const capability of delta.MODIFIED?.capabilities || []) {
+    const index = next.capabilities.findIndex((candidate) => candidate.id === capability.id);
+    if (index === -1) {
+      throw new Error(`OPSX MODIFIED failed for capability '${capability.id}' - not found`);
+    }
+    next.capabilities[index] = capability;
+    counts.modified.capabilities += 1;
+  }
+  for (const relation of delta.MODIFIED?.relations || []) {
+    const pairKey = relationPairKey(relation);
+    const index = next.relations.findIndex((candidate) => relationPairKey(candidate) === pairKey);
+    if (index === -1) {
+      throw new Error(`OPSX MODIFIED failed for relation '${relation.from}' -> '${relation.to}' - not found`);
+    }
+    next.relations[index] = relation;
+    counts.modified.relations += 1;
+  }
+
+  const removedNodeIds = new Set<string>();
+  for (const domain of delta.REMOVED?.domains || []) {
+    const before = next.domains.length;
+    next.domains = next.domains.filter((candidate) => candidate.id !== domain.id);
+    if (next.domains.length !== before) {
+      removedNodeIds.add(domain.id);
+      counts.removed.domains += 1;
+    }
+  }
+  for (const capability of delta.REMOVED?.capabilities || []) {
+    const before = next.capabilities.length;
+    next.capabilities = next.capabilities.filter((candidate) => candidate.id !== capability.id);
+    if (next.capabilities.length !== before) {
+      removedNodeIds.add(capability.id);
+      counts.removed.capabilities += 1;
+    }
+  }
+  if (removedNodeIds.size > 0) {
+    next.code_map = next.code_map.filter((entry) => !removedNodeIds.has(entry.id));
+  }
+  for (const relation of delta.REMOVED?.relations || []) {
+    const before = next.relations.length;
+    const removeKey = relationKey(relation);
+    next.relations = next.relations.filter((candidate) => relationKey(candidate) !== removeKey);
+    if (next.relations.length !== before) {
+      counts.removed.relations += 1;
+    }
+  }
+
+  const changed = [
+    counts.added.domains,
+    counts.added.capabilities,
+    counts.added.relations,
+    counts.modified.domains,
+    counts.modified.capabilities,
+    counts.modified.relations,
+    counts.removed.domains,
+    counts.removed.capabilities,
+    counts.removed.relations,
+  ].some((count) => count > 0);
+
+  return {
+    bundle: next,
+    counts,
+    changed,
+  };
 }
 
 /**
@@ -429,4 +580,24 @@ export function validateCodeMapIntegrity(bundle: ProjectOpsxBundle): ValidationR
   }
 
   return { valid: errors.length === 0, errors };
+}
+
+async function readOptionalTextFile(filePath: string): Promise<string | null> {
+  try {
+    return await fs.readFile(filePath, 'utf-8');
+  } catch (error: any) {
+    if (error?.code === 'ENOENT') {
+      return null;
+    }
+    throw error;
+  }
+}
+
+async function restoreOptionalTextFile(filePath: string, content: string | null): Promise<void> {
+  if (content === null) {
+    await fs.rm(filePath, { force: true }).catch(() => undefined);
+    return;
+  }
+  await FileSystemUtils.createDirectory(path.dirname(filePath));
+  await fs.writeFile(filePath, content, 'utf-8');
 }

@@ -11,7 +11,7 @@ export const GlobalConfigSchema = z
       .optional()
       .default({}),
     profile: z
-      .enum(['core', 'custom'])
+      .enum(['core', 'expanded', 'custom'])
       .optional()
       .default('core'),
     delivery: z

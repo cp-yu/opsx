@@ -2,7 +2,6 @@
 
 ## Purpose
 Define tool-agnostic command content and adapter contracts for generating tool-specific OpenSpec command files.
-
 ## Requirements
 ### Requirement: CommandContent interface
 
@@ -52,20 +51,22 @@ Define tool-agnostic command content and adapter contracts for generating tool-s
 
 ### Requirement: Command generator function
 
-系统 SHALL 提供 `generateCommand` 函数来组合 command content 与 adapter。
+The system SHALL generate workflow command artifacts from a single manifest-derived projection rather than from scattered workflow-specific mappings.
 
-#### Scenario: Generate command file
+#### Scenario: Shared workflow projection drives generation
+- **WHEN** generating command artifacts for any supported tool
+- **THEN** the command set SHALL be derived from a shared manifest projection of the selected workflows
+- **AND** the same projection SHALL determine workflow IDs, command slugs, and generated artifact membership
 
-- **WHEN** calling `generateCommand(content, adapter)`
-- **THEN** it SHALL return an object with:
-  - `path`: the file path from `adapter.getFilePath(content.commandSlug)`
-  - `fileContent`: the formatted content from `adapter.formatFile(content)`
+#### Scenario: Core and expanded mode projections remain deterministic
+- **WHEN** command artifacts are generated for `core` or `expanded` mode
+- **THEN** the resulting command set SHALL match the selected mode exactly
+- **AND** repeated generation with the same inputs SHALL converge to the same file set
 
-#### Scenario: Generate multiple commands
-
-- **WHEN** generating all opsx commands for a tool
-- **THEN** the system SHALL iterate over command contents and generate each using the tool's adapter
-- **AND** workflows with custom external command slugs SHALL still preserve their internal IDs in command metadata used by higher-level workflow selection logic
+#### Scenario: Standalone sync command exists only in expanded projection
+- **WHEN** the selected mode is `core`
+- **THEN** command generation SHALL NOT emit a standalone sync command artifact
+- **AND** when the selected mode is `expanded`, command generation SHALL emit the standalone sync command artifact
 
 ### Requirement: CommandAdapterRegistry
 
@@ -96,3 +97,4 @@ The body content of commands SHALL be shared across all tools.
 - **WHEN** generating the 'explore' command for Claude and Cursor
 - **THEN** both SHALL use the same `body` content
 - **AND** only the frontmatter and file path SHALL differ
+

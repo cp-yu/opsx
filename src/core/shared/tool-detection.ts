@@ -7,68 +7,15 @@
 import path from 'path';
 import * as fs from 'fs';
 import { AI_TOOLS } from '../config.js';
+import { SKILL_NAMES, COMMAND_IDS, getCommandSlug } from '../workflow-surface.js';
 
-/**
- * Names of skill directories created by openspec init.
- */
-export const SKILL_NAMES = [
-  'openspec-explore',
-  'openspec-new-change',
-  'openspec-continue-change',
-  'openspec-apply-change',
-  'openspec-ff-change',
-  'openspec-sync-specs',
-  'openspec-archive-change',
-  'openspec-bulk-archive-change',
-  'openspec-verify-change',
-  'openspec-onboard',
-  'openspec-propose',
-  'openspec-bootstrap-opsx',
-] as const;
-
-export type SkillName = (typeof SKILL_NAMES)[number];
-
-/**
- * Internal workflow IDs for command templates created by openspec init.
- */
-export const COMMAND_IDS = [
-  'explore',
-  'new',
-  'continue',
-  'apply',
-  'ff',
-  'sync',
-  'archive',
-  'bulk-archive',
-  'verify',
-  'onboard',
-  'propose',
-  'bootstrap-opsx',
-] as const;
-
-export type CommandId = (typeof COMMAND_IDS)[number];
-
-/**
- * Maps internal workflow IDs to user-facing command slugs.
- */
-export const WORKFLOW_TO_COMMAND_SLUG: Record<CommandId, string> = {
-  'explore': 'explore',
-  'new': 'new',
-  'continue': 'continue',
-  'apply': 'apply',
-  'ff': 'ff',
-  'sync': 'sync',
-  'archive': 'archive',
-  'bulk-archive': 'bulk-archive',
-  'verify': 'verify',
-  'onboard': 'onboard',
-  'propose': 'propose',
-  'bootstrap-opsx': 'bootstrap',
-};
-
-export function getCommandSlug(workflowId: CommandId): string {
-  return WORKFLOW_TO_COMMAND_SLUG[workflowId];
-}
+export {
+  SKILL_NAMES,
+  COMMAND_IDS,
+  WORKFLOW_TO_COMMAND_SLUG,
+  getCommandSlug,
+} from '../workflow-surface.js';
+export type { SkillName, CommandId } from '../workflow-surface.js';
 
 /**
  * Status of skill configuration for a tool.

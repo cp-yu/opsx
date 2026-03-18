@@ -2,35 +2,22 @@ import path from 'path';
 import * as fs from 'fs';
 import { AI_TOOLS } from './config.js';
 import type { Delivery } from './global-config.js';
-import { ALL_WORKFLOWS } from './profiles.js';
 import { CommandAdapterRegistry } from './command-generation/index.js';
-import { COMMAND_IDS, getCommandSlug, getConfiguredTools } from './shared/index.js';
+import { createWorkflowArtifactPlan } from './workflow-installation.js';
+import { getConfiguredTools } from './shared/index.js';
+import {
+  ALL_WORKFLOWS,
+  COMMAND_IDS,
+  WORKFLOW_TO_SKILL_DIR,
+  getCommandSlug,
+  normalizeWorkflowIds,
+  type WorkflowId,
+} from './workflow-surface.js';
 
-type WorkflowId = (typeof ALL_WORKFLOWS)[number];
-
-/**
- * Maps workflow IDs to their skill directory names.
- */
-export const WORKFLOW_TO_SKILL_DIR: Record<WorkflowId, string> = {
-  'explore': 'openspec-explore',
-  'new': 'openspec-new-change',
-  'continue': 'openspec-continue-change',
-  'apply': 'openspec-apply-change',
-  'ff': 'openspec-ff-change',
-  'sync': 'openspec-sync-specs',
-  'archive': 'openspec-archive-change',
-  'bulk-archive': 'openspec-bulk-archive-change',
-  'verify': 'openspec-verify-change',
-  'onboard': 'openspec-onboard',
-  'propose': 'openspec-propose',
-  'bootstrap-opsx': 'openspec-bootstrap-opsx',
-};
+export { WORKFLOW_TO_SKILL_DIR } from './workflow-surface.js';
 
 function toKnownWorkflows(workflows: readonly string[]): WorkflowId[] {
-  return workflows.filter(
-    (workflow): workflow is WorkflowId =>
-      (ALL_WORKFLOWS as readonly string[]).includes(workflow)
-  );
+  return normalizeWorkflowIds(workflows);
 }
 
 /**
@@ -80,11 +67,6 @@ export function getConfiguredToolsForProfileSync(projectPath: string): string[] 
 
 /**
  * Detects if a single tool has profile/delivery drift against the desired state.
- *
- * This function covers:
- * - required artifacts missing for selected workflows
- * - artifacts that should not exist for the selected delivery mode
- * - artifacts for workflows that were deselected from the current profile
  */
 export function hasToolProfileOrDeliveryDrift(
   projectPath: string,
@@ -95,34 +77,28 @@ export function hasToolProfileOrDeliveryDrift(
   const tool = AI_TOOLS.find((t) => t.value === toolId);
   if (!tool?.skillsDir) return false;
 
-  const knownDesiredWorkflows = toKnownWorkflows(desiredWorkflows);
-  const desiredWorkflowSet = new Set<WorkflowId>(knownDesiredWorkflows);
+  const plan = createWorkflowArtifactPlan(toKnownWorkflows(desiredWorkflows), delivery);
   const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
   const adapter = CommandAdapterRegistry.get(toolId);
-  const shouldGenerateSkills = delivery !== 'commands';
-  const shouldGenerateCommands = delivery !== 'skills';
 
-  if (shouldGenerateSkills) {
-    for (const workflow of knownDesiredWorkflows) {
-      const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
+  if (plan.shouldGenerateSkills) {
+    for (const dirName of plan.expectedSkillDirNames) {
       const skillFile = path.join(skillsDir, dirName, 'SKILL.md');
       if (!fs.existsSync(skillFile)) {
         return true;
       }
     }
 
-    // Deselecting workflows in a profile should trigger sync.
-    for (const workflow of ALL_WORKFLOWS) {
-      if (desiredWorkflowSet.has(workflow)) continue;
-      const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
+    const expectedSkillDirs = new Set(plan.expectedSkillDirNames);
+    for (const dirName of plan.managedSkillDirNames) {
+      if (expectedSkillDirs.has(dirName)) continue;
       const skillDir = path.join(skillsDir, dirName);
       if (fs.existsSync(skillDir)) {
         return true;
       }
     }
   } else {
-    for (const workflow of ALL_WORKFLOWS) {
-      const dirName = WORKFLOW_TO_SKILL_DIR[workflow];
+    for (const dirName of plan.managedSkillDirNames) {
       const skillDir = path.join(skillsDir, dirName);
       if (fs.existsSync(skillDir)) {
         return true;
@@ -130,27 +106,27 @@ export function hasToolProfileOrDeliveryDrift(
     }
   }
 
-  if (shouldGenerateCommands && adapter) {
-    for (const workflow of knownDesiredWorkflows) {
-      const cmdPath = adapter.getFilePath(getCommandSlug(workflow));
+  if (plan.shouldGenerateCommands && adapter) {
+    for (const commandSlug of plan.expectedCommandSlugs) {
+      const cmdPath = adapter.getFilePath(commandSlug);
       const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
       if (!fs.existsSync(fullPath)) {
         return true;
       }
     }
 
-    // Deselecting workflows in a profile should trigger sync.
-    for (const workflow of ALL_WORKFLOWS) {
-      if (desiredWorkflowSet.has(workflow)) continue;
-      const cmdPath = adapter.getFilePath(getCommandSlug(workflow));
+    const expectedCommandSlugs = new Set(plan.expectedCommandSlugs);
+    for (const commandSlug of plan.managedCommandSlugs) {
+      if (expectedCommandSlugs.has(commandSlug)) continue;
+      const cmdPath = adapter.getFilePath(commandSlug);
       const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
       if (fs.existsSync(fullPath)) {
         return true;
       }
     }
-  } else if (!shouldGenerateCommands && adapter) {
-    for (const workflow of ALL_WORKFLOWS) {
-      const cmdPath = adapter.getFilePath(getCommandSlug(workflow));
+  } else if (!plan.shouldGenerateCommands && adapter) {
+    for (const commandSlug of plan.managedCommandSlugs) {
+      const cmdPath = adapter.getFilePath(commandSlug);
       const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
       if (fs.existsSync(fullPath)) {
         return true;

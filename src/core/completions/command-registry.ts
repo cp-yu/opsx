@@ -147,7 +147,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
       {
         name: 'skip-specs',
-        description: 'Skip spec update operations',
+        description: 'Skip archive-time spec and OPSX sync writes',
       },
       {
         name: 'no-validate',
