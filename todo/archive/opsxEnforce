@@ -1,0 +1,71 @@
+
+  现状
+
+  当前系统已经引入了 OPSX，但在三个核心工作流里的利用深度不一致，而且整体偏浅。
+
+  explore 已经有“先读 openspec/project.opsx.yaml”的提示，能把 OPSX 当作初始导航信息来用，见 src/core/
+  templates/workflows/explore.ts:79。但这更像宽松提示，不是明确的分层加载协议，也没有稳定的结构化输出传递
+  给后续工作流。
+
+  propose 对 OPSX 的使用最弱。主流程是根据 openspec instructions 生成 proposal/design/tasks/specs，只有在
+  specs 完成后生成 opsx-delta.yaml 时，才补充读取 project.opsx.yaml 作为参考，见 src/core/templates/
+  workflows/propose.ts:59 和 src/core/templates/workflows/propose.ts:85。也就是说，OPSX 还没有真正参与提
+  案形成。
+
+  apply 目前也只是轻量接入。模板要求在读取变更制品前先看 project.opsx.yaml 和 code-map，见 src/core/
+  templates/workflows/apply-change.ts:54。但在真正编写代码时，OPSX 还没有被用作稳定的全局约束模型。
+
+  项目设计文档本身也反映了这种职责切分：apply/explore 被定义为 OPSX 导航入口，而 propose 更偏向生成 opsx-
+  delta，见 openspec/changes/archive/2026-03-17-project-opsx-integration/proposal.md:21。
+
+  痛点
+
+  第一，OPSX 目前更像“附加信息”而不是“共享工作上下文”。它存在，但没有成为三条核心链路的共同基础。
+
+  第二，explore -> propose 缺少稳定交接。探索阶段即便得出了 domain、capability、边界等结论，也没有正式机
+  制确保 proposal 复用这些结论。仓库里这件事本身还停留在开放问题讨论，见 openspec/explorations/explore-
+  workflow-ux.md:39。
+
+  第三，propose 因为没有前置使用 OPSX，容易出现重复 capability、跨错 domain、命名不一致、变更范围漂移等问
+  题。结果就是 proposal 看起来合理，但和现有架构图不一致，最后只能在 opsx-delta 阶段补救。
+
+  第四，apply 对 OPSX 的使用还停留在“辅助找文件”。这对于真正的代码实现是不够的。实现阶段除了定位代码，更
+  需要全局知识来判断边界、依赖、约束、接口影响面，否则容易做出局部正确但全局有副作用的改动。
+
+  第五，三个工作流对 OPSX 的利用方式不统一，用户体验也不稳定。有时像主上下文，有时像事后补充，有时只是提
+  示词里的一句建议。这会让工作流行为依赖会话偶然性，而不是依赖明确协议。
+
+  预期
+
+  希望把 OPSX 从“存在于系统中的文件”提升为 explore / propose / apply 共享的一等上下文。
+
+  对 explore 的预期是：真正以 OPSX 为起点理解系统。先读 project、domains、capabilities、relations，明确问
+  题落点、边界和现有能力，并形成可复用的结构化结论，而不是只停留在聊天过程中。
+
+  对 propose 的预期是：在生成 proposal/design/specs/tasks 之前就利用 OPSX 约束提案形成。需要明确这次变更
+  关联哪个 domain，是扩展已有 capability 还是新增 capability，是否涉及跨域关系，从而避免 proposal 与现有
+  架构脱节。opsx-delta.yaml 不应是事后补锅，而应是提案阶段自然推导出来的结果。
+
+  对 apply 的预期是：不仅用 OPSX 找代码位置，还要用它提供实现所需的全局知识。代码编写前应能看到相关能力、
+  依赖、约束、接口和影响面，让实现更符合系统结构，而不是只围绕当前文件局部修补。
+
+  整体预期是形成统一协议：
+
+  - explore 用 OPSX 理解系统
+  - propose 用 OPSX 约束变更
+  - apply 用 OPSX 指导实现
+
+  建议的讨论问题
+
+  1. OPSX 是否应该成为 explore / propose / apply 的默认共享上下文，而不是只在个别阶段使用？
+  2. explore 是否需要输出结构化结论，供 propose 和 apply 复用？
+  3. propose 是否应该在生成 proposal 之前执行轻量或中等强度的 OPSX 预检查，而不是只在生成 opsx-delta 时参
+     考 OPSX？
+  4. apply 是否应把 OPSX 从“文件定位工具”提升为“实现阶段的全局约束模型”？
+  5. 三个工作流之间是否需要统一的 OPSX 加载协议和上下文传递机制？
+
+  一句话摘要
+
+  当前 OPSX 已经接入，但没有真正成为核心工作流的共享认知基础；讨论目标是决定是否把它提升为 explore /
+  propose / apply 全链路的一等上下文，以减少架构漂移、提升提案质量，并帮助实现阶段做出更稳健的代码修改。
+
