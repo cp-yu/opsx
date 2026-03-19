@@ -1,6 +1,8 @@
 import ora from 'ora';
 import chalk from 'chalk';
 import {
+  getBootstrapPreInitStatus,
+  getAllowedBootstrapModes,
   initBootstrap,
   getBootstrapStatus,
   validateGate,
@@ -41,10 +43,6 @@ export interface BootstrapPromoteOptions {
 // ─── Init ────────────────────────────────────────────────────────────────────
 
 function parseBootstrapMode(mode: string | undefined): BootstrapMode {
-  if (!mode) {
-    return 'full';
-  }
-
   if (mode === 'full' || mode === 'opsx-first') {
     return mode;
   }
@@ -52,9 +50,37 @@ function parseBootstrapMode(mode: string | undefined): BootstrapMode {
   throw new Error(`Invalid bootstrap mode '${mode}'. Valid modes: full, opsx-first`);
 }
 
+async function resolveBootstrapMode(
+  projectRoot: string,
+  requestedMode: string | undefined
+): Promise<BootstrapMode> {
+  if (requestedMode) {
+    return parseBootstrapMode(requestedMode);
+  }
+
+  const preInitStatus = await getBootstrapPreInitStatus(projectRoot);
+  if (!preInitStatus.supported) {
+    throw new Error(preInitStatus.reason);
+  }
+
+  const allowedModes = getAllowedBootstrapModes(preInitStatus.baselineType);
+  const isTTY = Boolean((process.stdout as NodeJS.WriteStream & { isTTY?: boolean }).isTTY);
+  if (!isTTY) {
+    throw new Error(
+      `Missing required option --mode in non-interactive mode. Valid modes: ${allowedModes.join(', ')}`
+    );
+  }
+
+  const { select } = await import('@inquirer/prompts');
+  return select({
+    message: 'Select bootstrap mode',
+    choices: allowedModes.map((mode) => ({ name: mode, value: mode })),
+  });
+}
+
 export async function bootstrapInitCommand(options: BootstrapInitOptions): Promise<void> {
   const projectRoot = process.cwd();
-  const mode = parseBootstrapMode(options.mode);
+  const mode = await resolveBootstrapMode(projectRoot, options.mode);
   const scope = options.scope ? options.scope.split(',').map(s => s.trim()) : undefined;
 
   const spinner = ora(`Initializing bootstrap workspace (mode: ${mode})...`).start();

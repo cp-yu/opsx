@@ -386,7 +386,7 @@ openspec archive add-dark-mode
 # Archive without prompts (CI/scripts)
 openspec archive add-dark-mode --yes
 
-# Archive a tooling change that doesn't affect specs
+# Archive a tooling change that does not require archive-time sync writes
 openspec archive update-ci-config --skip-specs
 ```
 
@@ -394,8 +394,8 @@ openspec archive update-ci-config --skip-specs
 
 1. Validates the change (unless `--no-validate`)
 2. Prompts for confirmation (unless `--yes`)
-3. Merges delta specs into `openspec/specs/`
-4. Applies `opsx-delta` to the project OPSX files when present
+3. Unless `--skip-specs` is set, merges delta specs into `openspec/specs/`
+4. Unless `--skip-specs` is set, applies `opsx-delta` to the project OPSX files when present
 5. Moves change folder to `openspec/changes/archive/YYYY-MM-DD-<name>/`
 
 ---

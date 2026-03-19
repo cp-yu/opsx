@@ -95,6 +95,31 @@ describe('UpdateCommand', () => {
     });
   });
 
+  describe('bootstrap surface exposure', () => {
+    it('adds bootstrap command surface when bootstrap workspace exists and remains convergent across repeated updates', async () => {
+      const skillsDir = path.join(testDir, '.claude', 'skills', 'openspec-explore');
+      await fs.mkdir(skillsDir, { recursive: true });
+      await fs.writeFile(path.join(skillsDir, 'SKILL.md'), 'existing explore skill');
+      await fs.mkdir(path.join(testDir, 'openspec', 'bootstrap'), { recursive: true });
+
+      setMockConfig({
+        featureFlags: {},
+        profile: 'core',
+        delivery: 'commands',
+      });
+
+      await updateCommand.execute(testDir);
+      const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
+      const firstRunFiles = (await fs.readdir(commandsDir)).sort();
+      expect(firstRunFiles).toContain('bootstrap.md');
+
+      await updateCommand.execute(testDir);
+      const secondRunFiles = (await fs.readdir(commandsDir)).sort();
+
+      expect(secondRunFiles).toEqual(firstRunFiles);
+    });
+  });
+
   describe('skill updates', () => {
     it('should update skill files for configured Claude tool', async () => {
       // Set up a configured Claude tool by creating skill directories

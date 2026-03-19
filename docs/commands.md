@@ -463,7 +463,7 @@ Archive a completed change. Finalizes the change and moves it to the archive fol
 - Checks artifact completion status
 - Checks task completion (warns if incomplete)
 - Assesses delta specs and `opsx-delta` before moving the change
-- Syncs both main specs and OPSX files inline unless explicitly skipped by CLI flag
+- Syncs both main specs and OPSX files inline unless `--skip-specs` skips all archive-time sync writes
 - Moves change folder to `openspec/changes/archive/YYYY-MM-DD-<name>/`
 - Preserves all artifacts for audit trail
 

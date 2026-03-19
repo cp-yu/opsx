@@ -77,7 +77,7 @@ export function hasToolProfileOrDeliveryDrift(
   const tool = AI_TOOLS.find((t) => t.value === toolId);
   if (!tool?.skillsDir) return false;
 
-  const plan = createWorkflowArtifactPlan(toKnownWorkflows(desiredWorkflows), delivery);
+  const plan = createWorkflowArtifactPlan(toKnownWorkflows(desiredWorkflows), delivery, projectPath);
   const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
   const adapter = CommandAdapterRegistry.get(toolId);
 

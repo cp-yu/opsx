@@ -5,7 +5,10 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
-import { ARTIFACT_DOC_LANGUAGE_CONTRACT } from '../fragments/opsx-fragments.js';
+import {
+  ARTIFACT_DOC_LANGUAGE_CONTRACT,
+  OPSX_SHARED_CONTEXT,
+} from '../fragments/opsx-fragments.js';
 
 export function getOpsxProposeSkillTemplate(): SkillTemplate {
   return {
@@ -49,6 +52,8 @@ When ready to implement, run /opsx:apply
    Parse the JSON to get:
    - \`applyRequires\`: array of artifact IDs needed before implementation (e.g., \`["tasks"]\`)
    - \`artifacts\`: list of all artifacts with their status and dependencies
+
+${OPSX_SHARED_CONTEXT}
 
 4. **Create artifacts in sequence until apply-ready**
 
@@ -171,6 +176,8 @@ When ready to implement, run /opsx:apply
    Parse the JSON to get:
    - \`applyRequires\`: array of artifact IDs needed before implementation (e.g., \`["tasks"]\`)
    - \`artifacts\`: list of all artifacts with their status and dependencies
+
+${OPSX_SHARED_CONTEXT}
 
 4. **Create artifacts in sequence until apply-ready**
 

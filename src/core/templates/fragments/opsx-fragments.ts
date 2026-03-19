@@ -6,16 +6,21 @@
  */
 
 /**
- * Fragment: Read project.opsx.yaml for context
- * Used in: apply-change, explore
+ * Fragment: Shared OPSX read context
+ * Used in: explore, propose, apply-change
  */
-export const OPSX_READ_CONTEXT = `
+export const OPSX_SHARED_CONTEXT = `
 Before reading other context files, check whether \`openspec/project.opsx.yaml\` exists.
 - If it exists, read it first for domains → capabilities structure
 - Check \`openspec/project.opsx.code-map.yaml\` for code location references
 - Check \`openspec/specs/\` for behavior documentation
 - Treat it as navigation context, not as a replacement for change artifacts
 `.trim();
+
+/**
+ * Backward-compatible alias for older consumers.
+ */
+export const OPSX_READ_CONTEXT = OPSX_SHARED_CONTEXT;
 
 /**
  * Fragment: Generate opsx-delta.yaml

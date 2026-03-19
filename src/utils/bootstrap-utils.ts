@@ -128,11 +128,18 @@ export type EvidenceDomain = z.infer<typeof EvidenceDomainSchema>;
 export type EvidenceFile = z.infer<typeof EvidenceFileSchema>;
 export type DomainMapFile = z.infer<typeof DomainMapFileSchema>;
 
+export interface InvalidDomainMap {
+  file: string;
+  domainId: string;
+  error: string;
+}
+
 export interface BootstrapState {
   metadata: BootstrapMetadata;
   scope: ScopeConfig | null;
   evidence: EvidenceFile | null;
   domainMaps: Map<string, DomainMapFile>;
+  invalidDomainMaps: Map<string, InvalidDomainMap>;
   reviewExists: boolean;
 }
 
@@ -167,6 +174,8 @@ export interface DomainStatus {
   id: string;
   confidence: 'high' | 'medium' | 'low';
   mapped: boolean;
+  mapState: 'valid' | 'missing' | 'invalid';
+  mapError?: string;
   capabilityCount: number;
   reviewed: boolean;
 }
@@ -509,6 +518,7 @@ export async function readBootstrapState(projectRoot: string): Promise<Bootstrap
 
   // Read domain maps
   const domainMaps = new Map<string, DomainMapFile>();
+  const invalidDomainMaps = new Map<string, InvalidDomainMap>();
   const mapDir = bootstrapPath(projectRoot, 'domain-map');
   if (await FileSystemUtils.directoryExists(mapDir)) {
     const entries = await fs.readdir(mapDir);
@@ -518,14 +528,21 @@ export async function readBootstrapState(projectRoot: string): Promise<Bootstrap
         const raw = await readYaml(path.join(mapDir, entry));
         const parsed = DomainMapFileSchema.parse(raw);
         domainMaps.set(parsed.domain.id, parsed);
-      } catch { /* skip invalid */ }
+      } catch (error) {
+        const domainId = entry.replace(/\.yaml$/, '');
+        invalidDomainMaps.set(domainId, {
+          file: entry,
+          domainId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
     }
   }
 
   const reviewPath = bootstrapPath(projectRoot, 'review.md');
   const reviewExists = await FileSystemUtils.fileExists(reviewPath);
 
-  return { metadata, scope, evidence, domainMaps, reviewExists };
+  return { metadata, scope, evidence, domainMaps, invalidDomainMaps, reviewExists };
 }
 
 export async function advancePhase(projectRoot: string, targetPhase: BootstrapPhase): Promise<void> {
@@ -572,10 +589,14 @@ export async function getBootstrapStatus(projectRoot: string): Promise<Bootstrap
     const orderedDomains = [...state.evidence.domains].sort(compareEvidenceDomains);
     for (const dom of orderedDomains) {
       const mapFile = state.domainMaps.get(dom.id);
+      const invalidMap = state.invalidDomainMaps.get(dom.id);
+      const mapState = mapFile ? 'valid' : invalidMap ? 'invalid' : 'missing';
       domains.push({
         id: dom.id,
         confidence: dom.confidence,
-        mapped: !!mapFile,
+        mapped: mapState === 'valid',
+        mapState,
+        ...(invalidMap ? { mapError: invalidMap.error } : {}),
         capabilityCount: mapFile?.capabilities.length ?? 0,
         reviewed: derived.reviewState === 'current' && derived.checkedDomains.has(dom.id),
       });
@@ -632,6 +653,13 @@ export async function validateGate(
         break;
       }
       for (const dom of state.evidence.domains) {
+        const invalidMap = state.invalidDomainMaps.get(dom.id);
+        if (invalidMap) {
+          errors.push(
+            `Domain '${dom.id}' has invalid domain-map: ${invalidMap.file} — ${invalidMap.error}`
+          );
+          continue;
+        }
         if (!state.domainMaps.has(dom.id)) {
           errors.push(`Domain '${dom.id}' has no domain-map file`);
         }
@@ -839,19 +867,28 @@ async function deriveBootstrapArtifacts(projectRoot: string, state: BootstrapSta
   const candidateFingerprint = bundle ? computeCandidateFingerprint(bundle) : null;
   const candidateExists = await candidateFilesExist(projectRoot);
 
-  const candidateState = !candidateFingerprint || !candidateExists
+  let candidateState: 'missing' | 'current' | 'stale' = !candidateFingerprint || !candidateExists
     ? 'missing'
     : state.metadata.source_fingerprint === sourceFingerprint
       && state.metadata.candidate_fingerprint === candidateFingerprint
       ? 'current'
       : 'stale';
 
-  const reviewState = !candidateFingerprint || !candidateExists || !state.reviewExists
+  let reviewState: 'missing' | 'current' | 'stale' = !candidateFingerprint || !candidateExists || !state.reviewExists
     ? 'missing'
     : state.metadata.source_fingerprint === sourceFingerprint
       && state.metadata.review_fingerprint === candidateFingerprint
       ? 'current'
       : 'stale';
+
+  if (state.invalidDomainMaps.size > 0) {
+    if (candidateState === 'current') {
+      candidateState = 'stale';
+    }
+    if (reviewState === 'current') {
+      reviewState = 'stale';
+    }
+  }
 
   return {
     bundle,

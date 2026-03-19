@@ -507,7 +507,7 @@ export class InitCommand {
     const profile: Profile = this.resolveProfileOverride() ?? globalConfig.profile ?? 'core';
     const delivery: Delivery = globalConfig.delivery ?? 'both';
     const workflows = getProfileWorkflows(profile, globalConfig.workflows);
-    const plan = createWorkflowArtifactPlan(workflows, delivery);
+    const plan = createWorkflowArtifactPlan(workflows, delivery, projectPath);
 
     // Process each tool
     for (const tool of tools) {
@@ -710,7 +710,7 @@ export class InitCommand {
       const profile: Profile = (this.profileOverride as Profile) ?? globalConfig.profile ?? 'core';
       const delivery: Delivery = globalConfig.delivery ?? 'both';
       const workflows = getProfileWorkflows(profile, globalConfig.workflows);
-      const plan = createWorkflowArtifactPlan(workflows, delivery);
+      const plan = createWorkflowArtifactPlan(workflows, delivery, projectPath);
       const toolDirs = [...new Set(successfulTools.map((t) => t.skillsDir))].join(', ');
       const skillCount = plan.skillTemplates.length;
       const commandCount = plan.commandContents.length;

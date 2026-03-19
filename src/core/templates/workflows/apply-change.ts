@@ -5,7 +5,10 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
-import { ARTIFACT_DOC_LANGUAGE_CONTRACT } from '../fragments/opsx-fragments.js';
+import {
+  ARTIFACT_DOC_LANGUAGE_CONTRACT,
+  OPSX_SHARED_CONTEXT,
+} from '../fragments/opsx-fragments.js';
 
 export function getApplyChangeSkillTemplate(): SkillTemplate {
   return {
@@ -53,10 +56,7 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
 
 4. **Read context files**
 
-   Before reading \`contextFiles\`, check whether \`openspec/project.opsx.yaml\` exists.
-   - If it exists, read it first for domains → capabilities structure
-   - Check \`openspec/project.opsx.code-map.yaml\` for code location references
-   - Treat it as navigation context, not as a replacement for change artifacts
+   ${OPSX_SHARED_CONTEXT}
 
    Read the files listed in \`contextFiles\` from the apply instructions output.
    The files depend on the schema being used:
@@ -216,6 +216,8 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
    - Otherwise: proceed to implementation
 
 4. **Read context files**
+
+   ${OPSX_SHARED_CONTEXT}
 
    Read the files listed in \`contextFiles\` from the apply instructions output.
    The files depend on the schema being used:

@@ -16,6 +16,7 @@ import { CompletionCommand } from '../commands/completion.js';
 import { FeedbackCommand } from '../commands/feedback.js';
 import { registerConfigCommand } from '../commands/config.js';
 import { registerSchemaCommand } from '../commands/schema.js';
+import { registerSyncCommand } from '../commands/sync.js';
 import {
   bootstrapInitCommand,
   bootstrapStatusCommand,
@@ -180,6 +181,8 @@ program
       process.exit(1);
     }
   });
+
+registerSyncCommand(program);
 
 program
   .command('list')

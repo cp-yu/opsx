@@ -8,6 +8,7 @@ import {
   applyPreparedChangeSync,
   prepareChangeSync,
 } from './change-sync.js';
+import { selectActiveChange } from './change-utils.js';
 
 /**
  * Recursively copy a directory. Used when fs.rename fails (e.g. EPERM on Windows).
@@ -63,7 +64,9 @@ export class ArchiveCommand {
 
     // Get change name interactively if not provided
     if (!changeName) {
-      const selectedChange = await this.selectChange(changesDir);
+      const selectedChange = await selectActiveChange(changesDir, {
+        message: 'Select a change to archive',
+      });
       if (!selectedChange) {
         console.log('No change selected. Aborting.');
         return;
@@ -240,51 +243,6 @@ export class ArchiveCommand {
     await moveDirectory(changeDir, archivePath);
 
     console.log(`Change '${changeName}' archived as '${archiveName}'.`);
-  }
-
-  private async selectChange(changesDir: string): Promise<string | null> {
-    const { select } = await import('@inquirer/prompts');
-    // Get all directories in changes (excluding archive)
-    const entries = await fs.readdir(changesDir, { withFileTypes: true });
-    const changeDirs = entries
-      .filter(entry => entry.isDirectory() && entry.name !== 'archive')
-      .map(entry => entry.name)
-      .sort();
-
-    if (changeDirs.length === 0) {
-      console.log('No active changes found.');
-      return null;
-    }
-
-    // Build choices with progress inline to avoid duplicate lists
-    let choices: Array<{ name: string; value: string }> = changeDirs.map(name => ({ name, value: name }));
-    try {
-      const progressList: Array<{ id: string; status: string }> = [];
-      for (const id of changeDirs) {
-        const progress = await getTaskProgressForChange(changesDir, id);
-        const status = formatTaskStatus(progress);
-        progressList.push({ id, status });
-      }
-      const nameWidth = Math.max(...progressList.map(p => p.id.length));
-      choices = progressList.map(p => ({
-        name: `${p.id.padEnd(nameWidth)}     ${p.status}`,
-        value: p.id
-      }));
-    } catch {
-      // If anything fails, fall back to simple names
-      choices = changeDirs.map(name => ({ name, value: name }));
-    }
-
-    try {
-      const answer = await select({
-        message: 'Select a change to archive',
-        choices
-      });
-      return answer;
-    } catch (error) {
-      // User cancelled (Ctrl+C)
-      return null;
-    }
   }
 
   private getArchiveDate(): string {

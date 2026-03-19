@@ -96,7 +96,7 @@ export class UpdateCommand {
     const profile = globalConfig.profile ?? 'core';
     const delivery: Delivery = globalConfig.delivery ?? 'both';
     const profileWorkflows = getProfileWorkflows(profile, globalConfig.workflows);
-    const plan = createWorkflowArtifactPlan(profileWorkflows, delivery);
+    const plan = createWorkflowArtifactPlan(profileWorkflows, delivery, resolvedProjectPath);
     const desiredWorkflows = [...plan.workflows];
 
     // 4. Detect and handle legacy artifacts + upgrade legacy tools using effective config
@@ -647,7 +647,7 @@ export class UpdateCommand {
 
     // Create skills/commands for selected tools using effective profile+delivery.
     const newlyConfigured: string[] = [];
-    const plan = createWorkflowArtifactPlan(desiredWorkflows, delivery);
+    const plan = createWorkflowArtifactPlan(desiredWorkflows, delivery, projectPath);
 
     for (const toolId of selectedTools) {
       const tool = AI_TOOLS.find((t) => t.value === toolId);

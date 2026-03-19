@@ -8,242 +8,245 @@ project:
     - path: .
 domains:
   - id: dom.cli
-    type: domain
     intent: 命令行界面，将所有 OpenSpec 操作暴露为可组合的子命令
+    type: domain
     boundary: 拥有终端 I/O 和命令路由。将所有领域逻辑委托给核心模块。
   - id: dom.artifact-graph
-    type: domain
     intent: 制品依赖解析、拓扑排序和指令组装的核心引擎
+    type: domain
     boundary: 拥有图解析和指令加载。不拥有 CLI 输出格式化或技能编排。
   - id: dom.change-workflow
-    type: domain
     intent: 管理完整变更生命周期 — 创建、增量规约操作、归档及合并到主规约
+    type: domain
     boundary: 拥有变更目录和增量合并逻辑。不拥有规约内容验证规则。
   - id: dom.schema
-    type: domain
     intent: 定义、解析和管理控制制品类型、依赖关系和构建顺序的工作流 Schema
+    type: domain
     boundary: 拥有 Schema YAML 解析和三层解析逻辑。不拥有制品内容生成。
   - id: dom.ai-integration
-    type: domain
     intent: 多工具 AI 支持 — 为 25+ AI 工具生成特定工具的技能文件、斜杠命令和面向 Agent 的工作流
+    type: domain
     boundary: 拥有工具适配器注册表和技能定义。不拥有核心规约/变更逻辑。
   - id: dom.config
-    type: domain
     intent: 项目级和用户级配置管理，带 Schema 验证
+    type: domain
     boundary: 拥有配置加载、验证和合并。不拥有配置 UI 或交互式提示。
   - id: dom.validation
-    type: domain
     intent: 变更、规约和 OPSX 完整性的验证系统
+    type: domain
     boundary: 拥有验证规则和错误报告。不拥有修复建议或自动修复。
   - id: dom.opsx
-    type: domain
     intent: OPSX 编程基础设施，用于架构追踪，包含 YAML 操作、验证和分片
+    type: domain
     boundary: 拥有 OPSX 文件 I/O、Schema 验证和 delta 合并。不拥有 OPSX 内容生成。
 capabilities:
   - id: cap.ai.agent-docs
-    type: capability
     intent: 生成面向 Agent 的指令文档
     status: active
-  - id: cap.ai.command-generation
     type: capability
+  - id: cap.ai.command-generation
     intent: 为 AI 工具生成 slash command 定义时，使用显式的外部 command slug，而不是假设 workflow ID 总是等于磁盘上的命令文件名
     status: active
+    type: capability
   - id: cap.ai.command-slugs
-    type: capability
     intent: 建立内部 workflow ID 到外部用户命令 slug 的映射，使生成、检测、迁移和清理命令制品时都遵循同一套命名契约
-  - id: cap.ai.skill-generation
     type: capability
+  - id: cap.ai.skill-generation
     intent: 为配置的 AI 工具生成特定工具的技能文件
     status: active
-  - id: cap.ai.tool-adapters
     type: capability
+  - id: cap.ai.tool-adapters
     intent: 为 25+ AI 工具（Claude、Cursor、Windsurf 等）提供工具适配器注册表
     status: active
+    type: capability
   - id: cap.ai.workflow-templates
-    type: capability
-    intent: 提供面向 Agent 的工作流模板（propose、apply、explore、archive 等）
+    intent: 提供面向 Agent 的工作流模板（propose、apply、explore、archive 等），并在核心 workflow 中共享 OPSX 上下文加载协议
     status: active
-  - id: cap.artifact-graph.instruction-loader
     type: capability
+  - id: cap.artifact-graph.instruction-loader
     intent: 加载 Schema 模板，注入项目上下文和制品规则，供 AI 消费
     status: active
-  - id: cap.artifact-graph.parse
     type: capability
+  - id: cap.artifact-graph.parse
     intent: 解析制品依赖关系并构建 DAG，支持循环检测和拓扑排序
     status: active
-  - id: cap.artifact-graph.schema-resolution
     type: capability
+  - id: cap.artifact-graph.schema-resolution
     intent: 解析和验证制品 Schema 定义
     status: active
-  - id: cap.artifact-graph.state-tracking
     type: capability
+  - id: cap.artifact-graph.state-tracking
     intent: 通过文件系统追踪制品完成状态
     status: active
-  - id: cap.change.archive
     type: capability
+  - id: cap.change.archive
     intent: 归档已完成的变更，将规约合并到主目录，移动变更到归档
     status: active
-  - id: cap.change.create
     type: capability
+  - id: cap.change.create
     intent: 创建新的变更目录，包含提案、规约、设计和任务文件
     status: active
-  - id: cap.change.discovery
     type: capability
+  - id: cap.change.discovery
     intent: 发现和列举项目中的变更和规约
     status: active
-  - id: cap.change.metadata
     type: capability
+  - id: cap.change.metadata
     intent: 管理变更元数据（创建时间、状态、描述）
     status: active
+    type: capability
   - id: cap.change.specs-sync
-    type: capability
-    intent: 将变更中的规约同步到主规约目录，支持幂等合并
+    intent: 将变更中的 delta specs 和 OPSX delta 同步到主规约与主 OPSX，支持幂等合并，并被 standalone sync 与 archive 共享
     status: active
-  - id: cap.cli.archive
     type: capability
+  - id: cap.cli.archive
     intent: 归档已完成的变更并将规约合并到主规约目录
     status: active
-  - id: cap.cli.change
     type: capability
+  - id: cap.cli.change
     intent: 管理变更提案，包含创建、列表和操作的子命令
     status: active
-  - id: cap.cli.completion
     type: capability
+  - id: cap.cli.completion
     intent: 管理 OpenSpec CLI 的 shell 补全
     status: active
-  - id: cap.cli.config
     type: capability
+  - id: cap.cli.config
     intent: 查看和修改全局 OpenSpec 配置
     status: active
-  - id: cap.cli.feedback
     type: capability
+  - id: cap.cli.feedback
     intent: 提交关于 OpenSpec 的反馈
     status: active
+    type: capability
   - id: cap.cli.init
-    type: capability
-    intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品，其中 slash command 输出路径遵循显式 workflow→command slug 映射
+    intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品，其中 slash command 输出路径遵循显式 workflow→command slug 映射，并在 bootstrap 工作区存在时暴露 bootstrap 命令面
     status: active
-  - id: cap.cli.instructions
     type: capability
+  - id: cap.cli.instructions
     intent: 输出用于创建制品或应用任务的丰富指令
     status: active
-  - id: cap.cli.list
     type: capability
+  - id: cap.cli.list
     intent: 列出变更或规约，支持过滤和 JSON 输出
     status: active
-  - id: cap.cli.new-change
     type: capability
+  - id: cap.cli.new-change
     intent: 创建新的变更目录
     status: active
-  - id: cap.cli.schema
     type: capability
+  - id: cap.cli.schema
     intent: 管理工作流 Schema，包含 init、fork 和 which 子命令
     status: active
-  - id: cap.cli.schemas
     type: capability
+  - id: cap.cli.schemas
     intent: 列出可用的工作流 Schema 及其描述
     status: active
-  - id: cap.cli.show
     type: capability
+  - id: cap.cli.show
     intent: 显示变更或规约的详细信息
     status: active
-  - id: cap.cli.spec
     type: capability
+  - id: cap.cli.spec
     intent: 使用子命令管理和查看 OpenSpec 规约
     status: active
-  - id: cap.cli.status
     type: capability
+  - id: cap.cli.status
     intent: 显示变更的制品完成状态
     status: active
-  - id: cap.cli.templates
     type: capability
+  - id: cap.cli.templates
     intent: 显示 Schema 中所有制品的已解析模板路径
     status: active
+    type: capability
   - id: cap.cli.update
-    type: capability
-    intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品，同时通过显式 command slug 映射保持 workflow 选择语义稳定
+    intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品，同时通过显式 command slug 映射保持 workflow 选择语义稳定，并根据 bootstrap 工作区动态暴露 bootstrap 命令面
     status: active
-  - id: cap.cli.validate
     type: capability
+  - id: cap.cli.validate
     intent: 验证变更和规约的完整性
     status: active
-  - id: cap.cli.view
     type: capability
+  - id: cap.cli.view
     intent: 显示规约和变更的交互式仪表板
     status: active
-  - id: cap.config.global
     type: capability
+  - id: cap.config.global
     intent: 加载和验证用户全局配置（~/.config/openspec/）
     status: active
-  - id: cap.config.migration
     type: capability
+  - id: cap.config.migration
     intent: 处理配置格式迁移和向后兼容
     status: active
-  - id: cap.config.project
     type: capability
+  - id: cap.config.project
     intent: 加载和验证项目级配置（openspec/config.yaml）
     status: active
-  - id: cap.config.schema-validation
     type: capability
+  - id: cap.config.schema-validation
     intent: 使用 Zod Schema 验证配置结构
     status: active
-  - id: cap.opsx.atomic-write
     type: capability
+  - id: cap.opsx.atomic-write
     intent: 使用临时文件 + 重命名模式实现原子写入
     status: active
+    type: capability
   - id: cap.opsx.bootstrap
-    type: capability
-    intent: 提供基于现有 CLI 的 bootstrap 工作流，并让面向 agent 的 `/opsx:bootstrap` 指引与结构化五阶段生命周期保持一致
+    intent: 提供基于现有 CLI 的 bootstrap 工作流，支持 TTY 模式选择、invalid domain-map 诊断与 gate 驱动的五阶段生命周期
     status: active
-  - id: cap.opsx.delta-merge
     type: capability
+  - id: cap.opsx.delta-merge
     intent: 将 opsx-delta.yaml 合并到主 OPSX 文件，支持 ADDED/MODIFIED/REMOVED
     status: active
-  - id: cap.opsx.read-transparent
     type: capability
+  - id: cap.opsx.read-transparent
     intent: 透明处理分片读取，自动合并多个分片文件
     status: active
-  - id: cap.opsx.referential-integrity
     type: capability
+  - id: cap.opsx.referential-integrity
     intent: 验证所有关系的 from/to 引用是否存在
     status: active
-  - id: cap.opsx.sharding
     type: capability
+  - id: cap.opsx.sharding
     intent: 当文件超过 1000 行时按领域自动分片
     status: active
-  - id: cap.opsx.spec-refs-validation
     type: capability
+  - id: cap.opsx.spec-refs-validation
     intent: 验证 spec_refs 路径是否存在
     status: active
-  - id: cap.opsx.yaml-operations
     type: capability
+  - id: cap.opsx.yaml-operations
     intent: YAML 序列化/反序列化，支持注释保留和格式化
     status: active
-  - id: cap.schema.fork
     type: capability
+  - id: cap.schema.fork
     intent: 从现有 Schema 创建分支
     status: active
-  - id: cap.schema.init
     type: capability
+  - id: cap.schema.init
     intent: 初始化新的工作流 Schema
     status: active
-  - id: cap.schema.parse
     type: capability
+  - id: cap.schema.parse
     intent: 解析工作流 Schema YAML 文件，支持三层解析（内置、项目、变更）
     status: active
-  - id: cap.schema.validate
     type: capability
+  - id: cap.schema.validate
     intent: 验证 Schema 结构和制品依赖关系
     status: active
-  - id: cap.validation.change
     type: capability
+  - id: cap.validation.change
     intent: 验证变更的完整性和结构
     status: active
-  - id: cap.validation.opsx
     type: capability
+  - id: cap.validation.opsx
     intent: 验证 OPSX 引用完整性和双向对齐
     status: active
-  - id: cap.validation.spec
     type: capability
+  - id: cap.validation.spec
     intent: 验证规约的格式和内容
     status: active
+    type: capability
+  - id: cap.cli.sync
+    intent: 顶层 CLI 命令，将 change 中的 delta specs 和 OPSX delta 同步到主文件，不执行归档
+    type: capability

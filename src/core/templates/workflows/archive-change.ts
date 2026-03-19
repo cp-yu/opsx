@@ -96,7 +96,7 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
 **Change:** <change-name>
 **Schema:** <schema-name>
 **Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs / OPSX:** ✓ Synced to main specs and project OPSX (or "No deltas" or "Sync skipped")
+**Specs / OPSX:** ✓ Synced to main specs and project OPSX (or "No deltas" or "Skipped all archive-time sync writes")
 
 All artifacts complete. All tasks complete.
 \`\`\`
@@ -196,7 +196,7 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
    - Change name
    - Schema that was used
    - Archive location
-   - Specs / OPSX sync status (synced / sync skipped / no deltas)
+   - Specs / OPSX sync status (synced / skipped all archive-time sync writes / no deltas)
    - Note about any warnings (incomplete artifacts/tasks)
 
 **Output On Success**
@@ -233,12 +233,12 @@ All artifacts complete. All tasks complete.
 **Change:** <change-name>
 **Schema:** <schema-name>
 **Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs / OPSX:** Sync skipped (user chose to skip)
+**Specs / OPSX:** Skipped all archive-time sync writes
 
 **Warnings:**
 - Archived with 2 incomplete artifacts
 - Archived with 3 incomplete tasks
-- Delta sync was skipped (user chose to skip)
+- Skipped all archive-time sync writes
 
 Review the archive if this was not intentional.
 \`\`\`

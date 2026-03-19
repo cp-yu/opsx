@@ -331,7 +331,7 @@ New feature description.
       expect(archives.length).toBe(1);
     });
 
-    it('should skip spec updates when --skip-specs flag is used', async () => {
+    it('should skip all archive-time sync writes when --skip-specs flag is used', async () => {
       const changeName = 'skip-specs-feature';
       const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
       const changeSpecDir = path.join(changeDir, 'specs', 'test-capability');

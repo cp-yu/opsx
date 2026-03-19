@@ -5,6 +5,7 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
+import { OPSX_NAVIGATION_GUIDANCE, OPSX_SHARED_CONTEXT } from '../fragments/opsx-fragments.js';
 
 export function getExploreSkillTemplate(): SkillTemplate {
   return {
@@ -92,8 +93,9 @@ This tells you:
 - Their names, schemas, and status
 - What the user might be working on
 
-If \`openspec/project.opsx.yaml\` exists at the project root, read it before diving into individual files.
-Use the OPSX structure: domains → capabilities for architecture, \`project.opsx.code-map.yaml\` for code locations.
+${OPSX_SHARED_CONTEXT}
+
+${OPSX_NAVIGATION_GUIDANCE}
 
 ### When no change exists
 
@@ -391,8 +393,9 @@ This tells you:
 - Their names, schemas, and status
 - What the user might be working on
 
-If \`openspec/project.opsx.yaml\` exists at the project root, read it before diving into individual files.
-Use the OPSX structure: domains → capabilities for architecture, \`project.opsx.code-map.yaml\` for code locations.
+${OPSX_SHARED_CONTEXT}
+
+${OPSX_NAVIGATION_GUIDANCE}
 
 If the user mentioned a specific change name, read its artifacts for context.
 

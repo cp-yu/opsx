@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import path from 'path';
 import { CommandAdapterRegistry } from './command-generation/index.js';
 import { AI_TOOLS } from './config.js';
@@ -33,11 +34,32 @@ export interface WorkflowArtifactPlan {
   managedCommandSlugs: string[];
 }
 
+export function resolveEffectiveWorkflows(
+  projectPath: string,
+  workflows: readonly string[]
+): readonly WorkflowId[] {
+  const effective = new Set<WorkflowId>(normalizeWorkflowIds(workflows));
+  const bootstrapDir = path.join(projectPath, 'openspec', 'bootstrap');
+
+  try {
+    if (fs.statSync(bootstrapDir).isDirectory()) {
+      effective.add('bootstrap-opsx');
+    }
+  } catch {
+    // No bootstrap workspace; keep the requested workflows unchanged.
+  }
+
+  return ALL_WORKFLOWS.filter((workflowId) => effective.has(workflowId));
+}
+
 export function createWorkflowArtifactPlan(
   workflows: readonly string[],
-  delivery: Delivery
+  delivery: Delivery,
+  projectPath?: string
 ): WorkflowArtifactPlan {
-  const normalizedWorkflows = normalizeWorkflowIds(workflows);
+  const normalizedWorkflows = projectPath
+    ? resolveEffectiveWorkflows(projectPath, workflows)
+    : normalizeWorkflowIds(workflows);
   const shouldGenerateSkills = delivery !== 'commands';
   const shouldGenerateCommands = delivery !== 'skills';
   const skillTemplates = shouldGenerateSkills ? getSkillTemplates(normalizedWorkflows) : [];

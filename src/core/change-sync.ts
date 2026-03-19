@@ -10,7 +10,12 @@ import {
   type OpsxDeltaApplyResult,
   type ProjectOpsxBundle,
 } from '../utils/opsx-utils.js';
-import { buildUpdatedSpec, findSpecUpdates, type SpecUpdate } from './specs-apply.js';
+import {
+  buildUpdatedSpec,
+  findSpecUpdates,
+  isDeltaSpecAlreadyApplied,
+  type SpecUpdate,
+} from './specs-apply.js';
 import { Validator } from './validation/validator.js';
 
 type SpecCounts = { added: number; modified: number; removed: number; renamed: number };
@@ -88,6 +93,15 @@ export async function prepareChangeSync(
   const validator = options.skipValidation ? null : new Validator();
 
   for (const update of state.specUpdates) {
+    const changeContent = await fs.readFile(update.source, 'utf-8');
+    const originalContent = await readOptionalFile(update.target);
+    if (
+      originalContent !== null &&
+      isDeltaSpecAlreadyApplied(changeContent, originalContent)
+    ) {
+      continue;
+    }
+
     const built = await buildUpdatedSpec(update, state.changeName);
     if (validator) {
       const specName = path.basename(path.dirname(update.target));
@@ -105,7 +119,7 @@ export async function prepareChangeSync(
       update,
       rebuilt: built.rebuilt,
       counts: built.counts,
-      originalContent: await readOptionalFile(update.target),
+      originalContent,
     });
 
     totals.added += built.counts.added;
@@ -129,6 +143,13 @@ export async function prepareChangeSync(
     }
 
     const result = applyOpsxDelta(originalBundle, delta);
+    if (!result.changed) {
+      return {
+        state,
+        specs: { writes, totals },
+        opsx: null,
+      };
+    }
     const referentialIntegrity = validateReferentialIntegrity(result.bundle);
     if (!referentialIntegrity.valid) {
       throw new Error(

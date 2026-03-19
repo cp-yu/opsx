@@ -1,0 +1,36 @@
+ADDED:
+  capabilities:
+    - id: cap.cli.sync
+      type: capability
+      intent: 顶层 CLI 命令，将 change 中的 delta specs 和 OPSX delta 同步到主文件，不执行归档
+
+  relations:
+    - from: cap.cli.sync
+      to: dom.cli
+      type: contains
+    - from: cap.cli.sync
+      to: cap.cli.archive
+      type: relates_to
+
+MODIFIED:
+  capabilities:
+    - id: cap.change.specs-sync
+      type: capability
+      intent: 将变更中的 delta specs 和 OPSX delta 同步到主规约与主 OPSX，支持幂等合并，并被 standalone sync 与 archive 共享
+      status: active
+    - id: cap.opsx.bootstrap
+      type: capability
+      intent: 提供基于现有 CLI 的 bootstrap 工作流，支持 TTY 模式选择、invalid domain-map 诊断与 gate 驱动的五阶段生命周期
+      status: active
+    - id: cap.ai.workflow-templates
+      type: capability
+      intent: 提供面向 Agent 的工作流模板（propose、apply、explore、archive 等），并在核心 workflow 中共享 OPSX 上下文加载协议
+      status: active
+    - id: cap.cli.init
+      type: capability
+      intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品，其中 slash command 输出路径遵循显式 workflow→command slug 映射，并在 bootstrap 工作区存在时暴露 bootstrap 命令面
+      status: active
+    - id: cap.cli.update
+      type: capability
+      intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品，同时通过显式 command slug 映射保持 workflow 选择语义稳定，并根据 bootstrap 工作区动态暴露 bootstrap 命令面
+      status: active

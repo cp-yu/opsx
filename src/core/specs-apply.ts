@@ -46,6 +46,56 @@ export interface SpecsApplyOutput {
   noChanges: boolean;
 }
 
+export function isDeltaSpecAlreadyApplied(
+  changeContent: string,
+  targetContent: string
+): boolean {
+  const plan = parseDeltaSpec(changeContent);
+  const parts = extractRequirementsSection(targetContent);
+  const currentBlocks = new Map(
+    parts.bodyBlocks.map((block) => [normalizeRequirementName(block.name), block])
+  );
+  let confirmedAppliedState = false;
+
+  for (const rename of plan.renamed) {
+    if (currentBlocks.has(normalizeRequirementName(rename.from))) {
+      return false;
+    }
+    if (!currentBlocks.has(normalizeRequirementName(rename.to))) {
+      return false;
+    }
+    confirmedAppliedState = true;
+  }
+
+  for (const name of plan.removed) {
+    if (currentBlocks.has(normalizeRequirementName(name))) {
+      return false;
+    }
+  }
+
+  for (const modified of plan.modified) {
+    const current = currentBlocks.get(normalizeRequirementName(modified.name));
+    if (!current || current.raw !== modified.raw) {
+      return false;
+    }
+    confirmedAppliedState = true;
+  }
+
+  for (const added of plan.added) {
+    const current = currentBlocks.get(normalizeRequirementName(added.name));
+    if (!current || current.raw !== added.raw) {
+      return false;
+    }
+    confirmedAppliedState = true;
+  }
+
+  if (plan.removed.length > 0 && !confirmedAppliedState) {
+    return false;
+  }
+
+  return true;
+}
+
 // -----------------------------------------------------------------------------
 // Public API
 // -----------------------------------------------------------------------------
