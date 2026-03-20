@@ -73,13 +73,27 @@ describe('bootstrap command Phase 1 baseline contract', () => {
     vi.clearAllMocks();
   });
 
-  it('returns structured pre-init status for specs-only repositories', async () => {
+  it('returns structured pre-init status for raw repositories with an empty specs directory', async () => {
     await fs.mkdir(path.join(testDir, 'openspec', 'specs'), { recursive: true });
 
     const status = await withCwd(testDir, () => captureJsonOutput(() => bootstrapStatusCommand({ json: true })));
     expect(status).toMatchObject({
       initialized: false,
-      baselineType: 'specs-only',
+      baselineType: 'raw',
+      supported: true,
+      allowedModes: ['full', 'opsx-first'],
+      nextAction: 'init',
+    });
+  });
+
+  it('returns structured pre-init status for specs-based repositories', async () => {
+    await fs.mkdir(path.join(testDir, 'openspec', 'specs', 'auth'), { recursive: true });
+    await fs.writeFile(path.join(testDir, 'openspec', 'specs', 'auth', 'spec.md'), '# Auth\n', 'utf-8');
+
+    const status = await withCwd(testDir, () => captureJsonOutput(() => bootstrapStatusCommand({ json: true })));
+    expect(status).toMatchObject({
+      initialized: false,
+      baselineType: 'specs-based',
       supported: true,
       allowedModes: ['full'],
       nextAction: 'init',
@@ -103,7 +117,8 @@ describe('bootstrap command Phase 1 baseline contract', () => {
   });
 
   it('returns pre-init instructions json instead of init-first error', async () => {
-    await fs.mkdir(path.join(testDir, 'openspec', 'specs'), { recursive: true });
+    await fs.mkdir(path.join(testDir, 'openspec', 'specs', 'auth'), { recursive: true });
+    await fs.writeFile(path.join(testDir, 'openspec', 'specs', 'auth', 'spec.md'), '# Auth\n', 'utf-8');
 
     const instructions = await withCwd(
       testDir,
@@ -113,7 +128,7 @@ describe('bootstrap command Phase 1 baseline contract', () => {
       initialized: false,
       phase: 'init',
       currentPhase: null,
-      baselineType: 'specs-only',
+      baselineType: 'specs-based',
       supported: true,
       allowedModes: ['full'],
       nextAction: 'init',
@@ -131,10 +146,11 @@ describe('bootstrap command Phase 1 baseline contract', () => {
   });
 
   it('rejects unsupported baseline-to-mode combinations with valid modes listed', async () => {
-    await fs.mkdir(path.join(testDir, 'openspec', 'specs'), { recursive: true });
+    await fs.mkdir(path.join(testDir, 'openspec', 'specs', 'auth'), { recursive: true });
+    await fs.writeFile(path.join(testDir, 'openspec', 'specs', 'auth', 'spec.md'), '# Auth\n', 'utf-8');
 
     await expect(initBootstrap(testDir, { mode: 'opsx-first' })).rejects.toThrow(
-      "Bootstrap mode 'opsx-first' is not supported for baseline 'specs-only'. Valid modes: full"
+      "Bootstrap mode 'opsx-first' is not supported for baseline 'specs-based'. Valid modes: full"
     );
     await expect(fs.stat(path.join(testDir, 'openspec', 'bootstrap'))).rejects.toThrow();
   });
@@ -142,7 +158,7 @@ describe('bootstrap command Phase 1 baseline contract', () => {
   it('persists baseline type and approved mode names on init', async () => {
     await initBootstrap(testDir, { mode: 'opsx-first' });
     const metadata = await fs.readFile(path.join(testDir, 'openspec', 'bootstrap', '.bootstrap.yaml'), 'utf-8');
-    expect(metadata).toContain('baseline_type: no-spec');
+    expect(metadata).toContain('baseline_type: raw');
     expect(metadata).toContain('mode: opsx-first');
   });
 

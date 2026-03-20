@@ -17,12 +17,12 @@ describe('PBT: Bootstrap mode contract', () => {
       fc.property(fc.constantFrom(...BOOTSTRAP_BASELINE_TYPES), (baseline) => {
         const modes = getAllowedBootstrapModes(baseline);
 
-        if (baseline === 'no-spec') {
+        if (baseline === 'raw') {
           expect(modes).toEqual(['full', 'opsx-first']);
           return;
         }
 
-        if (baseline === 'specs-only') {
+        if (baseline === 'specs-based') {
           expect(modes).toEqual(['full']);
           return;
         }

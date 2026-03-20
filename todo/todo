@@ -2,9 +2,15 @@
 
 ## 待处理
 
+暂无。
 
 ## 已完成并归档
 
+- [x] CLI shell completion 补齐 `bootstrap`、`sync`、`status`、`instructions`、`templates`、`schemas`、`new` 等缺失命令与子命令
+- [x] `bootstrap init` 不再因为空 `openspec/specs/` 被误判，只显示 `full`；空目录场景现在允许 `full` / `opsx-first`
+- [x] `full` 模式在无真实 spec 内容时，promote 会正确写入 OPSX 并创建 specs starter，而不是只生成 OPSX
+- [x] bootstrap baseline 检测不再把空 `openspec/specs/` 视为已有 specs
+- [x] bootstrap baseline 命名从 `no-spec` / `specs-only` 规范为 `raw` / `specs-based`，同时保持磁盘兼容
 - [x] `bootstrap init` 完成后，应自动刷新并暴露相关的 bootstrap command surface；当前仍需要额外执行 `openspec update`
 - [x] 对 Claude Code 工具链补充“可使用 subagent 完成操作”的明确提示
 - [x] `openspec sync` 顶层 CLI 命令
@@ -15,6 +21,7 @@
 
 归档记录：
 
+- `todo/archive/2026-03-20-fix-bootstrap-and-completion-gaps.md`
 - `todo/archive/2026-03-19-fix-todo-workflow-gaps.md`
 - `todo/archive/bootstrap-invalid-domain-map.md`
 - `todo/archive/opsxEnforce`

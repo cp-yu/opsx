@@ -49,8 +49,8 @@ openspec bootstrap init [--mode <full|opsx-first>] [--scope <path>]
 ### Requirement: 模式选项来源
 
 #### Scenario: 选项集与 baseline 一致
-- **GIVEN** baseline 类型为 `no-spec`
-- **AND** `getAllowedBootstrapModes('no-spec')` 返回 `['full', 'opsx-first']`
+- **GIVEN** baseline 类型为 `raw`
+- **AND** `getAllowedBootstrapModes('raw')` 返回 `['full', 'opsx-first']`
 - **WHEN** 显示交互式 prompt
 - **THEN** 可选项恰好为 `['full', 'opsx-first']`
 - **AND** 不多不少

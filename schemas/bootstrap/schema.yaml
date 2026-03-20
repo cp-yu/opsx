@@ -17,9 +17,9 @@ artifacts:
       - scope.yaml — user configuration (mode, include/exclude paths, granularity)
 
       Supported upgrade paths:
-      - specs-only -> full
-      - no-spec -> full
-      - no-spec -> opsx-first
+      - specs-based -> full
+      - raw -> full
+      - raw -> opsx-first
 
       Use opsx-first only when the repository has no existing specs and you want formal OPSX first.
       In that path, add specs later through normal change workflows.
@@ -111,7 +111,7 @@ artifacts:
       1. Re-validates scan, map, and review gate conditions
       2. Assembles candidate OPSX bundle from domain-map files
       3. Writes formal OPSX three-file bundle (project.opsx.yaml, relations, code-map)
-      4. In full mode on a no-spec baseline, creates a starter openspec/specs/ structure
+      4. In full mode on a raw baseline, creates a starter openspec/specs/ structure
       5. Cleans up openspec/bootstrap/ workspace
 
       Confirm before writing to formal OPSX files.

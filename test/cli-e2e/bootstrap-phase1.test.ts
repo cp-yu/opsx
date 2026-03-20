@@ -81,18 +81,18 @@ afterAll(async () => {
 });
 
 describe('openspec bootstrap Phase 1', () => {
-  it('returns structured pre-init status for a specs-only baseline', async () => {
+  it('returns structured pre-init status for a specs-based baseline', async () => {
     const projectDir = await createTempProject();
     await writeFile(projectDir, 'openspec/specs/auth/spec.md', '# Auth spec\n');
 
     const json = await withCwd(projectDir, () => captureJsonOutput(() => bootstrapStatusCommand({ json: true })));
     expect(json).toMatchObject({
       initialized: false,
-      baselineType: 'specs-only',
+      baselineType: 'specs-based',
       supported: true,
       allowedModes: ['full'],
       nextAction: 'init',
-      reason: 'Repository has specs but no formal OPSX files.',
+      reason: 'Repository has spec content but no formal OPSX files.',
     });
   });
 
@@ -128,7 +128,7 @@ capabilities: []
     expect(json.phase).toBe('init');
     expect(json.requestedPhase).toBe('scan');
     expect(json.currentPhase).toBeNull();
-    expect(json.baselineType).toBe('no-spec');
+    expect(json.baselineType).toBe('raw');
     expect(json.supported).toBe(true);
     expect(json.allowedModes).toContain('full');
     expect(json.allowedModes).toContain('opsx-first');
@@ -151,7 +151,7 @@ capabilities: []
     await writeFile(projectDir, 'openspec/specs/auth/spec.md', '# Auth spec\n');
 
     await expect(initBootstrap(projectDir, { mode: 'opsx-first' })).rejects.toThrow(
-      "Bootstrap mode 'opsx-first' is not supported for baseline 'specs-only'. Valid modes: full"
+      "Bootstrap mode 'opsx-first' is not supported for baseline 'specs-based'. Valid modes: full"
     );
     expect(await pathExists(projectDir, 'openspec/bootstrap')).toBe(false);
   });

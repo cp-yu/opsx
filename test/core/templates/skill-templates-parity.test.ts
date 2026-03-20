@@ -55,7 +55,7 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getOpsxProposeSkillTemplate: '20e619b32826aa9c2c3564e2942428694aeeb7c739199742f84540af1c088d67',
   getOpsxProposeCommandTemplate: 'bde6231b56605be7eb14e7d327bae60c177f3ea46ee9820e4dc8045b86b2dfa2',
   getFeedbackSkillTemplate: 'd7d83c5f7fc2b92fe8f4588a5bf2d9cb315e4c73ec19bcd5ef28270906319a0d',
-  getBootstrapOpsxSkillTemplate: '956fbe934e1adb6088fed7a95cb69a095f5351033edf35ad466ff974550dd800',
+  getBootstrapOpsxSkillTemplate: '7653dd8f132ff484082a2912f355f3b4add218dc07a500252e90d542c98b01a0',
   getOpsxBootstrapCommandTemplate: 'c6eb15e4095986118270514810220aabdcaa1557a2060d0cb00d55b31c2aca10',
 };
 

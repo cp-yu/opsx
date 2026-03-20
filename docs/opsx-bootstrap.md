@@ -32,9 +32,9 @@ This is useful for:
 
 Supported upgrade paths:
 
-- `specs-only -> full`
-- `no-spec -> full`
-- `no-spec -> opsx-first`
+- `specs-based -> full`
+- `raw -> full`
+- `raw -> opsx-first`
 
 `opsx-first` is intentionally narrow: it writes formal OPSX now and leaves behavior specs to be added later through normal change workflows.
 
@@ -50,7 +50,7 @@ openspec bootstrap status --json
 # Initialize the workspace
 openspec bootstrap init --mode full
 
-# Or, on a no-spec repository only:
+# Or, on a raw repository only:
 openspec bootstrap init --mode opsx-first
 
 # Follow phase instructions
@@ -74,10 +74,10 @@ Key behavior:
   - Writes only the formal OPSX bundle on promote
   - Does not create placeholder specs
   - You add specs later through normal OpenSpec changes
-- `full` on `no-spec`
+- `full` on `raw`
   - Writes the formal OPSX bundle
   - Creates a starter `openspec/specs/README.md`
-- `full` on `specs-only`
+- `full` on `specs-based`
   - Preserves existing specs
   - Adds the formal OPSX bundle aligned to those specs
 

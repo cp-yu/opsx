@@ -76,12 +76,12 @@ async function expectFormalBundle(projectDir: string): Promise<void> {
 async function initWorkspace(
   projectDir: string,
   mode: 'full' | 'opsx-first',
-  baseline: 'no-spec' | 'specs-only'
+  baseline: 'raw' | 'specs-based'
 ): Promise<void> {
   await writeFile(projectDir, 'src/cli/index.ts', 'export const cli = true;\n');
   await writeFile(projectDir, 'src/auth/login.ts', 'export function login() { return true; }\n');
 
-  if (baseline === 'specs-only') {
+  if (baseline === 'specs-based') {
     await writeFile(projectDir, 'openspec/specs/auth/spec.md', '# Auth\n');
   }
 
@@ -93,7 +93,7 @@ async function initWorkspace(
 async function prepareReviewWorkspace(
   projectDir: string,
   mode: 'full' | 'opsx-first',
-  baseline: 'no-spec' | 'specs-only'
+  baseline: 'raw' | 'specs-based'
 ): Promise<void> {
   await initWorkspace(projectDir, mode, baseline);
 
@@ -167,12 +167,12 @@ afterAll(async () => {
 });
 
 describe('openspec bootstrap lifecycle', () => {
-  it('supports specs-only -> full and preserves existing specs', async () => {
+  it('supports specs-based -> full and preserves existing specs', async () => {
     const projectDir = await createTempProject();
     const originalSpec = '# Auth\n';
     await writeFile(projectDir, 'openspec/specs/auth/spec.md', originalSpec);
 
-    await prepareReviewWorkspace(projectDir, 'full', 'specs-only');
+    await prepareReviewWorkspace(projectDir, 'full', 'specs-based');
     await checkAllReviewBoxes(projectDir);
 
     const validateResult = await runCLI(['bootstrap', 'validate'], { cwd: projectDir });
@@ -186,9 +186,9 @@ describe('openspec bootstrap lifecycle', () => {
     expect(await pathExists(projectDir, 'openspec/bootstrap')).toBe(false);
   });
 
-  it('supports no-spec -> opsx-first without creating spec placeholders', async () => {
+  it('supports raw -> opsx-first without creating spec placeholders', async () => {
     const projectDir = await createTempProject();
-    await prepareReviewWorkspace(projectDir, 'opsx-first', 'no-spec');
+    await prepareReviewWorkspace(projectDir, 'opsx-first', 'raw');
     await checkAllReviewBoxes(projectDir);
 
     const validateResult = await runCLI(['bootstrap', 'validate'], { cwd: projectDir });
@@ -200,9 +200,25 @@ describe('openspec bootstrap lifecycle', () => {
     expect(await pathExists(projectDir, 'openspec/specs')).toBe(false);
   });
 
-  it('supports no-spec -> full and creates starter specs output', async () => {
+  it('supports raw -> full and creates starter specs output', async () => {
     const projectDir = await createTempProject();
-    await prepareReviewWorkspace(projectDir, 'full', 'no-spec');
+    await prepareReviewWorkspace(projectDir, 'full', 'raw');
+    await checkAllReviewBoxes(projectDir);
+
+    const validateResult = await runCLI(['bootstrap', 'validate'], { cwd: projectDir });
+    expect(validateResult.exitCode).toBe(0);
+
+    const promoteResult = await runCLI(['bootstrap', 'promote', '-y'], { cwd: projectDir });
+    expect(promoteResult.exitCode).toBe(0);
+    await expectFormalBundle(projectDir);
+    await expect(readFile(projectDir, 'openspec/specs/README.md')).resolves.toContain('bootstrapped in `full` mode');
+  });
+
+  it('treats an empty specs directory as raw and still creates starter specs output', async () => {
+    const projectDir = await createTempProject();
+    await fs.mkdir(path.join(projectDir, 'openspec', 'specs'), { recursive: true });
+
+    await prepareReviewWorkspace(projectDir, 'full', 'raw');
     await checkAllReviewBoxes(projectDir);
 
     const validateResult = await runCLI(['bootstrap', 'validate'], { cwd: projectDir });
@@ -216,7 +232,7 @@ describe('openspec bootstrap lifecycle', () => {
 
   it('re-asserts upstream completeness before promote', async () => {
     const projectDir = await createTempProject();
-    await prepareReviewWorkspace(projectDir, 'full', 'no-spec');
+    await prepareReviewWorkspace(projectDir, 'full', 'raw');
     await checkAllReviewBoxes(projectDir);
 
     const validateResult = await runCLI(['bootstrap', 'validate'], { cwd: projectDir });
@@ -232,7 +248,7 @@ describe('openspec bootstrap lifecycle', () => {
 
   it('invalidates stale review after evidence edits and reports stale status', async () => {
     const projectDir = await createTempProject();
-    await prepareReviewWorkspace(projectDir, 'full', 'no-spec');
+    await prepareReviewWorkspace(projectDir, 'full', 'raw');
     await checkAllReviewBoxes(projectDir);
 
     const validateResult = await runCLI(['bootstrap', 'validate'], { cwd: projectDir });

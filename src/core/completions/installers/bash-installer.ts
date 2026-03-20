@@ -100,12 +100,11 @@ export class BashInstaller {
    * @returns Configuration content
    */
   private generateBashrcConfig(completionsDir: string): string {
+    const completionFile = path.join(completionsDir, 'openspec');
     return [
       '# OpenSpec shell completions configuration',
-      `if [ -d "${completionsDir}" ]; then`,
-      `  for f in "${completionsDir}"/*; do`,
-      '    [ -f "$f" ] && . "$f"',
-      '  done',
+      `if [ -f "${completionFile}" ]; then`,
+      `  . "${completionFile}"`,
       'fi',
     ].join('\n');
   }
@@ -222,15 +221,20 @@ export class BashInstaller {
       try {
         const existingContent = await fs.readFile(targetPath, 'utf-8');
         if (existingContent === completionScript) {
+          const targetDir = path.dirname(targetPath);
+          const bashrcConfigured = await this.configureBashrc(targetDir);
           // Already installed and up to date
           return {
             success: true,
             installedPath: targetPath,
+            bashrcConfigured,
             message: 'Completion script is already installed (up to date)',
-            instructions: [
-              'The completion script is already installed and up to date.',
-              'If completions are not working, try: exec bash',
-            ],
+            instructions: bashrcConfigured
+              ? [
+                  'The completion script is already installed and up to date.',
+                  'If completions are not working, try: exec bash',
+                ]
+              : this.generateInstructions(targetPath),
           };
         }
         // File exists but content is different - this is an update

@@ -460,4 +460,144 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
     ],
   },
+  {
+    name: 'sync',
+    description: 'Sync a change into main specs and OPSX files without archiving',
+    acceptsPositional: true,
+    positionalType: 'change-id',
+    flags: [
+      {
+        name: 'no-validate',
+        description: 'Skip validation while preparing sync output',
+      },
+    ],
+  },
+  {
+    name: 'status',
+    description: 'Display artifact completion status for a change',
+    flags: [
+      {
+        name: 'change',
+        description: 'Change name to show status for',
+        takesValue: true,
+      },
+      {
+        name: 'schema',
+        description: 'Schema override (auto-detected from config.yaml)',
+        takesValue: true,
+      },
+      COMMON_FLAGS.json,
+    ],
+  },
+  {
+    name: 'instructions',
+    description: 'Output enriched instructions for creating an artifact or applying tasks',
+    acceptsPositional: true,
+    flags: [
+      {
+        name: 'change',
+        description: 'Change name',
+        takesValue: true,
+      },
+      {
+        name: 'schema',
+        description: 'Schema override (auto-detected from config.yaml)',
+        takesValue: true,
+      },
+      COMMON_FLAGS.json,
+    ],
+  },
+  {
+    name: 'templates',
+    description: 'Show resolved template paths for all artifacts in a schema',
+    flags: [
+      {
+        name: 'schema',
+        description: 'Schema to use',
+        takesValue: true,
+      },
+      COMMON_FLAGS.json,
+    ],
+  },
+  {
+    name: 'schemas',
+    description: 'List available workflow schemas with descriptions',
+    flags: [COMMON_FLAGS.json],
+  },
+  {
+    name: 'new',
+    description: 'Create new items',
+    flags: [],
+    subcommands: [
+      {
+        name: 'change',
+        description: 'Create a new change directory',
+        acceptsPositional: true,
+        flags: [
+          {
+            name: 'description',
+            description: 'Description to add to README.md',
+            takesValue: true,
+          },
+          {
+            name: 'schema',
+            description: 'Workflow schema to use',
+            takesValue: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'bootstrap',
+    description: 'Structured bootstrap workflow — discover and map existing architecture',
+    flags: [],
+    subcommands: [
+      {
+        name: 'init',
+        description: 'Initialize bootstrap workspace',
+        flags: [
+          {
+            name: 'mode',
+            description: 'Bootstrap mode: full or opsx-first (default: full)',
+            takesValue: true,
+            values: ['full', 'opsx-first'],
+          },
+          {
+            name: 'scope',
+            description: 'Comma-separated paths to include in scan',
+            takesValue: true,
+          },
+        ],
+      },
+      {
+        name: 'status',
+        description: 'Show bootstrap phase progress and per-domain status',
+        flags: [COMMON_FLAGS.json],
+      },
+      {
+        name: 'instructions',
+        description: 'Get agent instructions for a bootstrap phase',
+        acceptsPositional: true,
+        flags: [COMMON_FLAGS.json],
+      },
+      {
+        name: 'validate',
+        description: 'Run gate validation for current bootstrap phase',
+        flags: [COMMON_FLAGS.json],
+      },
+      {
+        name: 'promote',
+        description: 'Validate, write formal OPSX files, and clean workspace',
+        flags: [
+          {
+            name: 'yes',
+            short: 'y',
+            description: 'Skip confirmation',
+          },
+        ],
+      },
+    ],
+  }
+
 ];

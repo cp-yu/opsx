@@ -16,5 +16,5 @@ Confirm promotion of candidate OPSX files to formal project files.
 2. Write openspec/project.opsx.yaml
 3. Write openspec/project.opsx.relations.yaml
 4. Write openspec/project.opsx.code-map.yaml
-5. In `full` mode on a `no-spec` baseline, create a starter `openspec/specs/README.md`
+5. In `full` mode on a `raw` baseline, create a starter `openspec/specs/README.md`
 6. Clean up openspec/bootstrap/

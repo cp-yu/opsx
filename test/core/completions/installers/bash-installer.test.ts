@@ -118,6 +118,8 @@ describe('BashInstaller', () => {
       expect(content).toContain('# OPENSPEC:START');
       expect(content).toContain('# OPENSPEC:END');
       expect(content).toContain('OpenSpec shell completions configuration');
+      expect(content).toContain('.local/share/bash-completion/completions/openspec');
+      expect(content).not.toContain('for f in');
     });
 
     it('should include instructions when auto-config is disabled', async () => {
@@ -163,6 +165,38 @@ describe('BashInstaller', () => {
       expect(secondResult.message).toContain('already installed');
       expect(secondResult.message).toContain('up to date');
       expect(secondResult.backupPath).toBeUndefined();
+    });
+
+    it('should refresh stale .bashrc markers even when the completion script is already up to date', async () => {
+      const targetPath = path.join(testHomeDir, '.local', 'share', 'bash-completion', 'completions', 'openspec');
+      await fs.mkdir(path.dirname(targetPath), { recursive: true });
+      await fs.writeFile(targetPath, testScript);
+
+      const bashrcPath = path.join(testHomeDir, '.bashrc');
+      await fs.writeFile(
+        bashrcPath,
+        [
+          '# OPENSPEC:START',
+          '# OpenSpec shell completions configuration',
+          'if [ -d "/stale/path" ]; then',
+          '  for f in "/stale/path"/*; do',
+          '    [ -f "$f" ] && . "$f"',
+          '  done',
+          'fi',
+          '# OPENSPEC:END',
+        ].join('\n'),
+        'utf-8'
+      );
+
+      const result = await installer.install(testScript);
+
+      expect(result.success).toBe(true);
+      expect(result.bashrcConfigured).toBe(true);
+
+      const content = await fs.readFile(bashrcPath, 'utf-8');
+      expect(content).toContain('.local/share/bash-completion/completions/openspec');
+      expect(content).not.toContain('/stale/path');
+      expect(content).not.toContain('for f in');
     });
 
     it('should update completion when content differs', async () => {
@@ -275,6 +309,8 @@ describe('BashInstaller', () => {
       expect(content).toContain('# OPENSPEC:END');
       expect(content).toContain('# OpenSpec shell completions configuration');
       expect(content).toContain(completionsDir);
+      expect(content).toContain(`${completionsDir}/openspec`);
+      expect(content).not.toContain('for f in');
     });
 
     it('should prepend markers and config when .bashrc exists without markers', async () => {

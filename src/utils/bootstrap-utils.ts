@@ -29,8 +29,8 @@ export const BOOTSTRAP_MODES = ['full', 'opsx-first'] as const;
 export type BootstrapMode = typeof BOOTSTRAP_MODES[number];
 
 export const BOOTSTRAP_BASELINE_TYPES = [
-  'no-spec',
-  'specs-only',
+  'raw',
+  'specs-based',
   'formal-opsx',
   'invalid-partial-opsx',
 ] as const;
@@ -40,9 +40,22 @@ export type BootstrapBaselineType = typeof BOOTSTRAP_BASELINE_TYPES[number];
 
 const BootstrapDiskModeSchema = z.union([z.enum(BOOTSTRAP_MODES), z.literal('seed')]);
 
+const BaselineTypeDiskSchema = z.enum([
+  'raw',
+  'specs-based',
+  'formal-opsx',
+  'invalid-partial-opsx',
+  'no-spec',
+  'specs-only',
+]).transform((value): BootstrapBaselineType => {
+  if (value === 'no-spec') return 'raw';
+  if (value === 'specs-only') return 'specs-based';
+  return value;
+});
+
 const BootstrapMetadataDiskSchema = z.object({
   phase: z.enum(BOOTSTRAP_PHASES),
-  baseline_type: z.enum(BOOTSTRAP_BASELINE_TYPES).optional(),
+  baseline_type: BaselineTypeDiskSchema.optional(),
   mode: BootstrapDiskModeSchema,
   created_at: z.string(),
   source_fingerprint: z.string().nullable().optional(),
@@ -211,9 +224,29 @@ const DOMAIN_CONFIDENCE_ORDER: Record<EvidenceDomain['confidence'], number> = {
   high: 2,
 };
 
-async function inferLegacyBaselineType(projectRoot: string): Promise<BootstrapBaselineType> {
+async function hasRealSpecContent(projectRoot: string): Promise<boolean> {
   const specsDir = FileSystemUtils.joinPath(projectRoot, 'openspec/specs');
-  return await FileSystemUtils.directoryExists(specsDir) ? 'specs-only' : 'no-spec';
+  if (!await FileSystemUtils.directoryExists(specsDir)) {
+    return false;
+  }
+
+  const entries = await fs.readdir(specsDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+
+    const specPath = FileSystemUtils.joinPath(specsDir, entry.name, 'spec.md');
+    if (await FileSystemUtils.fileExists(specPath)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+async function inferLegacyBaselineType(projectRoot: string): Promise<BootstrapBaselineType> {
+  return await hasRealSpecContent(projectRoot) ? 'specs-based' : 'raw';
 }
 
 function parseBootstrapMetadata(
@@ -346,19 +379,18 @@ export async function detectBootstrapBaseline(projectRoot: string): Promise<Boot
     return 'invalid-partial-opsx';
   }
 
-  const specsDir = FileSystemUtils.joinPath(projectRoot, 'openspec/specs');
-  if (await FileSystemUtils.directoryExists(specsDir)) {
-    return 'specs-only';
+  if (await hasRealSpecContent(projectRoot)) {
+    return 'specs-based';
   }
 
-  return 'no-spec';
+  return 'raw';
 }
 
 export function getAllowedBootstrapModes(baselineType: BootstrapBaselineType): BootstrapMode[] {
   switch (baselineType) {
-    case 'no-spec':
+    case 'raw':
       return ['full', 'opsx-first'];
-    case 'specs-only':
+    case 'specs-based':
       return ['full'];
     case 'formal-opsx':
     case 'invalid-partial-opsx':
@@ -368,10 +400,10 @@ export function getAllowedBootstrapModes(baselineType: BootstrapBaselineType): B
 
 export function getBootstrapBaselineReason(baselineType: BootstrapBaselineType): string {
   switch (baselineType) {
-    case 'no-spec':
-      return 'Repository has no specs or formal OPSX files.';
-    case 'specs-only':
-      return 'Repository has specs but no formal OPSX files.';
+    case 'raw':
+      return 'Repository has no spec content or formal OPSX files.';
+    case 'specs-based':
+      return 'Repository has spec content but no formal OPSX files.';
     case 'formal-opsx':
       return 'Bootstrap does not support repositories with existing formal OPSX files.';
     case 'invalid-partial-opsx':
@@ -970,7 +1002,11 @@ export async function refreshBootstrapDerivedArtifacts(
 }
 
 async function writeBootstrapSpecStarter(projectRoot: string, state: BootstrapState): Promise<void> {
-  if (state.metadata.mode !== 'full' || state.metadata.baseline_type !== 'no-spec') {
+  if (state.metadata.mode !== 'full') {
+    return;
+  }
+
+  if (await hasRealSpecContent(projectRoot)) {
     return;
   }
 

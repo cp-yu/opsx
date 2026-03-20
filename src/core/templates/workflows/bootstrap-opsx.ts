@@ -32,10 +32,10 @@ This is a **structured, multi-phase** workflow. Each phase produces intermediate
    \`\`\`
    Creates workspace at \`openspec/bootstrap/\` with scope configuration.
    Supported upgrade paths:
-   - \`specs-only -> full\`
-   - \`no-spec -> full\`
-   - \`no-spec -> opsx-first\`
-   Use \`opsx-first\` only for \`no-spec\` repositories when you want formal OPSX now and specs later.
+   - \`specs-based -> full\`
+   - \`raw -> full\`
+   - \`raw -> opsx-first\`
+   Use \`opsx-first\` only for \`raw\` repositories when you want formal OPSX now and specs later.
 
    **Phase: scan**
    - Read \`package.json\`, \`README\`, OpenSpec config, \`openspec/specs/\`
@@ -90,8 +90,8 @@ This is a **structured, multi-phase** workflow. Each phase produces intermediate
    \`\`\`
    Re-validates all upstream gates before writing.
    - \`opsx-first\`: writes only the formal OPSX three-file bundle
-   - \`full\` on \`no-spec\`: also creates a starter \`openspec/specs/\` structure
-   - \`full\` on \`specs-only\`: preserves existing specs and adds OPSX output
+   - \`full\` on \`raw\`: also creates a starter \`openspec/specs/\` structure
+   - \`full\` on \`specs-based\`: preserves existing specs and adds OPSX output
    Cleans up the bootstrap workspace on success.
 
 3. **After each phase action**
