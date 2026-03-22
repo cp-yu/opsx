@@ -533,7 +533,7 @@ const bootstrapCmd = program
 bootstrapCmd
   .command('init')
   .description('Initialize bootstrap workspace')
-  .option('--mode <mode>', 'Bootstrap mode: full or opsx-first (default: full)')
+  .option('--mode <mode>', 'Bootstrap mode: full (complete specs) or opsx-first (README-only starter)')
   .option('--scope <paths>', 'Comma-separated paths to include in scan')
   .action(async (options: BootstrapInitOptions) => {
     try {

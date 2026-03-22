@@ -92,7 +92,10 @@ export async function bootstrapInitCommand(options: BootstrapInitOptions): Promi
     console.log(`  Mode: ${metadata.mode}`);
     console.log();
     if (metadata.mode === 'opsx-first') {
-      console.log('This mode writes formal OPSX only. Add specs later through normal change workflows.');
+      console.log('This mode writes the formal OPSX bundle plus a README-only specs starter. Add behavior specs later through normal change workflows.');
+      console.log();
+    } else if (metadata.baseline_type === 'raw') {
+      console.log('Full mode will generate the formal OPSX bundle plus complete valid candidate specs for each capability.');
       console.log();
     }
     console.log('Next: Run the scan phase to discover domains.');
@@ -259,12 +262,12 @@ function getPreInitInstructions(status: Extract<BootstrapStatus, { initialized: 
   lines.push(`Run: openspec bootstrap init --mode ${status.allowedModes[0]}`);
 
   if (status.baselineType === 'specs-based') {
-    lines.push('', 'Bootstrap will preserve existing specs and add formal OPSX output aligned to them.');
+    lines.push('', 'Bootstrap will preserve existing specs, add missing capability specs, and fail fast on target-path conflicts.');
   }
 
   if (status.baselineType === 'raw') {
-    lines.push('', 'Use `full` to prepare both specs and OPSX starting artifacts.');
-    lines.push('Use `opsx-first` to focus on formal OPSX now and add specs later through normal change workflows.');
+    lines.push('', 'Use `full` to prepare the formal OPSX bundle plus complete valid specs for each mapped capability.');
+    lines.push('Use `opsx-first` to prepare the formal OPSX bundle plus a README-only specs starter, then add behavior specs later through normal change workflows.');
   }
 
   return lines.join('\n');
@@ -283,10 +286,10 @@ Run: openspec bootstrap init --mode ${mode}
 
 This creates the workspace at openspec/bootstrap/ with scope configuration.
 ${mode === 'opsx-first'
-  ? 'This mode prepares formal OPSX output first. Add specs incrementally later through normal change workflows.'
+  ? 'This mode prepares the formal OPSX bundle plus a README-only specs starter. Add behavior specs incrementally later through normal change workflows.'
   : baselineType === 'specs-based'
-    ? 'This mode preserves existing specs and adds formal OPSX output aligned to them.'
-    : 'This mode prepares formal OPSX output and a starter openspec/specs/ structure for later spec work.'}
+    ? 'This mode preserves existing specs, adds missing capability specs, and fails fast if a generated target path already exists.'
+    : 'This mode prepares the formal OPSX bundle plus complete valid candidate specs for each mapped capability.'}
 After init, advance to scan: the agent will analyze the codebase for domain candidates.`;
 
     case 'scan':
@@ -338,10 +341,10 @@ Run: openspec bootstrap promote
 This re-validates scan, map, and review gates before writing any formal OPSX files.
 Successful promotion writes the three formal OPSX files and cleans up the bootstrap workspace.
 ${mode === 'opsx-first'
-  ? 'Opsx-first writes only formal OPSX files. Add specs later through normal change workflows.'
+  ? 'Opsx-first writes the formal OPSX bundle plus only openspec/specs/README.md.'
   : baselineType === 'specs-based'
-    ? 'Full mode preserves your existing specs and adds formal OPSX files aligned to them.'
-    : 'Full mode also creates an openspec/specs starter so you can add behavior specs incrementally.'}`;
+    ? 'Full mode preserves your existing specs, adds only missing capability specs, and fails fast on target-path conflicts.'
+    : 'Full mode writes the formal OPSX bundle and one validated spec file per mapped capability.'}`;
   }
 }
 

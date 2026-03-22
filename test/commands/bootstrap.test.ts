@@ -245,6 +245,19 @@ capabilities:
   - id: cap.auth.login
     type: capability
     intent: Login users
+    spec:
+      folder: auth
+      purpose: Login users purpose
+      requirements:
+        - title: Login
+          text: The system SHALL authenticate users.
+          scenarios:
+            - title: Successful login
+              steps:
+                - keyword: WHEN
+                  text: valid credentials are submitted
+                - keyword: THEN
+                  text: access is granted
 relations:
   - from: cap.auth.login
     to: dom.auth
@@ -299,6 +312,19 @@ capabilities:
   - id: cap.auth.login
     type: capability
     intent: Login users
+    spec:
+      folder: auth
+      purpose: Login users purpose
+      requirements:
+        - title: Login
+          text: The system SHALL authenticate users.
+          scenarios:
+            - title: Successful login
+              steps:
+                - keyword: WHEN
+                  text: valid credentials are submitted
+                - keyword: THEN
+                  text: access is granted
 relations:
   - from: cap.auth.login
     to: dom.auth

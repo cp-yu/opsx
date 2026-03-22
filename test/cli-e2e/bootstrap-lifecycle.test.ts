@@ -122,6 +122,19 @@ capabilities:
   - id: cap.cli.bootstrap
     type: capability
     intent: Bootstrap OPSX from an existing repository
+    spec:
+      folder: cli
+      purpose: Bootstrap the repository into formal OPSX tracking.
+      requirements:
+        - title: Bootstrap workflow
+          text: The system SHALL provide a bootstrap workflow.
+          scenarios:
+            - title: Bootstrap command runs
+              steps:
+                - keyword: WHEN
+                  text: the user starts bootstrap
+                - keyword: THEN
+                  text: the workflow initializes correctly
 relations:
   - from: cap.cli.bootstrap
     to: dom.cli
@@ -141,6 +154,20 @@ capabilities:
   - id: cap.auth.login
     type: capability
     intent: Log in a user
+    spec:
+      preserve_existing: true
+      folder: auth
+      purpose: Authenticate a user.
+      requirements:
+        - title: User login
+          text: The system SHALL authenticate users.
+          scenarios:
+            - title: Login succeeds
+              steps:
+                - keyword: WHEN
+                  text: valid credentials are submitted
+                - keyword: THEN
+                  text: access is granted
 relations:
   - from: cap.auth.login
     to: dom.auth
@@ -167,7 +194,7 @@ afterAll(async () => {
 });
 
 describe('openspec bootstrap lifecycle', () => {
-  it('supports specs-based -> full and preserves existing specs', async () => {
+  it('supports specs-based -> full, preserves existing specs, and adds missing candidate specs', async () => {
     const projectDir = await createTempProject();
     const originalSpec = '# Auth\n';
     await writeFile(projectDir, 'openspec/specs/auth/spec.md', originalSpec);
@@ -183,10 +210,11 @@ describe('openspec bootstrap lifecycle', () => {
     expect(promoteResult.exitCode).toBe(0);
     await expectFormalBundle(projectDir);
     await expect(readFile(projectDir, 'openspec/specs/auth/spec.md')).resolves.toBe(originalSpec);
+    await expect(readFile(projectDir, 'openspec/specs/cli/spec.md')).resolves.toContain('### Requirement: Bootstrap workflow');
     expect(await pathExists(projectDir, 'openspec/bootstrap')).toBe(false);
   });
 
-  it('supports raw -> opsx-first without creating spec placeholders', async () => {
+  it('supports raw -> opsx-first with README-only starter output', async () => {
     const projectDir = await createTempProject();
     await prepareReviewWorkspace(projectDir, 'opsx-first', 'raw');
     await checkAllReviewBoxes(projectDir);
@@ -197,10 +225,12 @@ describe('openspec bootstrap lifecycle', () => {
     const promoteResult = await runCLI(['bootstrap', 'promote', '-y'], { cwd: projectDir });
     expect(promoteResult.exitCode).toBe(0);
     await expectFormalBundle(projectDir);
-    expect(await pathExists(projectDir, 'openspec/specs')).toBe(false);
+    await expect(readFile(projectDir, 'openspec/specs/README.md')).resolves.toContain('bootstrapped in `opsx-first` mode');
+    expect(await pathExists(projectDir, 'openspec/specs/cli/spec.md')).toBe(false);
+    expect(await pathExists(projectDir, 'openspec/specs/auth/spec.md')).toBe(false);
   });
 
-  it('supports raw -> full and creates starter specs output', async () => {
+  it('supports raw -> full and writes complete candidate specs', async () => {
     const projectDir = await createTempProject();
     await prepareReviewWorkspace(projectDir, 'full', 'raw');
     await checkAllReviewBoxes(projectDir);
@@ -211,10 +241,12 @@ describe('openspec bootstrap lifecycle', () => {
     const promoteResult = await runCLI(['bootstrap', 'promote', '-y'], { cwd: projectDir });
     expect(promoteResult.exitCode).toBe(0);
     await expectFormalBundle(projectDir);
-    await expect(readFile(projectDir, 'openspec/specs/README.md')).resolves.toContain('bootstrapped in `full` mode');
+    await expect(readFile(projectDir, 'openspec/specs/cli/spec.md')).resolves.toContain('### Requirement: Bootstrap workflow');
+    await expect(readFile(projectDir, 'openspec/specs/auth/spec.md')).resolves.toContain('### Requirement: User login');
+    expect(await pathExists(projectDir, 'openspec/specs/README.md')).toBe(false);
   });
 
-  it('treats an empty specs directory as raw and still creates starter specs output', async () => {
+  it('treats an empty specs directory as raw and still writes complete specs in full mode', async () => {
     const projectDir = await createTempProject();
     await fs.mkdir(path.join(projectDir, 'openspec', 'specs'), { recursive: true });
 
@@ -227,7 +259,9 @@ describe('openspec bootstrap lifecycle', () => {
     const promoteResult = await runCLI(['bootstrap', 'promote', '-y'], { cwd: projectDir });
     expect(promoteResult.exitCode).toBe(0);
     await expectFormalBundle(projectDir);
-    await expect(readFile(projectDir, 'openspec/specs/README.md')).resolves.toContain('bootstrapped in `full` mode');
+    await expect(readFile(projectDir, 'openspec/specs/cli/spec.md')).resolves.toContain('### Requirement: Bootstrap workflow');
+    await expect(readFile(projectDir, 'openspec/specs/auth/spec.md')).resolves.toContain('### Requirement: User login');
+    expect(await pathExists(projectDir, 'openspec/specs/README.md')).toBe(false);
   });
 
   it('re-asserts upstream completeness before promote', async () => {
@@ -243,6 +277,31 @@ describe('openspec bootstrap lifecycle', () => {
     const promoteResult = await runCLI(['bootstrap', 'promote', '-y'], { cwd: projectDir });
     expect(promoteResult.exitCode).toBe(1);
     expect(await pathExists(projectDir, 'openspec/project.opsx.yaml')).toBe(false);
+    expect(await pathExists(projectDir, 'openspec/bootstrap')).toBe(true);
+  }, 30000);
+
+  it('blocks promote on invalid candidate spec before any formal outputs are written', async () => {
+    const projectDir = await createTempProject();
+    await prepareReviewWorkspace(projectDir, 'full', 'raw');
+    await checkAllReviewBoxes(projectDir);
+
+    const validateResult = await runCLI(['bootstrap', 'validate'], { cwd: projectDir });
+    expect(validateResult.exitCode).toBe(0);
+
+    const candidateSpecPath = path.join(projectDir, 'openspec', 'bootstrap', 'candidate', 'specs', 'cli', 'spec.md');
+    await fs.writeFile(candidateSpecPath, '# Spec: cli\n', 'utf-8');
+
+    const promoteResult = await runCLI(['bootstrap', 'promote', '-y'], { cwd: projectDir });
+    expect(promoteResult.exitCode).toBe(1);
+    expect(promoteResult.stdout + promoteResult.stderr).toContain(
+      "Candidate spec 'openspec/bootstrap/candidate/specs/cli/spec.md' failed validation"
+    );
+
+    // No partial formal writes should have occurred.
+    expect(await pathExists(projectDir, 'openspec/project.opsx.yaml')).toBe(false);
+    expect(await pathExists(projectDir, 'openspec/project.opsx.relations.yaml')).toBe(false);
+    expect(await pathExists(projectDir, 'openspec/project.opsx.code-map.yaml')).toBe(false);
+    expect(await pathExists(projectDir, 'openspec/specs/cli/spec.md')).toBe(false);
     expect(await pathExists(projectDir, 'openspec/bootstrap')).toBe(true);
   }, 30000);
 

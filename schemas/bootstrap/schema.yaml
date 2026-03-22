@@ -21,8 +21,8 @@ artifacts:
       - raw -> full
       - raw -> opsx-first
 
-      Use opsx-first only when the repository has no existing specs and you want formal OPSX first.
-      In that path, add specs later through normal change workflows.
+      Use opsx-first only when the repository has no existing specs and you want the formal OPSX bundle plus a README-only specs starter first.
+      In that path, add full behavior specs later through normal change workflows.
 
       Confirm the scope configuration with the user before proceeding.
     requires: []
@@ -110,9 +110,10 @@ artifacts:
       This command:
       1. Re-validates scan, map, and review gate conditions
       2. Assembles candidate OPSX bundle from domain-map files
-      3. Writes formal OPSX three-file bundle (project.opsx.yaml, relations, code-map)
-      4. In full mode on a raw baseline, creates a starter openspec/specs/ structure
-      5. Cleans up openspec/bootstrap/ workspace
+      3. Writes only reviewed candidate artifacts to the formal OPSX bundle and specs tree
+      4. In raw + full, writes one validated spec per mapped capability; in raw + opsx-first, writes only openspec/specs/README.md
+      5. In specs-based + full, preserves existing specs and writes only missing capability specs
+      6. Cleans up openspec/bootstrap/ workspace
 
       Confirm before writing to formal OPSX files.
     requires:

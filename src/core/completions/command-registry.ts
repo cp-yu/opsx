@@ -559,7 +559,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         flags: [
           {
             name: 'mode',
-            description: 'Bootstrap mode: full or opsx-first (default: full)',
+            description: 'Bootstrap mode: full (complete specs) or opsx-first (README-only starter)',
             takesValue: true,
             values: ['full', 'opsx-first'],
           },

@@ -35,7 +35,7 @@ This is a **structured, multi-phase** workflow. Each phase produces intermediate
    - \`specs-based -> full\`
    - \`raw -> full\`
    - \`raw -> opsx-first\`
-   Use \`opsx-first\` only for \`raw\` repositories when you want formal OPSX now and specs later.
+   Use \`opsx-first\` only for \`raw\` repositories when you want the formal OPSX bundle plus a README-only specs starter now, and full behavior specs later.
 
    **Phase: scan**
    - Read \`package.json\`, \`README\`, OpenSpec config, \`openspec/specs/\`
@@ -89,9 +89,9 @@ This is a **structured, multi-phase** workflow. Each phase produces intermediate
    openspec bootstrap promote -y
    \`\`\`
    Re-validates all upstream gates before writing.
-   - \`opsx-first\`: writes only the formal OPSX three-file bundle
-   - \`full\` on \`raw\`: also creates a starter \`openspec/specs/\` structure
-   - \`full\` on \`specs-based\`: preserves existing specs and adds OPSX output
+   - \`opsx-first\`: writes the formal OPSX three-file bundle plus only \`openspec/specs/README.md\`
+   - \`full\` on \`raw\`: writes the formal OPSX bundle plus one validated spec per mapped capability
+   - \`full\` on \`specs-based\`: preserves existing specs, adds only missing capability specs, and fails fast on target-path conflicts
    Cleans up the bootstrap workspace on success.
 
 3. **After each phase action**

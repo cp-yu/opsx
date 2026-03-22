@@ -4,13 +4,14 @@ import path from 'path';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { z } from 'zod';
 import { FileSystemUtils } from './file-system.js';
+import { readProjectConfig } from '../core/project-config.js';
+import { Validator } from '../core/validation/validator.js';
 import {
   OPSX_SCHEMA_VERSION,
   OPSX_PATHS,
   ProjectOpsxFileSchema,
   ProjectOpsxRelationsFileSchema,
   ProjectOpsxCodeMapFileSchema,
-  writeProjectOpsx,
   validateReferentialIntegrity,
   validateCodeMapIntegrity,
   type ProjectOpsxBundle,
@@ -87,6 +88,26 @@ const DomainCapabilitySchema = z.object({
   type: z.literal('capability').default('capability'),
   intent: z.string(),
   status: z.enum(['draft', 'active']).default('draft'),
+  spec: z.object({
+    preserve_existing: z.boolean().optional().default(false),
+    folder: z
+      .string()
+      .min(1)
+      .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/)
+      .refine((value) => value !== '.' && value !== '..', 'folder must be a single path segment'),
+    purpose: z.string().min(1),
+    requirements: z.array(z.object({
+      title: z.string().min(1),
+      text: z.string().min(1),
+      scenarios: z.array(z.object({
+        title: z.string().min(1),
+        steps: z.array(z.object({
+          keyword: z.enum(['GIVEN', 'WHEN', 'THEN', 'AND']),
+          text: z.string().min(1),
+        })).min(1),
+      })).min(1),
+    })).min(1),
+  }).optional(),
 });
 
 const DomainNodeSchema = z.object({
@@ -140,6 +161,22 @@ export interface ScopeConfig {
 export type EvidenceDomain = z.infer<typeof EvidenceDomainSchema>;
 export type EvidenceFile = z.infer<typeof EvidenceFileSchema>;
 export type DomainMapFile = z.infer<typeof DomainMapFileSchema>;
+export type DomainCapability = z.infer<typeof DomainCapabilitySchema>;
+
+interface BootstrapCandidateSpec {
+  capabilityId: string;
+  folder: string;
+  candidateRelativePath: string;
+  formalRelativePath: string;
+  content: string;
+}
+
+interface CandidateSpecAssembly {
+  specs: BootstrapCandidateSpec[];
+  preservedFormalPaths: string[];
+  sourceErrors: string[];
+  validationErrors: string[];
+}
 
 export interface InvalidDomainMap {
   file: string;
@@ -200,6 +237,9 @@ export interface GateResult {
 
 interface DerivedBootstrapArtifacts {
   bundle: ProjectOpsxBundle | null;
+  candidateSpecs: BootstrapCandidateSpec[];
+  preservedFormalPaths: string[];
+  specErrors: string[];
   sourceFingerprint: string | null;
   candidateFingerprint: string | null;
   candidateState: 'missing' | 'current' | 'stale';
@@ -285,6 +325,14 @@ function formalOpsxPaths(projectRoot: string): string[] {
 
 function candidatePath(projectRoot: string, fileName: string): string {
   return bootstrapPath(projectRoot, 'candidate', fileName);
+}
+
+function candidateSpecPath(projectRoot: string, folder: string): string {
+  return bootstrapPath(projectRoot, 'candidate', 'specs', folder, 'spec.md');
+}
+
+function formalSpecPath(projectRoot: string, folder: string): string {
+  return FileSystemUtils.joinPath(projectRoot, 'openspec', 'specs', folder, 'spec.md');
 }
 
 function compareConfidence(a: EvidenceDomain['confidence'], b: EvidenceDomain['confidence']): number {
@@ -447,11 +495,12 @@ function getNextBootstrapAction(phase: BootstrapPhase): BootstrapPhase | null {
     : null;
 }
 
-async function candidateFilesExist(projectRoot: string): Promise<boolean> {
+async function candidateFilesExist(projectRoot: string, candidateSpecs: BootstrapCandidateSpec[]): Promise<boolean> {
   const results = await Promise.all([
     FileSystemUtils.fileExists(candidatePath(projectRoot, 'project.opsx.yaml')),
     FileSystemUtils.fileExists(candidatePath(projectRoot, 'project.opsx.relations.yaml')),
     FileSystemUtils.fileExists(candidatePath(projectRoot, 'project.opsx.code-map.yaml')),
+    ...candidateSpecs.map((spec) => FileSystemUtils.fileExists(candidateSpecPath(projectRoot, spec.folder))),
   ]);
   return results.every(Boolean);
 }
@@ -473,6 +522,217 @@ function collectReviewChecks(reviewContent: string): { checkedDomains: Set<strin
   }
 
   return { checkedDomains, uncheckedItems };
+}
+
+function usesShallOrMust(text: string): boolean {
+  return /\b(SHALL|MUST)\b/.test(text);
+}
+
+function normalizeSpecFolderInput(folder: string): string {
+  return folder.trim();
+}
+
+function getConfiguredSchemaName(projectRoot: string): string {
+  return readProjectConfig(projectRoot)?.schema ?? 'spec-driven';
+}
+
+function validateSpecScenarioSteps(
+  capabilityId: string,
+  requirementTitle: string,
+  scenarioTitle: string,
+  steps: Array<{ keyword: 'GIVEN' | 'WHEN' | 'THEN' | 'AND'; text: string }>
+): string[] {
+  const errors: string[] = [];
+  const keywords = new Set(steps.map((step) => step.keyword));
+  if (!keywords.has('WHEN')) {
+    errors.push(`Capability '${capabilityId}' requirement '${requirementTitle}' scenario '${scenarioTitle}' must include at least one WHEN step`);
+  }
+  if (!keywords.has('THEN')) {
+    errors.push(`Capability '${capabilityId}' requirement '${requirementTitle}' scenario '${scenarioTitle}' must include at least one THEN step`);
+  }
+  return errors;
+}
+
+function renderCandidateSpec(capability: DomainCapability, folder: string): string {
+  const spec = capability.spec!;
+  const lines: string[] = [
+    `# Spec: ${folder}`,
+    '',
+    '## Purpose',
+    '',
+    spec.purpose.trim(),
+    '',
+    '## Requirements',
+    '',
+  ];
+
+  for (const requirement of spec.requirements) {
+    lines.push(`### Requirement: ${requirement.title.trim()}`);
+    lines.push(requirement.text.trim());
+    lines.push('');
+
+    for (const scenario of requirement.scenarios) {
+      lines.push(`#### Scenario: ${scenario.title.trim()}`);
+      for (const step of scenario.steps) {
+        lines.push(`- **${step.keyword}** ${step.text.trim()}`);
+      }
+      lines.push('');
+    }
+  }
+
+  return `${lines.join('\n').trim()}\n`;
+}
+
+async function assembleCandidateSpecs(
+  projectRoot: string,
+  state: BootstrapState,
+  bundle: ProjectOpsxBundle | null
+): Promise<CandidateSpecAssembly> {
+  if (!bundle || state.metadata.mode !== 'full') {
+    return { specs: [], preservedFormalPaths: [], sourceErrors: [], validationErrors: [] };
+  }
+
+  const sourceErrors: string[] = [];
+  const specs: BootstrapCandidateSpec[] = [];
+  const preservedFormalPaths: string[] = [];
+  const validationErrors: string[] = [];
+  const seenFolders = new Map<string, string>();
+  const validator = new Validator(false);
+
+  const sortedDomainMaps = [...state.domainMaps.entries()]
+    .sort(([leftId], [rightId]) => leftId.localeCompare(rightId))
+    .map(([, mapFile]) => mapFile);
+
+  for (const mapFile of sortedDomainMaps) {
+    for (const capability of [...mapFile.capabilities].sort((a, b) => a.id.localeCompare(b.id))) {
+      if (!capability.spec) {
+        sourceErrors.push(`Capability '${capability.id}' is missing spec source data. Add spec.folder, spec.purpose, and spec.requirements.`);
+        continue;
+      }
+
+      const folder = normalizeSpecFolderInput(capability.spec.folder);
+      if (!folder || folder.includes('/') || folder.includes('\\')) {
+        sourceErrors.push(`Capability '${capability.id}' has invalid spec folder '${capability.spec.folder}'. Use a single cross-platform path segment.`);
+        continue;
+      }
+
+      const priorCapability = seenFolders.get(folder);
+      if (priorCapability && priorCapability !== capability.id) {
+        sourceErrors.push(`Capabilities '${priorCapability}' and '${capability.id}' map to the same spec folder '${folder}'`);
+        continue;
+      }
+      seenFolders.set(folder, capability.id);
+
+      if (!capability.spec.purpose.trim()) {
+        sourceErrors.push(`Capability '${capability.id}' has an empty spec purpose`);
+      }
+
+      for (const requirement of capability.spec.requirements) {
+        if (!usesShallOrMust(requirement.text)) {
+          sourceErrors.push(`Capability '${capability.id}' requirement '${requirement.title}' must contain SHALL or MUST`);
+        }
+
+        for (const scenario of requirement.scenarios) {
+          sourceErrors.push(
+            ...validateSpecScenarioSteps(capability.id, requirement.title, scenario.title, scenario.steps)
+          );
+        }
+      }
+
+      const formalRelativePath = `openspec/specs/${folder}/spec.md`;
+      const existingFormalPath = formalSpecPath(projectRoot, folder);
+      const alreadyExists = await FileSystemUtils.fileExists(existingFormalPath);
+      if (state.metadata.baseline_type === 'specs-based' && alreadyExists) {
+        if (capability.spec.preserve_existing) {
+          preservedFormalPaths.push(formalRelativePath);
+          continue;
+        }
+        sourceErrors.push(
+          `Capability '${capability.id}' maps to existing spec path '${formalRelativePath}'. Mark spec.preserve_existing: true to preserve it, or choose a different folder.`
+        );
+        continue;
+      }
+
+      const candidateRelativePath = `openspec/bootstrap/candidate/specs/${folder}/spec.md`;
+      const content = renderCandidateSpec(capability, folder);
+      specs.push({
+        capabilityId: capability.id,
+        folder,
+        candidateRelativePath,
+        formalRelativePath,
+        content,
+      });
+
+      const report = await validator.validateSpecContent(folder, content);
+      if (!report.valid) {
+        for (const issue of report.issues.filter((issue) => issue.level === 'ERROR')) {
+          validationErrors.push(
+            `Candidate spec '${candidateRelativePath}' failed validation at ${issue.path || 'file'}: ${issue.message}`
+          );
+        }
+      }
+    }
+  }
+
+  return {
+    specs,
+    preservedFormalPaths: preservedFormalPaths.sort(),
+    sourceErrors,
+    validationErrors,
+  };
+}
+
+async function validateFormalSpecTargets(
+  projectRoot: string,
+  state: BootstrapState,
+  candidateSpecs: BootstrapCandidateSpec[]
+): Promise<string[]> {
+  const errors: string[] = [];
+  for (const spec of candidateSpecs) {
+    const formalPath = formalSpecPath(projectRoot, spec.folder);
+    if (await FileSystemUtils.fileExists(formalPath)) {
+      if (state.metadata.baseline_type === 'specs-based') {
+        errors.push(`Cannot promote candidate spec '${spec.formalRelativePath}' because the target path already exists`);
+      } else {
+        errors.push(`Raw bootstrap cannot promote over existing spec path '${spec.formalRelativePath}'`);
+      }
+    }
+  }
+  return errors;
+}
+
+async function validateCandidateSpecsOnDisk(
+  projectRoot: string,
+  candidateSpecs: BootstrapCandidateSpec[]
+): Promise<string[]> {
+  const errors: string[] = [];
+  const validator = new Validator(false);
+
+  for (const spec of candidateSpecs) {
+    const filePath = candidateSpecPath(projectRoot, spec.folder);
+    let content: string;
+    try {
+      content = await fs.readFile(filePath, 'utf-8');
+    } catch {
+      errors.push(`Candidate spec is missing: ${spec.candidateRelativePath}`);
+      continue;
+    }
+
+    const report = await validator.validateSpecContent(spec.folder, content);
+    if (!report.valid) {
+      for (const issue of report.issues.filter((i) => i.level === 'ERROR')) {
+        errors.push(`Candidate spec '${spec.candidateRelativePath}' failed validation at ${issue.path || 'file'}: ${issue.message}`);
+      }
+    }
+  }
+
+  return errors;
+}
+
+async function copyFile(sourcePath: string, targetPath: string): Promise<void> {
+  await FileSystemUtils.createDirectory(path.dirname(targetPath));
+  const content = await fs.readFile(sourcePath);
+  await fs.writeFile(targetPath, content);
 }
 
 // ─── Core Functions ──────────────────────────────────────────────────────────
@@ -711,6 +971,8 @@ export async function validateGate(
           }
         }
       }
+      const derived = await deriveBootstrapArtifacts(projectRoot, state);
+      errors.push(...derived.specErrors);
       break;
     }
     case 'review_to_promote': {
@@ -737,6 +999,10 @@ export async function validateGate(
       for (const item of uncheckedItems) {
         errors.push(`Unchecked review item: ${item}`);
       }
+
+      errors.push(...derived.specErrors);
+      errors.push(...await validateCandidateSpecsOnDisk(projectRoot, derived.candidateSpecs));
+      errors.push(...await validateFormalSpecTargets(projectRoot, state, derived.candidateSpecs));
 
       const bundle = derived.bundle;
       const refResult = validateReferentialIntegrity(bundle);
@@ -813,7 +1079,7 @@ function assembleBundle(state: BootstrapState): ProjectOpsxBundle {
   };
 }
 
-function computeSourceFingerprint(state: BootstrapState): string | null {
+function computeSourceFingerprint(projectRoot: string, state: BootstrapState): string | null {
   if (!state.evidence) {
     return null;
   }
@@ -823,22 +1089,44 @@ function computeSourceFingerprint(state: BootstrapState): string | null {
     .map(([, mapFile]) => normalizeDomainMapForFingerprint(mapFile));
 
   return fingerprintValue({
+    schema: getConfiguredSchemaName(projectRoot),
     evidence: normalizeEvidenceForFingerprint(state.evidence),
     domainMaps: normalizedDomainMaps,
   });
 }
 
-function computeCandidateFingerprint(bundle: ProjectOpsxBundle): string {
-  return fingerprintValue(bundle);
+function computeCandidateFingerprint(
+  bundle: ProjectOpsxBundle,
+  state: BootstrapState,
+  candidateSpecs: BootstrapCandidateSpec[],
+  preservedFormalPaths: string[]
+): string {
+  return fingerprintValue({
+    bundle,
+    baseline: state.metadata.baseline_type,
+    mode: state.metadata.mode,
+    candidateSpecs: candidateSpecs.map((spec) => ({
+      capabilityId: spec.capabilityId,
+      candidateRelativePath: spec.candidateRelativePath,
+      formalRelativePath: spec.formalRelativePath,
+      content: spec.content,
+    })),
+    preservedFormalPaths,
+  });
 }
 
 async function writeBootstrapMetadata(projectRoot: string, metadata: BootstrapMetadata): Promise<void> {
   await writeYaml(bootstrapPath(projectRoot, '.bootstrap.yaml'), metadata);
 }
 
-async function writeCandidateFiles(projectRoot: string, bundle: ProjectOpsxBundle): Promise<void> {
+async function writeCandidateFiles(
+  projectRoot: string,
+  bundle: ProjectOpsxBundle,
+  candidateSpecs: BootstrapCandidateSpec[]
+): Promise<void> {
   const candidateDir = bootstrapPath(projectRoot, 'candidate');
   await FileSystemUtils.createDirectory(candidateDir);
+  await fs.rm(bootstrapPath(projectRoot, 'candidate', 'specs'), { recursive: true, force: true });
 
   const mainData = {
     schema_version: bundle.schema_version,
@@ -857,10 +1145,11 @@ async function writeCandidateFiles(projectRoot: string, bundle: ProjectOpsxBundl
     writeYaml(candidatePath(projectRoot, 'project.opsx.yaml'), mainData),
     writeYaml(candidatePath(projectRoot, 'project.opsx.relations.yaml'), relData),
     writeYaml(candidatePath(projectRoot, 'project.opsx.code-map.yaml'), mapData),
+    ...candidateSpecs.map((spec) => FileSystemUtils.writeFile(candidateSpecPath(projectRoot, spec.folder), spec.content)),
   ]);
 }
 
-function buildReviewContent(state: BootstrapState): string {
+function buildReviewContent(state: BootstrapState, derived: DerivedBootstrapArtifacts): string {
   if (!state.evidence) {
     throw new Error('No evidence.yaml found. Run scan phase first.');
   }
@@ -878,10 +1167,28 @@ function buildReviewContent(state: BootstrapState): string {
     lines.push(`- [ ] ${dom.id} — ${status}, confidence: ${dom.confidence}`);
   }
 
+  lines.push('', '## Candidate Specs', '');
+  if (state.metadata.mode === 'opsx-first') {
+    lines.push('- Mode contract: README-only starter at openspec/specs/README.md');
+    lines.push('- No capability-level candidate specs should be generated');
+  } else if (derived.candidateSpecs.length === 0) {
+    lines.push('- No candidate specs will be written');
+  } else {
+    for (const spec of derived.candidateSpecs) {
+      lines.push(`- ${spec.capabilityId} -> ${spec.formalRelativePath}`);
+    }
+  }
+
+  for (const preservedPath of derived.preservedFormalPaths) {
+    lines.push(`- preserved existing spec: ${preservedPath}`);
+  }
+
   lines.push('', '## Validation', '');
   lines.push('- [ ] Review matches current candidate output');
   lines.push('- [ ] Referential integrity passes');
   lines.push('- [ ] Code-map paths exist on disk');
+  lines.push('- [ ] Candidate spec set matches the bootstrap mode contract');
+  lines.push('- [ ] Candidate specs pass OpenSpec validation');
   lines.push('- [ ] Domain boundaries match mental model');
   lines.push('');
 
@@ -894,24 +1201,45 @@ async function deriveBootstrapArtifacts(projectRoot: string, state: BootstrapSta
     : '';
   const { checkedDomains, uncheckedItems } = collectReviewChecks(reviewContent);
 
-  const sourceFingerprint = computeSourceFingerprint(state);
+  const sourceFingerprint = computeSourceFingerprint(projectRoot, state);
   const bundle = sourceFingerprint ? assembleBundle(state) : null;
-  const candidateFingerprint = bundle ? computeCandidateFingerprint(bundle) : null;
-  const candidateExists = await candidateFilesExist(projectRoot);
+  const candidateSpecAssembly = await assembleCandidateSpecs(projectRoot, state, bundle);
+  const specErrors = [
+    ...candidateSpecAssembly.sourceErrors,
+    ...candidateSpecAssembly.validationErrors,
+  ];
+  const candidateFingerprint = bundle && candidateSpecAssembly.sourceErrors.length === 0
+    ? computeCandidateFingerprint(bundle, state, candidateSpecAssembly.specs, candidateSpecAssembly.preservedFormalPaths)
+    : null;
+  const candidateExists = candidateFingerprint
+    ? await candidateFilesExist(projectRoot, candidateSpecAssembly.specs)
+    : false;
 
-  let candidateState: 'missing' | 'current' | 'stale' = !candidateFingerprint || !candidateExists
-    ? 'missing'
-    : state.metadata.source_fingerprint === sourceFingerprint
-      && state.metadata.candidate_fingerprint === candidateFingerprint
-      ? 'current'
-      : 'stale';
+  let candidateState: 'missing' | 'current' | 'stale' = 'missing';
+  if (candidateFingerprint) {
+    if (!candidateExists) {
+      candidateState = state.metadata.candidate_fingerprint ? 'stale' : 'missing';
+    } else {
+      candidateState = state.metadata.source_fingerprint === sourceFingerprint
+        && state.metadata.candidate_fingerprint === candidateFingerprint
+        ? 'current'
+        : 'stale';
+    }
+  }
 
-  let reviewState: 'missing' | 'current' | 'stale' = !candidateFingerprint || !candidateExists || !state.reviewExists
-    ? 'missing'
-    : state.metadata.source_fingerprint === sourceFingerprint
-      && state.metadata.review_fingerprint === candidateFingerprint
-      ? 'current'
-      : 'stale';
+  let reviewState: 'missing' | 'current' | 'stale' = 'missing';
+  if (candidateFingerprint) {
+    if (!candidateExists) {
+      reviewState = state.metadata.review_fingerprint || state.metadata.candidate_fingerprint ? 'stale' : 'missing';
+    } else if (!state.reviewExists) {
+      reviewState = state.metadata.review_fingerprint ? 'stale' : 'missing';
+    } else {
+      reviewState = state.metadata.source_fingerprint === sourceFingerprint
+        && state.metadata.review_fingerprint === candidateFingerprint
+        ? 'current'
+        : 'stale';
+    }
+  }
 
   if (state.invalidDomainMaps.size > 0) {
     if (candidateState === 'current') {
@@ -924,6 +1252,9 @@ async function deriveBootstrapArtifacts(projectRoot: string, state: BootstrapSta
 
   return {
     bundle,
+    candidateSpecs: candidateSpecAssembly.specs,
+    preservedFormalPaths: candidateSpecAssembly.preservedFormalPaths,
+    specErrors,
     sourceFingerprint,
     candidateFingerprint,
     candidateState,
@@ -940,7 +1271,7 @@ export async function assembleCandidate(projectRoot: string): Promise<ProjectOps
     throw new Error('No evidence.yaml found. Run scan phase first.');
   }
 
-  await writeCandidateFiles(projectRoot, derived.bundle);
+  await writeCandidateFiles(projectRoot, derived.bundle, derived.candidateSpecs);
   await writeBootstrapMetadata(projectRoot, {
     ...state.metadata,
     source_fingerprint: derived.sourceFingerprint,
@@ -957,7 +1288,7 @@ export async function generateReview(projectRoot: string): Promise<string> {
     throw new Error('No evidence.yaml found. Run scan phase first.');
   }
 
-  const content = buildReviewContent(state);
+  const content = buildReviewContent(state, derived);
   await fs.writeFile(bootstrapPath(projectRoot, 'review.md'), content, 'utf-8');
   await writeBootstrapMetadata(projectRoot, {
     ...state.metadata,
@@ -982,11 +1313,11 @@ export async function refreshBootstrapDerivedArtifacts(
   const reviewUpdated = derived.reviewState !== 'current';
 
   if (candidateUpdated) {
-    await writeCandidateFiles(projectRoot, derived.bundle);
+    await writeCandidateFiles(projectRoot, derived.bundle, derived.candidateSpecs);
   }
 
   if (reviewUpdated) {
-    await fs.writeFile(bootstrapPath(projectRoot, 'review.md'), buildReviewContent(state), 'utf-8');
+    await fs.writeFile(bootstrapPath(projectRoot, 'review.md'), buildReviewContent(state, derived), 'utf-8');
   }
 
   if (candidateUpdated || reviewUpdated) {
@@ -1002,11 +1333,11 @@ export async function refreshBootstrapDerivedArtifacts(
 }
 
 async function writeBootstrapSpecStarter(projectRoot: string, state: BootstrapState): Promise<void> {
-  if (state.metadata.mode !== 'full') {
+  if (state.metadata.mode !== 'opsx-first') {
     return;
   }
 
-  if (await hasRealSpecContent(projectRoot)) {
+  if (state.metadata.baseline_type !== 'raw') {
     return;
   }
 
@@ -1017,7 +1348,7 @@ async function writeBootstrapSpecStarter(projectRoot: string, state: BootstrapSt
 
   const content = `# Specs Starter
 
-This repository was bootstrapped in \`full\` mode.
+This repository was bootstrapped in \`opsx-first\` mode.
 
 - Formal OPSX files were generated from the bootstrap workflow.
 - Add behavior specs incrementally with normal OpenSpec changes.
@@ -1036,22 +1367,24 @@ export async function promoteBootstrap(projectRoot: string): Promise<void> {
   }
 
   const state = await readBootstrapState(projectRoot);
-  const bundle = assembleBundle(state);
-
-  // Read existing OPSX to merge project metadata if present
-  const existingMainPath = FileSystemUtils.joinPath(projectRoot, 'openspec/project.opsx.yaml');
-  if (await FileSystemUtils.fileExists(existingMainPath)) {
-    try {
-      const content = await fs.readFile(existingMainPath, 'utf-8');
-      const existing = parseYaml(content);
-      if (existing?.project) {
-        bundle.project = { ...bundle.project, ...existing.project };
-      }
-    } catch { /* use default project metadata */ }
+  const derived = await deriveBootstrapArtifacts(projectRoot, state);
+  if (!derived.bundle || !derived.candidateFingerprint) {
+    throw new Error('Cannot promote: candidate artifacts are unavailable. Run `openspec bootstrap validate` first.');
   }
 
-  // Write formal OPSX files
-  await writeProjectOpsx(projectRoot, bundle);
+  const targetErrors = await validateFormalSpecTargets(projectRoot, state, derived.candidateSpecs);
+  if (targetErrors.length > 0) {
+    throw new Error(`Cannot promote: gate validation failed.\n${targetErrors.join('\n')}`);
+  }
+
+  await copyFile(candidatePath(projectRoot, 'project.opsx.yaml'), FileSystemUtils.joinPath(projectRoot, OPSX_PATHS.PROJECT_FILE));
+  await copyFile(candidatePath(projectRoot, 'project.opsx.relations.yaml'), FileSystemUtils.joinPath(projectRoot, OPSX_PATHS.RELATIONS_FILE));
+  await copyFile(candidatePath(projectRoot, 'project.opsx.code-map.yaml'), FileSystemUtils.joinPath(projectRoot, OPSX_PATHS.CODE_MAP_FILE));
+
+  for (const spec of derived.candidateSpecs) {
+    await copyFile(candidateSpecPath(projectRoot, spec.folder), formalSpecPath(projectRoot, spec.folder));
+  }
+
   await writeBootstrapSpecStarter(projectRoot, state);
 
   // Clean up workspace

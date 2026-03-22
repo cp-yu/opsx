@@ -36,7 +36,7 @@ Supported upgrade paths:
 - `raw -> full`
 - `raw -> opsx-first`
 
-`opsx-first` is intentionally narrow: it writes formal OPSX now and leaves behavior specs to be added later through normal change workflows.
+`opsx-first` is intentionally narrow: it writes the formal OPSX bundle plus a README-only starter now, and leaves full behavior specs to be added later through normal change workflows.
 
 ## Running Bootstrap
 
@@ -64,22 +64,23 @@ openspec bootstrap promote -y
 ```
 
 Key behavior:
-1. `validate` regenerates `review.md` and candidate OPSX files from current `evidence.yaml` and `domain-map/*.yaml`
+1. `validate` regenerates `review.md`, candidate OPSX files, and candidate specs from current `evidence.yaml` and `domain-map/*.yaml`
 2. If evidence or mappings change, previous review approval becomes stale and must be redone
-3. `promote -y` re-checks scan, map, and review gates before any formal write
+3. `promote -y` re-checks scan, map, and review gates before any formal write and copies only reviewed candidate artifacts into formal outputs
 
 ## What Gets Generated
 
 - `opsx-first`
-  - Writes only the formal OPSX bundle on promote
-  - Does not create placeholder specs
-  - You add specs later through normal OpenSpec changes
+  - Writes the formal OPSX bundle on promote
+  - Creates only `openspec/specs/README.md`
+  - You add full behavior specs later through normal OpenSpec changes
 - `full` on `raw`
   - Writes the formal OPSX bundle
-  - Creates a starter `openspec/specs/README.md`
+  - Writes one validated `openspec/specs/<capability-folder>/spec.md` per mapped capability
 - `full` on `specs-based`
   - Preserves existing specs
-  - Adds the formal OPSX bundle aligned to those specs
+  - Adds only missing capability specs
+  - Fails fast if a generated target path already exists
 
 ### Minimal Example
 
