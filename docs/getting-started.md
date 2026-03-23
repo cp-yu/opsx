@@ -130,6 +130,9 @@ AI:  Created openspec/changes/add-dark-mode/
      ✓ specs/       — requirements and scenarios
      ✓ design.md    — technical approach
      ✓ tasks.md     — implementation checklist
+     Post-propose check:
+     - Fixed: tasks.md checkbox structure
+     - Skipped: OPSX merge validation (no openspec/project.opsx.yaml)
      Ready for implementation!
 ```
 

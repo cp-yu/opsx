@@ -1,11 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import {
   OPSX_NAVIGATION_GUIDANCE,
+  OPSX_POST_PROPOSE_VALIDATION,
   OPSX_READ_CONTEXT,
   OPSX_SHARED_CONTEXT,
 } from '../../../src/core/templates/fragments/opsx-fragments.js';
 import { getExploreSkillTemplate } from '../../../src/core/templates/workflows/explore.js';
-import { getOpsxProposeSkillTemplate } from '../../../src/core/templates/workflows/propose.js';
+import {
+  getOpsxProposeCommandTemplate,
+  getOpsxProposeSkillTemplate,
+} from '../../../src/core/templates/workflows/propose.js';
 import { getApplyChangeSkillTemplate } from '../../../src/core/templates/workflows/apply-change.js';
 
 describe('OPSX shared context fragments', () => {
@@ -19,5 +23,10 @@ describe('OPSX shared context fragments', () => {
 
     expect(getOpsxProposeSkillTemplate().instructions).toContain(OPSX_SHARED_CONTEXT);
     expect(getApplyChangeSkillTemplate().instructions).toContain(OPSX_SHARED_CONTEXT);
+  });
+
+  it('reuses post-propose validation guidance across propose skill and command templates', () => {
+    expect(getOpsxProposeSkillTemplate().instructions).toContain(OPSX_POST_PROPOSE_VALIDATION);
+    expect(getOpsxProposeCommandTemplate().content).toContain(OPSX_POST_PROPOSE_VALIDATION);
   });
 });

@@ -51,6 +51,8 @@ Create a new change and generate planning artifacts in one step. This is the def
 **What it does:**
 - Creates `openspec/changes/<change-name>/`
 - Generates artifacts needed before implementation (for `spec-driven`: proposal, specs, design, tasks)
+- Runs a warning-only post-propose validation pass for delta specs, `opsx-delta.yaml`, and lightweight artifact structure checks
+- Performs at most one repair pass, then reports fixed warnings, remaining warnings, and skipped checks
 - Stops when the change is ready for `/opsx:apply`
 
 **Example:**
@@ -62,6 +64,9 @@ AI:  Created openspec/changes/add-dark-mode/
      ✓ specs/ui/spec.md
      ✓ design.md
      ✓ tasks.md
+     Post-propose check:
+     - Fixed: tasks.md checkbox structure
+     - Skipped: OPSX merge validation (no openspec/project.opsx.yaml)
      Ready for implementation. Run /opsx:apply.
 ```
 

@@ -7,6 +7,7 @@
 import type { SkillTemplate, CommandTemplate } from '../types.js';
 import {
   ARTIFACT_DOC_LANGUAGE_CONTRACT,
+  OPSX_POST_PROPOSE_VALIDATION,
   OPSX_SHARED_CONTEXT,
 } from '../fragments/opsx-fragments.js';
 
@@ -94,7 +95,11 @@ ${OPSX_SHARED_CONTEXT}
       - Generate \`openspec/changes/<name>/opsx-delta.yaml\` using ADDED / MODIFIED / REMOVED sections
       - Keep this agent-driven: capture merge intent in the YAML, not in programmatic code
 
-5. **Show final status**
+5. **Run post-propose validation before the final summary**
+
+   ${OPSX_POST_PROPOSE_VALIDATION}
+
+6. **Show final status**
    \`\`\`bash
    openspec status --change "<name>"
    \`\`\`
@@ -104,6 +109,7 @@ ${OPSX_SHARED_CONTEXT}
 After completing all artifacts, summarize:
 - Change name and location
 - List of artifacts created with brief descriptions
+- Validation summary with fixed warnings, remaining warnings, and skipped checks
 - What's ready: "All artifacts created! Ready for implementation."
 - Prompt: "Run \`/opsx:apply\` or ask me to implement to start working on the tasks."
 
@@ -218,7 +224,11 @@ ${OPSX_SHARED_CONTEXT}
       - Generate \`openspec/changes/<name>/opsx-delta.yaml\` using ADDED / MODIFIED / REMOVED sections
       - Keep this agent-driven: capture merge intent in the YAML, not in programmatic code
 
-5. **Show final status**
+5. **Run post-propose validation before the final summary**
+
+   ${OPSX_POST_PROPOSE_VALIDATION}
+
+6. **Show final status**
    \`\`\`bash
    openspec status --change "<name>"
    \`\`\`
@@ -228,6 +238,7 @@ ${OPSX_SHARED_CONTEXT}
 After completing all artifacts, summarize:
 - Change name and location
 - List of artifacts created with brief descriptions
+- Validation summary with fixed warnings, remaining warnings, and skipped checks
 - What's ready: "All artifacts created! Ready for implementation."
 - Prompt: "Run \`/opsx:apply\` to start implementing."
 

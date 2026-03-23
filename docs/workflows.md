@@ -78,6 +78,9 @@ AI:  Creating all planning artifacts...
      ✓ specs/
      ✓ design.md
      ✓ tasks.md
+     Post-propose check:
+     - Fixed: one generated requirement now includes a scenario block
+     - Remaining: none
      Ready for implementation!
 
 You: /opsx:apply

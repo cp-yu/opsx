@@ -36,6 +36,34 @@ export const OPSX_GENERATE_DELTA = `
 - Keep this agent-driven: capture merge intent in the YAML, not in programmatic code
 `.trim();
 
+
+/**
+ * Fragment: Post-propose warning validation
+ * Used in: propose
+ */
+export const OPSX_POST_PROPOSE_VALIDATION = `
+**Run post-propose warning validation**:
+- This validation is warning-only. Do NOT turn \`/opsx:propose\` into a blocking gate.
+- Validate generated change specs against the same contract used by downstream change delta validation:
+  - Prefer \`openspec validate "<name>" --type change --json\` when available
+  - Align with \`Validator.validateChangeDeltaSpecs()\` semantics for delta sections, SHALL/MUST requirement text, and required \`#### Scenario:\` blocks
+- Validate \`opsx-delta.yaml\` against the same dry-run merge contract used by downstream sync/archive prepare:
+  - Reuse the semantics of \`prepareChangeSync()\` in \`src/core/change-sync.ts\`
+  - Read the current OPSX files, dry-run the delta merge, then check referential integrity and code-map integrity
+  - Do NOT run \`openspec sync\` for this check because it mutates project files
+  - If \`openspec/project.opsx.yaml\` does not exist, skip this OPSX merge-based validation and report the skip in the final summary
+- Run lightweight structure checks for \`proposal.md\`, \`design.md\`, and \`tasks.md\` against the current schema templates, not scattered examples:
+  - Read \`openspec instructions proposal --change "<name>" --json\`, \`openspec instructions design --change "<name>" --json\`, and \`openspec instructions tasks --change "<name>" --json\`
+  - Check only key required headings and checkbox structure
+  - Do NOT invent semantic lint rules beyond the current templates
+- If warnings are found, do exactly one repair pass on the generated artifacts, then re-check once
+- Final summary MUST separate:
+  - fixed warnings
+  - remaining warnings
+  - skipped checks
+- Even with remaining warnings, you MAY still declare the change ready for \`/opsx:apply\`, but disclose the residual issues explicitly
+`.trim();
+
 /**
  * Fragment: Verify OPSX alignment
  * Used in: verify-change
