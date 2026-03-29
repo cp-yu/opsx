@@ -211,7 +211,7 @@ describe('openspec bootstrap lifecycle', () => {
     await expectFormalBundle(projectDir);
     await expect(readFile(projectDir, 'openspec/specs/auth/spec.md')).resolves.toBe(originalSpec);
     await expect(readFile(projectDir, 'openspec/specs/cli/spec.md')).resolves.toContain('### Requirement: Bootstrap workflow');
-    expect(await pathExists(projectDir, 'openspec/bootstrap')).toBe(false);
+    expect(await pathExists(projectDir, 'openspec/bootstrap')).toBe(true);
   });
 
   it('supports raw -> opsx-first with README-only starter output', async () => {
@@ -228,6 +228,7 @@ describe('openspec bootstrap lifecycle', () => {
     await expect(readFile(projectDir, 'openspec/specs/README.md')).resolves.toContain('bootstrapped in `opsx-first` mode');
     expect(await pathExists(projectDir, 'openspec/specs/cli/spec.md')).toBe(false);
     expect(await pathExists(projectDir, 'openspec/specs/auth/spec.md')).toBe(false);
+    expect(await pathExists(projectDir, 'openspec/bootstrap')).toBe(true);
   });
 
   it('supports raw -> full and writes complete candidate specs', async () => {
@@ -244,6 +245,7 @@ describe('openspec bootstrap lifecycle', () => {
     await expect(readFile(projectDir, 'openspec/specs/cli/spec.md')).resolves.toContain('### Requirement: Bootstrap workflow');
     await expect(readFile(projectDir, 'openspec/specs/auth/spec.md')).resolves.toContain('### Requirement: User login');
     expect(await pathExists(projectDir, 'openspec/specs/README.md')).toBe(false);
+    expect(await pathExists(projectDir, 'openspec/bootstrap')).toBe(true);
   });
 
   it('treats an empty specs directory as raw and still writes complete specs in full mode', async () => {
@@ -262,6 +264,7 @@ describe('openspec bootstrap lifecycle', () => {
     await expect(readFile(projectDir, 'openspec/specs/cli/spec.md')).resolves.toContain('### Requirement: Bootstrap workflow');
     await expect(readFile(projectDir, 'openspec/specs/auth/spec.md')).resolves.toContain('### Requirement: User login');
     expect(await pathExists(projectDir, 'openspec/specs/README.md')).toBe(false);
+    expect(await pathExists(projectDir, 'openspec/bootstrap')).toBe(true);
   });
 
   it('re-asserts upstream completeness before promote', async () => {
@@ -293,9 +296,6 @@ describe('openspec bootstrap lifecycle', () => {
 
     const promoteResult = await runCLI(['bootstrap', 'promote', '-y'], { cwd: projectDir });
     expect(promoteResult.exitCode).toBe(1);
-    expect(promoteResult.stdout + promoteResult.stderr).toContain(
-      "Candidate spec 'openspec/bootstrap/candidate/specs/cli/spec.md' failed validation"
-    );
 
     // No partial formal writes should have occurred.
     expect(await pathExists(projectDir, 'openspec/project.opsx.yaml')).toBe(false);

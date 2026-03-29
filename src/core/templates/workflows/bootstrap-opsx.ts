@@ -92,7 +92,7 @@ This is a **structured, multi-phase** workflow. Each phase produces intermediate
    - \`opsx-first\`: writes the formal OPSX three-file bundle plus only \`openspec/specs/README.md\`
    - \`full\` on \`raw\`: writes the formal OPSX bundle plus one validated spec per mapped capability
    - \`full\` on \`specs-based\`: preserves existing specs, adds only missing capability specs, and fails fast on target-path conflicts
-   Cleans up the bootstrap workspace on success.
+   Retains the bootstrap workspace on success so you can inspect or delete it manually later.
 
 3. **After each phase action**
    - Run \`openspec bootstrap validate\` to verify gate conditions
@@ -152,7 +152,7 @@ openspec bootstrap promote -y
 \`\`\`
 
 Each phase produces intermediate artifacts in \`openspec/bootstrap/\`.
-The workspace is cleaned up after promote.
+The workspace is retained after promote so it can be inspected or deleted manually later.
 
 **Key Commands**
 - \/opsx:bootstrap — user-facing agent command that drives the CLI-backed workflow
@@ -160,6 +160,6 @@ The workspace is cleaned up after promote.
 - \`openspec bootstrap status [--json]\` — phase progress + per-domain status
 - \`openspec bootstrap instructions [phase] [--json]\` — phase-specific guidance
 - \`openspec bootstrap validate [--json]\` — gate validation + auto-advance
-- \`openspec bootstrap promote [-y]\` — re-validate, write formal OPSX, then cleanup`
+- \`openspec bootstrap promote [-y]\` — re-validate, write formal OPSX, then retain the workspace for manual cleanup`
   };
 }

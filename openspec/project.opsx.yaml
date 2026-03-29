@@ -192,7 +192,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.opsx.bootstrap
-    intent: 提供基于现有 CLI 的 bootstrap 工作流，支持 TTY 模式选择、invalid domain-map 诊断与 gate 驱动的五阶段生命周期
+    intent: 提供基于现有 CLI 的 bootstrap 工作流，支持 TTY 模式选择、invalid domain-map 诊断与 gate 驱动的五阶段生命周期；在组装 candidate bundle 时从 bootstrap 工作区派生 project intent/scope；promote 后保留工作区并提示用户可手动清理；不调整已有 formal OPSX 项目
     status: active
     type: capability
   - id: cap.opsx.delta-merge

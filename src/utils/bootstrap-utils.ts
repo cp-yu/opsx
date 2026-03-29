@@ -22,6 +22,10 @@ import {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 export const BOOTSTRAP_DIR = 'openspec/bootstrap';
+export const DEFAULT_BOOTSTRAP_PROJECT_ID = 'project';
+export const DEFAULT_BOOTSTRAP_PROJECT_NAME = 'Project';
+export const BOOTSTRAP_WORKSPACE_RETAINED_NOTICE =
+  'Bootstrap workspace retained at openspec/bootstrap/. You may delete it manually once you no longer need it.';
 
 export const BOOTSTRAP_PHASES = ['init', 'scan', 'map', 'review', 'promote'] as const;
 export type BootstrapPhase = typeof BOOTSTRAP_PHASES[number];
@@ -248,6 +252,10 @@ interface DerivedBootstrapArtifacts {
   checkedDomains: Set<string>;
 }
 
+export interface PromoteBootstrapResult {
+  retainedWorkspaceNotice: string;
+}
+
 // ─── Path Helpers ────────────────────────────────────────────────────────────
 
 function bootstrapPath(projectRoot: string, ...segments: string[]): string {
@@ -342,6 +350,80 @@ function compareConfidence(a: EvidenceDomain['confidence'], b: EvidenceDomain['c
 function compareEvidenceDomains(a: EvidenceDomain, b: EvidenceDomain): number {
   const confidenceComparison = compareConfidence(a.confidence, b.confidence);
   return confidenceComparison !== 0 ? confidenceComparison : a.id.localeCompare(b.id);
+}
+
+function normalizeBootstrapText(value: string | undefined): string | undefined {
+  const normalized = value?.trim().replace(/\s+/g, ' ');
+  return normalized ? normalized : undefined;
+}
+
+function canDeriveBootstrapProjectMetadata(state: BootstrapState): boolean {
+  return state.metadata.baseline_type === 'raw' || state.metadata.baseline_type === 'specs-based';
+}
+
+function deriveProjectIntent(state: BootstrapState): string | undefined {
+  if (!canDeriveBootstrapProjectMetadata(state)) {
+    return undefined;
+  }
+
+  const intentsByDomain = new Map<string, string>();
+  for (const domain of state.evidence?.domains ?? []) {
+    const normalizedIntent = normalizeBootstrapText(domain.intent);
+    if (normalizedIntent) {
+      intentsByDomain.set(domain.id, normalizedIntent);
+    }
+  }
+
+  for (const [domainId, mapFile] of [...state.domainMaps.entries()].sort(([leftId], [rightId]) => leftId.localeCompare(rightId))) {
+    const normalizedIntent = normalizeBootstrapText(mapFile.domain.intent);
+    if (normalizedIntent) {
+      intentsByDomain.set(domainId, normalizedIntent);
+    }
+  }
+
+  if (intentsByDomain.size === 0 || state.domainMaps.size === 0) {
+    return undefined;
+  }
+
+  return [...intentsByDomain.entries()]
+    .sort(([leftId], [rightId]) => leftId.localeCompare(rightId))
+    .map(([, intent]) => intent)
+    .join('; ');
+}
+
+function deriveProjectScope(state: BootstrapState): string | undefined {
+  if (!canDeriveBootstrapProjectMetadata(state) || !state.scope) {
+    return undefined;
+  }
+
+  const mappedDomainIds = [...state.domainMaps.keys()].sort();
+  const segments = [`mode=${state.scope.mode}`];
+  if (state.scope.include.length > 0) {
+    segments.push(`include=${state.scope.include.join(', ')}`);
+  }
+  if (state.scope.exclude.length > 0) {
+    segments.push(`exclude=${state.scope.exclude.join(', ')}`);
+  }
+  if (mappedDomainIds.length > 0) {
+    segments.push(`mapped domains=${mappedDomainIds.join(', ')}`);
+  }
+
+  if (segments.length === 1) {
+    return undefined;
+  }
+
+  return segments.join('; ');
+}
+
+function buildBootstrapProjectMetadata(state: BootstrapState): ProjectOpsxBundle['project'] {
+  const intent = deriveProjectIntent(state);
+  const scope = deriveProjectScope(state);
+  return {
+    id: DEFAULT_BOOTSTRAP_PROJECT_ID,
+    name: DEFAULT_BOOTSTRAP_PROJECT_NAME,
+    ...(intent ? { intent } : {}),
+    ...(scope ? { scope } : {}),
+  };
 }
 
 function normalizeEvidenceForFingerprint(evidence: EvidenceFile): EvidenceFile {
@@ -1068,10 +1150,7 @@ function assembleBundle(state: BootstrapState): ProjectOpsxBundle {
 
   return {
     schema_version: OPSX_SCHEMA_VERSION,
-    project: {
-      id: 'project',
-      name: 'Project',
-    },
+    project: buildBootstrapProjectMetadata(state),
     domains,
     capabilities,
     relations,
@@ -1358,7 +1437,7 @@ This repository was bootstrapped in \`opsx-first\` mode.
   await FileSystemUtils.writeFile(specsReadmePath, content);
 }
 
-export async function promoteBootstrap(projectRoot: string): Promise<void> {
+export async function promoteBootstrap(projectRoot: string): Promise<PromoteBootstrapResult> {
   await refreshBootstrapDerivedArtifacts(projectRoot);
 
   const gate = await validateGate(projectRoot, 'review_to_promote');
@@ -1387,9 +1466,9 @@ export async function promoteBootstrap(projectRoot: string): Promise<void> {
 
   await writeBootstrapSpecStarter(projectRoot, state);
 
-  // Clean up workspace
-  const bsDir = bootstrapPath(projectRoot);
-  await fs.rm(bsDir, { recursive: true, force: true });
+  return {
+    retainedWorkspaceNotice: BOOTSTRAP_WORKSPACE_RETAINED_NOTICE,
+  };
 }
 
 // ─── YAML Helpers ────────────────────────────────────────────────────────────

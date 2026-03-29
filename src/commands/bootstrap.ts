@@ -339,7 +339,7 @@ When all checkboxes are checked, proceed to promote.`;
 Run: openspec bootstrap promote
 
 This re-validates scan, map, and review gates before writing any formal OPSX files.
-Successful promotion writes the three formal OPSX files and cleans up the bootstrap workspace.
+Successful promotion writes the three formal OPSX files and retains the bootstrap workspace for manual cleanup.
 ${mode === 'opsx-first'
   ? 'Opsx-first writes the formal OPSX bundle plus only openspec/specs/README.md.'
   : baselineType === 'specs-based'
@@ -428,7 +428,7 @@ export async function bootstrapPromoteCommand(options: BootstrapPromoteOptions):
   const projectRoot = process.cwd();
 
   if (!options.yes) {
-    console.log('This will write formal OPSX files and clean up the bootstrap workspace.');
+    console.log('This will write formal OPSX files and retain the bootstrap workspace for manual cleanup.');
     console.log('Run with -y to confirm, or use the /opsx:bootstrap skill.');
     return;
   }
@@ -436,12 +436,12 @@ export async function bootstrapPromoteCommand(options: BootstrapPromoteOptions):
   const spinner = ora('Promoting bootstrap to formal OPSX...').start();
 
   try {
-    await promoteBootstrap(projectRoot);
+    const result = await promoteBootstrap(projectRoot);
     spinner.succeed('Bootstrap promoted to formal OPSX files');
     console.log('  Written: openspec/project.opsx.yaml');
     console.log('  Written: openspec/project.opsx.relations.yaml');
     console.log('  Written: openspec/project.opsx.code-map.yaml');
-    console.log('  Cleaned: openspec/bootstrap/');
+    console.log(`  ${result.retainedWorkspaceNotice}`);
   } catch (error) {
     spinner.fail('Failed to promote bootstrap');
     throw error;

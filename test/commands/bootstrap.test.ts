@@ -4,7 +4,7 @@ import path from 'path';
 import os from 'os';
 import { randomUUID } from 'crypto';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
-import { bootstrapInstructionsCommand, bootstrapStatusCommand } from '../../src/commands/bootstrap.js';
+import { bootstrapInstructionsCommand, bootstrapPromoteCommand, bootstrapStatusCommand } from '../../src/commands/bootstrap.js';
 import {
   bootstrapInitCommand,
   bootstrapValidateCommand,
@@ -48,6 +48,22 @@ async function captureJsonOutput(fn: () => Promise<void>): Promise<any> {
     throw new Error(`No JSON output captured: ${output}`);
   }
   return JSON.parse(output.slice(start));
+}
+
+async function captureTextOutput(fn: () => Promise<void>): Promise<string> {
+  const messages: string[] = [];
+  const originalLog = console.log;
+  console.log = (...args: unknown[]) => {
+    messages.push(args.join(' '));
+  };
+
+  try {
+    await fn();
+  } finally {
+    console.log = originalLog;
+  }
+
+  return messages.join('\n');
 }
 
 async function setBootstrapPhase(projectDir: string, phase: string): Promise<void> {
@@ -353,5 +369,70 @@ code_refs:
     expect(status.candidateState).toBe('current');
     expect(status.reviewState).toBe('current');
     process.exitCode = originalExitCode;
+  });
+
+  it('prints the retained bootstrap workspace notice after promote succeeds', async () => {
+    await initBootstrap(testDir, { mode: 'full' });
+
+    await fs.mkdir(path.join(testDir, 'src', 'auth'), { recursive: true });
+    await fs.writeFile(path.join(testDir, 'src', 'auth', 'index.ts'), 'export {};\n', 'utf-8');
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'bootstrap', 'evidence.yaml'),
+      `domains:
+  - id: dom.auth
+    confidence: high
+    sources:
+      - code:src/auth/index.ts
+    intent: Authentication
+`,
+      'utf-8'
+    );
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'bootstrap', 'domain-map', 'dom.auth.yaml'),
+      `domain:
+  id: dom.auth
+  type: domain
+  intent: Authentication boundary
+capabilities:
+  - id: cap.auth.login
+    type: capability
+    intent: Login users
+    spec:
+      folder: auth
+      purpose: Login users purpose
+      requirements:
+        - title: Login
+          text: The system SHALL authenticate users.
+          scenarios:
+            - title: Successful login
+              steps:
+                - keyword: WHEN
+                  text: valid credentials are submitted
+                - keyword: THEN
+                  text: access is granted
+relations:
+  - from: cap.auth.login
+    to: dom.auth
+    type: contains
+code_refs:
+  - id: cap.auth.login
+    refs:
+      - path: src/auth/index.ts
+        line_start: 1
+`,
+      'utf-8'
+    );
+
+    await refreshBootstrapDerivedArtifacts(testDir);
+
+    const reviewPath = path.join(testDir, 'openspec', 'bootstrap', 'review.md');
+    const review = await fs.readFile(reviewPath, 'utf-8');
+    await fs.writeFile(reviewPath, review.replace(/- \[ \]/g, '- [x]'), 'utf-8');
+
+    const output = await withCwd(testDir, () => captureTextOutput(() => bootstrapPromoteCommand({ yes: true })));
+
+    expect(output).toContain(
+      'Bootstrap workspace retained at openspec/bootstrap/. You may delete it manually once you no longer need it.'
+    );
   });
 });

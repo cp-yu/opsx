@@ -67,6 +67,7 @@ Key behavior:
 1. `validate` regenerates `review.md`, candidate OPSX files, and candidate specs from current `evidence.yaml` and `domain-map/*.yaml`
 2. If evidence or mappings change, previous review approval becomes stale and must be redone
 3. `promote -y` re-checks scan, map, and review gates before any formal write and copies only reviewed candidate artifacts into formal outputs
+4. Successful promote retains `openspec/bootstrap/` for later inspection or manual cleanup
 
 ## What Gets Generated
 
@@ -88,23 +89,20 @@ For a simple project:
 
 ```yaml
 # openspec/project.opsx.yaml
+schema_version: 1
 project:
-  name: my-app
-  version: 1.0.0
-  description: "[DRAFT] Generated from codebase analysis"
+  id: proj.my-app
+  name: My App
+  intent: Core application and API surface discovered from the current bootstrap workspace
 
 domains:
   - id: dom.core
     type: domain
     intent: Core application logic
-    code_refs:
-      - path: src/core/
 
   - id: dom.api
     type: domain
     intent: API endpoints
-    code_refs:
-      - path: src/api/
 ```
 
 ### Full Example

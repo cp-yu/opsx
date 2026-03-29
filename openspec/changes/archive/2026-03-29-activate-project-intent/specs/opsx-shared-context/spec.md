@@ -1,9 +1,7 @@
 # Spec: opsx-shared-context
 
-## Purpose
+## MODIFIED Requirements
 
-统一 explore / propose / apply 三个核心工作流对 OPSX 的加载协议，使 OPSX 成为共享一等上下文而非各模板各自为政的附加信息。
-## Requirements
 ### Requirement: 统一加载协议
 
 三个核心工作流模板必须在起始阶段使用同一 OPSX 共享上下文 fragment，且该 fragment SHALL 引导 AI 读取 `project:` 块的 `intent` 和 `scope`。
@@ -63,4 +61,3 @@ Explore、propose 与 apply 模板 SHALL 继续引用同一个 `OPSX_SHARED_CONT
 - **WHEN** 检查 explore / propose / apply 模板源码
 - **THEN** 三者均引用 `OPSX_SHARED_CONTEXT`
 - **AND** 加载的 OPSX 要点集合一致
-

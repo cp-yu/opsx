@@ -4,6 +4,7 @@ import os from 'os';
 import path from 'path';
 import { randomUUID } from 'crypto';
 import {
+  BOOTSTRAP_WORKSPACE_RETAINED_NOTICE,
   getBootstrapStatus,
   initBootstrap,
   promoteBootstrap,
@@ -11,7 +12,7 @@ import {
   readBootstrapState,
   validateGate,
 } from '../../src/utils/bootstrap-utils.js';
-import { stringify as stringifyYaml } from 'yaml';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 
 describe('bootstrap-utils invalid domain-map handling', () => {
   let testDir: string;
@@ -39,6 +40,24 @@ describe('bootstrap-utils invalid domain-map handling', () => {
     ].join('\n');
 
     await fs.writeFile(path.join(testDir, 'openspec', 'bootstrap', 'evidence.yaml'), content, 'utf-8');
+  }
+
+  async function writeScope(scope: {
+    mode?: 'full' | 'opsx-first' | 'seed';
+    include?: string[];
+    exclude?: string[];
+    granularity?: 'coarse' | 'fine';
+  }): Promise<void> {
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'bootstrap', 'scope.yaml'),
+      stringifyYaml({
+        mode: scope.mode ?? 'full',
+        include: scope.include ?? [],
+        exclude: scope.exclude ?? [],
+        granularity: scope.granularity ?? 'coarse',
+      }),
+      'utf-8'
+    );
   }
 
   async function writeDomainMap(options: {
@@ -138,6 +157,12 @@ capabilities:
 `;
     await fs.mkdir(path.dirname(filePath), { recursive: true });
     await fs.writeFile(filePath, content, 'utf-8');
+  }
+
+  async function approveReview(): Promise<void> {
+    const reviewPath = path.join(testDir, 'openspec', 'bootstrap', 'review.md');
+    const review = await fs.readFile(reviewPath, 'utf-8');
+    await fs.writeFile(reviewPath, review.replace(/- \[ \]/g, '- [x]'), 'utf-8');
   }
 
   function getDomain(status: Extract<Awaited<ReturnType<typeof getBootstrapStatus>>, { initialized: true }>, domainId: string) {
@@ -407,5 +432,114 @@ code_refs:
     expect(gate2.errors).toEqual(
       expect.arrayContaining([expect.stringContaining("Domain 'dom.auth' has invalid domain-map: dom.auth.yaml")])
     );
+  });
+
+  it('derives bootstrap project metadata from workspace inputs instead of package manifests', async () => {
+    await fs.writeFile(
+      path.join(testDir, 'package.json'),
+      JSON.stringify({
+        name: '@acme/manifest-name',
+        description: 'Manifest description that must not become project metadata',
+      }, null, 2),
+      'utf-8'
+    );
+
+    await initBootstrap(testDir, { mode: 'full' });
+    await writeScope({
+      mode: 'full',
+      include: ['src', 'docs'],
+      exclude: ['vendor'],
+    });
+    await writeEvidence(['dom.auth', 'dom.cli']);
+    await writeDomainMap({
+      domainId: 'dom.auth',
+      capabilityId: 'cap.auth.login',
+    });
+    await writeDomainMap({
+      domainId: 'dom.cli',
+      capabilityId: 'cap.cli.run',
+    });
+
+    await refreshBootstrapDerivedArtifacts(testDir);
+
+    const candidate = parseYaml(
+      await fs.readFile(path.join(testDir, 'openspec', 'bootstrap', 'candidate', 'project.opsx.yaml'), 'utf-8')
+    ) as {
+      project: {
+        id: string;
+        name: string;
+        intent?: string;
+        scope?: string;
+      };
+    };
+
+    expect(candidate.project.id).toBe('project');
+    expect(candidate.project.name).toBe('Project');
+    expect(candidate.project.intent).toContain('dom.auth boundary');
+    expect(candidate.project.intent).toContain('dom.cli boundary');
+    expect(candidate.project.intent).not.toContain('Manifest description');
+    expect(candidate.project.scope).toContain('mode=full');
+    expect(candidate.project.scope).toContain('include=src, docs');
+    expect(candidate.project.scope).toContain('exclude=vendor');
+    expect(candidate.project.scope).toContain('mapped domains=dom.auth, dom.cli');
+  });
+
+  it('leaves bootstrap project intent and scope undefined when workspace inputs are insufficient', async () => {
+    await initBootstrap(testDir, { mode: 'full' });
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'bootstrap', 'evidence.yaml'),
+      stringifyYaml({
+        domains: [
+          {
+            id: 'dom.auth',
+            confidence: 'high',
+            sources: ['code:src/auth/index.ts'],
+            intent: '',
+          },
+        ],
+      }),
+      'utf-8'
+    );
+
+    await refreshBootstrapDerivedArtifacts(testDir);
+
+    const candidate = parseYaml(
+      await fs.readFile(path.join(testDir, 'openspec', 'bootstrap', 'candidate', 'project.opsx.yaml'), 'utf-8')
+    ) as { project: Record<string, unknown> };
+
+    expect(candidate.project.intent).toBeUndefined();
+    expect(candidate.project.scope).toBeUndefined();
+  });
+
+  it('keeps existing formal OPSX files unchanged when bootstrap is unsupported for formal baselines', async () => {
+    const originalProjectOpsx = `schema_version: 1
+project:
+  id: proj.demo
+  name: Demo
+  intent: Existing formal intent
+`;
+
+    await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.yaml'), originalProjectOpsx, 'utf-8');
+    await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.relations.yaml'), 'schema_version: 1\nrelations: []\n', 'utf-8');
+    await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.code-map.yaml'), 'schema_version: 1\nnodes: []\n', 'utf-8');
+
+    await expect(initBootstrap(testDir, { mode: 'full' })).rejects.toThrow('existing formal OPSX files');
+    await expect(fs.readFile(path.join(testDir, 'openspec', 'project.opsx.yaml'), 'utf-8')).resolves.toBe(originalProjectOpsx);
+    await expect(fs.stat(path.join(testDir, 'openspec', 'bootstrap'))).rejects.toThrow();
+  });
+
+  it('retains the bootstrap workspace after promote and returns a manual cleanup notice', async () => {
+    await initBootstrap(testDir, { mode: 'full' });
+    await writeEvidence(['dom.auth']);
+    await writeValidDomainMap('dom.auth');
+
+    await refreshBootstrapDerivedArtifacts(testDir);
+    await approveReview();
+    await refreshBootstrapDerivedArtifacts(testDir);
+
+    const result = await promoteBootstrap(testDir);
+
+    expect(result.retainedWorkspaceNotice).toBe(BOOTSTRAP_WORKSPACE_RETAINED_NOTICE);
+    await expect(fs.stat(path.join(testDir, 'openspec', 'bootstrap'))).resolves.toBeDefined();
   });
 });
