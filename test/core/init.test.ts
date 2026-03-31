@@ -57,6 +57,15 @@ describe('InitCommand', () => {
     vi.restoreAllMocks();
   });
 
+  async function writeLegacyCodexCommand(workflowSlug: string): Promise<string> {
+    const codexHome = process.env.CODEX_HOME ?? path.join(testDir, 'codex-home');
+    process.env.CODEX_HOME = codexHome;
+    const promptFile = path.join(path.resolve(codexHome), 'prompts', `opsx-${workflowSlug}.md`);
+    await fs.mkdir(path.dirname(promptFile), { recursive: true });
+    await fs.writeFile(promptFile, '# legacy codex command', 'utf-8');
+    return promptFile;
+  }
+
   describe('execute with --tools flag', () => {
     it('should create OpenSpec directory structure', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
@@ -185,6 +194,36 @@ describe('InitCommand', () => {
 
       const skillFile = path.join(testDir, '.windsurf', 'skills', 'openspec-explore', 'SKILL.md');
       expect(await fileExists(skillFile)).toBe(true);
+    });
+
+    it('should configure codex as skills-only by default', async () => {
+      const initCommand = new InitCommand({ tools: 'codex', force: true });
+
+      await initCommand.execute(testDir);
+
+      expect(await fileExists(
+        path.join(testDir, '.codex', 'skills', 'openspec-explore', 'SKILL.md')
+      )).toBe(true);
+      expect(await fileExists(
+        path.join(path.resolve(process.env.CODEX_HOME ?? path.join(testDir, 'codex-home')), 'prompts', 'opsx-explore.md')
+      )).toBe(false);
+    });
+
+    it('should keep codex on skills and remove legacy command files in commands delivery', async () => {
+      saveGlobalConfig({
+        featureFlags: {},
+        profile: 'core',
+        delivery: 'commands',
+      });
+      const legacyCommand = await writeLegacyCodexCommand('explore');
+      const initCommand = new InitCommand({ tools: 'codex', force: true });
+
+      await initCommand.execute(testDir);
+
+      expect(await fileExists(
+        path.join(testDir, '.codex', 'skills', 'openspec-explore', 'SKILL.md')
+      )).toBe(true);
+      expect(await fileExists(legacyCommand)).toBe(false);
     });
 
     it('should create skills for multiple tools at once', async () => {

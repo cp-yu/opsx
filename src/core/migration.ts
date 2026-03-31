@@ -6,9 +6,9 @@
  */
 
 import type { AIToolOption } from './config.js';
+import { toolSupportsCommandGeneration } from './config.js';
 import { getGlobalConfig, getGlobalConfigPath, saveGlobalConfig, type Delivery } from './global-config.js';
-import { CommandAdapterRegistry } from './command-generation/index.js';
-import { createWorkflowArtifactPlan } from './workflow-installation.js';
+import { createToolWorkflowArtifactPlan, getManagedCommandFiles } from './workflow-installation.js';
 import { ALL_WORKFLOWS } from './workflow-surface.js';
 import path from 'path';
 import * as fs from 'fs';
@@ -23,13 +23,13 @@ function scanInstalledWorkflowArtifacts(
   projectPath: string,
   tools: AIToolOption[]
 ): InstalledWorkflowArtifacts {
-  const managedPlan = createWorkflowArtifactPlan([], 'both');
   const installed = new Set<string>();
   let hasSkills = false;
   let hasCommands = false;
 
   for (const tool of tools) {
     if (!tool.skillsDir) continue;
+    const managedPlan = createToolWorkflowArtifactPlan(tool.value, [], 'both');
     const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
 
     for (const [index, workflowId] of ALL_WORKFLOWS.entries()) {
@@ -41,17 +41,18 @@ function scanInstalledWorkflowArtifacts(
       }
     }
 
-    const adapter = CommandAdapterRegistry.get(tool.value);
-    if (!adapter) continue;
-
     for (const [index, workflowId] of ALL_WORKFLOWS.entries()) {
-      const commandPath = adapter.getFilePath(managedPlan.managedCommandSlugs[index]);
-      const fullPath = path.isAbsolute(commandPath)
-        ? commandPath
-        : path.join(projectPath, commandPath);
-      if (fs.existsSync(fullPath)) {
+      const commandFiles = getManagedCommandFiles(
+        projectPath,
+        tool.value,
+        [managedPlan.managedCommandSlugs[index]],
+        { includeLegacyFiles: true }
+      );
+      if (commandFiles.some((filePath) => fs.existsSync(filePath))) {
         installed.add(workflowId);
-        hasCommands = true;
+        if (toolSupportsCommandGeneration(tool)) {
+          hasCommands = true;
+        }
       }
     }
   }

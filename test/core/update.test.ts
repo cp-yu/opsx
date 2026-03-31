@@ -42,11 +42,14 @@ function resetMockConfig() {
 describe('UpdateCommand', () => {
   let testDir: string;
   let updateCommand: UpdateCommand;
+  let originalEnv: NodeJS.ProcessEnv;
 
   beforeEach(async () => {
     // Create a temporary test directory
     testDir = path.join(os.tmpdir(), `openspec-test-${randomUUID()}`);
     await fs.mkdir(testDir, { recursive: true });
+    originalEnv = { ...process.env };
+    process.env.CODEX_HOME = path.join(testDir, 'codex-home');
 
     // Create openspec directory
     const openspecDir = path.join(testDir, 'openspec');
@@ -64,10 +67,23 @@ describe('UpdateCommand', () => {
   afterEach(async () => {
     // Restore all mocks after each test
     vi.restoreAllMocks();
+    process.env = originalEnv;
 
     // Clean up test directory
     await fs.rm(testDir, { recursive: true, force: true });
   });
+
+  async function writeLegacyCodexCommand(workflowSlug: string): Promise<string> {
+    const codexHome = process.env.CODEX_HOME;
+    if (!codexHome) {
+      throw new Error('CODEX_HOME must be set for Codex update tests');
+    }
+
+    const promptFile = path.join(path.resolve(codexHome), 'prompts', `opsx-${workflowSlug}.md`);
+    await fs.mkdir(path.dirname(promptFile), { recursive: true });
+    await fs.writeFile(promptFile, '# legacy codex command', 'utf-8');
+    return promptFile;
+  }
 
   describe('basic validation', () => {
     it('should throw error if openspec directory does not exist', async () => {
@@ -1532,7 +1548,9 @@ More user content after markers.
 
       const { AI_TOOLS } = await import('../../src/core/config.js');
       const { CommandAdapterRegistry } = await import('../../src/core/command-generation/index.js');
-      const adapterlessTool = AI_TOOLS.find((tool) => tool.skillsDir && !CommandAdapterRegistry.get(tool.value));
+      const adapterlessTool = AI_TOOLS.find(
+        (tool) => tool.skillsDir && tool.value !== 'codex' && !CommandAdapterRegistry.get(tool.value)
+      );
       expect(adapterlessTool).toBeDefined();
       if (!adapterlessTool?.skillsDir) {
         return;
@@ -1655,6 +1673,68 @@ content
       expect(hasDeselectedRemovalNote).toBe(true);
 
       consoleSpy.mockRestore();
+    });
+
+    it('should keep codex skills-only in both delivery and delete legacy command files', async () => {
+      setMockConfig({
+        featureFlags: {},
+        profile: 'core',
+        delivery: 'both',
+      });
+
+      const skillsDir = path.join(testDir, '.codex', 'skills');
+      await fs.mkdir(path.join(skillsDir, 'openspec-explore'), { recursive: true });
+      await fs.writeFile(path.join(skillsDir, 'openspec-explore', 'SKILL.md'), 'old');
+      const legacyCommand = await writeLegacyCodexCommand('explore');
+      const consoleSpy = vi.spyOn(console, 'log');
+
+      await updateCommand.execute(testDir);
+
+      expect(await FileSystemUtils.fileExists(
+        path.join(skillsDir, 'openspec-propose', 'SKILL.md')
+      )).toBe(true);
+      expect(await FileSystemUtils.fileExists(legacyCommand)).toBe(false);
+
+      const calls = consoleSpy.mock.calls.map((call) => call.map((arg) => String(arg)).join(' '));
+      expect(calls.some((call) => call.includes('no adapter'))).toBe(false);
+      consoleSpy.mockRestore();
+    });
+
+    it('should keep codex skills in commands delivery and remove legacy command files', async () => {
+      setMockConfig({
+        featureFlags: {},
+        profile: 'core',
+        delivery: 'commands',
+      });
+
+      const skillsDir = path.join(testDir, '.codex', 'skills');
+      await fs.mkdir(path.join(skillsDir, 'openspec-explore'), { recursive: true });
+      await fs.writeFile(path.join(skillsDir, 'openspec-explore', 'SKILL.md'), 'old');
+      const legacyCommand = await writeLegacyCodexCommand('explore');
+
+      await updateCommand.execute(testDir);
+
+      expect(await FileSystemUtils.fileExists(
+        path.join(skillsDir, 'openspec-apply-change', 'SKILL.md')
+      )).toBe(true);
+      expect(await FileSystemUtils.fileExists(legacyCommand)).toBe(false);
+    });
+
+    it('should recover codex from legacy command-only installs', async () => {
+      setMockConfig({
+        featureFlags: {},
+        profile: 'core',
+        delivery: 'commands',
+      });
+
+      const legacyCommand = await writeLegacyCodexCommand('explore');
+
+      await updateCommand.execute(testDir);
+
+      expect(await FileSystemUtils.fileExists(
+        path.join(testDir, '.codex', 'skills', 'openspec-explore', 'SKILL.md')
+      )).toBe(true);
+      expect(await FileSystemUtils.fileExists(legacyCommand)).toBe(false);
     });
   });
 

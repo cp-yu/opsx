@@ -69,6 +69,8 @@ Initialize OpenSpec in your project. Creates the folder structure and configures
 
 Default behavior uses global config defaults: profile `core`, delivery `both`, workflows `propose, explore, apply, archive`.
 
+Codex is always treated as skills-only. `openspec init` and `openspec update` keep Codex workflows under `.codex/skills/` even when global delivery is `commands`.
+
 ```
 openspec init [path] [options]
 ```
@@ -122,6 +124,7 @@ openspec/
 └── config.yaml         # Project configuration
 
 .claude/skills/         # Claude Code skills (if claude selected)
+.codex/skills/          # Codex skills (if codex selected; always skills-only)
 .cursor/skills/         # Cursor skills (if cursor selected)
 .cursor/commands/       # Cursor OPSX commands (if delivery includes commands)
 ... (other tool configs)

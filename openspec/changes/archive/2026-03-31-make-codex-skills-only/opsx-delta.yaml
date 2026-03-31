@@ -1,0 +1,24 @@
+schema_version: 1
+
+MODIFIED:
+  capabilities:
+    - id: cap.ai.command-generation
+      type: capability
+      intent: 为仍支持 adapter-backed command 文件的 AI 工具生成 slash command 定义；Codex 不再生成 commands，而是仅通过 skills 暴露 OpenSpec 工作流
+      status: active
+    - id: cap.ai.skill-generation
+      type: capability
+      intent: 为配置的 AI 工具生成特定工具的技能文件，并允许 Codex 在 commands 相关 delivery 下仍以 skills 作为唯一工作流承载面
+      status: active
+    - id: cap.ai.tool-adapters
+      type: capability
+      intent: 为支持的 AI 工具提供工具元数据与适配器注册；其中 Codex 通过显式工具元数据声明为 skills-only，不再注册 command adapter
+      status: active
+    - id: cap.cli.init
+      type: capability
+      intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品；对于 Codex，仅生成 `.codex/skills/` 下的 workflow skills，不再创建 commands
+      status: active
+    - id: cap.cli.update
+      type: capability
+      intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品；对于 Codex，仅刷新 skills，不再探测、创建或更新 commands
+      status: active

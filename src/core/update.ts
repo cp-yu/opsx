@@ -40,7 +40,11 @@ import {
   getConfiguredToolsForProfileSync,
   getToolsNeedingProfileSync,
 } from './profile-sync-drift.js';
-import { createWorkflowArtifactPlan } from './workflow-installation.js';
+import {
+  createToolWorkflowArtifactPlan,
+  createWorkflowArtifactPlan,
+  getManagedCommandFiles,
+} from './workflow-installation.js';
 import {
   scanInstalledWorkflows as scanInstalledWorkflowsShared,
   migrateIfNeeded as migrateIfNeededShared,
@@ -176,13 +180,14 @@ export class UpdateCommand {
       if (!tool?.skillsDir) continue;
 
       const spinner = ora(`Updating ${tool.name}...`).start();
+      const toolPlan = createToolWorkflowArtifactPlan(toolId, desiredWorkflows, delivery, resolvedProjectPath);
 
       try {
         const skillsDir = path.join(resolvedProjectPath, tool.skillsDir, 'skills');
 
         // Generate skill files if delivery includes skills
-        if (plan.shouldGenerateSkills) {
-          for (const { template, dirName } of plan.skillTemplates) {
+        if (toolPlan.shouldGenerateSkills) {
+          for (const { template, dirName } of toolPlan.skillTemplates) {
             const skillDir = path.join(skillsDir, dirName);
             const skillFile = path.join(skillDir, 'SKILL.md');
 
@@ -194,21 +199,21 @@ export class UpdateCommand {
 
           removedDeselectedSkillCount += await this.removeUnselectedSkillDirs(
             skillsDir,
-            plan.expectedSkillDirNames,
-            plan.managedSkillDirNames
+            toolPlan.expectedSkillDirNames,
+            toolPlan.managedSkillDirNames
           );
         }
 
         // Delete skill directories if delivery is commands-only
-        if (!plan.shouldGenerateSkills) {
-          removedSkillCount += await this.removeSkillDirs(skillsDir, plan.managedSkillDirNames);
+        if (!toolPlan.shouldGenerateSkills) {
+          removedSkillCount += await this.removeSkillDirs(skillsDir, toolPlan.managedSkillDirNames);
         }
 
         // Generate commands if delivery includes commands
-        if (plan.shouldGenerateCommands) {
+        if (toolPlan.shouldGenerateCommands) {
           const adapter = CommandAdapterRegistry.get(tool.value);
           if (adapter) {
-            const generatedCommands = generateCommands(plan.commandContents, adapter);
+            const generatedCommands = generateCommands(toolPlan.commandContents, adapter);
 
             for (const cmd of generatedCommands) {
               const commandFile = path.isAbsolute(cmd.path) ? cmd.path : path.join(resolvedProjectPath, cmd.path);
@@ -218,18 +223,18 @@ export class UpdateCommand {
             removedDeselectedCommandCount += await this.removeUnselectedCommandFiles(
               resolvedProjectPath,
               toolId,
-              plan.expectedCommandSlugs,
-              plan.managedCommandSlugs
+              toolPlan.expectedCommandSlugs,
+              toolPlan.managedCommandSlugs
             );
           }
         }
 
         // Delete command files if delivery is skills-only
-        if (!plan.shouldGenerateCommands) {
+        if (!toolPlan.shouldGenerateCommands) {
           removedCommandCount += await this.removeCommandFiles(
             resolvedProjectPath,
             toolId,
-            plan.managedCommandSlugs
+            toolPlan.managedCommandSlugs
           );
         }
 
@@ -434,14 +439,7 @@ export class UpdateCommand {
     managedCommandSlugs: readonly string[]
   ): Promise<number> {
     let removed = 0;
-
-    const adapter = CommandAdapterRegistry.get(toolId);
-    if (!adapter) return 0;
-
-    for (const commandSlug of managedCommandSlugs) {
-      const cmdPath = adapter.getFilePath(commandSlug);
-      const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
-
+    for (const fullPath of getManagedCommandFiles(projectPath, toolId, managedCommandSlugs, { includeLegacyFiles: true })) {
       try {
         if (fs.existsSync(fullPath)) {
           await fs.promises.unlink(fullPath);
@@ -467,23 +465,26 @@ export class UpdateCommand {
   ): Promise<number> {
     let removed = 0;
 
-    const adapter = CommandAdapterRegistry.get(toolId);
-    if (!adapter) return 0;
-
     const expected = new Set(expectedCommandSlugs);
 
     for (const commandSlug of managedCommandSlugs) {
       if (expected.has(commandSlug)) continue;
-      const cmdPath = adapter.getFilePath(commandSlug);
-      const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
+      const commandFiles = getManagedCommandFiles(
+        projectPath,
+        toolId,
+        [commandSlug],
+        { includeLegacyFiles: true }
+      );
 
-      try {
-        if (fs.existsSync(fullPath)) {
-          await fs.promises.unlink(fullPath);
-          removed++;
+      for (const fullPath of commandFiles) {
+        try {
+          if (fs.existsSync(fullPath)) {
+            await fs.promises.unlink(fullPath);
+            removed++;
+          }
+        } catch {
+          // Ignore errors
         }
-      } catch {
-        // Ignore errors
       }
     }
 
@@ -654,13 +655,14 @@ export class UpdateCommand {
       if (!tool?.skillsDir) continue;
 
       const spinner = ora(`Setting up ${tool.name}...`).start();
+      const toolPlan = createToolWorkflowArtifactPlan(toolId, plan.workflows, delivery, projectPath);
 
       try {
         const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
 
         // Create skill files when delivery includes skills
-        if (plan.shouldGenerateSkills) {
-          for (const { template, dirName } of plan.skillTemplates) {
+        if (toolPlan.shouldGenerateSkills) {
+          for (const { template, dirName } of toolPlan.skillTemplates) {
             const skillDir = path.join(skillsDir, dirName);
             const skillFile = path.join(skillDir, 'SKILL.md');
 
@@ -672,10 +674,10 @@ export class UpdateCommand {
         }
 
         // Create commands when delivery includes commands
-        if (plan.shouldGenerateCommands) {
+        if (toolPlan.shouldGenerateCommands) {
           const adapter = CommandAdapterRegistry.get(tool.value);
           if (adapter) {
-            const generatedCommands = generateCommands(plan.commandContents, adapter);
+            const generatedCommands = generateCommands(toolPlan.commandContents, adapter);
 
             for (const cmd of generatedCommands) {
               const commandFile = path.isAbsolute(cmd.path) ? cmd.path : path.join(projectPath, cmd.path);

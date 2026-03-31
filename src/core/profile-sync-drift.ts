@@ -2,8 +2,10 @@ import path from 'path';
 import * as fs from 'fs';
 import { AI_TOOLS } from './config.js';
 import type { Delivery } from './global-config.js';
-import { CommandAdapterRegistry } from './command-generation/index.js';
-import { createWorkflowArtifactPlan } from './workflow-installation.js';
+import {
+  createToolWorkflowArtifactPlan,
+  getManagedCommandFiles,
+} from './workflow-installation.js';
 import { getConfiguredTools } from './shared/index.js';
 import {
   ALL_WORKFLOWS,
@@ -24,13 +26,14 @@ function toKnownWorkflows(workflows: readonly string[]): WorkflowId[] {
  * Checks whether a tool has at least one generated OpenSpec command file.
  */
 export function toolHasAnyConfiguredCommand(projectPath: string, toolId: string): boolean {
-  const adapter = CommandAdapterRegistry.get(toolId);
-  if (!adapter) return false;
-
   for (const commandId of COMMAND_IDS) {
-    const cmdPath = adapter.getFilePath(getCommandSlug(commandId));
-    const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
-    if (fs.existsSync(fullPath)) {
+    const commandFiles = getManagedCommandFiles(
+      projectPath,
+      toolId,
+      [getCommandSlug(commandId)],
+      { includeLegacyFiles: true }
+    );
+    if (commandFiles.some((filePath) => fs.existsSync(filePath))) {
       return true;
     }
   }
@@ -43,15 +46,7 @@ export function toolHasAnyConfiguredCommand(projectPath: string, toolId: string)
  */
 export function getCommandConfiguredTools(projectPath: string): string[] {
   return AI_TOOLS
-    .filter((tool) => {
-      if (!tool.skillsDir) return false;
-      const toolDir = path.join(projectPath, tool.skillsDir);
-      try {
-        return fs.statSync(toolDir).isDirectory();
-      } catch {
-        return false;
-      }
-    })
+    .filter((tool) => Boolean(tool.skillsDir))
     .map((tool) => tool.value)
     .filter((toolId) => toolHasAnyConfiguredCommand(projectPath, toolId));
 }
@@ -77,9 +72,8 @@ export function hasToolProfileOrDeliveryDrift(
   const tool = AI_TOOLS.find((t) => t.value === toolId);
   if (!tool?.skillsDir) return false;
 
-  const plan = createWorkflowArtifactPlan(toKnownWorkflows(desiredWorkflows), delivery, projectPath);
+  const plan = createToolWorkflowArtifactPlan(toolId, toKnownWorkflows(desiredWorkflows), delivery, projectPath);
   const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
-  const adapter = CommandAdapterRegistry.get(toolId);
 
   if (plan.shouldGenerateSkills) {
     for (const dirName of plan.expectedSkillDirNames) {
@@ -106,11 +100,9 @@ export function hasToolProfileOrDeliveryDrift(
     }
   }
 
-  if (plan.shouldGenerateCommands && adapter) {
-    for (const commandSlug of plan.expectedCommandSlugs) {
-      const cmdPath = adapter.getFilePath(commandSlug);
-      const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
-      if (!fs.existsSync(fullPath)) {
+  if (plan.shouldGenerateCommands) {
+    for (const commandFile of getManagedCommandFiles(projectPath, toolId, plan.expectedCommandSlugs)) {
+      if (!fs.existsSync(commandFile)) {
         return true;
       }
     }
@@ -118,17 +110,24 @@ export function hasToolProfileOrDeliveryDrift(
     const expectedCommandSlugs = new Set(plan.expectedCommandSlugs);
     for (const commandSlug of plan.managedCommandSlugs) {
       if (expectedCommandSlugs.has(commandSlug)) continue;
-      const cmdPath = adapter.getFilePath(commandSlug);
-      const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
-      if (fs.existsSync(fullPath)) {
+      const commandFiles = getManagedCommandFiles(
+        projectPath,
+        toolId,
+        [commandSlug],
+        { includeLegacyFiles: true }
+      );
+      if (commandFiles.some((filePath) => fs.existsSync(filePath))) {
         return true;
       }
     }
-  } else if (!plan.shouldGenerateCommands && adapter) {
-    for (const commandSlug of plan.managedCommandSlugs) {
-      const cmdPath = adapter.getFilePath(commandSlug);
-      const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
-      if (fs.existsSync(fullPath)) {
+  } else {
+    for (const commandFile of getManagedCommandFiles(
+      projectPath,
+      toolId,
+      plan.managedCommandSlugs,
+      { includeLegacyFiles: true }
+    )) {
+      if (fs.existsSync(commandFile)) {
         return true;
       }
     }
@@ -174,14 +173,15 @@ function getInstalledWorkflowsForTool(
   }
 
   if (options.includeCommands) {
-    const adapter = CommandAdapterRegistry.get(toolId);
-    if (adapter) {
-      for (const workflow of ALL_WORKFLOWS) {
-        const cmdPath = adapter.getFilePath(getCommandSlug(workflow));
-        const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
-        if (fs.existsSync(fullPath)) {
-          installed.add(workflow);
-        }
+    for (const workflow of ALL_WORKFLOWS) {
+      const commandFiles = getManagedCommandFiles(
+        projectPath,
+        toolId,
+        [getCommandSlug(workflow)],
+        { includeLegacyFiles: true }
+      );
+      if (commandFiles.some((filePath) => fs.existsSync(filePath))) {
+        installed.add(workflow);
       }
     }
   }

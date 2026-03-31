@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { CommandAdapterRegistry } from '../../../src/core/command-generation/registry.js';
+import { AI_TOOLS, toolSupportsCommandGeneration } from '../../../src/core/config.js';
 
 describe('command-generation/registry', () => {
   describe('get', () => {
@@ -30,6 +31,11 @@ describe('command-generation/registry', () => {
       const adapter = CommandAdapterRegistry.get('');
       expect(adapter).toBeUndefined();
     });
+
+    it('should return undefined for codex', () => {
+      const adapter = CommandAdapterRegistry.get('codex');
+      expect(adapter).toBeUndefined();
+    });
   });
 
   describe('getAll', () => {
@@ -57,6 +63,7 @@ describe('command-generation/registry', () => {
     });
 
     it('should return false for unregistered tools', () => {
+      expect(CommandAdapterRegistry.has('codex')).toBe(false);
       expect(CommandAdapterRegistry.has('unknown')).toBe(false);
       expect(CommandAdapterRegistry.has('')).toBe(false);
     });
@@ -96,6 +103,18 @@ describe('command-generation/registry', () => {
           expect(output).toContain('---');
         }
       }
+    });
+
+    it('should stay aligned with tool capability metadata', () => {
+      const expectedCommandTools = AI_TOOLS
+        .filter((tool) => toolSupportsCommandGeneration(tool))
+        .map((tool) => tool.value)
+        .sort();
+      const registeredTools = CommandAdapterRegistry.getAll()
+        .map((adapter) => adapter.toolId)
+        .sort();
+
+      expect(registeredTools).toEqual(expectedCommandTools);
     });
   });
 });

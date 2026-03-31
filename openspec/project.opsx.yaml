@@ -45,18 +45,18 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.command-generation
-    intent: 为 AI 工具生成 slash command 定义时，使用显式的外部 command slug，而不是假设 workflow ID 总是等于磁盘上的命令文件名
+    intent: 为仍支持 adapter-backed command 文件的 AI 工具生成 slash command 定义；Codex 不再生成 commands，而是仅通过 skills 暴露 OpenSpec 工作流
     status: active
     type: capability
   - id: cap.ai.command-slugs
     intent: 建立内部 workflow ID 到外部用户命令 slug 的映射，使生成、检测、迁移和清理命令制品时都遵循同一套命名契约
     type: capability
   - id: cap.ai.skill-generation
-    intent: 为配置的 AI 工具生成特定工具的技能文件
+    intent: 为配置的 AI 工具生成特定工具的技能文件，并允许 Codex 在 commands 相关 delivery 下仍以 skills 作为唯一工作流承载面
     status: active
     type: capability
   - id: cap.ai.tool-adapters
-    intent: 为 25+ AI 工具（Claude、Cursor、Windsurf 等）提供工具适配器注册表
+    intent: 为支持的 AI 工具提供工具元数据与适配器注册；其中 Codex 通过显式工具元数据声明为 skills-only，不再注册 command adapter
     status: active
     type: capability
   - id: cap.ai.workflow-templates
@@ -120,7 +120,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.init
-    intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品，其中 slash command 输出路径遵循显式 workflow→command slug 映射，并在 bootstrap 工作区存在时暴露 bootstrap 命令面
+    intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品；对于 Codex，仅生成 `.codex/skills/` 下的 workflow skills，不再创建 commands
     status: active
     type: capability
   - id: cap.cli.instructions
@@ -160,7 +160,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.update
-    intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品，同时通过显式 command slug 映射保持 workflow 选择语义稳定，并根据 bootstrap 工作区动态暴露 bootstrap 命令面
+    intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品；对于 Codex，仅刷新 skills，不再探测、创建或更新 commands
     status: active
     type: capability
   - id: cap.cli.validate

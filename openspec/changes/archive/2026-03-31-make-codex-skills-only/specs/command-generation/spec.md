@@ -1,23 +1,4 @@
-# command-generation Specification
-
-## Purpose
-Define tool-agnostic command content and adapter contracts for generating tool-specific OpenSpec command files.
-## Requirements
-### Requirement: CommandContent interface
-
-系统 SHALL 定义一个工具无关的 `CommandContent` 接口来表示命令数据。
-
-#### Scenario: CommandContent structure
-
-- **WHEN** defining a command to generate
-- **THEN** `CommandContent` SHALL include:
-  - `id`: internal workflow-linked identifier (e.g., 'explore', 'bootstrap-opsx')
-  - `commandSlug`: external user-facing command slug used for command file generation (e.g., 'explore', 'bootstrap')
-  - `name`: human-readable name (e.g., 'OpenSpec Explore')
-  - `description`: brief description of command purpose
-  - `category`: grouping category (e.g., 'OpenSpec')
-  - `tags`: array of tag strings
-  - `body`: the command instruction content
+## MODIFIED Requirements
 
 ### Requirement: ToolCommandAdapter interface
 
@@ -55,25 +36,6 @@ Define tool-agnostic command content and adapter contracts for generating tool-s
 - **THEN** 系统 SHALL 将 Codex 视为 skills-only 的工具表面
 - **AND** 系统 SHALL NOT 为 `codex` 要求 `ToolCommandAdapter` 实现
 
-### Requirement: Command generator function
-
-The system SHALL generate workflow command artifacts from a single manifest-derived projection rather than from scattered workflow-specific mappings.
-
-#### Scenario: Shared workflow projection drives generation
-- **WHEN** generating command artifacts for any supported tool
-- **THEN** the command set SHALL be derived from a shared manifest projection of the selected workflows
-- **AND** the same projection SHALL determine workflow IDs, command slugs, and generated artifact membership
-
-#### Scenario: Core and expanded mode projections remain deterministic
-- **WHEN** command artifacts are generated for `core` or `expanded` mode
-- **THEN** the resulting command set SHALL match the selected mode exactly
-- **AND** repeated generation with the same inputs SHALL converge to the same file set
-
-#### Scenario: Standalone sync command exists only in expanded projection
-- **WHEN** the selected mode is `core`
-- **THEN** command generation SHALL NOT emit a standalone sync command artifact
-- **AND** when the selected mode is `expanded`, command generation SHALL emit the standalone sync command artifact
-
 ### Requirement: CommandAdapterRegistry
 
 系统 SHALL 提供一个 registry，仅为仍支持 adapter-backed command 文件的工具查找 adapter。
@@ -99,14 +61,3 @@ The system SHALL generate workflow command artifacts from a single manifest-deri
 - **WHEN** 调用 `CommandAdapterRegistry.get('codex')`
 - **THEN** 它 SHALL 返回 `undefined`
 - **AND** 调用方 SHALL 仅通过 skills 继续执行 Codex workflow 安装
-
-### Requirement: Shared command body content
-
-The body content of commands SHALL be shared across all tools.
-
-#### Scenario: Same instructions across tools
-
-- **WHEN** generating the 'explore' command for Claude and Cursor
-- **THEN** both SHALL use the same `body` content
-- **AND** only the frontmatter and file path SHALL differ
-

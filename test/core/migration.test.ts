@@ -11,12 +11,20 @@ import { getCommandSlug } from '../../src/core/shared/index.js';
 import { migrateIfNeeded, scanInstalledWorkflows } from '../../src/core/migration.js';
 
 const CLAUDE_TOOL = AI_TOOLS.find((tool) => tool.value === 'claude') as AIToolOption | undefined;
+const CODEX_TOOL = AI_TOOLS.find((tool) => tool.value === 'codex') as AIToolOption | undefined;
 
 function ensureClaudeTool(): AIToolOption {
   if (!CLAUDE_TOOL) {
     throw new Error('Claude tool definition not found');
   }
   return CLAUDE_TOOL;
+}
+
+function ensureCodexTool(): AIToolOption {
+  if (!CODEX_TOOL) {
+    throw new Error('Codex tool definition not found');
+  }
+  return CODEX_TOOL;
 }
 
 async function writeSkill(projectPath: string, dirName: string): Promise<void> {
@@ -38,6 +46,17 @@ async function writeManagedCommand(projectPath: string, workflowId: string): Pro
   await fsp.writeFile(fullPath, '# command\n', 'utf-8');
 }
 
+async function writeLegacyCodexCommand(workflowId: string): Promise<void> {
+  const codexHome = process.env.CODEX_HOME;
+  if (!codexHome) {
+    throw new Error('CODEX_HOME must be set for Codex migration tests');
+  }
+
+  const promptPath = path.join(path.resolve(codexHome), 'prompts', `opsx-${getCommandSlug(workflowId as Parameters<typeof getCommandSlug>[0])}.md`);
+  await fsp.mkdir(path.dirname(promptPath), { recursive: true });
+  await fsp.writeFile(promptPath, '# codex command\n', 'utf-8');
+}
+
 function readRawConfig(): Record<string, unknown> {
   return JSON.parse(fs.readFileSync(getGlobalConfigPath(), 'utf-8')) as Record<string, unknown>;
 }
@@ -50,10 +69,13 @@ describe('migration', () => {
   beforeEach(async () => {
     projectDir = path.join(os.tmpdir(), `openspec-migration-project-${randomUUID()}`);
     configHome = path.join(os.tmpdir(), `openspec-migration-config-${randomUUID()}`);
+    const codexHome = path.join(os.tmpdir(), `openspec-migration-codex-${randomUUID()}`);
     await fsp.mkdir(projectDir, { recursive: true });
     await fsp.mkdir(configHome, { recursive: true });
+    await fsp.mkdir(codexHome, { recursive: true });
     originalEnv = { ...process.env };
     process.env.XDG_CONFIG_HOME = configHome;
+    process.env.CODEX_HOME = codexHome;
   });
 
   afterEach(async () => {
@@ -147,5 +169,17 @@ describe('migration', () => {
 
     migrateIfNeeded(projectDir, [ensureClaudeTool()]);
     expect(fs.existsSync(getGlobalConfigPath())).toBe(false);
+  });
+
+  it('preserves workflows from legacy codex commands but migrates codex to skills delivery', async () => {
+    await writeLegacyCodexCommand('explore');
+    await writeLegacyCodexCommand('archive');
+
+    migrateIfNeeded(projectDir, [ensureCodexTool()]);
+
+    const config = readRawConfig();
+    expect(config.profile).toBe('custom');
+    expect(config.delivery).toBe('skills');
+    expect(config.workflows).toEqual(['explore', 'archive']);
   });
 });

@@ -9,7 +9,6 @@ export { antigravityAdapter } from './antigravity.js';
 export { auggieAdapter } from './auggie.js';
 export { claudeAdapter } from './claude.js';
 export { clineAdapter } from './cline.js';
-export { codexAdapter } from './codex.js';
 export { codebuddyAdapter } from './codebuddy.js';
 export { continueAdapter } from './continue.js';
 export { costrictAdapter } from './costrict.js';
