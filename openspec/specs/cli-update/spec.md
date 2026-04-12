@@ -357,7 +357,7 @@ The update command SHALL remove workflow files that are no longer selected in th
 
 ## Edge Cases
 
-### Requirement: Error Handling
+### Error Handling
 
 The command SHALL handle edge cases gracefully.
 

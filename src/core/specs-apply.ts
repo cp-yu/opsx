@@ -16,6 +16,7 @@ import {
 } from './parsers/requirement-blocks.js';
 import { projectConfigForRuntime, isChineseDocLanguage, type RuntimeProjection } from './config-projection.js';
 import { readProjectConfig } from './project-config.js';
+import { findMainSpecStructureIssues } from './parsers/spec-structure.js';
 import { Validator } from './validation/validator.js';
 
 // -----------------------------------------------------------------------------
@@ -287,6 +288,16 @@ export async function buildUpdatedSpec(
     }
     isNewSpec = true;
     targetContent = buildSpecSkeleton(specName, changeName, runtimeProjection);
+  }
+
+  const structureIssues = findMainSpecStructureIssues(targetContent);
+  if (structureIssues.length > 0) {
+    const details = structureIssues
+      .map(issue => `line ${issue.line}: ${issue.message}`)
+      .join('\n');
+    throw new Error(
+      `${specName}: target spec is structurally invalid and cannot be updated until fixed:\n${details}`
+    );
   }
 
   // Extract requirements section and build name->block map
