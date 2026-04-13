@@ -1,0 +1,36 @@
+schema_version: 1
+
+ADDED:
+  capabilities:
+    - id: cap.ai.tool-invocation-references
+      type: capability
+      intent: 基于共享 workflow surface 元数据渲染不同 AI 工具的用户可调用 workflow 引用，其中 Codex 使用精确的 `$openspec-*` skill 名称
+
+  relations:
+    - from: cap.ai.tool-invocation-references
+      to: dom.ai-integration
+      type: contains
+    - from: cap.ai.skill-generation
+      to: cap.ai.tool-invocation-references
+      type: depends_on
+    - from: cap.cli.init
+      to: cap.ai.tool-invocation-references
+      type: depends_on
+    - from: cap.cli.update
+      to: cap.ai.tool-invocation-references
+      type: depends_on
+
+MODIFIED:
+  capabilities:
+    - id: cap.ai.skill-generation
+      type: capability
+      intent: 为配置的 AI 工具生成特定工具的技能文件，并在写入 skill 指令时按工具渲染用户可见 workflow 引用；其中 Codex 使用精确的 `$openspec-*` skill 名称
+      status: active
+    - id: cap.cli.init
+      type: capability
+      intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品；成功输出与入门提示按工具表面渲染用户可见调用语法，Codex 使用 skills 引导而非 slash commands
+      status: active
+    - id: cap.cli.update
+      type: capability
+      intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品；刷新后的 onboarding 与 restart 提示按工具表面渲染用户可见调用语法，Codex 不再使用 slash-command 叙事
+      status: active
