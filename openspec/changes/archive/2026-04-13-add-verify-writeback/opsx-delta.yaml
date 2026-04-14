@@ -1,0 +1,20 @@
+ADDED:
+  capabilities:
+    - id: cap.ai.verify-writeback
+      type: capability
+      intent: 验证结果回写 tasks.md（unmark 未真正完成的任务）并生成分类 remediation 清单（code_fix / artifact_fix）
+      status: active
+
+  relations:
+    - from: cap.ai.verify-writeback
+      to: dom.ai-integration
+      type: contains
+    - from: cap.ai.verify-writeback
+      to: cap.ai.workflow-templates
+      type: depends_on
+
+MODIFIED:
+  capabilities:
+    - id: cap.ai.workflow-templates
+      type: capability
+      intent: 提供面向 Agent 的工作流模板（propose、apply、explore、archive、verify 等），在核心 workflow 中共享 OPSX 上下文加载协议和 conformance check 规则

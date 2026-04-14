@@ -8,7 +8,7 @@ Bootstrap 状态模型应显式区分 domain-map 文件的三种状态（valid /
 
 ### Requirement: 三态 domain-map 建模
 
-`readBootstrapState()` 必须将 domain-map 文件分类为 valid、missing 或 invalid，不得将 invalid 静默丢弃。
+`readBootstrapState()` SHALL 将 domain-map 文件分类为 valid、missing 或 invalid，并且 SHALL NOT 将 invalid 静默丢弃。
 
 #### Scenario: 文件存在且 schema 合法
 - **GIVEN** `openspec/bootstrap/domain-map/dom.auth.yaml` 存在
@@ -41,7 +41,7 @@ Bootstrap 状态模型应显式区分 domain-map 文件的三种状态（valid /
 
 ### Requirement: Status 输出区分三态
 
-`getBootstrapStatus()` 返回的 `DomainStatus` 必须通过 `mapState` 字段区分三种状态。
+`getBootstrapStatus()` 返回的 `DomainStatus` SHALL 通过 `mapState` 字段区分三种状态。
 
 #### Scenario: Status 报告 invalid domain
 - **GIVEN** `dom.auth` 的 domain-map 文件存在但 schema 非法
@@ -58,7 +58,7 @@ Bootstrap 状态模型应显式区分 domain-map 文件的三种状态（valid /
 
 ### Requirement: Gate 对 invalid 的处理
 
-`validateGate('map_to_review')` 必须对 invalid domain-map 报告具体错误。
+`validateGate('map_to_review')` SHALL 对 invalid domain-map 报告具体错误。
 
 #### Scenario: Gate 因 invalid domain-map 失败
 - **GIVEN** `dom.auth` 的 domain-map 文件存在但 schema 非法
@@ -75,7 +75,7 @@ Bootstrap 状态模型应显式区分 domain-map 文件的三种状态（valid /
 
 ### Requirement: Derived artifact stale 标记
 
-当 invalid domain-map 存在时，已有 candidate/review 不得保持 `current` 状态。
+当 invalid domain-map 存在时，已有 candidate/review SHALL NOT 保持 `current` 状态。
 
 #### Scenario: Invalid map 导致 candidate 降级为 stale
 - **GIVEN** candidate 和 review 当前状态为 `current`

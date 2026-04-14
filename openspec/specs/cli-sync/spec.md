@@ -18,7 +18,7 @@ openspec sync [change-name] [--no-validate]
 
 ### Requirement: Change 选择
 
-命令应同时支持交互式和直接指定两种选择方式。
+`openspec sync` SHALL 同时支持交互式和直接指定两种 change 选择方式。
 
 #### Scenario: 直接指定 change 名称
 - **GIVEN** 用户执行 `openspec sync my-change`
@@ -43,7 +43,7 @@ openspec sync [change-name] [--no-validate]
 
 ### Requirement: 同步执行
 
-命令应复用 `change-sync` 契约执行同步。
+`openspec sync` SHALL 复用 `change-sync` 契约执行同步。
 
 #### Scenario: 存在 delta specs 和 OPSX delta
 - **GIVEN** change 目录中存在 `specs/` 下的 delta spec 文件
@@ -74,12 +74,16 @@ openspec sync [change-name] [--no-validate]
 
 ### Requirement: 不触发归档
 
+`openspec sync` SHALL NOT 触发归档或移动 change 目录。
+
 #### Scenario: 同步后 change 目录保持不变
 - **WHEN** sync 成功完成
 - **THEN** change 目录不被移动或删除
 - **AND** change 目录内容不被修改（delta 文件保留）
 
 ### Requirement: 幂等性
+
+`openspec sync` SHALL 保持幂等性，重复执行不得引入额外差异。
 
 #### Scenario: 重复执行产生相同结果
 - **GIVEN** 已对某 change 执行过一次 sync

@@ -5,6 +5,11 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
+import {
+  CONFORMANCE_CHECK_RULES,
+  OPSX_VERIFY_ALIGNMENT,
+  VERIFY_WRITEBACK_RULES,
+} from '../fragments/opsx-fragments.js';
 
 export function getVerifyChangeSkillTemplate(): SkillTemplate {
   return {
@@ -90,15 +95,9 @@ export function getVerifyChangeSkillTemplate(): SkillTemplate {
        - Add WARNING: "Scenario not covered: <scenario name>"
        - Recommendation: "Add test or implementation for scenario: <description>"
 
-   **OPSX Alignment** (if \`opsx-delta.yaml\` exists):
-   - Check if \`opsx-delta.yaml\` exists in \`openspec/changes/<name>/\`
-   - If exists, verify OPSX alignment:
-     - **Referential integrity**: All relation from/to references must exist in the delta or project.opsx.yaml
-     - **Code-map integrity**: All code-map node IDs must reference existing domains or capabilities
-     - **REMOVED capabilities**: Should be gone from codebase or marked deprecated
-   - If misalignment detected:
-     - Add WARNING: "OPSX delta not reflected in code: <capability>"
-     - Recommendation: "Update code or revise opsx-delta.yaml"
+${CONFORMANCE_CHECK_RULES}
+
+${OPSX_VERIFY_ALIGNMENT}
 
 7. **Verify Coherence**
 
@@ -150,9 +149,34 @@ export function getVerifyChangeSkillTemplate(): SkillTemplate {
       - Each with specific recommendation
 
    **Final Assessment**:
-   - If CRITICAL issues: "X critical issue(s) found. Fix before archiving."
-   - If only warnings: "No critical issues. Y warning(s) to consider. Ready for archive (with noted improvements)."
-   - If all clear: "All checks passed. Ready for archive."
+   - If CRITICAL issues: "X critical issue(s) found. Fix before archiving." and set result to \`FAIL_NEEDS_REMEDIATION\`
+   - If only warnings: "No critical issues. Y warning(s) to consider. Ready for archive (with noted improvements)." and set result to \`PASS_WITH_WARNINGS\`
+   - If all clear: "All checks passed. Ready for archive." and set result to \`PASS\`
+
+   **Exit / Result Semantics**:
+   - \`PASS\`: no CRITICAL, WARNING, or SUGGESTION issue requires follow-up
+   - \`PASS_WITH_WARNINGS\`: no CRITICAL issues, but warnings or suggestions remain
+   - \`FAIL_NEEDS_REMEDIATION\`: one or more CRITICAL issues were found and write-back is required
+
+9. **Write Back CRITICAL Issues**
+
+${VERIFY_WRITEBACK_RULES}
+
+   - If no CRITICAL issues were found, leave \`tasks.md\` unchanged
+   - If CRITICAL issues were found:
+     - Unmark each affected completed task
+     - Append or refresh the \`## Remediation\` section with typed fix items
+     - Include the requirement name, issue summary, and owning task in each remediation entry when possible
+
+10. **Persist Verification Result**
+
+   - Build the verify result file path with \`path.join(changeDir, '.verify-result.json')\`
+   - Write a JSON object with:
+     - \`timestamp\`: ISO 8601 completion time
+     - \`result\`: \`PASS\` / \`PASS_WITH_WARNINGS\` / \`FAIL_NEEDS_REMEDIATION\`
+     - \`issues\`: the full issue list with severity, requirement, task linkage, and recommendations
+     - \`tasksFileHash\`: hash of the current \`tasks.md\` contents after any write-back
+   - Persist the file even when verification fails so archive/apply can consume the latest diagnostics
 
 **Verification Heuristics**
 
@@ -269,15 +293,9 @@ export function getOpsxVerifyCommandTemplate(): CommandTemplate {
        - Add WARNING: "Scenario not covered: <scenario name>"
        - Recommendation: "Add test or implementation for scenario: <description>"
 
-   **OPSX Alignment** (if \`opsx-delta.yaml\` exists):
-   - Check if \`opsx-delta.yaml\` exists in \`openspec/changes/<name>/\`
-   - If exists, verify OPSX alignment:
-     - **Referential integrity**: All relation from/to references must exist in the delta or project.opsx.yaml
-     - **Code-map integrity**: All code-map node IDs must reference existing domains or capabilities
-     - **REMOVED capabilities**: Should be gone from codebase or marked deprecated
-   - If misalignment detected:
-     - Add WARNING: "OPSX delta not reflected in code: <capability>"
-     - Recommendation: "Update code or revise opsx-delta.yaml"
+${CONFORMANCE_CHECK_RULES}
+
+${OPSX_VERIFY_ALIGNMENT}
 
 7. **Verify Coherence**
 
@@ -329,9 +347,34 @@ export function getOpsxVerifyCommandTemplate(): CommandTemplate {
       - Each with specific recommendation
 
    **Final Assessment**:
-   - If CRITICAL issues: "X critical issue(s) found. Fix before archiving."
-   - If only warnings: "No critical issues. Y warning(s) to consider. Ready for archive (with noted improvements)."
-   - If all clear: "All checks passed. Ready for archive."
+   - If CRITICAL issues: "X critical issue(s) found. Fix before archiving." and set result to \`FAIL_NEEDS_REMEDIATION\`
+   - If only warnings: "No critical issues. Y warning(s) to consider. Ready for archive (with noted improvements)." and set result to \`PASS_WITH_WARNINGS\`
+   - If all clear: "All checks passed. Ready for archive." and set result to \`PASS\`
+
+   **Exit / Result Semantics**:
+   - \`PASS\`: no CRITICAL, WARNING, or SUGGESTION issue requires follow-up
+   - \`PASS_WITH_WARNINGS\`: no CRITICAL issues, but warnings or suggestions remain
+   - \`FAIL_NEEDS_REMEDIATION\`: one or more CRITICAL issues were found and write-back is required
+
+9. **Write Back CRITICAL Issues**
+
+${VERIFY_WRITEBACK_RULES}
+
+   - If no CRITICAL issues were found, leave \`tasks.md\` unchanged
+   - If CRITICAL issues were found:
+     - Unmark each affected completed task
+     - Append or refresh the \`## Remediation\` section with typed fix items
+     - Include the requirement name, issue summary, and owning task in each remediation entry when possible
+
+10. **Persist Verification Result**
+
+   - Build the verify result file path with \`path.join(changeDir, '.verify-result.json')\`
+   - Write a JSON object with:
+     - \`timestamp\`: ISO 8601 completion time
+     - \`result\`: \`PASS\` / \`PASS_WITH_WARNINGS\` / \`FAIL_NEEDS_REMEDIATION\`
+     - \`issues\`: the full issue list with severity, requirement, task linkage, and recommendations
+     - \`tasksFileHash\`: hash of the current \`tasks.md\` contents after any write-back
+   - Persist the file even when verification fails so archive/apply can consume the latest diagnostics
 
 **Verification Heuristics**
 

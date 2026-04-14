@@ -80,6 +80,38 @@ export const OPSX_VERIFY_ALIGNMENT = `
 `.trim();
 
 /**
+ * Fragment: Shared conformance check rules
+ * Used in: verify-change, archive-change
+ */
+export const CONFORMANCE_CHECK_RULES = `
+**Conformance Check Rules**:
+- For each delta-spec requirement, search for concrete implementation evidence in code and tests before concluding status
+- Classify issues using strict thresholds:
+  - **CRITICAL**: required behavior is missing, directly contradicted, or no credible implementation evidence exists
+  - **WARNING**: implementation exists but may diverge from the requirement, scenario coverage is incomplete, or artifact/code drift is likely
+  - **SUGGESTION**: minor pattern or clarity issues that do not block archive
+- Map every issue to the most specific requirement and, when possible, the task that claimed completion
+- Cite file paths and line ranges for both supporting evidence and missing evidence
+- Only escalate to **CRITICAL** when the confidence is high enough to justify automatic task write-back
+`.trim();
+
+/**
+ * Fragment: Verify write-back rules
+ * Used in: verify-change, archive-change
+ */
+export const VERIFY_WRITEBACK_RULES = `
+**Verify Write-back Rules**:
+- Only **CRITICAL** issues may mutate \`tasks.md\`
+- For each CRITICAL issue tied to a completed task, change the matching task checkbox from \`[x]\` to \`[ ]\`
+- Never unmark tasks for WARNING or SUGGESTION issues
+- Append or update a \`## Remediation\` section in \`tasks.md\` when fixes are needed
+- Format each remediation item as \`- [ ] [code_fix]\` or \`- [ ] [artifact_fix]\` followed by the requirement, issue summary, and concrete next action
+- Use \`[code_fix]\` when code or tests must change to satisfy the requirement
+- Use \`[artifact_fix]\` when the correct fix is to update spec/design/tasks to match reality
+- Avoid duplicate remediation entries across repeated verify/archive runs; update existing entries when the same issue is found again
+`.trim();
+
+/**
  * Fragment: Sync opsx-delta to project.opsx.yaml
  * Used in: sync-specs, archive-change, bulk-archive-change
  */

@@ -2,7 +2,6 @@
 
 ## Purpose
 Define `/opsx:verify` behavior for assessing implementation completeness, correctness, and coherence against change artifacts.
-
 ## Requirements
 ### Requirement: Verify Skill Invocation
 The system SHALL provide an `/opsx:verify` skill that validates implementation against change artifacts.
@@ -116,9 +115,11 @@ The agent SHALL verify that implementation is sensible and follows design decisi
 - **AND** flag any significant deviations as suggestions
 
 ### Requirement: Verification Report Format
-The agent SHALL produce a structured, prioritized report.
+
+The agent SHALL produce a structured, prioritized report with exit code semantics.
 
 #### Scenario: Report summary
+
 - **WHEN** verification completes
 - **THEN** display summary scorecard:
   ```text
@@ -133,6 +134,7 @@ The agent SHALL produce a structured, prioritized report.
   ```
 
 #### Scenario: Issue prioritization
+
 - **WHEN** issues are found
 - **THEN** group and display in priority order:
   1. CRITICAL - Must fix before archive (missing implementation, incomplete tasks)
@@ -140,33 +142,68 @@ The agent SHALL produce a structured, prioritized report.
   3. SUGGESTION - Nice to fix (pattern inconsistencies, minor improvements)
 
 #### Scenario: Actionable recommendations
+
 - **WHEN** reporting an issue
 - **THEN** include specific, actionable fix recommendation
 - **AND** reference relevant files and line numbers where applicable
 - **AND** avoid vague suggestions like "consider reviewing"
 
 #### Scenario: All checks pass
-- **WHEN** no issues found across all dimensions
-- **THEN** display:
-  ```text
-  All checks passed. Ready for archive.
-  ```
 
-#### Scenario: Critical issues found
+- **WHEN** no issues found across all dimensions
+- **THEN** display: `All checks passed. Ready for archive.`
+- **AND** persist result as `PASS`
+
+#### Scenario: Critical issues found with write-back
+
 - **WHEN** CRITICAL issues exist
-- **THEN** display:
-  ```text
-  X critical issue(s) found. Fix before archiving.
-  ```
+- **THEN** display: `X critical issue(s) found. Fix before archiving.`
+- **AND** execute write-back: unmark affected tasks in `tasks.md`
+- **AND** append remediation section to `tasks.md`
+- **AND** persist result as `FAIL_NEEDS_REMEDIATION`
 - **AND** do NOT suggest running archive
 
 #### Scenario: Only warnings/suggestions
+
 - **WHEN** no CRITICAL issues but warnings exist
-- **THEN** display:
-  ```text
-  No critical issues. Y warning(s) to consider.
-  Ready for archive (with noted improvements).
-  ```
+- **THEN** display: `No critical issues. Y warning(s) to consider. Ready for archive (with noted improvements).`
+- **AND** persist result as `PASS_WITH_WARNINGS`
+
+### Requirement: Verify Write-back
+The agent SHALL write back high-confidence CRITICAL verification failures into `tasks.md`.
+
+#### Scenario: CRITICAL issue unmarks completed task
+- **WHEN** verify finds a CRITICAL issue that maps to a task currently marked `- [x]`
+- **THEN** the agent SHALL change that task entry to `- [ ]`
+- **AND** SHALL explain the requirement and reason in the remediation output
+
+#### Scenario: WARNING issue does not unmark task
+- **WHEN** verify finds only WARNING or SUGGESTION issues for a completed task
+- **THEN** the agent SHALL keep the task marked complete
+- **AND** SHALL report the issue without mutating `tasks.md`
+
+#### Scenario: Remediation section appended
+- **WHEN** verify finds one or more fixable issues
+- **THEN** the agent SHALL append or refresh a `## Remediation` section in `tasks.md`
+- **AND** SHALL write each remediation item as a checkbox tagged `[code_fix]` or `[artifact_fix]`
+- **AND** SHALL avoid duplicating the same remediation item across repeated runs
+
+### Requirement: Verify Result Persistence
+The agent SHALL persist verification results for downstream apply/archive flows.
+
+#### Scenario: Verify result file written
+- **WHEN** verify completes
+- **THEN** the agent SHALL write `openspec/changes/<name>/.verify-result.json`
+- **AND** the file SHALL include `timestamp`, `result`, `issues`, and `tasksFileHash`
+
+#### Scenario: tasks hash captured after write-back
+- **WHEN** verify writes `.verify-result.json`
+- **THEN** `tasksFileHash` SHALL describe the current `tasks.md` contents after any task unmark or remediation update
+
+#### Scenario: Cross-platform verify result path
+- **WHEN** the agent reads or writes `.verify-result.json`
+- **THEN** it SHALL build the path with `path.join()`
+- **AND** SHALL NOT rely on hardcoded path separators
 
 ### Requirement: Flexible Artifact Handling
 The agent SHALL gracefully handle changes with varying artifact completeness.
@@ -187,3 +224,4 @@ The agent SHALL gracefully handle changes with varying artifact completeness.
 - **WHEN** change has proposal, design, specs, and tasks
 - **THEN** perform all verification checks
 - **AND** cross-reference artifacts for consistency
+

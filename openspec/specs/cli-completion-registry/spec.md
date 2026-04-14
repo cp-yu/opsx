@@ -2,11 +2,13 @@
 
 ## Purpose
 
-补齐 CLI 命令补全注册表中缺失的命令定义。
+补齐 CLI 命令补全注册表中缺失的命令定义，确保 shell completion 看到的命令树、子命令和 flags 与真实 CLI 注册保持一致，避免补全能力长期漂移。
 
 ## Requirements
 
 ### Requirement: 所有 CLI 命令必须注册到 COMMAND_REGISTRY
+
+系统 SHALL 将所有面向用户的 CLI 命令注册到 `COMMAND_REGISTRY`，以便 shell completion 生成逻辑可以覆盖完整命令树。
 
 #### Scenario: 顶层命令补全
 - **GIVEN** 用户已安装 shell completion
@@ -31,6 +33,8 @@
 - **THEN** 补全列表包含活跃 change ID
 
 ### Requirement: COMMAND_REGISTRY 与 CLI 命令树保持一致
+
+`COMMAND_REGISTRY` SHALL 与 `src/cli/index.ts` 中注册的非 hidden CLI 命令树保持一致。
 
 #### Scenario: 注册表完整性
 - **GIVEN** `src/cli/index.ts` 中注册的所有非 hidden 命令

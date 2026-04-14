@@ -1,8 +1,15 @@
 # TODO
 
 ## 待处理
+1. 现在的codex使用skills使用的方法是 $开头。应该修改，比如比如现在应该是：
+$openspece
+                       
+    openspec-explore       
+    openspec-archive-change
+    openspec-propose       
+    openspec-ci-maintenance
+    openspec-apply-change  
 
-暂无。
 
 ## 已完成并归档
 

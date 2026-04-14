@@ -216,3 +216,9 @@ relations:
   - from: cap.cli.sync
     type: relates_to
     to: cap.cli.archive
+  - from: cap.ai.verify-writeback
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.verify-writeback
+    type: depends_on
+    to: cap.ai.workflow-templates

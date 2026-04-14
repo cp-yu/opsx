@@ -60,8 +60,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 提供面向 Agent 的工作流模板（propose、apply、explore、archive 等），并在核心 workflow 中共享 OPSX 上下文加载协议
-    status: active
+    intent: 提供面向 Agent 的工作流模板（propose、apply、explore、archive、verify 等），在核心 workflow 中共享 OPSX 上下文加载协议和 conformance check 规则
     type: capability
   - id: cap.artifact-graph.instruction-loader
     intent: 加载 Schema 模板，注入项目上下文和制品规则，供 AI 消费
@@ -249,4 +248,8 @@ capabilities:
     type: capability
   - id: cap.cli.sync
     intent: 顶层 CLI 命令，将 change 中的 delta specs 和 OPSX delta 同步到主文件，不执行归档
+    type: capability
+  - id: cap.ai.verify-writeback
+    intent: 验证结果回写 tasks.md（unmark 未真正完成的任务）并生成分类 remediation 清单（code_fix / artifact_fix）
+    status: active
     type: capability

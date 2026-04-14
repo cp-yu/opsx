@@ -5,6 +5,10 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
+import {
+  CONFORMANCE_CHECK_RULES,
+  VERIFY_WRITEBACK_RULES,
+} from '../fragments/opsx-fragments.js';
 
 export function getArchiveChangeSkillTemplate(): SkillTemplate {
   return {
@@ -25,7 +29,26 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
 
    **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
 
-2. **Check artifact completion status**
+2. **Apply expanded-mode verify gate**
+
+   Determine whether the current workflow surface is running in \`expanded\` mode.
+
+   **If running in expanded mode:**
+   - Build \`path.join(changeDir, '.verify-result.json')\`
+   - If the verify result file does not exist:
+     - Soft-prompt the user: "No verify result found. Run \`/opsx:verify\` first?"
+     - Allow the user to continue if they explicitly confirm
+   - If the file exists:
+     - Read \`result\`, \`timestamp\`, \`issues\`, and \`tasksFileHash\`
+     - Hash the current \`tasks.md\` contents and compare to \`tasksFileHash\`
+     - If \`result === 'FAIL_NEEDS_REMEDIATION'\`: hard-block archive and direct the user to fix remediation items first
+     - If the hash does not match: treat the verify result as stale and soft-prompt before continuing
+     - If \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\` and the hash is fresh: continue without prompting
+
+   **If running in core mode:**
+   - Skip this verify stamp gate because core mode has no standalone \`/opsx:verify\`
+
+3. **Check artifact completion status**
 
    Run \`openspec status --change "<name>" --json\` to check artifact completion.
 
@@ -38,7 +61,7 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
    - Use **AskUserQuestion tool** to confirm user wants to proceed
    - Proceed if user confirms
 
-3. **Check task completion status**
+4. **Check task completion status**
 
    Read the tasks file (typically \`tasks.md\`) to check for incomplete tasks.
 
@@ -51,7 +74,23 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
 
    **If no tasks file exists:** Proceed without task-related warning.
 
-4. **Assess delta sync state**
+   **Core mode inline conformance check (Step 4.5):**
+   - Only run this branch in \`core\` mode after all tasks are currently marked complete
+   - If no delta specs exist in \`openspec/changes/<name>/specs/\`, skip the inline conformance check entirely
+   - If delta specs exist, run a lightweight conformance pass before archive using the shared rules below
+
+${CONFORMANCE_CHECK_RULES}
+
+${VERIFY_WRITEBACK_RULES}
+
+   - If CRITICAL issues are found:
+     - Unmark affected completed tasks
+     - Append or refresh the \`## Remediation\` section
+     - Abort archive and tell the user to re-run \`/opsx:apply\` on the reopened tasks
+   - If only WARNING/SUGGESTION issues are found:
+     - Report them, but continue to sync/archive flow
+
+5. **Assess delta sync state**
 
    Check for delta specs at \`openspec/changes/<name>/specs/\` and for \`openspec/changes/<name>/opsx-delta.yaml\`. If neither exists, proceed directly to archive.
 
@@ -62,7 +101,7 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
    - Abort archive if sync preparation or validation fails, leaving main specs, OPSX files, and the active change directory unchanged.
    - In \`expanded\` mode, \`/opsx:sync\` may still exist as a standalone workflow, but archive MUST follow the same sync-state contract.
 
-5. **Perform the archive**
+6. **Perform the archive**
 
    Create the archive directory if it doesn't exist:
    \`\`\`bash
@@ -79,7 +118,7 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
    mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
    \`\`\`
 
-6. **Display summary**
+7. **Display summary**
 
    Show archive completion summary including:
    - Change name
@@ -136,7 +175,26 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 
    **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
 
-2. **Check artifact completion status**
+2. **Apply expanded-mode verify gate**
+
+   Determine whether the current workflow surface is running in \`expanded\` mode.
+
+   **If running in expanded mode:**
+   - Build \`path.join(changeDir, '.verify-result.json')\`
+   - If the verify result file does not exist:
+     - Prompt the user: "No verify result found. Run \`/opsx:verify\` first?"
+     - Allow the user to continue if they explicitly confirm
+   - If the file exists:
+     - Read \`result\`, \`timestamp\`, \`issues\`, and \`tasksFileHash\`
+     - Hash the current \`tasks.md\` contents and compare to \`tasksFileHash\`
+     - If \`result === 'FAIL_NEEDS_REMEDIATION'\`: hard-block archive and direct the user to fix remediation items first
+     - If the hash does not match: treat the verify result as stale and prompt before continuing
+     - If \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\` and the hash is fresh: continue without prompting
+
+   **If running in core mode:**
+   - Skip this verify stamp gate because core mode has no standalone \`/opsx:verify\`
+
+3. **Check artifact completion status**
 
    Run \`openspec status --change "<name>" --json\` to check artifact completion.
 
@@ -149,7 +207,7 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
    - Prompt user for confirmation to continue
    - Proceed if user confirms
 
-3. **Check task completion status**
+4. **Check task completion status**
 
    Read the tasks file (typically \`tasks.md\`) to check for incomplete tasks.
 
@@ -162,7 +220,23 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 
    **If no tasks file exists:** Proceed without task-related warning.
 
-4. **Assess delta sync state**
+   **Core mode inline conformance check (Step 4.5):**
+   - Only run this branch in \`core\` mode after all tasks are currently marked complete
+   - If no delta specs exist in \`openspec/changes/<name>/specs/\`, skip the inline conformance check entirely
+   - If delta specs exist, run a lightweight conformance pass before archive using the shared rules below
+
+${CONFORMANCE_CHECK_RULES}
+
+${VERIFY_WRITEBACK_RULES}
+
+   - If CRITICAL issues are found:
+     - Unmark affected completed tasks
+     - Append or refresh the \`## Remediation\` section
+     - Abort archive and tell the user to re-run \`/opsx:apply\` on the reopened tasks
+   - If only WARNING/SUGGESTION issues are found:
+     - Report them, but continue to sync/archive flow
+
+5. **Assess delta sync state**
 
    Check for delta specs at \`openspec/changes/<name>/specs/\` and for \`openspec/changes/<name>/opsx-delta.yaml\`. If neither exists, proceed directly to archive.
 
@@ -173,7 +247,7 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
    - Abort archive if sync preparation or validation fails, leaving main specs, OPSX files, and the active change directory unchanged.
    - In \`expanded\` mode, \`/opsx:sync\` may still exist as a standalone workflow, but archive MUST follow the same sync-state contract.
 
-5. **Perform the archive**
+6. **Perform the archive**
 
    Create the archive directory if it doesn't exist:
    \`\`\`bash
@@ -190,7 +264,7 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
    mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
    \`\`\`
 
-6. **Display summary**
+7. **Display summary**
 
    Show archive completion summary including:
    - Change name

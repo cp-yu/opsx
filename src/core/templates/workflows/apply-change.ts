@@ -62,6 +62,14 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
    The files depend on the schema being used:
    - **spec-driven**: proposal, specs, design, tasks
    - Other schemas: follow the contextFiles from CLI output
+   - Build \`path.join(changeDir, '.verify-result.json')\` and check whether the previous verify result exists
+   - If the file exists and \`result === 'FAIL_NEEDS_REMEDIATION'\`:
+     - Read the persisted \`issues\` array
+     - Keep only CRITICAL issues as mandatory remediation context
+   - If \`tasks.md\` contains a \`## Remediation\` section:
+     - Parse each checkbox item
+     - Track whether the item is tagged \`[code_fix]\` or \`[artifact_fix]\`
+     - Treat unchecked remediation items as priority work
 
 ${ARTIFACT_DOC_LANGUAGE_CONTRACT}
 
@@ -71,15 +79,22 @@ ${ARTIFACT_DOC_LANGUAGE_CONTRACT}
    - Schema being used
    - Progress: "N/M tasks complete"
    - Remaining tasks overview
+   - Summary of prior CRITICAL verify issues when \`.verify-result.json\` reports \`FAIL_NEEDS_REMEDIATION\`
+   - Summary of open remediation items grouped by \`[code_fix]\` and \`[artifact_fix]\`
    - Dynamic instruction from CLI
 
 6. **Implement tasks (loop until done or blocked)**
 
    For each pending task:
    - Show which task is being worked on
+   - If the task was unmarked by verify, inject the matching CRITICAL issue and remediation item into the working context before editing files
+   - Prioritize unchecked remediation entries before unrelated polish work
    - Make the code changes required
+   - For \`[code_fix]\` remediation items, update code/tests until the missing behavior is implemented
+   - For \`[artifact_fix]\` remediation items, update the affected spec/design/tasks artifact instead of forcing code changes
    - Keep changes minimal and focused
    - Mark task complete in the tasks file: \`- [ ]\` → \`- [x]\`
+   - Mark resolved remediation items complete in the \`## Remediation\` section
    - Continue to next task
 
    **Pause if:**
@@ -93,6 +108,7 @@ ${ARTIFACT_DOC_LANGUAGE_CONTRACT}
    Display:
    - Tasks completed this session
    - Overall progress: "N/M tasks complete"
+   - If remediation items were resolved, recommend re-running \`/opsx:verify\` to confirm the feedback loop has closed
    - If all done: suggest archive
    - If paused: explain why and wait for guidance
 
@@ -125,6 +141,7 @@ Working on task 4/7: <task description>
 ...
 
 All tasks complete! Ready to archive this change.
+If this session resolved remediation items, run \`/opsx:verify <change-name>\` before archiving.
 \`\`\`
 
 **Output On Pause (Issue Encountered)**
@@ -223,6 +240,14 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
    The files depend on the schema being used:
    - **spec-driven**: proposal, specs, design, tasks
    - Other schemas: follow the contextFiles from CLI output
+   - Build \`path.join(changeDir, '.verify-result.json')\` and check whether the previous verify result exists
+   - If the file exists and \`result === 'FAIL_NEEDS_REMEDIATION'\`:
+     - Read the persisted \`issues\` array
+     - Keep only CRITICAL issues as mandatory remediation context
+   - If \`tasks.md\` contains a \`## Remediation\` section:
+     - Parse each checkbox item
+     - Track whether the item is tagged \`[code_fix]\` or \`[artifact_fix]\`
+     - Treat unchecked remediation items as priority work
 
 ${ARTIFACT_DOC_LANGUAGE_CONTRACT}
 
@@ -232,15 +257,22 @@ ${ARTIFACT_DOC_LANGUAGE_CONTRACT}
    - Schema being used
    - Progress: "N/M tasks complete"
    - Remaining tasks overview
+   - Summary of prior CRITICAL verify issues when \`.verify-result.json\` reports \`FAIL_NEEDS_REMEDIATION\`
+   - Summary of open remediation items grouped by \`[code_fix]\` and \`[artifact_fix]\`
    - Dynamic instruction from CLI
 
 6. **Implement tasks (loop until done or blocked)**
 
    For each pending task:
    - Show which task is being worked on
+   - If the task was unmarked by verify, inject the matching CRITICAL issue and remediation item into the working context before editing files
+   - Prioritize unchecked remediation entries before unrelated polish work
    - Make the code changes required
+   - For \`[code_fix]\` remediation items, update code/tests until the missing behavior is implemented
+   - For \`[artifact_fix]\` remediation items, update the affected spec/design/tasks artifact instead of forcing code changes
    - Keep changes minimal and focused
    - Mark task complete in the tasks file: \`- [ ]\` → \`- [x]\`
+   - Mark resolved remediation items complete in the \`## Remediation\` section
    - Continue to next task
 
    **Pause if:**
@@ -254,6 +286,7 @@ ${ARTIFACT_DOC_LANGUAGE_CONTRACT}
    Display:
    - Tasks completed this session
    - Overall progress: "N/M tasks complete"
+   - If remediation items were resolved, recommend re-running \`/opsx:verify\` to confirm the feedback loop has closed
    - If all done: suggest archive
    - If paused: explain why and wait for guidance
 
@@ -286,6 +319,7 @@ Working on task 4/7: <task description>
 ...
 
 All tasks complete! You can archive this change with \`/opsx:archive\`.
+If this session resolved remediation items, run \`/opsx:verify <change-name>\` before archiving.
 \`\`\`
 
 **Output On Pause (Issue Encountered)**
