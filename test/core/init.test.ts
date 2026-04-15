@@ -197,6 +197,7 @@ describe('InitCommand', () => {
     });
 
     it('should configure codex as skills-only by default', async () => {
+      const consoleSpy = vi.spyOn(console, 'log');
       const initCommand = new InitCommand({ tools: 'codex', force: true });
 
       await initCommand.execute(testDir);
@@ -207,6 +208,29 @@ describe('InitCommand', () => {
       expect(await fileExists(
         path.join(path.resolve(process.env.CODEX_HOME ?? path.join(testDir, 'codex-home')), 'prompts', 'opsx-explore.md')
       )).toBe(false);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('$openspec-propose "your idea"')
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('refreshed skills to take effect')
+      );
+      expect(consoleSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining('/opsx:propose')
+      );
+    });
+
+    it('should keep command-backed init guidance on slash commands', async () => {
+      const consoleSpy = vi.spyOn(console, 'log');
+      const initCommand = new InitCommand({ tools: 'claude', force: true });
+
+      await initCommand.execute(testDir);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('/opsx:propose "your idea"')
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('slash commands to take effect')
+      );
     });
 
     it('should keep codex on skills and remove legacy command files in commands delivery', async () => {

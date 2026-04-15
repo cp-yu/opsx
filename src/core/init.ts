@@ -11,11 +11,15 @@ import ora from 'ora';
 import * as fs from 'fs';
 import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
-import { transformToHyphenCommands } from '../utils/command-references.js';
+import {
+  getWorkflowReferenceTransformer,
+  renderWorkflowInvocation,
+} from '../utils/command-references.js';
 import {
   AI_TOOLS,
   OPENSPEC_DIR_NAME,
   AIToolOption,
+  toolSupportsCommandGeneration,
 } from './config.js';
 import { PALETTE } from './styles/palette.js';
 import { isInteractive } from '../utils/interactive.js';
@@ -536,9 +540,8 @@ export class InitCommand {
             const skillDir = path.join(skillsDir, dirName);
             const skillFile = path.join(skillDir, 'SKILL.md');
 
-            // Generate SKILL.md content with YAML frontmatter including generatedBy
-            // Use hyphen-based command references for OpenCode
-            const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
+            // Generate SKILL.md content with tool-specific workflow references.
+            const transformer = getWorkflowReferenceTransformer(tool.value);
             const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
 
             // Write the skill file
@@ -772,13 +775,14 @@ export class InitCommand {
     const globalCfg = getGlobalConfig();
     const activeProfile: Profile = (this.profileOverride as Profile) ?? globalCfg.profile ?? 'core';
     const activeWorkflows = [...getProfileWorkflows(activeProfile, globalCfg.workflows)];
+    const guidanceToolId = this.getGuidanceToolId(successfulTools.map((tool) => tool.value));
     console.log();
-    if (activeWorkflows.includes('propose')) {
+    if (guidanceToolId && activeWorkflows.includes('propose')) {
       console.log(chalk.bold('Getting started:'));
-      console.log('  Start your first change: /opsx:propose "your idea"');
-    } else if (activeWorkflows.includes('new')) {
+      console.log(`  Start your first change: ${renderWorkflowInvocation(guidanceToolId, 'propose')} "your idea"`);
+    } else if (guidanceToolId && activeWorkflows.includes('new')) {
       console.log(chalk.bold('Getting started:'));
-      console.log('  Start your first change: /opsx:new "your idea"');
+      console.log(`  Start your first change: ${renderWorkflowInvocation(guidanceToolId, 'new')} "your idea"`);
     } else {
       console.log("Done. Run 'openspec config profile' to configure your workflows.");
     }
@@ -791,10 +795,18 @@ export class InitCommand {
     // Restart instruction if any tools were configured
     if (results.createdTools.length > 0 || results.refreshedTools.length > 0) {
       console.log();
-      console.log(chalk.white('Restart your IDE for slash commands to take effect.'));
+      if (guidanceToolId && toolSupportsCommandGeneration(guidanceToolId)) {
+        console.log(chalk.white('Restart your IDE for slash commands to take effect.'));
+      } else {
+        console.log(chalk.white('Restart your IDE or current session for refreshed skills to take effect.'));
+      }
     }
 
     console.log();
+  }
+
+  private getGuidanceToolId(toolIds: readonly string[]): string | undefined {
+    return toolIds.find((toolId) => toolSupportsCommandGeneration(toolId)) ?? toolIds[0];
   }
 
   private startSpinner(text: string) {

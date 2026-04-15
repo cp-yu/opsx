@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { transformToHyphenCommands } from '../../src/utils/command-references.js';
+import {
+  renderWorkflowInvocation,
+  transformToHyphenCommands,
+  transformWorkflowReferences,
+} from '../../src/utils/command-references.js';
 
 describe('transformToHyphenCommands', () => {
   describe('basic transformations', () => {
@@ -79,5 +83,29 @@ Finally /opsx-apply to implement`;
         expect(transformToHyphenCommands(`/opsx:${cmd}`)).toBe(`/opsx-${cmd}`);
       });
     }
+  });
+});
+
+describe('renderWorkflowInvocation', () => {
+  it('renders precise codex skill names from the manifest', () => {
+    expect(renderWorkflowInvocation('codex', 'propose')).toBe('$openspec-propose');
+    expect(renderWorkflowInvocation('codex', 'new')).toBe('$openspec-new-change');
+    expect(renderWorkflowInvocation('codex', 'continue')).toBe('$openspec-continue-change');
+    expect(renderWorkflowInvocation('codex', 'apply')).toBe('$openspec-apply-change');
+    expect(renderWorkflowInvocation('codex', 'archive')).toBe('$openspec-archive-change');
+  });
+
+  it('keeps command-backed tools on their command syntax', () => {
+    expect(renderWorkflowInvocation('claude', 'apply')).toBe('/opsx:apply');
+    expect(renderWorkflowInvocation('opencode', 'apply')).toBe('/opsx-apply');
+  });
+});
+
+describe('transformWorkflowReferences', () => {
+  it('rewrites only registered workflow references for codex', () => {
+    const input = 'Use /opsx:new, /opsx:continue, and /opsx:apply. Leave /opsx:unknown alone.';
+    expect(transformWorkflowReferences(input, 'codex')).toBe(
+      'Use $openspec-new-change, $openspec-continue-change, and $openspec-apply-change. Leave /opsx:unknown alone.'
+    );
   });
 });

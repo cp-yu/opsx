@@ -11,8 +11,11 @@ import ora from 'ora';
 import * as fs from 'fs';
 import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
-import { transformToHyphenCommands } from '../utils/command-references.js';
-import { AI_TOOLS, OPENSPEC_DIR_NAME } from './config.js';
+import {
+  getWorkflowReferenceTransformer,
+  renderWorkflowInvocation,
+} from '../utils/command-references.js';
+import { AI_TOOLS, OPENSPEC_DIR_NAME, toolSupportsCommandGeneration } from './config.js';
 import {
   generateCommands,
   CommandAdapterRegistry,
@@ -191,8 +194,7 @@ export class UpdateCommand {
             const skillDir = path.join(skillsDir, dirName);
             const skillFile = path.join(skillDir, 'SKILL.md');
 
-            // Use hyphen-based command references for OpenCode
-            const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
+            const transformer = getWorkflowReferenceTransformer(tool.value);
             const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
             await FileSystemUtils.writeFile(skillFile, skillContent);
           }
@@ -272,16 +274,18 @@ export class UpdateCommand {
 
     // 12. Show onboarding message for newly configured tools from legacy upgrade
     if (newlyConfiguredTools.length > 0) {
+      const guidanceToolId = this.getGuidanceToolId(newlyConfiguredTools);
       console.log();
       console.log(chalk.bold('Getting started:'));
-      console.log('  /opsx:new       Start a new change');
-      console.log('  /opsx:continue  Create the next artifact');
-      console.log('  /opsx:apply     Implement tasks');
+      console.log(`  ${renderWorkflowInvocation(guidanceToolId, 'new')}       Start a new change`);
+      console.log(`  ${renderWorkflowInvocation(guidanceToolId, 'continue')}  Create the next artifact`);
+      console.log(`  ${renderWorkflowInvocation(guidanceToolId, 'apply')}     Implement tasks`);
       console.log();
       console.log(`Learn more: ${chalk.cyan('https://github.com/cp-yu/opsx')}`);
     }
 
     const configuredAndNewTools = [...new Set([...configuredTools, ...newlyConfiguredTools])];
+    const affectedToolIds = [...new Set([...toolsToUpdate, ...newlyConfiguredTools])];
 
     // 13. Detect new tool directories not currently configured
     this.detectNewTools(resolvedProjectPath, configuredAndNewTools);
@@ -296,7 +300,15 @@ export class UpdateCommand {
     }
 
     console.log();
-    console.log(chalk.dim('Restart your IDE for changes to take effect.'));
+    if (affectedToolIds.some((toolId) => toolSupportsCommandGeneration(toolId))) {
+      console.log(chalk.dim('Restart your IDE for slash commands to take effect.'));
+    } else {
+      console.log(chalk.dim('Restart your IDE or current session for refreshed skills to take effect.'));
+    }
+  }
+
+  private getGuidanceToolId(toolIds: readonly string[]): string {
+    return toolIds.find((toolId) => toolSupportsCommandGeneration(toolId)) ?? toolIds[0] ?? 'codex';
   }
 
   /**
@@ -666,8 +678,7 @@ export class UpdateCommand {
             const skillDir = path.join(skillsDir, dirName);
             const skillFile = path.join(skillDir, 'SKILL.md');
 
-            // Use hyphen-based command references for OpenCode
-            const transformer = tool.value === 'opencode' ? transformToHyphenCommands : undefined;
+            const transformer = getWorkflowReferenceTransformer(tool.value);
             const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
             await FileSystemUtils.writeFile(skillFile, skillContent);
           }

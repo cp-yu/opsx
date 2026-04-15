@@ -52,7 +52,7 @@ capabilities:
     intent: 建立内部 workflow ID 到外部用户命令 slug 的映射，使生成、检测、迁移和清理命令制品时都遵循同一套命名契约
     type: capability
   - id: cap.ai.skill-generation
-    intent: 为配置的 AI 工具生成特定工具的技能文件，并允许 Codex 在 commands 相关 delivery 下仍以 skills 作为唯一工作流承载面
+    intent: 为配置的 AI 工具生成特定工具的技能文件，并在写入 skill 指令时按工具渲染用户可见 workflow 引用；其中 Codex 使用精确的 `$openspec-*` skill 名称
     status: active
     type: capability
   - id: cap.ai.tool-adapters
@@ -119,7 +119,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.init
-    intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品；对于 Codex，仅生成 `.codex/skills/` 下的 workflow skills，不再创建 commands
+    intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品；成功输出与入门提示按工具表面渲染用户可见调用语法，Codex 使用 skills 引导而非 slash commands
     status: active
     type: capability
   - id: cap.cli.instructions
@@ -159,7 +159,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.update
-    intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品；对于 Codex，仅刷新 skills，不再探测、创建或更新 commands
+    intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品；刷新后的 onboarding 与 restart 提示按工具表面渲染用户可见调用语法，Codex 不再使用 slash-command 叙事
     status: active
     type: capability
   - id: cap.cli.validate
@@ -252,4 +252,7 @@ capabilities:
   - id: cap.ai.verify-writeback
     intent: 验证结果回写 tasks.md（unmark 未真正完成的任务）并生成分类 remediation 清单（code_fix / artifact_fix）
     status: active
+    type: capability
+  - id: cap.ai.tool-invocation-references
+    intent: 基于共享 workflow surface 元数据渲染不同 AI 工具的用户可调用 workflow 引用，其中 Codex 使用精确的 `$openspec-*` skill 名称
     type: capability

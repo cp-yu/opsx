@@ -5,6 +5,7 @@ import {
   getCommandContents,
   generateSkillContent,
 } from '../../../src/core/shared/skill-generation.js';
+import { getWorkflowReferenceTransformer } from '../../../src/utils/command-references.js';
 
 describe('skill-generation', () => {
   describe('getSkillTemplates', () => {
@@ -312,6 +313,27 @@ describe('skill-generation', () => {
 
       expect(content).toContain('Some REPLACED text here.');
       expect(content).not.toContain('PLACEHOLDER');
+    });
+
+    it('should transform workflow references to precise codex skill names', () => {
+      const template = {
+        name: 'codex-transform',
+        description: 'Test codex transform',
+        instructions: 'Use /opsx:new, then /opsx:continue, then /opsx:apply.',
+      };
+
+      const content = generateSkillContent(
+        template,
+        '0.23.0',
+        getWorkflowReferenceTransformer('codex')
+      );
+
+      expect(content).toContain('$openspec-new-change');
+      expect(content).toContain('$openspec-continue-change');
+      expect(content).toContain('$openspec-apply-change');
+      expect(content).not.toContain('/opsx:new');
+      expect(content).not.toContain('/opsx:continue');
+      expect(content).not.toContain('/opsx:apply');
     });
   });
 });

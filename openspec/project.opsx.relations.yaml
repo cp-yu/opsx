@@ -222,3 +222,15 @@ relations:
   - from: cap.ai.verify-writeback
     type: depends_on
     to: cap.ai.workflow-templates
+  - from: cap.ai.tool-invocation-references
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.skill-generation
+    type: depends_on
+    to: cap.ai.tool-invocation-references
+  - from: cap.cli.init
+    type: depends_on
+    to: cap.ai.tool-invocation-references
+  - from: cap.cli.update
+    type: depends_on
+    to: cap.ai.tool-invocation-references

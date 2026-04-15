@@ -649,6 +649,30 @@ Old instructions content
 
       consoleSpy.mockRestore();
     });
+
+    it('should use skills-only restart guidance for codex-only updates', async () => {
+      const skillsDir = path.join(testDir, '.codex', 'skills');
+      await fs.mkdir(path.join(skillsDir, 'openspec-explore'), {
+        recursive: true,
+      });
+      await fs.writeFile(
+        path.join(skillsDir, 'openspec-explore', 'SKILL.md'),
+        'old'
+      );
+
+      const consoleSpy = vi.spyOn(console, 'log');
+
+      await updateCommand.execute(testDir);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('refreshed skills to take effect')
+      );
+      expect(consoleSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining('slash commands to take effect')
+      );
+
+      consoleSpy.mockRestore();
+    });
   });
 
   describe('smart update detection', () => {
@@ -1735,6 +1759,27 @@ content
         path.join(testDir, '.codex', 'skills', 'openspec-explore', 'SKILL.md')
       )).toBe(true);
       expect(await FileSystemUtils.fileExists(legacyCommand)).toBe(false);
+    });
+
+    it('should show codex getting-started guidance with precise managed skill names', async () => {
+      setMockConfig({
+        featureFlags: {},
+        profile: 'expanded',
+        delivery: 'commands',
+      });
+
+      const consoleSpy = vi.spyOn(console, 'log');
+      const forceUpdateCommand = new UpdateCommand({ force: true });
+      vi.spyOn(forceUpdateCommand as any, 'handleLegacyCleanup').mockResolvedValue(['codex']);
+
+      await forceUpdateCommand.execute(testDir);
+
+      const calls = consoleSpy.mock.calls.map((call) => call.map((arg) => String(arg)).join(' '));
+      expect(calls.some((call) => call.includes('$openspec-new-change'))).toBe(true);
+      expect(calls.some((call) => call.includes('$openspec-continue-change'))).toBe(true);
+      expect(calls.some((call) => call.includes('$openspec-apply-change'))).toBe(true);
+      expect(calls.some((call) => call.includes('/opsx:new'))).toBe(false);
+      consoleSpy.mockRestore();
     });
   });
 
