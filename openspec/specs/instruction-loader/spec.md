@@ -2,7 +2,6 @@
 
 ## Purpose
 The instruction-loader loads instruction templates from schema directories, validates and enriches them with metadata and parameters (such as change context and dependency status), and exposes them for use by downstream services including template retrieval, parameter substitution, and enrichment.
-
 ## Requirements
 ### Requirement: Template Loading
 The system SHALL load templates from schema directories.
@@ -67,4 +66,17 @@ The system SHALL format change status as readable output.
 #### Scenario: Include output paths
 - **WHEN** status is formatted
 - **THEN** each artifact shows its output path pattern
+
+### Requirement: Instruction loader SHALL expose config projection bundles
+The instruction loader SHALL compile project config into reusable projection bundles for the current workflow surface and artifact instead of exposing only raw `context` and `rules` fields.
+
+#### Scenario: Prompt projection generated for artifact instructions
+- **WHEN** artifact instructions are generated
+- **THEN** the loader SHALL resolve the effective project config and compile a prompt projection for the current surface and artifact
+- **AND** the compiled result SHALL preserve canonical token boundaries declared by the projection rules
+
+#### Scenario: Projection bundle remains stable across consumers
+- **WHEN** multiple workflow templates request instructions for the same surface and artifact under the same config
+- **THEN** the loader SHALL return projection content with the same semantics for each consumer
+- **AND** workflow templates SHALL NOT need to reinterpret raw config fields to recover those semantics
 

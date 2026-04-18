@@ -374,6 +374,35 @@ code_refs:
     expect(status.reviewState).toBe('stale');
   });
 
+  it('marks candidate and review stale when projection-affecting config changes', async () => {
+    await initBootstrap(testDir, { mode: 'full' });
+    await writeEvidence(['dom.auth']);
+    await writeValidDomainMap('dom.auth');
+
+    await refreshBootstrapDerivedArtifacts(testDir);
+    let status = await getBootstrapStatus(testDir);
+    expect(status.initialized).toBe(true);
+    if (!status.initialized) {
+      throw new Error('Expected initialized bootstrap status');
+    }
+    expect(status.candidateState).toBe('current');
+    expect(status.reviewState).toBe('current');
+
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'config.yaml'),
+      'schema: spec-driven\ndocLanguage: 中文\n',
+      'utf-8'
+    );
+
+    status = await getBootstrapStatus(testDir);
+    expect(status.initialized).toBe(true);
+    if (!status.initialized) {
+      throw new Error('Expected initialized bootstrap status');
+    }
+    expect(status.candidateState).toBe('stale');
+    expect(status.reviewState).toBe('stale');
+  });
+
   it('marks candidate and review stale when spec folder mapping changes (spec-path change)', async () => {
     await initBootstrap(testDir, { mode: 'full' });
     await writeEvidence(['dom.auth']);
@@ -412,6 +441,30 @@ code_refs:
     await expect(
       fs.readFile(path.join(testDir, 'openspec', 'bootstrap', 'candidate', 'specs', 'auth', 'spec.md'), 'utf-8')
     ).resolves.toContain('# Spec: auth');
+  });
+
+  it('localizes bootstrap review and starter prose through runtime projection while preserving canonical headings', async () => {
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'config.yaml'),
+      'schema: spec-driven\ndocLanguage: 中文\n',
+      'utf-8'
+    );
+    await initBootstrap(testDir, { mode: 'opsx-first' });
+    await writeEvidence(['dom.auth']);
+    await writeValidDomainMap('dom.auth');
+
+    await refreshBootstrapDerivedArtifacts(testDir);
+    await approveReview();
+    await promoteBootstrap(testDir);
+
+    const review = await fs.readFile(path.join(testDir, 'openspec', 'bootstrap', 'review.md'), 'utf-8');
+    const starter = await fs.readFile(path.join(testDir, 'openspec', 'specs', 'README.md'), 'utf-8');
+
+    expect(review).toContain('# Bootstrap Review');
+    expect(review).toContain('在提升为正式 OPSX 文件之前');
+    expect(review).toContain('## Validation');
+    expect(starter).toContain('# Specs Starter');
+    expect(starter).toContain('该仓库通过 `opsx-first` 模式完成了 bootstrap。');
   });
 
   it('rejects spec folders that embed path separators (Windows/posix)', async () => {

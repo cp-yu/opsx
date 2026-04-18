@@ -14,7 +14,7 @@ context: |
   Tech stack: TypeScript, React, Node.js
 ```
 
-That localizes natural-language prose in generated OpenSpec artifacts. Template headings, IDs, schema keys, BDD keywords, file paths, commands, and code identifiers remain unchanged.
+That localizes natural-language prose in generated OpenSpec artifacts through the shared config projection pipeline. Template headings, IDs, schema keys, BDD keywords, file paths, commands, and code identifiers remain unchanged.
 
 ## Language Examples
 
@@ -88,7 +88,7 @@ To verify your language config is working:
 # Check the instructions and generated workflow guidance
 openspec instructions proposal --change my-change
 
-# Agents should read openspec/config.yaml and apply docLanguage to artifact prose
+# Agents should consume the compiled config projection and apply docLanguage only to artifact prose
 ```
 
 ## Related Documentation

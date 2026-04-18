@@ -102,7 +102,7 @@ export async function prepareChangeSync(
       continue;
     }
 
-    const built = await buildUpdatedSpec(update, state.changeName);
+    const built = await buildUpdatedSpec(update, state.changeName, projectRoot);
     if (validator) {
       const specName = path.basename(path.dirname(update.target));
       const report = await validator.validateSpecContent(specName, built.rebuilt);

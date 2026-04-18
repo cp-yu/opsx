@@ -5,6 +5,7 @@ import { ArtifactGraph } from './graph.js';
 import { detectCompleted } from './state.js';
 import { resolveSchemaForChange } from '../../utils/change-metadata.js';
 import { readProjectConfig, validateConfigRules } from '../project-config.js';
+import { buildConfigProjectionBundle, type ConfigProjectionBundle } from '../config-projection.js';
 import type { Artifact, CompletedSet } from './types.js';
 
 // Session-level cache for validation warnings (avoid repeating same warnings)
@@ -63,6 +64,8 @@ export interface ArtifactInstructions {
   context: string | undefined;
   /** Artifact-specific rules from config (constraints for AI, not to be included in output) */
   rules: string[] | undefined;
+  /** Compiled project config projection for prompt consumers. */
+  configProjection: ConfigProjectionBundle;
   /** Template content (structure to follow - this IS the output format) */
   template: string;
   /** Dependencies with completion status and paths */
@@ -197,10 +200,10 @@ export function loadChangeContext(
 /**
  * Generates enriched instructions for creating an artifact.
  *
- * Instruction injection order:
- * 1. <context> - Project context from config (if present)
- * 2. <rules> - Artifact-specific rules from config (if present)
- * 3. <template> - Schema's template content
+ * Instruction projection order:
+ * 1. configProjection.prompt - compiled whitelist projection from config
+ * 2. context/rules - compatibility fields derived from the same projection inputs
+ * 3. template - Schema's template content
  *
  * @param context - Change context
  * @param artifactId - Artifact ID to generate instructions for
@@ -253,9 +256,14 @@ export function generateInstructions(
     }
   }
 
-  // Extract context and rules as separate fields (not prepended to template)
-  const configContext = projectConfig?.context?.trim() || undefined;
-  const rulesForArtifact = projectConfig?.rules?.[artifactId];
+  const configProjection = buildConfigProjectionBundle(projectConfig, {
+    surface: 'artifact-instructions',
+    artifactId,
+  });
+
+  // Backward-compatible fields are derived from the normalized projection input.
+  const configContext = configProjection.normalized.context;
+  const rulesForArtifact = configProjection.normalized.rules[artifactId];
   const configRules = rulesForArtifact && rulesForArtifact.length > 0 ? rulesForArtifact : undefined;
 
   return {
@@ -268,6 +276,7 @@ export function generateInstructions(
     instruction: artifact.instruction,
     context: configContext,
     rules: configRules,
+    configProjection,
     template: templateContent,
     dependencies,
     unlocks,

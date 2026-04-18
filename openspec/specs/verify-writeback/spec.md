@@ -70,3 +70,12 @@ TBD - created by archiving change add-verify-writeback. Update Purpose after arc
 - **THEN** 系统 SHALL 使用 `path.join()` 构建文件路径
 - **AND** SHALL NOT 硬编码路径分隔符
 
+### Requirement: Verify write-back SHALL consume runtime projection
+When verify writes remediation content back to `tasks.md`, the system SHALL use runtime projection compiled from project config for natural-language prose decisions.
+
+#### Scenario: Remediation prose follows projected language policy
+- **WHEN** verify appends or refreshes `## Remediation` content
+- **AND** runtime projection defines a prose-language policy
+- **THEN** remediation descriptions SHALL follow that policy
+- **AND** task checkboxes, section headers, requirement references, and other canonical tokens SHALL remain unchanged
+

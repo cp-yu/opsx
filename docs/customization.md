@@ -16,8 +16,8 @@ The `openspec/config.yaml` file is the easiest way to customize OpenSpec for you
 
 - **Set a default schema** - Skip `--schema` on every command
 - **Set document prose language** - Tell OpenSpec which language to use for natural-language artifact body text
-- **Inject project context** - AI sees your tech stack, conventions, etc.
-- **Add per-artifact rules** - Custom rules for specific artifacts
+- **Inject project context** - Compile project background into prompt/runtime projection consumers
+- **Add per-artifact rules** - Compile artifact-scoped authoring constraints without leaking the whole raw config
 
 ### Quick Setup
 
@@ -47,6 +47,8 @@ rules:
     - Reference existing patterns before inventing new ones
 ```
 
+`openspec/config.yaml` stays intentionally small. OpenSpec compiles its validated whitelist fields into prompt and runtime projection bundles for downstream consumers.
+
 `docLanguage` only applies to natural-language prose in OpenSpec artifacts. Template headings, IDs, schema keys, relation types, BDD keywords, file paths, commands, and code identifiers stay in their canonical form.
 
 ### How It Works
@@ -63,13 +65,21 @@ openspec new change my-feature
 
 **Context and rules injection:**
 
-When generating any artifact, your context and rules are injected into the AI prompt:
+When generating any artifact, OpenSpec exposes a compiled projection bundle plus compatibility fields derived from the same normalized inputs:
 
 ```xml
-<context>
+<config_projection>
+- Use zh-CN for natural-language prose that you newly write or revise.
+- Preserve canonical tokens unchanged: SHALL, MUST, section headers, scenario headers, BDD keywords, IDs, schema keys, paths, commands, and code identifiers.
+Tech stack: TypeScript, React, Node.js, PostgreSQL
+- Include rollback plan
+- Identify affected teams
+</config_projection>
+
+<project_context>
 Tech stack: TypeScript, React, Node.js, PostgreSQL
 ...
-</context>
+</project_context>
 
 <rules>
 - Include rollback plan
@@ -81,8 +91,9 @@ Tech stack: TypeScript, React, Node.js, PostgreSQL
 </template>
 ```
 
-- **Context** appears in ALL artifacts
-- **Rules** ONLY appear for the matching artifact
+- **Projection bundle** is the preferred contract for prompt/runtime consumers
+- **Context** still appears in ALL artifacts as a compatibility field derived from the same normalized config
+- **Rules** still appear only for the matching artifact as a compatibility field derived from the same normalized config
 
 ### Schema Resolution Order
 

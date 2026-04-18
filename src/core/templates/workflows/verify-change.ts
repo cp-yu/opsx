@@ -19,6 +19,8 @@ export function getVerifyChangeSkillTemplate(): SkillTemplate {
 
 **Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
+When verification writes remediation guidance or instructs artifact updates, treat \`openspec/config.yaml\` as the compact source of truth and follow the shared prompt/runtime projection contract. Preserve \`tasks.md\` structure tokens, checkboxes, requirement references, and canonical section headings.
+
 **Steps**
 
 1. **If no change name provided, prompt for selection**
@@ -216,6 +218,8 @@ export function getOpsxVerifyCommandTemplate(): CommandTemplate {
     content: `Verify that an implementation matches the change artifacts (specs, tasks, design).
 
 **Input**: Optionally specify a change name after \`/opsx:verify\` (e.g., \`/opsx:verify add-auth\`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+
+When verification writes remediation guidance or instructs artifact updates, treat \`openspec/config.yaml\` as the compact source of truth and follow the shared prompt/runtime projection contract. Preserve \`tasks.md\` structure tokens, checkboxes, requirement references, and canonical section headings.
 
 **Steps**
 

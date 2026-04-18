@@ -19,6 +19,8 @@ This standalone sync surface is part of the **expanded** workflow. In \`core\` m
 
 **Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
+Treat \`openspec/config.yaml\` as the compact source of truth and follow the shared prompt/runtime projection contract for any prose created during sync. Preserve canonical headers, requirement markers, scenario markers, \`SHALL\`/\`MUST\`, BDD keywords, IDs, schema keys, paths, and commands.
+
 **Steps**
 
 1. **If no change name provided, prompt for selection**
@@ -170,6 +172,8 @@ This is an **agent-driven** operation - you will read delta specs and directly e
 This standalone sync surface is part of the **expanded** workflow. In \`core\` mode, the same sync contract runs inline during \`/opsx:archive\`.
 
 **Input**: Optionally specify a change name after \`/opsx:sync\` (e.g., \`/opsx:sync add-auth\`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+
+Treat \`openspec/config.yaml\` as the compact source of truth and follow the shared prompt/runtime projection contract for any prose created during sync. Preserve canonical headers, requirement markers, scenario markers, \`SHALL\`/\`MUST\`, BDD keywords, IDs, schema keys, paths, and commands.
 
 **Steps**
 

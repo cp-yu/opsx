@@ -1,9 +1,10 @@
 schema_version: 1
-generated_at: 2026-04-15T07:44:34.552Z
+generated_at: 2026-04-18T09:00:30.841Z
 nodes:
   - id: cap.ai.agent-docs
     refs:
       - path: src/core/artifact-graph/instruction-loader.ts
+      - path: src/core/templates/workflows/
   - id: cap.ai.command-generation
     refs:
       - path: src/core/command-generation/
@@ -22,9 +23,11 @@ nodes:
     refs:
       - path: src/core/templates/workflows/
       - path: src/core/templates/skill-templates.ts
+      - path: src/core/templates/fragments/opsx-fragments.ts
   - id: cap.artifact-graph.instruction-loader
     refs:
       - path: src/core/artifact-graph/instruction-loader.ts
+      - path: src/core/config-projection.ts
   - id: cap.artifact-graph.parse
     refs:
       - path: src/core/artifact-graph/graph.ts
@@ -51,6 +54,7 @@ nodes:
   - id: cap.change.specs-sync
     refs:
       - path: src/core/specs-apply.ts
+      - path: src/core/change-sync.ts
   - id: cap.cli.archive
     refs:
       - path: src/core/archive.ts
@@ -168,6 +172,7 @@ nodes:
   - id: cap.config.project
     refs:
       - path: src/core/project-config.ts
+      - path: src/core/config-projection.ts
       - path: src/core/config-schema.ts
   - id: cap.config.schema-validation
     refs:
@@ -179,6 +184,7 @@ nodes:
         line_end: 350
   - id: cap.opsx.bootstrap
     refs:
+      - path: src/utils/bootstrap-utils.ts
       - path: src/core/templates/workflows/bootstrap-opsx.ts
   - id: cap.opsx.delta-merge
     refs:

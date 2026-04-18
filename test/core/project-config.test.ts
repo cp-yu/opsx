@@ -7,6 +7,11 @@ import {
   validateConfigRules,
   suggestSchemas,
 } from '../../src/core/project-config.js';
+import {
+  buildConfigProjectionBundle,
+  normalizeProjectConfig,
+  projectConfigForRuntime,
+} from '../../src/core/config-projection.js';
 
 describe('project-config', () => {
   let tempDir: string;
@@ -556,6 +561,76 @@ rules:
       const warnings = validateConfigRules(rules, validIds, 'spec-driven');
 
       expect(warnings).toEqual([]);
+    });
+  });
+
+  describe('config projection', () => {
+    it('normalizes whitespace while preserving whitelist fields', () => {
+      const normalized = normalizeProjectConfig({
+        schema: ' spec-driven ',
+        docLanguage: ' 中文 ',
+        context: '  Team context  ',
+        rules: {
+          proposal: ['  Rule 1  ', ' ', 'Rule 2'],
+          '  ': ['ignored'],
+        },
+      });
+
+      expect(normalized).toEqual({
+        schema: 'spec-driven',
+        docLanguage: '中文',
+        context: 'Team context',
+        rules: {
+          proposal: ['Rule 1', 'Rule 2'],
+        },
+      });
+    });
+
+    it('builds a prompt projection bundle without leaking raw config structure', () => {
+      const bundle = buildConfigProjectionBundle(
+        {
+          schema: 'spec-driven',
+          docLanguage: '中文',
+          context: 'Tech stack: TypeScript',
+          rules: {
+            proposal: ['Include rollback plan'],
+            specs: ['Use Given/When/Then'],
+          },
+        },
+        { surface: 'artifact-instructions', artifactId: 'proposal' }
+      );
+
+      expect(bundle.normalized.rules).toEqual({
+        proposal: ['Include rollback plan'],
+        specs: ['Use Given/When/Then'],
+      });
+      expect(bundle.prompt.fragments).toEqual([
+        expect.objectContaining({ key: 'docLanguage', scope: 'global' }),
+        expect.objectContaining({ key: 'context', scope: 'global' }),
+        expect.objectContaining({ key: 'rules', scope: 'artifact', lines: ['Include rollback plan'] }),
+      ]);
+      expect(bundle.prompt.compiledLines.join('\n')).toContain('Use 中文 for natural-language prose');
+      expect(bundle.prompt.compiledLines.join('\n')).toContain('Tech stack: TypeScript');
+      expect(bundle.prompt.compiledLines.join('\n')).toContain('Include rollback plan');
+      expect(bundle.prompt.compiledLines.join('\n')).not.toContain('Use Given/When/Then');
+    });
+
+    it('omits invalid or missing fields from runtime projection and marks docLanguage as fingerprint-affecting', () => {
+      const runtimeProjection = projectConfigForRuntime(
+        {
+          schema: 'spec-driven',
+          docLanguage: '中文',
+          rules: {},
+        },
+        { consumer: 'bootstrap-review' }
+      );
+
+      expect(runtimeProjection.proseLanguage).toBe('中文');
+      expect(runtimeProjection.affectsFingerprint).toBe(true);
+      expect(runtimeProjection.forbidHardcodedEnglishBoilerplate).toBe(true);
+      expect(runtimeProjection.fragments).toEqual([
+        expect.objectContaining({ key: 'docLanguage' }),
+      ]);
     });
   });
 

@@ -8,6 +8,8 @@ export function getBootstrapOpsxSkillTemplate(): SkillTemplate {
 
 This is a **structured, multi-phase** workflow. Each phase produces intermediate artifacts in \`openspec/bootstrap/\` before writing formal OPSX files.
 
+Treat \`openspec/config.yaml\` as the source of truth for authoring policy, but consume its compiled projection semantics: prose-bearing bootstrap artifacts follow the projected documentation language policy, while canonical headings, IDs, schema keys, paths, and commands stay unchanged.
+
 **Input**: No argument required. Scope hints (folders, domain names) are passed to init.
 
 **Steps**

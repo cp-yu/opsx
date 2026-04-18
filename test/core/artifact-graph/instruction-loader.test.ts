@@ -357,6 +357,10 @@ rules:
         // All three should be separate
         expect(instructions.context).toBe('Project context here');
         expect(instructions.rules).toEqual(['Rule 1']);
+        expect(instructions.configProjection.prompt.fragments).toEqual([
+          expect.objectContaining({ key: 'context', scope: 'global' }),
+          expect.objectContaining({ key: 'rules', scope: 'artifact', lines: ['Rule 1'] }),
+        ]);
         expect(instructions.template).toContain('## Why');
         // Template should not contain context or rules
         expect(instructions.template).not.toContain('Project context here');
@@ -409,7 +413,32 @@ rules:
 
         expect(instructions.context).toBeUndefined();
         expect(instructions.rules).toBeUndefined();
+        expect(instructions.configProjection.prompt.fragments).toEqual([]);
         expect(instructions.template).toContain('## Why');
+      });
+
+      it('should expose docLanguage through the compiled projection bundle', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+docLanguage: 中文
+rules:
+  proposal:
+    - Keep rationale concise
+`
+        );
+
+        const context = loadChangeContext(tempDir, 'my-change');
+        const instructions = generateInstructions(context, 'proposal', tempDir);
+
+        expect(instructions.configProjection.prompt.compiledLines.join('\n')).toContain(
+          'Use 中文 for natural-language prose that you newly write or revise.'
+        );
+        expect(instructions.configProjection.prompt.compiledLines.join('\n')).toContain(
+          'Keep rationale concise'
+        );
       });
     });
 

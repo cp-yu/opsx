@@ -13,9 +13,7 @@ openspec sync [change-name] [--no-validate]
 选项：
 - `change-name`：可选，指定 change 名称
 - `--no-validate`：跳过同步后验证（不推荐）
-
 ## Requirements
-
 ### Requirement: Change 选择
 
 `openspec sync` SHALL 同时支持交互式和直接指定两种 change 选择方式。
@@ -89,3 +87,17 @@ openspec sync [change-name] [--no-validate]
 - **GIVEN** 已对某 change 执行过一次 sync
 - **WHEN** 再次对同一 change 执行 sync
 - **THEN** 主 specs 和 OPSX 文件内容与首次同步后完全一致
+
+### Requirement: Sync-created specs SHALL use runtime projection
+When `openspec sync` creates or rebuilds formal specs, the command SHALL consume runtime projection so newly written prose follows config-driven policy instead of hardcoded English boilerplate.
+
+#### Scenario: New formal spec uses projected prose policy
+- **WHEN** sync creates a formal spec that does not yet exist
+- **THEN** the command SHALL use runtime projection for any generated prose content
+- **AND** SHALL preserve canonical headers, requirement markers, scenario markers, and normative keywords
+
+#### Scenario: Existing formal spec update does not inject unrelated boilerplate
+- **WHEN** sync updates an existing formal spec through delta reconciliation
+- **THEN** the command SHALL limit generated prose to the sync contract
+- **AND** SHALL NOT inject unrelated hardcoded English guidance into unaffected sections
+

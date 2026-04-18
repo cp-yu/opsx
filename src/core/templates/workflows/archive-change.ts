@@ -18,6 +18,8 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
 
 **Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
+When archive guidance discusses embedded sync or artifact write-back, treat \`openspec/config.yaml\` as the compact source of truth and follow the shared prompt/runtime projection contract rather than reinterpreting raw config keys inside the template body.
+
 **Steps**
 
 1. **If no change name provided, prompt for selection**
@@ -163,6 +165,8 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
     content: `Archive a completed change in the experimental workflow.
 
 **Input**: Optionally specify a change name after \`/opsx:archive\` (e.g., \`/opsx:archive add-auth\`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+
+When archive guidance discusses embedded sync or artifact write-back, treat \`openspec/config.yaml\` as the compact source of truth and follow the shared prompt/runtime projection contract rather than reinterpreting raw config keys inside the template body.
 
 **Steps**
 

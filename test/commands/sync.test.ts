@@ -87,6 +87,41 @@ Then the system signs the user in`
     expect(console.log).toHaveBeenCalledWith('opsx: no-delta');
   });
 
+  it('uses runtime projection when creating a new formal spec skeleton', async () => {
+    const syncCommand = await loadSyncCommand();
+    await fs.writeFile(
+      path.join(tempDir, 'openspec', 'config.yaml'),
+      'schema: spec-driven\ndocLanguage: 中文\n'
+    );
+    const changeDir = await createChange('localized-sync');
+    const changeSpecDir = path.join(changeDir, 'specs', 'auth');
+    await fs.mkdir(changeSpecDir, { recursive: true });
+    await fs.writeFile(
+      path.join(changeSpecDir, 'spec.md'),
+      `# Auth - Changes
+
+## ADDED Requirements
+
+### Requirement: The system SHALL support login
+
+#### Scenario: Login succeeds
+Given valid credentials
+When the user submits the form
+Then the system signs the user in`
+    );
+
+    await syncCommand('localized-sync', { noValidate: true });
+
+    const mainSpec = await fs.readFile(
+      path.join(tempDir, 'openspec', 'specs', 'auth', 'spec.md'),
+      'utf-8'
+    );
+    expect(mainSpec).toContain('## Purpose');
+    expect(mainSpec).toContain('此规约记录变更 localized-sync 引入的行为');
+    expect(mainSpec).toContain('### Requirement: The system SHALL support login');
+    expect(mainSpec).not.toContain('TBD - created by archiving change');
+  });
+
   it('supports interactive change selection when no name is provided', async () => {
     const syncCommand = await loadSyncCommand();
     const { select } = await import('@inquirer/prompts');

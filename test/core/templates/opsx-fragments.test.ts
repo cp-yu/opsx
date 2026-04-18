@@ -9,12 +9,14 @@ import {
   VERIFY_WRITEBACK_RULES,
 } from '../../../src/core/templates/fragments/opsx-fragments.js';
 import { getExploreSkillTemplate } from '../../../src/core/templates/workflows/explore.js';
+import { getOnboardSkillTemplate } from '../../../src/core/templates/workflows/onboard.js';
 import {
   getOpsxProposeCommandTemplate,
   getOpsxProposeSkillTemplate,
 } from '../../../src/core/templates/workflows/propose.js';
 import { getApplyChangeSkillTemplate } from '../../../src/core/templates/workflows/apply-change.js';
 import { getArchiveChangeSkillTemplate } from '../../../src/core/templates/workflows/archive-change.js';
+import { getSyncSpecsSkillTemplate } from '../../../src/core/templates/workflows/sync-specs.js';
 import { getVerifyChangeSkillTemplate } from '../../../src/core/templates/workflows/verify-change.js';
 
 describe('OPSX shared context fragments', () => {
@@ -42,5 +44,13 @@ describe('OPSX shared context fragments', () => {
 
     expect(getArchiveChangeSkillTemplate().instructions).toContain(CONFORMANCE_CHECK_RULES);
     expect(getArchiveChangeSkillTemplate().instructions).toContain(VERIFY_WRITEBACK_RULES);
+  });
+
+  it('keeps projection contract wording aligned across explore, sync, archive, verify, and onboard surfaces', () => {
+    expect(getExploreSkillTemplate().instructions).toContain('compiled prompt projection contract');
+    expect(getSyncSpecsSkillTemplate().instructions).toContain('shared prompt/runtime projection contract');
+    expect(getArchiveChangeSkillTemplate().instructions).toContain('shared prompt/runtime projection contract');
+    expect(getVerifyChangeSkillTemplate().instructions).toContain('shared prompt/runtime projection contract');
+    expect(getOnboardSkillTemplate().instructions).toContain('compiled prompt projection contract');
   });
 });

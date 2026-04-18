@@ -105,6 +105,7 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
     instruction,
     context,
     rules,
+    configProjection,
     template,
     dependencies,
     unlocks,
@@ -148,6 +149,24 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
       console.log(`- ${rule}`);
     }
     console.log('</rules>');
+    console.log();
+  }
+
+  if (configProjection.prompt.compiledLines.length > 0) {
+    console.log('<config_projection>');
+    console.log('<!-- This is the compiled config contract. Do NOT copy it into the artifact. -->');
+    for (const fragment of configProjection.prompt.fragments) {
+      console.log(`<fragment key="${fragment.key}" scope="${fragment.scope}">`);
+      for (const line of fragment.lines) {
+        if (fragment.key === 'rules') {
+          console.log(`- ${line}`);
+        } else {
+          console.log(line);
+        }
+      }
+      console.log('</fragment>');
+    }
+    console.log('</config_projection>');
     console.log();
   }
 

@@ -14,6 +14,8 @@ import {
   normalizeRequirementName,
   type RequirementBlock,
 } from './parsers/requirement-blocks.js';
+import { projectConfigForRuntime, isChineseDocLanguage, type RuntimeProjection } from './config-projection.js';
+import { readProjectConfig } from './project-config.js';
 import { Validator } from './validation/validator.js';
 
 // -----------------------------------------------------------------------------
@@ -150,7 +152,8 @@ export async function findSpecUpdates(changeDir: string, mainSpecsDir: string): 
  */
 export async function buildUpdatedSpec(
   update: SpecUpdate,
-  changeName: string
+  changeName: string,
+  projectRoot?: string
 ): Promise<{ rebuilt: string; counts: { added: number; modified: number; removed: number; renamed: number } }> {
   // Read change spec content (delta-format expected)
   const changeContent = await fs.readFile(update.source, 'utf-8');
@@ -251,6 +254,10 @@ export async function buildUpdatedSpec(
   // Load or create base target content
   let targetContent: string;
   let isNewSpec = false;
+  const runtimeProjection = projectConfigForRuntime(
+    projectRoot ? readProjectConfig(projectRoot) : null,
+    { consumer: 'spec-skeleton' }
+  );
   try {
     targetContent = await fs.readFile(update.target, 'utf-8');
   } catch {
@@ -270,7 +277,7 @@ export async function buildUpdatedSpec(
       );
     }
     isNewSpec = true;
-    targetContent = buildSpecSkeleton(specName, changeName);
+    targetContent = buildSpecSkeleton(specName, changeName, runtimeProjection);
   }
 
   // Extract requirements section and build name->block map
@@ -410,9 +417,22 @@ export async function writeUpdatedSpec(
 /**
  * Build a skeleton spec for new capabilities.
  */
-export function buildSpecSkeleton(specFolderName: string, changeName: string): string {
+function buildSpecSkeletonPurpose(changeName: string, projection: RuntimeProjection): string {
+  if (isChineseDocLanguage(projection.proseLanguage)) {
+    return `此规约记录变更 ${changeName} 引入的行为，请在后续同步或归档前补全正式 Purpose。`;
+  }
+
+  return `This specification records behavior introduced by change ${changeName}. Replace this Purpose with the formal capability intent before archive.`;
+}
+
+export function buildSpecSkeleton(
+  specFolderName: string,
+  changeName: string,
+  projection?: RuntimeProjection
+): string {
   const titleBase = specFolderName;
-  return `# ${titleBase} Specification\n\n## Purpose\nTBD - created by archiving change ${changeName}. Update Purpose after archive.\n\n## Requirements\n`;
+  const effectiveProjection = projection ?? projectConfigForRuntime(null, { consumer: 'spec-skeleton' });
+  return `# ${titleBase} Specification\n\n## Purpose\n${buildSpecSkeletonPurpose(changeName, effectiveProjection)}\n\n## Requirements\n`;
 }
 
 /**
@@ -465,7 +485,7 @@ export async function applySpecs(
   }> = [];
 
   for (const update of specUpdates) {
-    const built = await buildUpdatedSpec(update, changeName);
+    const built = await buildUpdatedSpec(update, changeName, projectRoot);
     prepared.push({ update, rebuilt: built.rebuilt, counts: built.counts });
   }
 

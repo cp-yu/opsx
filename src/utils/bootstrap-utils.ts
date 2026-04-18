@@ -4,6 +4,12 @@ import path from 'path';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { z } from 'zod';
 import { FileSystemUtils } from './file-system.js';
+import {
+  getRuntimeFingerprintInput,
+  isChineseDocLanguage,
+  projectConfigForRuntime,
+  type RuntimeProjection,
+} from '../core/config-projection.js';
 import { readProjectConfig } from '../core/project-config.js';
 import { Validator } from '../core/validation/validator.js';
 import {
@@ -635,28 +641,40 @@ function validateSpecScenarioSteps(
   return errors;
 }
 
-function renderCandidateSpec(capability: DomainCapability, folder: string): string {
+function renderProjectedProse(text: string, projection: RuntimeProjection): string {
+  if (projection.preserveCanonicalTokens) {
+    return text.trim();
+  }
+
+  return text.trim();
+}
+
+function renderCandidateSpec(
+  capability: DomainCapability,
+  folder: string,
+  projection: RuntimeProjection
+): string {
   const spec = capability.spec!;
   const lines: string[] = [
     `# Spec: ${folder}`,
     '',
     '## Purpose',
     '',
-    spec.purpose.trim(),
+    renderProjectedProse(spec.purpose, projection),
     '',
     '## Requirements',
     '',
   ];
 
   for (const requirement of spec.requirements) {
-    lines.push(`### Requirement: ${requirement.title.trim()}`);
-    lines.push(requirement.text.trim());
+    lines.push(`### Requirement: ${renderProjectedProse(requirement.title, projection)}`);
+    lines.push(renderProjectedProse(requirement.text, projection));
     lines.push('');
 
     for (const scenario of requirement.scenarios) {
-      lines.push(`#### Scenario: ${scenario.title.trim()}`);
+      lines.push(`#### Scenario: ${renderProjectedProse(scenario.title, projection)}`);
       for (const step of scenario.steps) {
-        lines.push(`- **${step.keyword}** ${step.text.trim()}`);
+        lines.push(`- **${step.keyword}** ${renderProjectedProse(step.text, projection)}`);
       }
       lines.push('');
     }
@@ -680,6 +698,9 @@ async function assembleCandidateSpecs(
   const validationErrors: string[] = [];
   const seenFolders = new Map<string, string>();
   const validator = new Validator(false);
+  const candidateProjection = projectConfigForRuntime(readProjectConfig(projectRoot), {
+    consumer: 'bootstrap-candidate-spec',
+  });
 
   const sortedDomainMaps = [...state.domainMaps.entries()]
     .sort(([leftId], [rightId]) => leftId.localeCompare(rightId))
@@ -736,7 +757,7 @@ async function assembleCandidateSpecs(
       }
 
       const candidateRelativePath = `openspec/bootstrap/candidate/specs/${folder}/spec.md`;
-      const content = renderCandidateSpec(capability, folder);
+      const content = renderCandidateSpec(capability, folder, candidateProjection);
       specs.push({
         capabilityId: capability.id,
         folder,
@@ -1175,15 +1196,28 @@ function computeSourceFingerprint(projectRoot: string, state: BootstrapState): s
 }
 
 function computeCandidateFingerprint(
+  projectRoot: string,
   bundle: ProjectOpsxBundle,
   state: BootstrapState,
   candidateSpecs: BootstrapCandidateSpec[],
   preservedFormalPaths: string[]
 ): string {
+  const projectConfig = readProjectConfig(projectRoot);
   return fingerprintValue({
     bundle,
     baseline: state.metadata.baseline_type,
     mode: state.metadata.mode,
+    runtimeProjection: {
+      candidateSpec: getRuntimeFingerprintInput(
+        projectConfigForRuntime(projectConfig, { consumer: 'bootstrap-candidate-spec' })
+      ),
+      review: getRuntimeFingerprintInput(
+        projectConfigForRuntime(projectConfig, { consumer: 'bootstrap-review' })
+      ),
+      starterReadme: getRuntimeFingerprintInput(
+        projectConfigForRuntime(projectConfig, { consumer: 'bootstrap-starter-readme' })
+      ),
+    },
     candidateSpecs: candidateSpecs.map((spec) => ({
       capabilityId: spec.capabilityId,
       candidateRelativePath: spec.candidateRelativePath,
@@ -1192,6 +1226,13 @@ function computeCandidateFingerprint(
     })),
     preservedFormalPaths,
   });
+}
+
+function localizeBootstrapText(
+  projection: RuntimeProjection,
+  text: { en: string; zh: string }
+): string {
+  return isChineseDocLanguage(projection.proseLanguage) ? text.zh : text.en;
 }
 
 async function writeBootstrapMetadata(projectRoot: string, metadata: BootstrapMetadata): Promise<void> {
@@ -1228,30 +1269,60 @@ async function writeCandidateFiles(
   ]);
 }
 
-function buildReviewContent(state: BootstrapState, derived: DerivedBootstrapArtifacts): string {
+function buildReviewContent(
+  state: BootstrapState,
+  derived: DerivedBootstrapArtifacts,
+  projection: RuntimeProjection
+): string {
   if (!state.evidence) {
     throw new Error('No evidence.yaml found. Run scan phase first.');
   }
 
   const lines: string[] = ['# Bootstrap Review', ''];
-  lines.push('Review the mapped architecture before promoting to formal OPSX files.', '');
-  lines.push('This file is derived from evidence.yaml and domain-map/*.yaml. If either changes, regenerate review via `openspec bootstrap validate`.', '');
+  lines.push(
+    localizeBootstrapText(projection, {
+      en: 'Review the mapped architecture before promoting to formal OPSX files.',
+      zh: '在提升为正式 OPSX 文件之前，先审阅当前映射出的架构。',
+    }),
+    ''
+  );
+  lines.push(
+    localizeBootstrapText(projection, {
+      en: 'This file is derived from evidence.yaml and domain-map/*.yaml. If either changes, regenerate review via `openspec bootstrap validate`.',
+      zh: '该文件由 evidence.yaml 和 domain-map/*.yaml 派生；任一内容变化后，都需要重新运行 `openspec bootstrap validate` 生成新的 review。',
+    }),
+    ''
+  );
   lines.push('## Domain Checklist', '');
 
   const orderedDomains = [...state.evidence.domains].sort(compareEvidenceDomains);
   for (const dom of orderedDomains) {
     const mapFile = state.domainMaps.get(dom.id);
     const capCount = mapFile?.capabilities.length ?? 0;
-    const status = mapFile ? `${capCount} capabilities` : 'unmapped';
+    const status = mapFile
+      ? localizeBootstrapText(projection, {
+        en: `${capCount} capabilities`,
+        zh: `${capCount} 个 capability`,
+      })
+      : localizeBootstrapText(projection, { en: 'unmapped', zh: '未映射' });
     lines.push(`- [ ] ${dom.id} — ${status}, confidence: ${dom.confidence}`);
   }
 
   lines.push('', '## Candidate Specs', '');
   if (state.metadata.mode === 'opsx-first') {
-    lines.push('- Mode contract: README-only starter at openspec/specs/README.md');
-    lines.push('- No capability-level candidate specs should be generated');
+    lines.push(`- ${localizeBootstrapText(projection, {
+      en: 'Mode contract: README-only starter at openspec/specs/README.md',
+      zh: '模式约束：只在 openspec/specs/README.md 生成 README 型 starter',
+    })}`);
+    lines.push(`- ${localizeBootstrapText(projection, {
+      en: 'No capability-level candidate specs should be generated',
+      zh: '此模式下不应生成 capability 级别的 candidate spec',
+    })}`);
   } else if (derived.candidateSpecs.length === 0) {
-    lines.push('- No candidate specs will be written');
+    lines.push(`- ${localizeBootstrapText(projection, {
+      en: 'No candidate specs will be written',
+      zh: '当前不会写入 candidate spec',
+    })}`);
   } else {
     for (const spec of derived.candidateSpecs) {
       lines.push(`- ${spec.capabilityId} -> ${spec.formalRelativePath}`);
@@ -1259,16 +1330,37 @@ function buildReviewContent(state: BootstrapState, derived: DerivedBootstrapArti
   }
 
   for (const preservedPath of derived.preservedFormalPaths) {
-    lines.push(`- preserved existing spec: ${preservedPath}`);
+    lines.push(`- ${localizeBootstrapText(projection, {
+      en: `preserved existing spec: ${preservedPath}`,
+      zh: `保留已有 spec：${preservedPath}`,
+    })}`);
   }
 
   lines.push('', '## Validation', '');
-  lines.push('- [ ] Review matches current candidate output');
-  lines.push('- [ ] Referential integrity passes');
-  lines.push('- [ ] Code-map paths exist on disk');
-  lines.push('- [ ] Candidate spec set matches the bootstrap mode contract');
-  lines.push('- [ ] Candidate specs pass OpenSpec validation');
-  lines.push('- [ ] Domain boundaries match mental model');
+  lines.push(`- [ ] ${localizeBootstrapText(projection, {
+    en: 'Review matches current candidate output',
+    zh: 'Review 内容与当前 candidate 输出一致',
+  })}`);
+  lines.push(`- [ ] ${localizeBootstrapText(projection, {
+    en: 'Referential integrity passes',
+    zh: '引用完整性校验通过',
+  })}`);
+  lines.push(`- [ ] ${localizeBootstrapText(projection, {
+    en: 'Code-map paths exist on disk',
+    zh: 'Code-map 中的路径都存在于磁盘上',
+  })}`);
+  lines.push(`- [ ] ${localizeBootstrapText(projection, {
+    en: 'Candidate spec set matches the bootstrap mode contract',
+    zh: 'Candidate spec 集合符合当前 bootstrap 模式约束',
+  })}`);
+  lines.push(`- [ ] ${localizeBootstrapText(projection, {
+    en: 'Candidate specs pass OpenSpec validation',
+    zh: 'Candidate spec 通过 OpenSpec 校验',
+  })}`);
+  lines.push(`- [ ] ${localizeBootstrapText(projection, {
+    en: 'Domain boundaries match mental model',
+    zh: 'Domain 边界与预期心智模型一致',
+  })}`);
   lines.push('');
 
   return lines.join('\n');
@@ -1288,7 +1380,7 @@ async function deriveBootstrapArtifacts(projectRoot: string, state: BootstrapSta
     ...candidateSpecAssembly.validationErrors,
   ];
   const candidateFingerprint = bundle && candidateSpecAssembly.sourceErrors.length === 0
-    ? computeCandidateFingerprint(bundle, state, candidateSpecAssembly.specs, candidateSpecAssembly.preservedFormalPaths)
+    ? computeCandidateFingerprint(projectRoot, bundle, state, candidateSpecAssembly.specs, candidateSpecAssembly.preservedFormalPaths)
     : null;
   const candidateExists = candidateFingerprint
     ? await candidateFilesExist(projectRoot, candidateSpecAssembly.specs)
@@ -1367,7 +1459,11 @@ export async function generateReview(projectRoot: string): Promise<string> {
     throw new Error('No evidence.yaml found. Run scan phase first.');
   }
 
-  const content = buildReviewContent(state, derived);
+  const content = buildReviewContent(
+    state,
+    derived,
+    projectConfigForRuntime(readProjectConfig(projectRoot), { consumer: 'bootstrap-review' })
+  );
   await fs.writeFile(bootstrapPath(projectRoot, 'review.md'), content, 'utf-8');
   await writeBootstrapMetadata(projectRoot, {
     ...state.metadata,
@@ -1396,7 +1492,15 @@ export async function refreshBootstrapDerivedArtifacts(
   }
 
   if (reviewUpdated) {
-    await fs.writeFile(bootstrapPath(projectRoot, 'review.md'), buildReviewContent(state, derived), 'utf-8');
+    await fs.writeFile(
+      bootstrapPath(projectRoot, 'review.md'),
+      buildReviewContent(
+        state,
+        derived,
+        projectConfigForRuntime(readProjectConfig(projectRoot), { consumer: 'bootstrap-review' })
+      ),
+      'utf-8'
+    );
   }
 
   if (candidateUpdated || reviewUpdated) {
@@ -1425,13 +1529,28 @@ async function writeBootstrapSpecStarter(projectRoot: string, state: BootstrapSt
     return;
   }
 
+  const projection = projectConfigForRuntime(readProjectConfig(projectRoot), {
+    consumer: 'bootstrap-starter-readme',
+  });
   const content = `# Specs Starter
 
-This repository was bootstrapped in \`opsx-first\` mode.
+${localizeBootstrapText(projection, {
+  en: 'This repository was bootstrapped in `opsx-first` mode.',
+  zh: '该仓库通过 `opsx-first` 模式完成了 bootstrap。',
+})}
 
-- Formal OPSX files were generated from the bootstrap workflow.
-- Add behavior specs incrementally with normal OpenSpec changes.
-- Create focused specs under \`openspec/specs/<capability>/spec.md\` as features evolve.
+- ${localizeBootstrapText(projection, {
+  en: 'Formal OPSX files were generated from the bootstrap workflow.',
+  zh: '正式 OPSX 文件已经由 bootstrap 工作流生成。',
+})}
+- ${localizeBootstrapText(projection, {
+  en: 'Add behavior specs incrementally with normal OpenSpec changes.',
+  zh: '后续请通过常规 OpenSpec change 渐进补充行为规约。',
+})}
+- ${localizeBootstrapText(projection, {
+  en: 'Create focused specs under `openspec/specs/<capability>/spec.md` as features evolve.',
+  zh: '随着功能演进，在 `openspec/specs/<capability>/spec.md` 下补充聚焦的 spec。',
+})}
 `;
 
   await FileSystemUtils.writeFile(specsReadmePath, content);

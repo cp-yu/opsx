@@ -41,7 +41,7 @@ domains:
     boundary: 拥有 OPSX 文件 I/O、Schema 验证和 delta 合并。不拥有 OPSX 内容生成。
 capabilities:
   - id: cap.ai.agent-docs
-    intent: 生成面向 Agent 的指令文档
+    intent: 生成面向 Agent 的指令文档，并让所有会生成或回写 artifact 的 workflow surface 共享同一套配置投影合同
     status: active
     type: capability
   - id: cap.ai.command-generation
@@ -60,10 +60,11 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 提供面向 Agent 的工作流模板（propose、apply、explore、archive、verify 等），在核心 workflow 中共享 OPSX 上下文加载协议和 conformance check 规则
+    intent: 提供面向 Agent 的工作流模板（propose、apply、explore、archive、verify 等），通过共享配置投影消费项目级 authoring 约束与 runtime policy 边界
+    status: active
     type: capability
   - id: cap.artifact-graph.instruction-loader
-    intent: 加载 Schema 模板，注入项目上下文和制品规则，供 AI 消费
+    intent: 加载 Schema 模板，并按 workflow surface 与 artifact 编译项目配置投影，向 AI 暴露统一的 prompt projection 而非原始字段拼接结果
     status: active
     type: capability
   - id: cap.artifact-graph.parse
@@ -79,7 +80,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.change.archive
-    intent: 归档已完成的变更，将规约合并到主目录，移动变更到归档
+    intent: 归档已完成的变更，将规约合并到主目录，移动变更到归档，并在 archive-time sync 与 remediation 相关写回中遵守统一配置投影语义
     status: active
     type: capability
   - id: cap.change.create
@@ -95,11 +96,11 @@ capabilities:
     status: active
     type: capability
   - id: cap.change.specs-sync
-    intent: 将变更中的 delta specs 和 OPSX delta 同步到主规约与主 OPSX，支持幂等合并，并被 standalone sync 与 archive 共享
+    intent: 将变更中的 delta specs 和 OPSX delta 同步到主规约与主 OPSX，支持幂等合并，并在 standalone sync 与 archive 共享路径中消费统一的 runtime projection
     status: active
     type: capability
   - id: cap.cli.archive
-    intent: 归档已完成的变更并将规约合并到主规约目录
+    intent: 归档已完成的变更并将规约合并到主规约目录，同时让 embedded sync 的正文生成行为与统一 runtime projection 保持一致
     status: active
     type: capability
   - id: cap.cli.change
@@ -179,7 +180,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.config.project
-    intent: 加载和验证项目级配置（openspec/config.yaml）
+    intent: 加载和验证项目级配置（openspec/config.yaml），并将有效字段暴露为可供 prompt projection 与 runtime projection 共同消费的统一输入
     status: active
     type: capability
   - id: cap.config.schema-validation
@@ -191,7 +192,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.opsx.bootstrap
-    intent: 提供基于现有 CLI 的 bootstrap 工作流，支持 TTY 模式选择、invalid domain-map 诊断与 gate 驱动的五阶段生命周期；在组装 candidate bundle 时从 bootstrap 工作区派生 project intent/scope；promote 后保留工作区并提示用户可手动清理；不调整已有 formal OPSX 项目
+    intent: 提供基于现有 CLI 的 bootstrap 工作流，支持 TTY 模式选择、invalid domain-map 诊断与 gate 驱动的五阶段生命周期；在组装 candidate bundle 时从 bootstrap 工作区派生 project intent/scope，并通过统一 runtime projection 管理 candidate prose、review/starter 生成与 stale 判定；promote 后保留工作区并提示用户可手动清理；不调整已有 formal OPSX 项目
     status: active
     type: capability
   - id: cap.opsx.delta-merge
@@ -247,10 +248,11 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.sync
-    intent: 顶层 CLI 命令，将 change 中的 delta specs 和 OPSX delta 同步到主文件，不执行归档
+    intent: 顶层 CLI 命令，将 change 中的 delta specs 和 OPSX delta 同步到主文件，不执行归档，并在需要生成正文时消费统一 runtime projection
+    status: active
     type: capability
   - id: cap.ai.verify-writeback
-    intent: 验证结果回写 tasks.md（unmark 未真正完成的任务）并生成分类 remediation 清单（code_fix / artifact_fix）
+    intent: 验证结果回写 tasks.md（unmark 未真正完成的任务）并生成分类 remediation 清单（code_fix / artifact_fix），同时让 write-back prose 遵守统一 runtime projection
     status: active
     type: capability
   - id: cap.ai.tool-invocation-references

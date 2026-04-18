@@ -20,6 +20,8 @@ export function getOnboardSkillTemplate(): SkillTemplate {
 function getOnboardInstructions(): string {
   return `Guide the user through their first complete OpenSpec workflow cycle. This is a teaching experience—you'll do real work in their codebase while explaining each step.
 
+When onboarding drafts or updates artifacts, treat \`openspec/config.yaml\` as the compact source of truth and follow the compiled prompt projection contract for prose guidance. Preserve canonical tokens such as section headers, \`SHALL\`/\`MUST\`, BDD keywords, IDs, schema keys, paths, commands, and code identifiers.
+
 ---
 
 ## Preflight
