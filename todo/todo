@@ -1,9 +1,7 @@
 # TODO
 
 ## 待处理
- 允许bootstrap 于已经spec的内容中完成，可以利用就的bootstrap 的信息继续完成。适用场景，和团队开发，有的人不使用openspec完成开发。
- 鉴于已经有了bootstrap或者说已经有了内容了，此时大概率可以假设是有git的。如果有git，那么就记录完成bootstrap最后的提交，然后做一个diff，就可以很好的增量完成。
- 如果没有git，那么只能全部扫描+利用已有的bootstrap信息，完成更新。
+
 
 ## 已完成并归档
 
