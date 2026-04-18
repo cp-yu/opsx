@@ -533,7 +533,7 @@ const bootstrapCmd = program
 bootstrapCmd
   .command('init')
   .description('Initialize bootstrap workspace')
-  .option('--mode <mode>', 'Bootstrap mode: full (complete specs) or opsx-first (README-only starter)')
+  .option('--mode <mode>', 'Bootstrap mode: full (complete specs), opsx-first (README-only starter), or refresh (delta-first formal OPSX refresh)')
   .option('--scope <paths>', 'Comma-separated paths to include in scan')
   .action(async (options: BootstrapInitOptions) => {
     try {
@@ -589,7 +589,7 @@ bootstrapCmd
 
 bootstrapCmd
   .command('promote')
-  .description('Validate, write formal OPSX files, and clean workspace')
+  .description('Validate, write formal OPSX files, and retain the workspace')
   .option('-y, --yes', 'Skip confirmation')
   .action(async (options: BootstrapPromoteOptions) => {
     try {

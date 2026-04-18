@@ -1,5 +1,4 @@
 import { spawn } from 'child_process';
-import { existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -54,10 +53,6 @@ function runCommand(command: string, args: string[], options: RunCommandOptions 
 }
 
 export async function ensureCliBuilt() {
-  if (existsSync(cliEntry)) {
-    return;
-  }
-
   if (!buildPromise) {
     buildPromise = runCommand('pnpm', ['run', 'build']).catch((error) => {
       buildPromise = undefined;
@@ -66,10 +61,6 @@ export async function ensureCliBuilt() {
   }
 
   await buildPromise;
-
-  if (!existsSync(cliEntry)) {
-    throw new Error('CLI entry point missing after build. Expected dist/cli/index.js');
-  }
 }
 
 export async function runCLI(args: string[] = [], options: RunCLIOptions = {}): Promise<RunCLIResult> {

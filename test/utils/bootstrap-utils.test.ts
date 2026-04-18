@@ -564,7 +564,7 @@ code_refs:
     expect(candidate.project.scope).toBeUndefined();
   });
 
-  it('keeps existing formal OPSX files unchanged when bootstrap is unsupported for formal baselines', async () => {
+  it('keeps existing formal OPSX files unchanged when a non-refresh mode is requested on a formal baseline', async () => {
     const originalProjectOpsx = `schema_version: 1
 project:
   id: proj.demo
@@ -576,7 +576,9 @@ project:
     await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.relations.yaml'), 'schema_version: 1\nrelations: []\n', 'utf-8');
     await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.code-map.yaml'), 'schema_version: 1\nnodes: []\n', 'utf-8');
 
-    await expect(initBootstrap(testDir, { mode: 'full' })).rejects.toThrow('existing formal OPSX files');
+    await expect(initBootstrap(testDir, { mode: 'full' })).rejects.toThrow(
+      "Bootstrap mode 'full' is not supported for baseline 'formal-opsx'. Valid modes: refresh"
+    );
     await expect(fs.readFile(path.join(testDir, 'openspec', 'project.opsx.yaml'), 'utf-8')).resolves.toBe(originalProjectOpsx);
     await expect(fs.stat(path.join(testDir, 'openspec', 'bootstrap'))).rejects.toThrow();
   });

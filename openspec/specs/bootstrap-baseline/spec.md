@@ -5,7 +5,7 @@
 修正 bootstrap baseline 下 `full` 与 `opsx-first` 的输出合同，并将 candidate specs 纳入正式 bootstrap 流程。
 ## Requirements
 ### Requirement: 空 specs 目录仍应视为 raw baseline
-`detectBootstrapBaseline()` SHALL 将空的 `openspec/specs/` 目录（或仅包含 `README.md`）视为 `raw` baseline。
+`detectBootstrapBaseline()` SHALL 基于 formal OPSX 文件完整性与真实 spec 内容返回稳定的 baseline 分类，并为每种 baseline 暴露显式允许的 modes。
 
 #### Scenario: 空 openspec/specs/ 目录
 - **GIVEN** 项目存在 `openspec/specs/` 目录
@@ -19,6 +19,18 @@
 - **WHEN** 执行 `detectBootstrapBaseline()`
 - **THEN** 返回 `specs-based`
 - **AND** `getAllowedBootstrapModes('specs-based')` 返回 `['full']`
+
+#### Scenario: Existing formal OPSX uses refresh mode
+- **GIVEN** 项目存在完整且合法的 formal OPSX 三文件
+- **WHEN** 执行 `detectBootstrapBaseline()`
+- **THEN** 返回 `formal-opsx`
+- **AND** `getAllowedBootstrapModes('formal-opsx')` 返回 `['refresh']`
+
+#### Scenario: Partial or invalid formal OPSX remains unsupported
+- **GIVEN** 项目只存在部分 formal OPSX 文件，或任一 formal OPSX 文件无法通过 schema 校验
+- **WHEN** 执行 `detectBootstrapBaseline()`
+- **THEN** 返回 `invalid-partial-opsx`
+- **AND** `getAllowedBootstrapModes('invalid-partial-opsx')` 返回空列表
 
 ### Requirement: Raw + full SHALL generate formal OPSX and complete valid specs
 在 `raw + full` 下，bootstrap SHALL 将 candidate specs 纳入 review / stale / promote 合同，并且当 candidate spec 失效时在任何正式写入之前阻断 promote。

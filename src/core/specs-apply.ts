@@ -48,6 +48,15 @@ export interface SpecsApplyOutput {
   noChanges: boolean;
 }
 
+function normalizeRequirementBlockRaw(raw: string): string {
+  return raw
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .join('\n');
+}
+
 export function isDeltaSpecAlreadyApplied(
   changeContent: string,
   targetContent: string
@@ -77,7 +86,7 @@ export function isDeltaSpecAlreadyApplied(
 
   for (const modified of plan.modified) {
     const current = currentBlocks.get(normalizeRequirementName(modified.name));
-    if (!current || current.raw !== modified.raw) {
+    if (!current || normalizeRequirementBlockRaw(current.raw) !== normalizeRequirementBlockRaw(modified.raw)) {
       return false;
     }
     confirmedAppliedState = true;
@@ -85,7 +94,7 @@ export function isDeltaSpecAlreadyApplied(
 
   for (const added of plan.added) {
     const current = currentBlocks.get(normalizeRequirementName(added.name));
-    if (!current || current.raw !== added.raw) {
+    if (!current || normalizeRequirementBlockRaw(current.raw) !== normalizeRequirementBlockRaw(added.raw)) {
       return false;
     }
     confirmedAppliedState = true;

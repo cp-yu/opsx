@@ -1,6 +1,8 @@
 import { promises as fs } from 'fs';
 import { createHash } from 'crypto';
 import path from 'path';
+import { promisify } from 'util';
+import { execFile as execFileCallback } from 'child_process';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { z } from 'zod';
 import { FileSystemUtils } from './file-system.js';
@@ -18,11 +20,17 @@ import {
   ProjectOpsxFileSchema,
   ProjectOpsxRelationsFileSchema,
   ProjectOpsxCodeMapFileSchema,
+  applyOpsxDelta,
+  readProjectOpsx,
   validateReferentialIntegrity,
   validateCodeMapIntegrity,
+  writeProjectOpsx,
   type ProjectOpsxBundle,
   type OpsxRelation,
   type CodeMapEntry,
+  type OpsxDelta,
+  type OpsxNode,
+  type OpsxDeltaApplyResult,
 } from './opsx-utils.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -32,11 +40,24 @@ export const DEFAULT_BOOTSTRAP_PROJECT_ID = 'project';
 export const DEFAULT_BOOTSTRAP_PROJECT_NAME = 'Project';
 export const BOOTSTRAP_WORKSPACE_RETAINED_NOTICE =
   'Bootstrap workspace retained at openspec/bootstrap/. You may delete it manually once you no longer need it.';
+export const BOOTSTRAP_METADATA_FILE = '.bootstrap.yaml';
+export const BOOTSTRAP_SCOPE_FILE = 'scope.yaml';
+export const BOOTSTRAP_EVIDENCE_FILE = 'evidence.yaml';
+export const BOOTSTRAP_DOMAIN_MAP_DIR = 'domain-map';
+export const BOOTSTRAP_REVIEW_FILE = 'review.md';
+export const BOOTSTRAP_CANDIDATE_DIR = 'candidate';
+export const BOOTSTRAP_CANDIDATE_SPECS_DIR = path.join(BOOTSTRAP_CANDIDATE_DIR, 'specs');
+export const BOOTSTRAP_CANDIDATE_FILE_NAMES = {
+  project: 'project.opsx.yaml',
+  relations: 'project.opsx.relations.yaml',
+  codeMap: 'project.opsx.code-map.yaml',
+} as const;
+const execFile = promisify(execFileCallback);
 
 export const BOOTSTRAP_PHASES = ['init', 'scan', 'map', 'review', 'promote'] as const;
 export type BootstrapPhase = typeof BOOTSTRAP_PHASES[number];
 
-export const BOOTSTRAP_MODES = ['full', 'opsx-first'] as const;
+export const BOOTSTRAP_MODES = ['full', 'opsx-first', 'refresh'] as const;
 export type BootstrapMode = typeof BOOTSTRAP_MODES[number];
 
 export const BOOTSTRAP_BASELINE_TYPES = [
@@ -72,6 +93,8 @@ const BootstrapMetadataDiskSchema = z.object({
   source_fingerprint: z.string().nullable().optional(),
   candidate_fingerprint: z.string().nullable().optional(),
   review_fingerprint: z.string().nullable().optional(),
+  refresh_anchor_commit: z.string().nullable().optional(),
+  candidate_spec_paths: z.array(z.string()).optional(),
 });
 
 const ScopeConfigDiskSchema = z.object({
@@ -160,6 +183,8 @@ export interface BootstrapMetadata {
   source_fingerprint: string | null;
   candidate_fingerprint: string | null;
   review_fingerprint: string | null;
+  refresh_anchor_commit: string | null;
+  candidate_spec_paths: string[];
 }
 
 export interface ScopeConfig {
@@ -186,6 +211,28 @@ interface CandidateSpecAssembly {
   preservedFormalPaths: string[];
   sourceErrors: string[];
   validationErrors: string[];
+}
+
+type RefreshPlanStrategy = 'git-diff' | 'full-scan-fallback';
+
+interface RefreshPlan {
+  strategy: RefreshPlanStrategy;
+  reason: string;
+  anchorCommit: string | null;
+  changedPaths: string[];
+  mappedNodeIds: string[];
+  neighborNodeIds: string[];
+  impactedNodeIds: string[];
+  impactedDomainIds: string[];
+}
+
+interface RefreshDeltaSummary {
+  delta: OpsxDelta;
+  result: OpsxDeltaApplyResult;
+  mergedBundle: ProjectOpsxBundle;
+  affectedDomainIds: string[];
+  affectedNodeIds: string[];
+  preservedNodeIds: string[];
 }
 
 export interface InvalidDomainMap {
@@ -256,6 +303,8 @@ interface DerivedBootstrapArtifacts {
   reviewState: 'missing' | 'current' | 'stale';
   reviewApproved: boolean;
   checkedDomains: Set<string>;
+  refreshPlan: RefreshPlan | null;
+  refreshDelta: RefreshDeltaSummary | null;
 }
 
 export interface PromoteBootstrapResult {
@@ -316,6 +365,8 @@ function parseBootstrapMetadata(
     source_fingerprint: parsed.source_fingerprint ?? null,
     candidate_fingerprint: parsed.candidate_fingerprint ?? null,
     review_fingerprint: parsed.review_fingerprint ?? null,
+    refresh_anchor_commit: parsed.refresh_anchor_commit ?? null,
+    candidate_spec_paths: parsed.candidate_spec_paths ?? [],
   };
 }
 
@@ -338,11 +389,11 @@ function formalOpsxPaths(projectRoot: string): string[] {
 }
 
 function candidatePath(projectRoot: string, fileName: string): string {
-  return bootstrapPath(projectRoot, 'candidate', fileName);
+  return bootstrapPath(projectRoot, BOOTSTRAP_CANDIDATE_DIR, fileName);
 }
 
 function candidateSpecPath(projectRoot: string, folder: string): string {
-  return bootstrapPath(projectRoot, 'candidate', 'specs', folder, 'spec.md');
+  return bootstrapPath(projectRoot, BOOTSTRAP_CANDIDATE_SPECS_DIR, folder, 'spec.md');
 }
 
 function formalSpecPath(projectRoot: string, folder: string): string {
@@ -486,6 +537,221 @@ function fingerprintValue(value: unknown): string {
   return createHash('sha256').update(stableStringify(value)).digest('hex');
 }
 
+function toPathSegments(value: string): string[] {
+  return value.split(/[\\/]+/).filter(Boolean);
+}
+
+function looksWindowsLikePath(value: string): boolean {
+  return /^[A-Za-z]:[\\/]/.test(value) || value.includes('\\');
+}
+
+function normalizeRelativePath(value: string): string {
+  const segments = toPathSegments(value.trim());
+  return segments.length > 0 ? path.join(...segments) : '';
+}
+
+function normalizeComparableAbsolutePath(projectRoot: string, value: string): { comparable: string; absolute: string } {
+  const normalizedInput = normalizeRelativePath(value);
+  const absolute = path.normalize(path.resolve(projectRoot, normalizedInput));
+  const comparable = (process.platform === 'win32' || looksWindowsLikePath(value))
+    ? absolute.toLowerCase()
+    : absolute;
+  return { absolute, comparable };
+}
+
+function isPathCoveredByRef(projectRoot: string, changedPath: string, refPath: string): boolean {
+  const changed = normalizeComparableAbsolutePath(projectRoot, changedPath);
+  const ref = normalizeComparableAbsolutePath(projectRoot, refPath);
+  return changed.comparable === ref.comparable
+    || changed.comparable.startsWith(`${ref.comparable}${path.sep}`);
+}
+
+async function runGitCommand(projectRoot: string, args: string[]): Promise<{ ok: boolean; stdout: string; stderr: string }> {
+  try {
+    const result = await execFile('git', args, {
+      cwd: projectRoot,
+      windowsHide: true,
+    });
+    return {
+      ok: true,
+      stdout: result.stdout.trim(),
+      stderr: result.stderr.trim(),
+    };
+  } catch (error: any) {
+    if (error?.code === 'ENOENT') {
+      return { ok: false, stdout: '', stderr: 'git executable not found' };
+    }
+    return {
+      ok: false,
+      stdout: typeof error?.stdout === 'string' ? error.stdout.trim() : '',
+      stderr: typeof error?.stderr === 'string' ? error.stderr.trim() : String(error?.message ?? error),
+    };
+  }
+}
+
+async function resolveCurrentGitHead(projectRoot: string): Promise<string | null> {
+  const result = await runGitCommand(projectRoot, ['rev-parse', 'HEAD']);
+  return result.ok && result.stdout ? result.stdout : null;
+}
+
+async function collectGitChangedPaths(projectRoot: string, anchorCommit: string | null): Promise<RefreshPlan> {
+  const workTree = await runGitCommand(projectRoot, ['rev-parse', '--is-inside-work-tree']);
+  if (!workTree.ok || workTree.stdout !== 'true') {
+    return {
+      strategy: 'full-scan-fallback',
+      reason: 'Git 不可用，或当前目录不在 git work tree 中。',
+      anchorCommit: null,
+      changedPaths: [],
+      mappedNodeIds: [],
+      neighborNodeIds: [],
+      impactedNodeIds: [],
+      impactedDomainIds: [],
+    };
+  }
+
+  if (!anchorCommit) {
+    return {
+      strategy: 'full-scan-fallback',
+      reason: 'Refresh 锚点缺失，无法可靠缩小扫描范围。',
+      anchorCommit: null,
+      changedPaths: [],
+      mappedNodeIds: [],
+      neighborNodeIds: [],
+      impactedNodeIds: [],
+      impactedDomainIds: [],
+    };
+  }
+
+  const anchorReachable = await runGitCommand(projectRoot, ['cat-file', '-e', `${anchorCommit}^{commit}`]);
+  if (!anchorReachable.ok) {
+    return {
+      strategy: 'full-scan-fallback',
+      reason: `Refresh 锚点提交 '${anchorCommit}' 不可达，回退到全量扫描。`,
+      anchorCommit,
+      changedPaths: [],
+      mappedNodeIds: [],
+      neighborNodeIds: [],
+      impactedNodeIds: [],
+      impactedDomainIds: [],
+    };
+  }
+
+  const [committed, staged, unstaged, untracked] = await Promise.all([
+    runGitCommand(projectRoot, ['diff', '--name-only', '--diff-filter=ACDMRTUXB', `${anchorCommit}..HEAD`]),
+    runGitCommand(projectRoot, ['diff', '--name-only', '--cached', '--diff-filter=ACDMRTUXB']),
+    runGitCommand(projectRoot, ['diff', '--name-only', '--diff-filter=ACDMRTUXB']),
+    runGitCommand(projectRoot, ['ls-files', '--others', '--exclude-standard']),
+  ]);
+
+  if ([committed, staged, unstaged, untracked].some((result) => !result.ok)) {
+    return {
+      strategy: 'full-scan-fallback',
+      reason: '无法稳定收集 git diff 结果，回退到全量扫描。',
+      anchorCommit,
+      changedPaths: [],
+      mappedNodeIds: [],
+      neighborNodeIds: [],
+      impactedNodeIds: [],
+      impactedDomainIds: [],
+    };
+  }
+
+  const ignorePrefixes = [
+    `${path.normalize('openspec/bootstrap')}${path.sep}`,
+    `${path.normalize('openspec/specs')}${path.sep}`,
+  ];
+  const ignoreFiles = new Set([
+    path.normalize(OPSX_PATHS.PROJECT_FILE),
+    path.normalize(OPSX_PATHS.RELATIONS_FILE),
+    path.normalize(OPSX_PATHS.CODE_MAP_FILE),
+  ]);
+
+  const changedPaths = [...new Set(
+    [committed.stdout, staged.stdout, unstaged.stdout, untracked.stdout]
+      .flatMap((value) => value.split('\n'))
+      .map((entry) => normalizeRelativePath(entry))
+      .filter(Boolean)
+      .filter((entry) => !ignoreFiles.has(path.normalize(entry)))
+      .filter((entry) => !ignorePrefixes.some((prefix) => path.normalize(entry).startsWith(prefix)))
+  )].sort();
+
+  return {
+    strategy: 'git-diff',
+    reason: changedPaths.length > 0
+      ? '使用 git 锚点与工作树 diff 缩小 refresh 扫描范围。'
+      : 'git 锚点可用，但未发现需要映射到 code-map 的源码路径变化。',
+    anchorCommit,
+    changedPaths,
+    mappedNodeIds: [],
+    neighborNodeIds: [],
+    impactedNodeIds: [],
+    impactedDomainIds: [],
+  };
+}
+
+export function mapChangedPathsToNodeIds(
+  projectRoot: string,
+  bundle: ProjectOpsxBundle,
+  changedPaths: string[]
+): { mappedNodeIds: string[]; unmappedPaths: string[] } {
+  const matched = new Set<string>();
+  const unmappedPaths: string[] = [];
+
+  for (const changedPath of changedPaths) {
+    let mapped = false;
+    for (const entry of bundle.code_map) {
+      if (entry.refs.some((ref) => isPathCoveredByRef(projectRoot, changedPath, ref.path))) {
+        matched.add(entry.id);
+        mapped = true;
+      }
+    }
+    if (!mapped) {
+      unmappedPaths.push(changedPath);
+    }
+  }
+
+  return {
+    mappedNodeIds: [...matched].sort(),
+    unmappedPaths,
+  };
+}
+
+function expandNeighborNodeIds(bundle: ProjectOpsxBundle, nodeIds: string[]): string[] {
+  const expanded = new Set(nodeIds);
+  for (const relation of bundle.relations) {
+    if (expanded.has(relation.from) || expanded.has(relation.to)) {
+      expanded.add(relation.from);
+      expanded.add(relation.to);
+    }
+  }
+  return [...expanded].sort();
+}
+
+function findDomainForNode(bundle: ProjectOpsxBundle, nodeId: string): string | null {
+  if (nodeId.startsWith('dom.')) {
+    return nodeId;
+  }
+
+  const containsRelation = bundle.relations.find((relation) => relation.from === nodeId && relation.type === 'contains' && relation.to.startsWith('dom.'));
+  if (containsRelation) {
+    return containsRelation.to;
+  }
+
+  const capabilityMatch = nodeId.match(/^cap\.([^.]+)\./);
+  return capabilityMatch ? `dom.${capabilityMatch[1]}` : null;
+}
+
+function collectDomainIdsForNodes(bundle: ProjectOpsxBundle, nodeIds: string[]): string[] {
+  const domainIds = new Set<string>();
+  for (const nodeId of nodeIds) {
+    const domainId = findDomainForNode(bundle, nodeId);
+    if (domainId) {
+      domainIds.add(domainId);
+    }
+  }
+  return [...domainIds].sort();
+}
+
 async function countExistingFormalOpsxFiles(projectRoot: string): Promise<number> {
   const results = await Promise.all(formalOpsxPaths(projectRoot).map((filePath) => FileSystemUtils.fileExists(filePath)));
   return results.filter(Boolean).length;
@@ -529,6 +795,7 @@ export function getAllowedBootstrapModes(baselineType: BootstrapBaselineType): B
     case 'specs-based':
       return ['full'];
     case 'formal-opsx':
+      return ['refresh'];
     case 'invalid-partial-opsx':
       return [];
   }
@@ -541,7 +808,7 @@ export function getBootstrapBaselineReason(baselineType: BootstrapBaselineType):
     case 'specs-based':
       return 'Repository has spec content but no formal OPSX files.';
     case 'formal-opsx':
-      return 'Bootstrap does not support repositories with existing formal OPSX files.';
+      return 'Repository already has formal OPSX files. Use refresh to run an incremental bootstrap pass.';
     case 'invalid-partial-opsx':
       return 'Bootstrap does not support repositories with partial or invalid formal OPSX files.';
   }
@@ -686,9 +953,10 @@ function renderCandidateSpec(
 async function assembleCandidateSpecs(
   projectRoot: string,
   state: BootstrapState,
-  bundle: ProjectOpsxBundle | null
+  bundle: ProjectOpsxBundle | null,
+  options: { addedCapabilityIds?: Set<string> } = {}
 ): Promise<CandidateSpecAssembly> {
-  if (!bundle || state.metadata.mode !== 'full') {
+  if (!bundle || (state.metadata.mode !== 'full' && state.metadata.mode !== 'refresh')) {
     return { specs: [], preservedFormalPaths: [], sourceErrors: [], validationErrors: [] };
   }
 
@@ -705,9 +973,18 @@ async function assembleCandidateSpecs(
   const sortedDomainMaps = [...state.domainMaps.entries()]
     .sort(([leftId], [rightId]) => leftId.localeCompare(rightId))
     .map(([, mapFile]) => mapFile);
+  const restrictToAddedCapabilities = state.metadata.mode === 'refresh' ? (options.addedCapabilityIds ?? new Set<string>()) : null;
 
   for (const mapFile of sortedDomainMaps) {
     for (const capability of [...mapFile.capabilities].sort((a, b) => a.id.localeCompare(b.id))) {
+      if (restrictToAddedCapabilities && !restrictToAddedCapabilities.has(capability.id)) {
+        const formalPath = capability.spec ? `openspec/specs/${normalizeSpecFolderInput(capability.spec.folder)}/spec.md` : null;
+        if (formalPath) {
+          preservedFormalPaths.push(formalPath);
+        }
+        continue;
+      }
+
       if (!capability.spec) {
         sourceErrors.push(`Capability '${capability.id}' is missing spec source data. Add spec.folder, spec.purpose, and spec.requirements.`);
         continue;
@@ -745,6 +1022,13 @@ async function assembleCandidateSpecs(
       const formalRelativePath = `openspec/specs/${folder}/spec.md`;
       const existingFormalPath = formalSpecPath(projectRoot, folder);
       const alreadyExists = await FileSystemUtils.fileExists(existingFormalPath);
+      if (state.metadata.mode === 'refresh' && alreadyExists) {
+        sourceErrors.push(
+          `Refresh cannot write spec '${formalRelativePath}' because the target path already exists. Preserve existing formal specs or choose a different folder.`
+        );
+        continue;
+      }
+
       if (state.metadata.baseline_type === 'specs-based' && alreadyExists) {
         if (capability.spec.preserve_existing) {
           preservedFormalPaths.push(formalRelativePath);
@@ -838,6 +1122,300 @@ async function copyFile(sourcePath: string, targetPath: string): Promise<void> {
   await fs.writeFile(targetPath, content);
 }
 
+function sortNodes<T extends OpsxNode>(nodes: T[]): T[] {
+  return [...nodes].sort((left, right) => left.id.localeCompare(right.id));
+}
+
+function sortRelations(relations: OpsxRelation[]): OpsxRelation[] {
+  return [...relations].sort((left, right) => {
+    const fromComparison = left.from.localeCompare(right.from);
+    if (fromComparison !== 0) return fromComparison;
+    const toComparison = left.to.localeCompare(right.to);
+    if (toComparison !== 0) return toComparison;
+    return left.type.localeCompare(right.type);
+  });
+}
+
+function sortCodeMap(entries: CodeMapEntry[]): CodeMapEntry[] {
+  return [...entries]
+    .map((entry) => ({
+      ...entry,
+      refs: [...entry.refs].sort((left, right) => {
+        const pathComparison = left.path.localeCompare(right.path);
+        if (pathComparison !== 0) return pathComparison;
+        const startComparison = (left.line_start ?? 0) - (right.line_start ?? 0);
+        if (startComparison !== 0) return startComparison;
+        return (left.line_end ?? 0) - (right.line_end ?? 0);
+      }),
+    }))
+    .sort((left, right) => left.id.localeCompare(right.id));
+}
+
+function relationKey(relation: OpsxRelation): string {
+  return `${relation.from}|${relation.to}|${relation.type}`;
+}
+
+function relationPairKey(relation: OpsxRelation): string {
+  return `${relation.from}|${relation.to}`;
+}
+
+function nodesEqual(left: OpsxNode, right: OpsxNode): boolean {
+  return stableStringify(left) === stableStringify(right);
+}
+
+function codeMapEntryEqual(left: CodeMapEntry, right: CodeMapEntry): boolean {
+  return stableStringify({
+    ...left,
+    refs: sortCodeMap([left])[0]?.refs ?? left.refs,
+  }) === stableStringify({
+    ...right,
+    refs: sortCodeMap([right])[0]?.refs ?? right.refs,
+  });
+}
+
+function collectCapabilitiesForDomains(bundle: ProjectOpsxBundle, domainIds: Set<string>): string[] {
+  const capabilities = new Set<string>();
+  for (const relation of bundle.relations) {
+    if (relation.type === 'contains' && domainIds.has(relation.to) && relation.from.startsWith('cap.')) {
+      capabilities.add(relation.from);
+    }
+  }
+  for (const capability of bundle.capabilities) {
+    const domainId = findDomainForNode(bundle, capability.id);
+    if (domainId && domainIds.has(domainId)) {
+      capabilities.add(capability.id);
+    }
+  }
+  return [...capabilities].sort();
+}
+
+function buildRefreshFallbackPlan(reason: string, anchorCommit: string | null): RefreshPlan {
+  return {
+    strategy: 'full-scan-fallback',
+    reason,
+    anchorCommit,
+    changedPaths: [],
+    mappedNodeIds: [],
+    neighborNodeIds: [],
+    impactedNodeIds: [],
+    impactedDomainIds: [],
+  };
+}
+
+async function deriveRefreshPlan(projectRoot: string, state: BootstrapState, formalBundle: ProjectOpsxBundle): Promise<RefreshPlan> {
+  const rawPlan = await collectGitChangedPaths(projectRoot, state.metadata.refresh_anchor_commit);
+  if (rawPlan.strategy === 'full-scan-fallback') {
+    return rawPlan;
+  }
+
+  if (rawPlan.changedPaths.length === 0) {
+    return {
+      ...rawPlan,
+      impactedDomainIds: [...state.domainMaps.keys()].sort(),
+    };
+  }
+
+  const mapping = mapChangedPathsToNodeIds(projectRoot, formalBundle, rawPlan.changedPaths);
+  if (mapping.unmappedPaths.length > 0) {
+    return buildRefreshFallbackPlan(
+      `变更路径无法可信映射到现有 code-map：${mapping.unmappedPaths.join(', ')}`,
+      rawPlan.anchorCommit
+    );
+  }
+
+  if (mapping.mappedNodeIds.length === 0) {
+    return buildRefreshFallbackPlan(
+      'git diff 命中了源码路径，但没有映射到任何 formal OPSX 节点，回退到全量扫描。',
+      rawPlan.anchorCommit
+    );
+  }
+
+  const neighborNodeIds = expandNeighborNodeIds(formalBundle, mapping.mappedNodeIds);
+  return {
+    ...rawPlan,
+    mappedNodeIds: mapping.mappedNodeIds,
+    neighborNodeIds,
+    impactedNodeIds: neighborNodeIds,
+    impactedDomainIds: collectDomainIdsForNodes(formalBundle, neighborNodeIds),
+  };
+}
+
+function assembleRefreshDelta(
+  formalBundle: ProjectOpsxBundle,
+  partialBundle: ProjectOpsxBundle,
+  refreshPlan: RefreshPlan
+): RefreshDeltaSummary {
+  const partialDomainIds = new Set(partialBundle.domains.map((domain) => domain.id));
+  const affectedDomainIds = new Set(
+    refreshPlan.impactedDomainIds.length > 0
+      ? refreshPlan.impactedDomainIds
+      : [...partialDomainIds]
+  );
+  for (const domainId of partialDomainIds) {
+    affectedDomainIds.add(domainId);
+  }
+
+  const affectedCapabilityIds = new Set([
+    ...collectCapabilitiesForDomains(formalBundle, affectedDomainIds),
+    ...collectCapabilitiesForDomains(partialBundle, affectedDomainIds),
+  ]);
+  for (const capability of partialBundle.capabilities) {
+    affectedCapabilityIds.add(capability.id);
+  }
+
+  const affectedNodeIds = new Set<string>([
+    ...affectedDomainIds,
+    ...affectedCapabilityIds,
+  ]);
+  const preservedNodeIds = [
+    ...formalBundle.domains.map((domain) => domain.id),
+    ...formalBundle.capabilities.map((capability) => capability.id),
+  ].filter((nodeId) => !affectedNodeIds.has(nodeId)).sort();
+
+  const partialDomainsById = new Map(partialBundle.domains.map((domain) => [domain.id, domain]));
+  const formalDomainsById = new Map(formalBundle.domains.map((domain) => [domain.id, domain]));
+  const partialCapabilitiesById = new Map(partialBundle.capabilities.map((capability) => [capability.id, capability]));
+  const formalCapabilitiesById = new Map(formalBundle.capabilities.map((capability) => [capability.id, capability]));
+
+  const addedDomains: ProjectOpsxBundle['domains'] = [];
+  const modifiedDomains: ProjectOpsxBundle['domains'] = [];
+  const removedDomains: ProjectOpsxBundle['domains'] = [];
+  for (const domainId of [...affectedDomainIds].sort()) {
+    const formalDomain = formalDomainsById.get(domainId);
+    const partialDomain = partialDomainsById.get(domainId);
+    if (!formalDomain && partialDomain) {
+      addedDomains.push(partialDomain);
+      continue;
+    }
+    if (formalDomain && !partialDomain) {
+      removedDomains.push(formalDomain);
+      continue;
+    }
+    if (formalDomain && partialDomain && !nodesEqual(formalDomain, partialDomain)) {
+      modifiedDomains.push(partialDomain);
+    }
+  }
+
+  const addedCapabilities: ProjectOpsxBundle['capabilities'] = [];
+  const modifiedCapabilities: ProjectOpsxBundle['capabilities'] = [];
+  const removedCapabilities: ProjectOpsxBundle['capabilities'] = [];
+  for (const capabilityId of [...affectedCapabilityIds].sort()) {
+    const formalCapability = formalCapabilitiesById.get(capabilityId);
+    const partialCapability = partialCapabilitiesById.get(capabilityId);
+    if (!formalCapability && partialCapability) {
+      addedCapabilities.push(partialCapability);
+      continue;
+    }
+    if (formalCapability && !partialCapability) {
+      removedCapabilities.push(formalCapability);
+      continue;
+    }
+    if (formalCapability && partialCapability && !nodesEqual(formalCapability, partialCapability)) {
+      modifiedCapabilities.push(partialCapability);
+    }
+  }
+
+  const affectedRelationKeys = new Set<string>();
+  for (const relation of [...formalBundle.relations, ...partialBundle.relations]) {
+    if (affectedNodeIds.has(relation.from) || affectedNodeIds.has(relation.to)) {
+      affectedRelationKeys.add(relationKey(relation));
+    }
+  }
+  const formalRelations = formalBundle.relations.filter((relation) => affectedNodeIds.has(relation.from) || affectedNodeIds.has(relation.to));
+  const partialRelations = partialBundle.relations.filter((relation) => affectedNodeIds.has(relation.from) || affectedNodeIds.has(relation.to));
+  const formalRelationsByKey = new Map(formalRelations.map((relation) => [relationKey(relation), relation]));
+  const partialRelationsByKey = new Map(partialRelations.map((relation) => [relationKey(relation), relation]));
+  const formalRelationsByPair = new Map(formalRelations.map((relation) => [relationPairKey(relation), relation]));
+  const partialRelationsByPair = new Map(partialRelations.map((relation) => [relationPairKey(relation), relation]));
+
+  const addedRelations: OpsxRelation[] = [];
+  const modifiedRelations: OpsxRelation[] = [];
+  const removedRelations: OpsxRelation[] = [];
+
+  for (const relation of partialRelations) {
+    const pairKey = relationPairKey(relation);
+    const formalRelation = formalRelationsByPair.get(pairKey);
+    if (!formalRelation) {
+      addedRelations.push(relation);
+      continue;
+    }
+    if (relationKey(formalRelation) !== relationKey(relation)) {
+      modifiedRelations.push(relation);
+    }
+  }
+
+  for (const relation of formalRelations) {
+    if (!partialRelationsByPair.has(relationPairKey(relation))) {
+      removedRelations.push(relation);
+    }
+  }
+
+  const delta: OpsxDelta = {
+    ...(addedDomains.length || addedCapabilities.length || addedRelations.length
+      ? {
+          ADDED: {
+            ...(addedDomains.length ? { domains: sortNodes(addedDomains) } : {}),
+            ...(addedCapabilities.length ? { capabilities: sortNodes(addedCapabilities) } : {}),
+            ...(addedRelations.length ? { relations: sortRelations(addedRelations) } : {}),
+          },
+        }
+      : {}),
+    ...(modifiedDomains.length || modifiedCapabilities.length || modifiedRelations.length
+      ? {
+          MODIFIED: {
+            ...(modifiedDomains.length ? { domains: sortNodes(modifiedDomains) } : {}),
+            ...(modifiedCapabilities.length ? { capabilities: sortNodes(modifiedCapabilities) } : {}),
+            ...(modifiedRelations.length ? { relations: sortRelations(modifiedRelations) } : {}),
+          },
+        }
+      : {}),
+    ...(removedDomains.length || removedCapabilities.length || removedRelations.length
+      ? {
+          REMOVED: {
+            ...(removedDomains.length ? { domains: sortNodes(removedDomains) } : {}),
+            ...(removedCapabilities.length ? { capabilities: sortNodes(removedCapabilities) } : {}),
+            ...(removedRelations.length ? { relations: sortRelations(removedRelations) } : {}),
+          },
+        }
+      : {}),
+  };
+
+  const result = applyOpsxDelta(formalBundle, delta);
+  const removedNodeIds = new Set([
+    ...removedDomains.map((domain) => domain.id),
+    ...removedCapabilities.map((capability) => capability.id),
+  ]);
+  const mergedCodeMap = new Map<string, CodeMapEntry>();
+  for (const entry of formalBundle.code_map) {
+    if (!affectedNodeIds.has(entry.id)) {
+      mergedCodeMap.set(entry.id, entry);
+    }
+  }
+  for (const entry of partialBundle.code_map) {
+    if (!removedNodeIds.has(entry.id)) {
+      mergedCodeMap.set(entry.id, entry);
+    }
+  }
+
+  const mergedBundle: ProjectOpsxBundle = {
+    ...result.bundle,
+    project: formalBundle.project,
+    domains: sortNodes(result.bundle.domains),
+    capabilities: sortNodes(result.bundle.capabilities),
+    relations: sortRelations(result.bundle.relations),
+    code_map: sortCodeMap([...mergedCodeMap.values()]),
+  };
+
+  return {
+    delta,
+    result,
+    mergedBundle,
+    affectedDomainIds: [...affectedDomainIds].sort(),
+    affectedNodeIds: [...affectedNodeIds].sort(),
+    preservedNodeIds,
+  };
+}
+
 // ─── Core Functions ──────────────────────────────────────────────────────────
 
 export async function initBootstrap(
@@ -867,6 +1445,8 @@ export async function initBootstrap(
     source_fingerprint: null,
     candidate_fingerprint: null,
     review_fingerprint: null,
+    refresh_anchor_commit: null,
+    candidate_spec_paths: [],
   };
 
   const scope: ScopeConfig = {
@@ -878,12 +1458,12 @@ export async function initBootstrap(
 
   // Create workspace
   await FileSystemUtils.createDirectory(bsDir);
-  await FileSystemUtils.createDirectory(bootstrapPath(projectRoot, 'domain-map'));
-  await FileSystemUtils.createDirectory(bootstrapPath(projectRoot, 'candidate'));
+  await FileSystemUtils.createDirectory(bootstrapPath(projectRoot, BOOTSTRAP_DOMAIN_MAP_DIR));
+  await FileSystemUtils.createDirectory(bootstrapPath(projectRoot, BOOTSTRAP_CANDIDATE_DIR));
 
   // Write files
-  await writeYaml(bootstrapPath(projectRoot, '.bootstrap.yaml'), metadata);
-  await writeYaml(bootstrapPath(projectRoot, 'scope.yaml'), scope);
+  await writeYaml(bootstrapPath(projectRoot, BOOTSTRAP_METADATA_FILE), metadata);
+  await writeYaml(bootstrapPath(projectRoot, BOOTSTRAP_SCOPE_FILE), scope);
 
   return metadata;
 }
@@ -896,25 +1476,25 @@ export async function readBootstrapState(projectRoot: string): Promise<Bootstrap
   }
 
   const fallbackBaselineType = await inferLegacyBaselineType(projectRoot);
-  const metaRaw = await readYaml(bootstrapPath(projectRoot, '.bootstrap.yaml'));
+  const metaRaw = await readYaml(bootstrapPath(projectRoot, BOOTSTRAP_METADATA_FILE));
   const metadata = parseBootstrapMetadata(metaRaw, fallbackBaselineType);
 
   let scope: ScopeConfig | null = null;
   try {
-    const scopeRaw = await readYaml(bootstrapPath(projectRoot, 'scope.yaml'));
+    const scopeRaw = await readYaml(bootstrapPath(projectRoot, BOOTSTRAP_SCOPE_FILE));
     scope = parseScopeConfig(scopeRaw);
   } catch { /* scope may not exist yet */ }
 
   let evidence: EvidenceFile | null = null;
   try {
-    const evidenceRaw = await readYaml(bootstrapPath(projectRoot, 'evidence.yaml'));
+    const evidenceRaw = await readYaml(bootstrapPath(projectRoot, BOOTSTRAP_EVIDENCE_FILE));
     evidence = EvidenceFileSchema.parse(evidenceRaw);
   } catch { /* evidence may not exist yet */ }
 
   // Read domain maps
   const domainMaps = new Map<string, DomainMapFile>();
   const invalidDomainMaps = new Map<string, InvalidDomainMap>();
-  const mapDir = bootstrapPath(projectRoot, 'domain-map');
+  const mapDir = bootstrapPath(projectRoot, BOOTSTRAP_DOMAIN_MAP_DIR);
   if (await FileSystemUtils.directoryExists(mapDir)) {
     const entries = await fs.readdir(mapDir);
     for (const entry of entries) {
@@ -934,14 +1514,14 @@ export async function readBootstrapState(projectRoot: string): Promise<Bootstrap
     }
   }
 
-  const reviewPath = bootstrapPath(projectRoot, 'review.md');
+  const reviewPath = bootstrapPath(projectRoot, BOOTSTRAP_REVIEW_FILE);
   const reviewExists = await FileSystemUtils.fileExists(reviewPath);
 
   return { metadata, scope, evidence, domainMaps, invalidDomainMaps, reviewExists };
 }
 
 export async function advancePhase(projectRoot: string, targetPhase: BootstrapPhase): Promise<void> {
-  const metaPath = bootstrapPath(projectRoot, '.bootstrap.yaml');
+  const metaPath = bootstrapPath(projectRoot, BOOTSTRAP_METADATA_FILE);
   const fallbackBaselineType = await inferLegacyBaselineType(projectRoot);
   const metaRaw = await readYaml(metaPath);
   const metadata = parseBootstrapMetadata(metaRaw, fallbackBaselineType);
@@ -968,7 +1548,7 @@ export async function updateDomainProgress(
 ): Promise<void> {
   const validated = DomainMapFileSchema.parse(data);
   const fileName = `${domainId}.yaml`;
-  await writeYaml(bootstrapPath(projectRoot, 'domain-map', fileName), validated);
+  await writeYaml(bootstrapPath(projectRoot, BOOTSTRAP_DOMAIN_MAP_DIR, fileName), validated);
 }
 
 export async function getBootstrapStatus(projectRoot: string): Promise<BootstrapStatus> {
@@ -1121,7 +1701,10 @@ export async function validateGate(
 
 // ─── Assemble & Promote ─────────────────────────────────────────────────────
 
-function assembleBundle(state: BootstrapState): ProjectOpsxBundle {
+function assembleBundle(
+  state: BootstrapState,
+  options: { projectMetadata?: ProjectOpsxBundle['project'] } = {}
+): ProjectOpsxBundle {
   const domains: ProjectOpsxBundle['domains'] = [];
   const capabilities: ProjectOpsxBundle['capabilities'] = [];
   const relations: OpsxRelation[] = [];
@@ -1171,11 +1754,11 @@ function assembleBundle(state: BootstrapState): ProjectOpsxBundle {
 
   return {
     schema_version: OPSX_SCHEMA_VERSION,
-    project: buildBootstrapProjectMetadata(state),
-    domains,
-    capabilities,
-    relations,
-    code_map,
+    project: options.projectMetadata ?? buildBootstrapProjectMetadata(state),
+    domains: sortNodes(domains),
+    capabilities: sortNodes(capabilities),
+    relations: sortRelations(relations),
+    code_map: sortCodeMap(code_map),
   };
 }
 
@@ -1200,7 +1783,9 @@ function computeCandidateFingerprint(
   bundle: ProjectOpsxBundle,
   state: BootstrapState,
   candidateSpecs: BootstrapCandidateSpec[],
-  preservedFormalPaths: string[]
+  preservedFormalPaths: string[],
+  refreshPlan: RefreshPlan | null,
+  refreshDelta: RefreshDeltaSummary | null
 ): string {
   const projectConfig = readProjectConfig(projectRoot);
   return fingerprintValue({
@@ -1218,6 +1803,14 @@ function computeCandidateFingerprint(
         projectConfigForRuntime(projectConfig, { consumer: 'bootstrap-starter-readme' })
       ),
     },
+    refreshPlan,
+    refreshDelta: refreshDelta ? {
+      delta: refreshDelta.delta,
+      counts: refreshDelta.result.counts,
+      affectedDomainIds: refreshDelta.affectedDomainIds,
+      affectedNodeIds: refreshDelta.affectedNodeIds,
+      preservedNodeIds: refreshDelta.preservedNodeIds,
+    } : null,
     candidateSpecs: candidateSpecs.map((spec) => ({
       capabilityId: spec.capabilityId,
       candidateRelativePath: spec.candidateRelativePath,
@@ -1236,17 +1829,22 @@ function localizeBootstrapText(
 }
 
 async function writeBootstrapMetadata(projectRoot: string, metadata: BootstrapMetadata): Promise<void> {
-  await writeYaml(bootstrapPath(projectRoot, '.bootstrap.yaml'), metadata);
+  await writeYaml(bootstrapPath(projectRoot, BOOTSTRAP_METADATA_FILE), metadata);
 }
 
 async function writeCandidateFiles(
   projectRoot: string,
+  state: BootstrapState,
   bundle: ProjectOpsxBundle,
   candidateSpecs: BootstrapCandidateSpec[]
-): Promise<void> {
-  const candidateDir = bootstrapPath(projectRoot, 'candidate');
+): Promise<string[]> {
+  const candidateDir = bootstrapPath(projectRoot, BOOTSTRAP_CANDIDATE_DIR);
   await FileSystemUtils.createDirectory(candidateDir);
-  await fs.rm(bootstrapPath(projectRoot, 'candidate', 'specs'), { recursive: true, force: true });
+  const nextSpecPaths = candidateSpecs.map((spec) => spec.candidateRelativePath).sort();
+  const staleSpecPaths = state.metadata.candidate_spec_paths.filter((candidatePath) => !nextSpecPaths.includes(candidatePath));
+  await Promise.all(staleSpecPaths.map(async (relativePath) => {
+    await fs.rm(FileSystemUtils.joinPath(projectRoot, relativePath), { force: true }).catch(() => undefined);
+  }));
 
   const mainData = {
     schema_version: bundle.schema_version,
@@ -1262,11 +1860,13 @@ async function writeCandidateFiles(
   };
 
   await Promise.all([
-    writeYaml(candidatePath(projectRoot, 'project.opsx.yaml'), mainData),
-    writeYaml(candidatePath(projectRoot, 'project.opsx.relations.yaml'), relData),
-    writeYaml(candidatePath(projectRoot, 'project.opsx.code-map.yaml'), mapData),
+    writeYaml(candidatePath(projectRoot, BOOTSTRAP_CANDIDATE_FILE_NAMES.project), mainData),
+    writeYaml(candidatePath(projectRoot, BOOTSTRAP_CANDIDATE_FILE_NAMES.relations), relData),
+    writeYaml(candidatePath(projectRoot, BOOTSTRAP_CANDIDATE_FILE_NAMES.codeMap), mapData),
     ...candidateSpecs.map((spec) => FileSystemUtils.writeFile(candidateSpecPath(projectRoot, spec.folder), spec.content)),
   ]);
+
+  return nextSpecPaths;
 }
 
 function buildReviewContent(
@@ -1293,9 +1893,66 @@ function buildReviewContent(
     }),
     ''
   );
+
+  if (state.metadata.mode === 'refresh' && derived.refreshPlan && derived.refreshDelta) {
+    lines.push('## Refresh Scope', '');
+    lines.push(`- ${localizeBootstrapText(projection, {
+      en: `Strategy: ${derived.refreshPlan.strategy}`,
+      zh: `策略：${derived.refreshPlan.strategy}`,
+    })}`);
+    lines.push(`- ${localizeBootstrapText(projection, {
+      en: `Anchor commit: ${derived.refreshPlan.anchorCommit ?? '(none)'}`,
+      zh: `锚点提交：${derived.refreshPlan.anchorCommit ?? '（空）'}`,
+    })}`);
+    lines.push(`- ${localizeBootstrapText(projection, {
+      en: `Reason: ${derived.refreshPlan.reason}`,
+      zh: `原因：${derived.refreshPlan.reason}`,
+    })}`);
+    if (derived.refreshPlan.changedPaths.length > 0) {
+      lines.push(`- ${localizeBootstrapText(projection, {
+        en: `Changed paths: ${derived.refreshPlan.changedPaths.join(', ')}`,
+        zh: `变更路径：${derived.refreshPlan.changedPaths.join(', ')}`,
+      })}`);
+    }
+    lines.push(`- ${localizeBootstrapText(projection, {
+      en: `Impacted domains: ${derived.refreshDelta.affectedDomainIds.join(', ') || '(none)'}`,
+      zh: `受影响 domains：${derived.refreshDelta.affectedDomainIds.join(', ') || '（空）'}`,
+    })}`);
+    lines.push(`- ${localizeBootstrapText(projection, {
+      en: `Preserved baseline nodes: ${derived.refreshDelta.preservedNodeIds.length}`,
+      zh: `保留的基线节点数：${derived.refreshDelta.preservedNodeIds.length}`,
+    })}`);
+    lines.push('', '## Delta Summary', '');
+
+    const addedNodeCount = derived.refreshDelta.result.counts.added.domains + derived.refreshDelta.result.counts.added.capabilities;
+    const modifiedNodeCount = derived.refreshDelta.result.counts.modified.domains + derived.refreshDelta.result.counts.modified.capabilities;
+    const removedNodeCount = derived.refreshDelta.result.counts.removed.domains + derived.refreshDelta.result.counts.removed.capabilities;
+    lines.push(`- ${localizeBootstrapText(projection, {
+      en: `ADDED: ${addedNodeCount} nodes, ${derived.refreshDelta.result.counts.added.relations} relations`,
+      zh: `ADDED：${addedNodeCount} 个节点，${derived.refreshDelta.result.counts.added.relations} 条关系`,
+    })}`);
+    lines.push(`- ${localizeBootstrapText(projection, {
+      en: `MODIFIED: ${modifiedNodeCount} nodes, ${derived.refreshDelta.result.counts.modified.relations} relations`,
+      zh: `MODIFIED：${modifiedNodeCount} 个节点，${derived.refreshDelta.result.counts.modified.relations} 条关系`,
+    })}`);
+    lines.push(`- ${localizeBootstrapText(projection, {
+      en: `REMOVED: ${removedNodeCount} nodes, ${derived.refreshDelta.result.counts.removed.relations} relations`,
+      zh: `REMOVED：${removedNodeCount} 个节点，${derived.refreshDelta.result.counts.removed.relations} 条关系`,
+    })}`);
+    if (derived.refreshDelta.preservedNodeIds.length > 0) {
+      lines.push(`- ${localizeBootstrapText(projection, {
+        en: `Preserved baseline nodes: ${derived.refreshDelta.preservedNodeIds.join(', ')}`,
+        zh: `保留的基线节点：${derived.refreshDelta.preservedNodeIds.join(', ')}`,
+      })}`);
+    }
+    lines.push('');
+  }
+
   lines.push('## Domain Checklist', '');
 
-  const orderedDomains = [...state.evidence.domains].sort(compareEvidenceDomains);
+  const orderedDomains = [...state.evidence.domains]
+    .filter((domain) => state.metadata.mode !== 'refresh' || !derived.refreshDelta || derived.refreshDelta.affectedDomainIds.length === 0 || derived.refreshDelta.affectedDomainIds.includes(domain.id))
+    .sort(compareEvidenceDomains);
   for (const dom of orderedDomains) {
     const mapFile = state.domainMaps.get(dom.id);
     const capCount = mapFile?.capabilities.length ?? 0;
@@ -1323,6 +1980,12 @@ function buildReviewContent(
       en: 'No candidate specs will be written',
       zh: '当前不会写入 candidate spec',
     })}`);
+    if (state.metadata.mode === 'refresh') {
+      lines.push(`- ${localizeBootstrapText(projection, {
+        en: 'Existing formal specs remain the source of truth unless a new capability requires a missing spec file.',
+        zh: '除非新增 capability 缺少 formal spec，否则现有 formal specs 继续作为唯一真相来源。',
+      })}`);
+    }
   } else {
     for (const spec of derived.candidateSpecs) {
       lines.push(`- ${spec.capabilityId} -> ${spec.formalRelativePath}`);
@@ -1353,6 +2016,12 @@ function buildReviewContent(
     en: 'Candidate spec set matches the bootstrap mode contract',
     zh: 'Candidate spec 集合符合当前 bootstrap 模式约束',
   })}`);
+  if (state.metadata.mode === 'refresh') {
+    lines.push(`- [ ] ${localizeBootstrapText(projection, {
+      en: 'Refresh delta matches the current formal OPSX baseline',
+      zh: 'Refresh delta 与当前 formal OPSX 基线一致',
+    })}`);
+  }
   lines.push(`- [ ] ${localizeBootstrapText(projection, {
     en: 'Candidate specs pass OpenSpec validation',
     zh: 'Candidate spec 通过 OpenSpec 校验',
@@ -1368,19 +2037,49 @@ function buildReviewContent(
 
 async function deriveBootstrapArtifacts(projectRoot: string, state: BootstrapState): Promise<DerivedBootstrapArtifacts> {
   const reviewContent = state.reviewExists
-    ? await fs.readFile(bootstrapPath(projectRoot, 'review.md'), 'utf-8').catch(() => '')
+    ? await fs.readFile(bootstrapPath(projectRoot, BOOTSTRAP_REVIEW_FILE), 'utf-8').catch(() => '')
     : '';
   const { checkedDomains, uncheckedItems } = collectReviewChecks(reviewContent);
 
   const sourceFingerprint = computeSourceFingerprint(projectRoot, state);
-  const bundle = sourceFingerprint ? assembleBundle(state) : null;
-  const candidateSpecAssembly = await assembleCandidateSpecs(projectRoot, state, bundle);
+  let bundle: ProjectOpsxBundle | null = null;
+  let refreshPlan: RefreshPlan | null = null;
+  let refreshDelta: RefreshDeltaSummary | null = null;
+  const preSpecErrors: string[] = [];
+
+  if (sourceFingerprint) {
+    if (state.metadata.mode === 'refresh') {
+      const formalBundle = await readProjectOpsx(projectRoot);
+      if (!formalBundle) {
+        preSpecErrors.push('Refresh requires existing formal OPSX files.');
+      } else {
+        refreshPlan = await deriveRefreshPlan(projectRoot, state, formalBundle);
+        const partialBundle = assembleBundle(state, { projectMetadata: formalBundle.project });
+        refreshDelta = assembleRefreshDelta(formalBundle, partialBundle, refreshPlan);
+        bundle = refreshDelta.mergedBundle;
+      }
+    } else {
+      bundle = assembleBundle(state);
+    }
+  }
+
+  const addedCapabilityIds = new Set(refreshDelta?.delta.ADDED?.capabilities?.map((capability) => capability.id) ?? []);
+  const candidateSpecAssembly = await assembleCandidateSpecs(projectRoot, state, bundle, { addedCapabilityIds });
   const specErrors = [
+    ...preSpecErrors,
     ...candidateSpecAssembly.sourceErrors,
     ...candidateSpecAssembly.validationErrors,
   ];
-  const candidateFingerprint = bundle && candidateSpecAssembly.sourceErrors.length === 0
-    ? computeCandidateFingerprint(projectRoot, bundle, state, candidateSpecAssembly.specs, candidateSpecAssembly.preservedFormalPaths)
+  const candidateFingerprint = bundle && specErrors.length === 0
+    ? computeCandidateFingerprint(
+        projectRoot,
+        bundle,
+        state,
+        candidateSpecAssembly.specs,
+        candidateSpecAssembly.preservedFormalPaths,
+        refreshPlan,
+        refreshDelta
+      )
     : null;
   const candidateExists = candidateFingerprint
     ? await candidateFilesExist(projectRoot, candidateSpecAssembly.specs)
@@ -1432,6 +2131,8 @@ async function deriveBootstrapArtifacts(projectRoot: string, state: BootstrapSta
     reviewState,
     reviewApproved: reviewState === 'current' && uncheckedItems.length === 0,
     checkedDomains,
+    refreshPlan,
+    refreshDelta,
   };
 }
 
@@ -1442,11 +2143,12 @@ export async function assembleCandidate(projectRoot: string): Promise<ProjectOps
     throw new Error('No evidence.yaml found. Run scan phase first.');
   }
 
-  await writeCandidateFiles(projectRoot, derived.bundle, derived.candidateSpecs);
+  const candidateSpecPaths = await writeCandidateFiles(projectRoot, state, derived.bundle, derived.candidateSpecs);
   await writeBootstrapMetadata(projectRoot, {
     ...state.metadata,
     source_fingerprint: derived.sourceFingerprint,
     candidate_fingerprint: derived.candidateFingerprint,
+    candidate_spec_paths: candidateSpecPaths,
   });
 
   return derived.bundle;
@@ -1464,12 +2166,13 @@ export async function generateReview(projectRoot: string): Promise<string> {
     derived,
     projectConfigForRuntime(readProjectConfig(projectRoot), { consumer: 'bootstrap-review' })
   );
-  await fs.writeFile(bootstrapPath(projectRoot, 'review.md'), content, 'utf-8');
+  await fs.writeFile(bootstrapPath(projectRoot, BOOTSTRAP_REVIEW_FILE), content, 'utf-8');
   await writeBootstrapMetadata(projectRoot, {
     ...state.metadata,
     source_fingerprint: derived.sourceFingerprint,
     candidate_fingerprint: derived.candidateFingerprint,
     review_fingerprint: derived.candidateFingerprint,
+    candidate_spec_paths: state.metadata.candidate_spec_paths,
   });
 
   return content;
@@ -1488,12 +2191,12 @@ export async function refreshBootstrapDerivedArtifacts(
   const reviewUpdated = derived.reviewState !== 'current';
 
   if (candidateUpdated) {
-    await writeCandidateFiles(projectRoot, derived.bundle, derived.candidateSpecs);
+    state.metadata.candidate_spec_paths = await writeCandidateFiles(projectRoot, state, derived.bundle, derived.candidateSpecs);
   }
 
   if (reviewUpdated) {
     await fs.writeFile(
-      bootstrapPath(projectRoot, 'review.md'),
+      bootstrapPath(projectRoot, BOOTSTRAP_REVIEW_FILE),
       buildReviewContent(
         state,
         derived,
@@ -1509,6 +2212,7 @@ export async function refreshBootstrapDerivedArtifacts(
       source_fingerprint: derived.sourceFingerprint,
       candidate_fingerprint: derived.candidateFingerprint,
       review_fingerprint: reviewUpdated ? derived.candidateFingerprint : state.metadata.review_fingerprint,
+      candidate_spec_paths: state.metadata.candidate_spec_paths,
     });
   }
 
@@ -1575,15 +2279,52 @@ export async function promoteBootstrap(projectRoot: string): Promise<PromoteBoot
     throw new Error(`Cannot promote: gate validation failed.\n${targetErrors.join('\n')}`);
   }
 
-  await copyFile(candidatePath(projectRoot, 'project.opsx.yaml'), FileSystemUtils.joinPath(projectRoot, OPSX_PATHS.PROJECT_FILE));
-  await copyFile(candidatePath(projectRoot, 'project.opsx.relations.yaml'), FileSystemUtils.joinPath(projectRoot, OPSX_PATHS.RELATIONS_FILE));
-  await copyFile(candidatePath(projectRoot, 'project.opsx.code-map.yaml'), FileSystemUtils.joinPath(projectRoot, OPSX_PATHS.CODE_MAP_FILE));
+  const originalBundle = state.metadata.mode === 'refresh' ? await readProjectOpsx(projectRoot) : null;
+  const writtenSpecPaths: Array<{ path: string; original: string | null }> = [];
+  try {
+    if (state.metadata.mode === 'refresh') {
+      await writeProjectOpsx(projectRoot, derived.bundle);
+    } else {
+      await copyFile(candidatePath(projectRoot, BOOTSTRAP_CANDIDATE_FILE_NAMES.project), FileSystemUtils.joinPath(projectRoot, OPSX_PATHS.PROJECT_FILE));
+      await copyFile(candidatePath(projectRoot, BOOTSTRAP_CANDIDATE_FILE_NAMES.relations), FileSystemUtils.joinPath(projectRoot, OPSX_PATHS.RELATIONS_FILE));
+      await copyFile(candidatePath(projectRoot, BOOTSTRAP_CANDIDATE_FILE_NAMES.codeMap), FileSystemUtils.joinPath(projectRoot, OPSX_PATHS.CODE_MAP_FILE));
+    }
 
-  for (const spec of derived.candidateSpecs) {
-    await copyFile(candidateSpecPath(projectRoot, spec.folder), formalSpecPath(projectRoot, spec.folder));
+    for (const spec of derived.candidateSpecs) {
+      const targetPath = formalSpecPath(projectRoot, spec.folder);
+      let original: string | null = null;
+      try {
+        original = await fs.readFile(targetPath, 'utf-8');
+      } catch (error: any) {
+        if (error?.code !== 'ENOENT') {
+          throw error;
+        }
+      }
+      writtenSpecPaths.push({ path: targetPath, original });
+      await copyFile(candidateSpecPath(projectRoot, spec.folder), targetPath);
+    }
+
+    await writeBootstrapSpecStarter(projectRoot, state);
+  } catch (error) {
+    if (state.metadata.mode === 'refresh' && originalBundle) {
+      await writeProjectOpsx(projectRoot, originalBundle).catch(() => undefined);
+    }
+    for (const write of writtenSpecPaths.reverse()) {
+      if (write.original === null) {
+        await fs.rm(write.path, { force: true }).catch(() => undefined);
+      } else {
+        await FileSystemUtils.writeFile(write.path, write.original).catch(() => undefined);
+      }
+    }
+    throw error;
   }
 
-  await writeBootstrapSpecStarter(projectRoot, state);
+  if (state.metadata.mode === 'refresh') {
+    await writeBootstrapMetadata(projectRoot, {
+      ...state.metadata,
+      refresh_anchor_commit: await resolveCurrentGitHead(projectRoot),
+    });
+  }
 
   return {
     retainedWorkspaceNotice: BOOTSTRAP_WORKSPACE_RETAINED_NOTICE,

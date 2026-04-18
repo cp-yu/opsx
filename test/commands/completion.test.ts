@@ -316,7 +316,7 @@ describe('completion registry coverage', () => {
 
     const bootstrapInit = bootstrap?.subcommands?.find((command) => command.name === 'init');
     expect(bootstrapInit?.flags).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: 'mode', takesValue: true, values: ['full', 'opsx-first'] }),
+      expect.objectContaining({ name: 'mode', takesValue: true, values: ['full', 'opsx-first', 'refresh'] }),
       expect.objectContaining({ name: 'scope', takesValue: true }),
     ]));
 

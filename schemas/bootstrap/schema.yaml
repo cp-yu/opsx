@@ -10,7 +10,7 @@ artifacts:
     instruction: |
       Create the bootstrap workspace under openspec/bootstrap/.
 
-      Run: openspec bootstrap init [--mode full|opsx-first] [--scope src/]
+      Run: openspec bootstrap init [--mode full|opsx-first|refresh] [--scope src/]
 
       This creates:
       - .bootstrap.yaml — metadata (phase, baseline, mode, fingerprints, created_at)
@@ -20,9 +20,11 @@ artifacts:
       - specs-based -> full
       - raw -> full
       - raw -> opsx-first
+      - formal-opsx -> refresh
 
       Use opsx-first only when the repository has no existing specs and you want the formal OPSX bundle plus a README-only specs starter first.
       In that path, add full behavior specs later through normal change workflows.
+      Use refresh only when the repository already has the formal OPSX bundle and you want a delta-first refresh that merges reviewed changes back into the existing formal files.
 
       Confirm the scope configuration with the user before proceeding.
     requires: []
@@ -97,6 +99,7 @@ artifacts:
       - Referential integrity passes
       - Code-map integrity passes
       - Upstream scan/map completeness still passes
+      - In refresh mode, the delta summary matches the current formal OPSX baseline
     requires:
       - map
 
@@ -113,7 +116,8 @@ artifacts:
       3. Writes only reviewed candidate artifacts to the formal OPSX bundle and specs tree
       4. In raw + full, writes one validated spec per mapped capability; in raw + opsx-first, writes only openspec/specs/README.md
       5. In specs-based + full, preserves existing specs and writes only missing capability specs
-      6. Cleans up openspec/bootstrap/ workspace
+      6. In formal-opsx + refresh, merges the reviewed delta into the existing formal OPSX bundle, preserves existing specs, and writes only missing specs for newly added capabilities
+      7. Retains openspec/bootstrap/ workspace for manual inspection or cleanup
 
       Confirm before writing to formal OPSX files.
     requires:

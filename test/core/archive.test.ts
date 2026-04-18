@@ -138,7 +138,7 @@ Then expected result happens`;
       const updatedContent = await fs.readFile(mainSpecPath, 'utf-8');
       expect(updatedContent).toContain('# test-capability Specification');
       expect(updatedContent).toContain('## Purpose');
-      expect(updatedContent).toContain(`created by archiving change ${changeName}`);
+      expect(updatedContent).toContain(`This specification records behavior introduced by change ${changeName}.`);
       expect(updatedContent).toContain('## Requirements');
       expect(updatedContent).toContain('### Requirement: The system SHALL provide test capability');
       expect(updatedContent).toContain('#### Scenario: Basic test');
@@ -269,6 +269,56 @@ New feature description.
       const archiveDir = path.join(tempDir, 'openspec', 'changes', 'archive');
       const archives = await fs.readdir(archiveDir);
       expect(archives.some(a => a.includes(changeName))).toBe(false);
+    });
+
+    it('should treat already-synced delta specs as no-op during archive-time sync', async () => {
+      const changeName = 'already-synced-spec';
+      const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
+      const changeSpecDir = path.join(changeDir, 'specs', 'bootstrap-refresh-mode');
+      const mainSpecDir = path.join(tempDir, 'openspec', 'specs', 'bootstrap-refresh-mode');
+      await fs.mkdir(changeSpecDir, { recursive: true });
+      await fs.mkdir(mainSpecDir, { recursive: true });
+
+      const deltaSpec = `## ADDED Requirements
+
+### Requirement: Refresh mode SHALL support formal OPSX repositories
+\`openspec bootstrap\` SHALL 为已有 formal OPSX 三文件的仓库提供显式 \`refresh\` mode，并继续拒绝 \`invalid-partial-opsx\` baseline。
+
+#### Scenario: formal-opsx baseline exposes refresh as the only supported mode
+- **WHEN** 仓库已存在合法的 \`openspec/project.opsx.yaml\`、\`openspec/project.opsx.relations.yaml\` 与 \`openspec/project.opsx.code-map.yaml\`
+- **THEN** \`detectBootstrapBaseline()\` SHALL 返回 \`formal-opsx\`
+- **AND** \`getAllowedBootstrapModes('formal-opsx')\` SHALL 返回 \`['refresh']\`
+- **AND** pre-init \`status --json\` / \`instructions --json\` SHALL 将下一步指向 \`openspec bootstrap init --mode refresh\`
+`;
+      await fs.writeFile(path.join(changeSpecDir, 'spec.md'), deltaSpec, 'utf-8');
+
+      const syncedMainSpec = `# Spec: bootstrap-refresh-mode
+
+## Purpose
+
+定义 refresh 合同。
+
+## Requirements
+
+### Requirement: Refresh mode SHALL support formal OPSX repositories
+
+\`openspec bootstrap\` SHALL 为已有 formal OPSX 三文件的仓库提供显式 \`refresh\` mode，并继续拒绝 \`invalid-partial-opsx\` baseline。
+
+#### Scenario: formal-opsx baseline exposes refresh as the only supported mode
+
+- **WHEN** 仓库已存在合法的 \`openspec/project.opsx.yaml\`、\`openspec/project.opsx.relations.yaml\` 与 \`openspec/project.opsx.code-map.yaml\`
+- **THEN** \`detectBootstrapBaseline()\` SHALL 返回 \`formal-opsx\`
+- **AND** \`getAllowedBootstrapModes('formal-opsx')\` SHALL 返回 \`['refresh']\`
+- **AND** pre-init \`status --json\` / \`instructions --json\` SHALL 将下一步指向 \`openspec bootstrap init --mode refresh\`
+`;
+      await fs.writeFile(path.join(mainSpecDir, 'spec.md'), syncedMainSpec, 'utf-8');
+      await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] synced already\n', 'utf-8');
+
+      await archiveCommand.execute(changeName, { yes: true, noValidate: true });
+
+      const archiveDir = path.join(tempDir, 'openspec', 'changes', 'archive');
+      const archives = await fs.readdir(archiveDir);
+      expect(archives.some(a => a.includes(changeName))).toBe(true);
     });
 
     it('should throw error if change does not exist', async () => {

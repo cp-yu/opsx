@@ -117,6 +117,21 @@ capabilities: []
     });
   });
 
+  it('returns structured pre-init status for a formal OPSX baseline with refresh enabled', async () => {
+    const projectDir = await createTempProject();
+    await writeFormalOpsxBundle(projectDir);
+
+    const json = await withCwd(projectDir, () => captureJsonOutput(() => bootstrapStatusCommand({ json: true })));
+    expect(json).toMatchObject({
+      initialized: false,
+      baselineType: 'formal-opsx',
+      supported: true,
+      allowedModes: ['refresh'],
+      nextAction: 'init',
+    });
+    expect(json.reason).toContain('Use refresh');
+  });
+
   it('returns pre-init instructions JSON instead of an init-first exception', async () => {
     const projectDir = await createTempProject();
 
@@ -136,14 +151,23 @@ capabilities: []
     expect(json.instruction).toContain('openspec bootstrap init --mode');
   });
 
-  it('rejects repositories with formal OPSX before creating openspec/bootstrap', async () => {
+  it('rejects unsupported full mode on formal OPSX before creating openspec/bootstrap', async () => {
     const projectDir = await createTempProject();
     await writeFormalOpsxBundle(projectDir);
 
     await expect(initBootstrap(projectDir, { mode: 'full' })).rejects.toThrow(
-      'Bootstrap does not support repositories with existing formal OPSX files.'
+      "Bootstrap mode 'full' is not supported for baseline 'formal-opsx'. Valid modes: refresh"
     );
     expect(await pathExists(projectDir, 'openspec/bootstrap')).toBe(false);
+  });
+
+  it('allows refresh init on formal OPSX repositories', async () => {
+    const projectDir = await createTempProject();
+    await writeFormalOpsxBundle(projectDir);
+
+    await initBootstrap(projectDir, { mode: 'refresh' });
+
+    expect(await pathExists(projectDir, 'openspec/bootstrap')).toBe(true);
   });
 
   it('rejects unsupported baseline-to-mode combinations with valid modes in the error', async () => {

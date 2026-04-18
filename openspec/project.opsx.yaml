@@ -192,7 +192,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.opsx.bootstrap
-    intent: 提供基于现有 CLI 的 bootstrap 工作流，支持 TTY 模式选择、invalid domain-map 诊断与 gate 驱动的五阶段生命周期；在组装 candidate bundle 时从 bootstrap 工作区派生 project intent/scope，并通过统一 runtime projection 管理 candidate prose、review/starter 生成与 stale 判定；promote 后保留工作区并提示用户可手动清理；不调整已有 formal OPSX 项目
+    intent: 提供基于现有 CLI 的 bootstrap 工作流，支持 TTY 模式选择、invalid domain-map 诊断、gate 驱动的五阶段生命周期，以及针对已有 formal OPSX 项目的显式 refresh 增量刷新入口；promote 后保留工作区并提示用户可手动清理
     status: active
     type: capability
   - id: cap.opsx.delta-merge
@@ -257,4 +257,8 @@ capabilities:
     type: capability
   - id: cap.ai.tool-invocation-references
     intent: 基于共享 workflow surface 元数据渲染不同 AI 工具的用户可调用 workflow 引用，其中 Codex 使用精确的 `$openspec-*` skill 名称
+    type: capability
+  - id: cap.opsx.bootstrap-refresh
+    intent: 为已有 formal OPSX 项目提供显式 refresh 生命周期，基于现有 OPSX/specs/bootstrap 工作区和可选 git diff 生成可审查增量，并通过 merge/delta 安全更新正式 OPSX
+    status: active
     type: capability

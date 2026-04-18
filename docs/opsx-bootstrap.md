@@ -27,7 +27,7 @@ This is useful for:
 
 **Don't use bootstrap when:**
 - Starting a new project (use `/opsx:propose` instead)
-- You already have the formal OPSX bundle
+- You already have the formal OPSX bundle and do not need an incremental refresh
 - You prefer manual structure creation
 
 Supported upgrade paths:
@@ -35,8 +35,10 @@ Supported upgrade paths:
 - `specs-based -> full`
 - `raw -> full`
 - `raw -> opsx-first`
+- `formal-opsx -> refresh`
 
 `opsx-first` is intentionally narrow: it writes the formal OPSX bundle plus a README-only starter now, and leaves full behavior specs to be added later through normal change workflows.
+`refresh` is also intentionally narrow: it treats the existing formal OPSX bundle as the source-of-truth baseline, uses git diff only to narrow scan scope when possible, and merges reviewed deltas back into the existing formal files instead of overwriting them wholesale.
 
 ## Running Bootstrap
 
@@ -53,6 +55,9 @@ openspec bootstrap init --mode full
 # Or, on a raw repository only:
 openspec bootstrap init --mode opsx-first
 
+# Or, on a repository with an existing formal OPSX bundle:
+openspec bootstrap init --mode refresh
+
 # Follow phase instructions
 openspec bootstrap instructions --json
 
@@ -66,7 +71,7 @@ openspec bootstrap promote -y
 Key behavior:
 1. `validate` regenerates `review.md`, candidate OPSX files, and candidate specs from current `evidence.yaml` and `domain-map/*.yaml`
 2. If evidence or mappings change, previous review approval becomes stale and must be redone
-3. `promote -y` re-checks scan, map, and review gates before any formal write and copies only reviewed candidate artifacts into formal outputs
+3. `promote -y` re-checks scan, map, and review gates before any formal write; refresh merges reviewed deltas while the non-refresh modes write the reviewed candidate bundle
 4. Successful promote retains `openspec/bootstrap/` for later inspection or manual cleanup
 
 ## What Gets Generated
@@ -82,6 +87,13 @@ Key behavior:
   - Preserves existing specs
   - Adds only missing capability specs
   - Fails fast if a generated target path already exists
+- `refresh` on `formal-opsx`
+  - Preserves the current formal OPSX bundle as the baseline
+  - Uses git diff only to narrow scan scope when the stored anchor commit is still reachable
+  - Falls back to a full scan when git is unavailable, the anchor is missing/unreachable, or changed paths cannot be mapped confidently through `project.opsx.code-map.yaml`
+  - Reviews ADDED / MODIFIED / REMOVED deltas instead of the whole system
+  - Merges reviewed OPSX deltas back into the existing formal files
+  - Preserves existing formal specs, writes only missing specs for newly added capabilities, and fails fast on conflicts
 
 ### Minimal Example
 

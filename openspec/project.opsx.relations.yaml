@@ -234,3 +234,12 @@ relations:
   - from: cap.cli.update
     type: depends_on
     to: cap.ai.tool-invocation-references
+  - from: dom.opsx
+    type: contains
+    to: cap.opsx.bootstrap-refresh
+  - from: cap.opsx.bootstrap-refresh
+    type: depends_on
+    to: cap.opsx.bootstrap
+  - from: cap.opsx.bootstrap-refresh
+    type: depends_on
+    to: cap.opsx.delta-merge

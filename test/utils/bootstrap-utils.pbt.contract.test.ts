@@ -38,6 +38,11 @@ describe('PBT: Bootstrap mode contract', () => {
           return;
         }
 
+        if (baseline === 'formal-opsx') {
+          expect(modes).toEqual(['refresh']);
+          return;
+        }
+
         expect(modes).toEqual([]);
       }),
       { numRuns: BOOTSTRAP_BASELINE_TYPES.length * 8 },
@@ -68,12 +73,16 @@ describe('Bootstrap contract parity', () => {
     for (const content of [schema, workflow, docs]) {
       expect(content).toContain('opsx-first');
       expect(content).toContain('full');
+      expect(content).toContain('refresh');
       expect(content).not.toContain('full|seed');
     }
 
     expect(schema).toContain('specs later');
     expect(workflow).toContain('specs later');
     expect(docs).toContain('normal change workflows');
+    expect(schema).toContain('formal-opsx -> refresh');
+    expect(workflow).toContain('formal-opsx -> refresh');
+    expect(docs).toContain('formal-opsx -> refresh');
   });
 });
 

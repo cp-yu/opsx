@@ -37,7 +37,9 @@ Treat \`openspec/config.yaml\` as the source of truth for authoring policy, but 
    - \`specs-based -> full\`
    - \`raw -> full\`
    - \`raw -> opsx-first\`
+   - \`formal-opsx -> refresh\`
    Use \`opsx-first\` only for \`raw\` repositories when you want the formal OPSX bundle plus a README-only specs starter now, and full behavior specs later.
+   Use \`refresh\` only for repositories that already have the formal OPSX bundle and need a delta-first refresh that merges reviewed changes back into the existing formal files.
 
    **Phase: scan**
    - Read \`package.json\`, \`README\`, OpenSpec config, \`openspec/specs/\`
@@ -49,8 +51,9 @@ Treat \`openspec/config.yaml\` as the source of truth for authoring policy, but 
          confidence: high
          sources: [code:src/cli/, spec:openspec/specs/cli/]
          intent: CLI entry point and command routing
-     \`\`\`
+   \`\`\`
    - Run \`openspec bootstrap validate\` to verify gates
+   - In \`refresh\`, treat the current formal OPSX bundle as the baseline and use git diff only to narrow scan scope when a stored anchor commit is still reachable
 
    **Phase: map**
    - For each domain in evidence.yaml, create \`openspec/bootstrap/domain-map/<domain-id>.yaml\`:
@@ -82,6 +85,7 @@ Treat \`openspec/config.yaml\` as the source of truth for authoring policy, but 
    **Phase: review**
    - Validate regenerates review.md and candidate OPSX files from current \`evidence.yaml\` and \`domain-map/*.yaml\`
    - Review each domain checkbox in review.md
+   - In \`refresh\`, review the delta summary against the current formal OPSX baseline instead of re-approving the whole model
    - Check all validation checkboxes
    - If evidence or domain maps change, rerun validate and re-approve the regenerated review
    - Low-confidence domains appear first for priority review
@@ -94,6 +98,7 @@ Treat \`openspec/config.yaml\` as the source of truth for authoring policy, but 
    - \`opsx-first\`: writes the formal OPSX three-file bundle plus only \`openspec/specs/README.md\`
    - \`full\` on \`raw\`: writes the formal OPSX bundle plus one validated spec per mapped capability
    - \`full\` on \`specs-based\`: preserves existing specs, adds only missing capability specs, and fails fast on target-path conflicts
+   - \`refresh\` on \`formal-opsx\`: merges the reviewed delta into the existing formal OPSX bundle, preserves existing specs, adds only missing specs for newly added capabilities, and fails fast on conflicts
    Retains the bootstrap workspace on success so you can inspect or delete it manually later.
 
 3. **After each phase action**
@@ -143,6 +148,9 @@ openspec bootstrap status
 # Initialize (if no workspace)
 openspec bootstrap init --mode full
 
+# Or use refresh when formal OPSX already exists
+openspec bootstrap init --mode refresh
+
 # Get instructions for current phase
 openspec bootstrap instructions
 
@@ -158,7 +166,7 @@ The workspace is retained after promote so it can be inspected or deleted manual
 
 **Key Commands**
 - \/opsx:bootstrap — user-facing agent command that drives the CLI-backed workflow
-- \`openspec bootstrap init [--mode full|opsx-first] [--scope src/]\` — create workspace
+- \`openspec bootstrap init [--mode full|opsx-first|refresh] [--scope src/]\` — create workspace
 - \`openspec bootstrap status [--json]\` — phase progress + per-domain status
 - \`openspec bootstrap instructions [phase] [--json]\` — phase-specific guidance
 - \`openspec bootstrap validate [--json]\` — gate validation + auto-advance

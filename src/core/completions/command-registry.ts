@@ -559,9 +559,9 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         flags: [
           {
             name: 'mode',
-            description: 'Bootstrap mode: full (complete specs) or opsx-first (README-only starter)',
+            description: 'Bootstrap mode: full (complete specs), opsx-first (README-only starter), or refresh (delta-first formal OPSX refresh)',
             takesValue: true,
-            values: ['full', 'opsx-first'],
+            values: ['full', 'opsx-first', 'refresh'],
           },
           {
             name: 'scope',
@@ -588,7 +588,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
       },
       {
         name: 'promote',
-        description: 'Validate, write formal OPSX files, and clean workspace',
+        description: 'Validate, write formal OPSX files, and retain the workspace',
         flags: [
           {
             name: 'yes',

@@ -116,7 +116,7 @@ describe('bootstrap command Phase 1 baseline contract', () => {
     });
   });
 
-  it('returns structured pre-init status for unsupported formal-opsx repositories', async () => {
+  it('returns structured pre-init status for formal-opsx repositories with refresh as the only allowed mode', async () => {
     await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.yaml'), 'schema_version: 1\nproject:\n  id: demo\n  name: Demo\n');
     await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.relations.yaml'), 'schema_version: 1\nrelations: []\n');
     await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.code-map.yaml'), 'schema_version: 1\nnodes: []\n');
@@ -125,11 +125,11 @@ describe('bootstrap command Phase 1 baseline contract', () => {
     expect(status).toMatchObject({
       initialized: false,
       baselineType: 'formal-opsx',
-      supported: false,
-      allowedModes: [],
-      nextAction: null,
+      supported: true,
+      allowedModes: ['refresh'],
+      nextAction: 'init',
     });
-    expect(status.reason).toContain('existing formal OPSX files');
+    expect(status.reason).toContain('Use refresh');
   });
 
   it('returns pre-init instructions json instead of init-first error', async () => {
@@ -152,13 +152,28 @@ describe('bootstrap command Phase 1 baseline contract', () => {
     expect(instructions.instruction).toContain('Run: openspec bootstrap init --mode full');
   });
 
-  it('rejects unsupported baseline before creating bootstrap workspace', async () => {
+  it('rejects unsupported mode on a formal-opsx baseline before creating bootstrap workspace', async () => {
     await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.yaml'), 'schema_version: 1\nproject:\n  id: demo\n  name: Demo\n');
     await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.relations.yaml'), 'schema_version: 1\nrelations: []\n');
     await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.code-map.yaml'), 'schema_version: 1\nnodes: []\n');
 
-    await expect(initBootstrap(testDir, { mode: 'full' })).rejects.toThrow('existing formal OPSX files');
+    await expect(initBootstrap(testDir, { mode: 'full' })).rejects.toThrow(
+      "Bootstrap mode 'full' is not supported for baseline 'formal-opsx'. Valid modes: refresh"
+    );
     await expect(fs.stat(path.join(testDir, 'openspec', 'bootstrap'))).rejects.toThrow();
+  });
+
+  it('allows formal-opsx repositories to initialize refresh mode', async () => {
+    await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.yaml'), 'schema_version: 1\nproject:\n  id: demo\n  name: Demo\n');
+    await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.relations.yaml'), 'schema_version: 1\nrelations: []\n');
+    await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.code-map.yaml'), 'schema_version: 1\nnodes: []\n');
+
+    await initBootstrap(testDir, { mode: 'refresh' });
+
+    const metadata = await fs.readFile(path.join(testDir, 'openspec', 'bootstrap', '.bootstrap.yaml'), 'utf-8');
+    expect(metadata).toContain('baseline_type: formal-opsx');
+    expect(metadata).toContain('mode: refresh');
+    await expect(fs.stat(path.join(testDir, 'openspec', 'bootstrap'))).resolves.toBeDefined();
   });
 
   it('rejects unsupported baseline-to-mode combinations with valid modes listed', async () => {
