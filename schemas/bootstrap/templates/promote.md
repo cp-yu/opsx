@@ -19,4 +19,4 @@ Confirm promotion of candidate OPSX files to formal project files.
 5. In `raw + full`, copy reviewed candidate specs into `openspec/specs/<capability-folder>/spec.md`
 6. In `raw + opsx-first`, create only `openspec/specs/README.md`
 7. In `specs-based + full`, preserve existing specs and add only missing capability specs
-8. Clean up openspec/bootstrap/
+8. Retain openspec/bootstrap/ as audit history and direct the next run to `openspec bootstrap init --mode refresh --restart`

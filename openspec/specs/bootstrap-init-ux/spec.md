@@ -7,7 +7,7 @@
 ## Command Syntax
 
 ```bash
-openspec bootstrap init [--mode <full|opsx-first>] [--scope <path>]
+openspec bootstrap init [--mode <full|opsx-first|refresh>] [--scope <path>] [--restart]
 ```
 ## Requirements
 ### Requirement: TTY 环境下的模式提问
@@ -68,6 +68,28 @@ openspec bootstrap init [--mode <full|opsx-first>] [--scope <path>]
 - **WHEN** 执行 `openspec bootstrap init --mode opsx-first`
 - **THEN** 正常执行，不报错
 
+### Requirement: Retained workspace restart SHALL require explicit user intent
+
+`openspec bootstrap init` SHALL 将正常初始化与 completed retained workspace restart 视为两类不同意图。除非用户显式传入 `--restart`，否则系统 SHALL NOT 移动、覆盖或重置已保留的 workspace。
+
+#### Scenario: init rejects completed retained workspace without restart
+
+- **GIVEN** `openspec/bootstrap/` 已存在
+- **AND** workspace 生命周期状态表明上一轮 promote 已完成
+- **WHEN** 用户执行 `openspec bootstrap init --mode refresh`
+- **THEN** 命令 SHALL fail fast
+- **AND** 错误信息 SHALL 指向 `openspec bootstrap init --mode refresh --restart`
+- **AND** SHALL NOT 把删除 `openspec/bootstrap/` 作为默认修复路径
+
+#### Scenario: init restart refuses in-progress workspace
+
+- **GIVEN** `openspec/bootstrap/` 已存在
+- **AND** workspace 生命周期状态表明当前 run 尚未完成
+- **WHEN** 用户执行 `openspec bootstrap init --mode refresh --restart`
+- **THEN** 命令 SHALL fail fast
+- **AND** 错误信息 SHALL 指向 `openspec bootstrap status` 或 `openspec bootstrap instructions`
+- **AND** SHALL NOT 自动移动或覆盖 in-progress workspace
+
 ### Requirement: Bootstrap guidance SHALL explain projection-driven authoring rules
 Bootstrap init guidance and phase instructions SHALL describe how config projection governs bootstrap prose fields while keeping canonical tokens unchanged.
 
@@ -75,4 +97,3 @@ Bootstrap init guidance and phase instructions SHALL describe how config project
 - **WHEN** bootstrap guidance instructs users or agents to fill prose-bearing fields such as `spec.purpose`, requirement prose, scenario titles, or step text
 - **THEN** the guidance SHALL explain that those fields follow the projected documentation language policy
 - **AND** SHALL explain that canonical template and normative tokens remain unchanged
-

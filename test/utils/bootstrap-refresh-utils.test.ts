@@ -5,10 +5,12 @@ import path from 'path';
 import { randomUUID } from 'crypto';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import {
+  getBootstrapStatus,
   initBootstrap,
   mapChangedPathsToNodeIds,
   promoteBootstrap,
   refreshBootstrapDerivedArtifacts,
+  readBootstrapState,
   type DomainMapFile,
 } from '../../src/utils/bootstrap-utils.js';
 import type { ProjectOpsxBundle } from '../../src/utils/opsx-utils.js';
@@ -77,6 +79,15 @@ nodes:
       'openspec/bootstrap/domain-map/dom.auth.yaml',
       stringifyYaml(mapFile, { lineWidth: 0 })
     );
+  }
+
+  async function rewriteBootstrapMetadata(
+    mutate: (metadata: Record<string, unknown>) => void
+  ): Promise<void> {
+    const metadataPath = path.join(testDir, 'openspec', 'bootstrap', '.bootstrap.yaml');
+    const metadata = parseYaml(await fs.readFile(metadataPath, 'utf-8')) as Record<string, unknown>;
+    mutate(metadata);
+    await fs.writeFile(metadataPath, stringifyYaml(metadata, { lineWidth: 0 }), 'utf-8');
   }
 
   it('falls back to a full scan when refresh runs without git support', async () => {
@@ -253,5 +264,111 @@ nodes:
     const mapping = mapChangedPathsToNodeIds(testDir, bundle, ['SRC\\AUTH\\LOGIN.TS']);
     expect(mapping.mappedNodeIds).toEqual(['cap.auth.login']);
     expect(mapping.unmappedPaths).toEqual([]);
+  });
+
+  it('restarts a completed retained refresh workspace by snapshotting the old workspace and carrying forward stable inputs', async () => {
+    await writeFormalBaseline();
+    await initBootstrap(testDir, { mode: 'refresh' });
+
+    await writeFile('openspec/bootstrap/evidence.yaml', 'domains: []\n');
+    await writeFile('openspec/bootstrap/review.md', '# Review\n');
+    await writeFile('openspec/bootstrap/candidate/project.opsx.yaml', 'schema_version: 1\nproject:\n  id: proj.demo\n  name: Demo\n');
+    await writeFile('openspec/bootstrap/scope.yaml', stringifyYaml({
+      mode: 'refresh',
+      include: ['src/auth'],
+      exclude: ['vendor'],
+      granularity: 'fine',
+    }, { lineWidth: 0 }));
+    await rewriteBootstrapMetadata((metadata) => {
+      metadata.phase = 'promote';
+      metadata.completed_at = '2026-04-20T00:00:00.000Z';
+      metadata.refresh_anchor_commit = 'abc123';
+      metadata.source_fingerprint = 'source';
+      metadata.candidate_fingerprint = 'candidate';
+      metadata.review_fingerprint = 'review';
+      metadata.candidate_spec_paths = ['openspec/bootstrap/candidate/specs/auth/spec.md'];
+    });
+
+    const result = await initBootstrap(testDir, { mode: 'refresh', restart: true });
+
+    expect(result.restarted).toBe(true);
+    expect(result.historyPath).toMatch(/^openspec[\\/]+bootstrap-history[\\/]+/);
+
+    const historyRoot = path.join(testDir, 'openspec', 'bootstrap-history');
+    const historyEntries = await fs.readdir(historyRoot);
+    expect(historyEntries).toHaveLength(1);
+
+    const historyDir = path.join(historyRoot, historyEntries[0]);
+    await expect(fs.readFile(path.join(historyDir, 'review.md'), 'utf-8')).resolves.toContain('# Review');
+    await expect(fs.readFile(path.join(historyDir, 'evidence.yaml'), 'utf-8')).resolves.toContain('domains: []');
+
+    const state = await readBootstrapState(testDir);
+    expect(state.metadata.phase).toBe('init');
+    expect(state.metadata.completed_at).toBeNull();
+    expect(state.metadata.refresh_anchor_commit).toBe('abc123');
+    expect(state.metadata.source_fingerprint).toBeNull();
+    expect(state.metadata.candidate_fingerprint).toBeNull();
+    expect(state.metadata.review_fingerprint).toBeNull();
+    expect(state.metadata.candidate_spec_paths).toEqual([]);
+    expect(state.scope).toEqual({
+      mode: 'refresh',
+      include: ['src/auth'],
+      exclude: ['vendor'],
+      granularity: 'fine',
+    });
+    await expect(fs.access(path.join(testDir, 'openspec', 'bootstrap', 'review.md'))).rejects.toThrow();
+    await expect(fs.access(path.join(testDir, 'openspec', 'bootstrap', 'evidence.yaml'))).rejects.toThrow();
+  });
+
+  it('infers legacy completed refresh workspaces from refresh anchors and preserves the anchor on restart', async () => {
+    await writeFormalBaseline();
+    await initBootstrap(testDir, { mode: 'refresh' });
+    await rewriteBootstrapMetadata((metadata) => {
+      metadata.phase = 'promote';
+      metadata.refresh_anchor_commit = 'legacy-anchor';
+      delete metadata.completed_at;
+    });
+
+    const status = await getBootstrapStatus(testDir);
+    expect(status.initialized).toBe(true);
+    if (!status.initialized) {
+      throw new Error('Expected initialized bootstrap status');
+    }
+    expect(status.workspaceState).toBe('completed');
+    expect(status.restartCommand).toBe('openspec bootstrap init --mode refresh --restart');
+
+    await initBootstrap(testDir, { mode: 'refresh', restart: true });
+    const restarted = await readBootstrapState(testDir);
+    expect(restarted.metadata.refresh_anchor_commit).toBe('legacy-anchor');
+    expect(restarted.metadata.completed_at).toBeNull();
+  });
+
+  it('allows restart from a legacy completed full workspace and falls back to a refresh run without an anchor', async () => {
+    await initBootstrap(testDir, { mode: 'full' });
+    await writeFormalBaseline();
+    await rewriteBootstrapMetadata((metadata) => {
+      metadata.phase = 'promote';
+      delete metadata.completed_at;
+      delete metadata.refresh_anchor_commit;
+    });
+
+    await initBootstrap(testDir, { mode: 'refresh', restart: true });
+    const restarted = await readBootstrapState(testDir);
+    expect(restarted.metadata.mode).toBe('refresh');
+    expect(restarted.metadata.refresh_anchor_commit).toBeNull();
+    expect(restarted.metadata.completed_at).toBeNull();
+  });
+
+  it('refuses restart for in-progress workspaces without moving the current workspace', async () => {
+    await writeFormalBaseline();
+    await initBootstrap(testDir, { mode: 'refresh' });
+    await writeFile('openspec/bootstrap/review.md', '# In progress\n');
+
+    await expect(initBootstrap(testDir, { mode: 'refresh', restart: true })).rejects.toThrow(
+      '`--restart` only works after promote completes'
+    );
+
+    await expect(fs.readFile(path.join(testDir, 'openspec', 'bootstrap', 'review.md'), 'utf-8')).resolves.toContain('# In progress');
+    await expect(fs.stat(path.join(testDir, 'openspec', 'bootstrap-history'))).rejects.toThrow();
   });
 });

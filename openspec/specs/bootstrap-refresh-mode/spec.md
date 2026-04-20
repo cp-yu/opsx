@@ -79,3 +79,31 @@ refresh 模式下的 review 与 promote SHALL 以已有 formal OPSX 为基线，
 - **THEN** 命令 SHALL 失败并报告冲突路径
 - **AND** SHALL NOT 隐式 merge、覆盖或删除已有 formal spec
 - **AND** 对 formal OPSX 的写入 SHALL 一并中止
+
+### Requirement: Refresh restart SHALL preserve retained workspace audit history
+
+对已完成的 retained workspace 显式执行 restart 以开启新的 refresh run 时，系统 SHALL 在创建新工作目录前保留上一轮 workspace 作为审计历史。
+
+#### Scenario: completed retained workspace is snapshotted before restart
+
+- **GIVEN** 仓库 baseline 为 `formal-opsx`
+- **AND** 当前 `openspec/bootstrap/` 是已完成 promote 的 retained workspace
+- **WHEN** 用户执行 `openspec bootstrap init --mode refresh --restart`
+- **THEN** 系统 SHALL 先将现有 workspace 移动到 OpenSpec 管理的显式历史目录
+- **AND** SHALL 再创建新的 `openspec/bootstrap/` 作为下一轮 refresh run 的工作目录
+- **AND** 成功输出 SHALL 包含历史快照路径
+
+#### Scenario: restart carries forward only stable input state
+
+- **GIVEN** 已完成 retained workspace 的 metadata 中存在上一轮 scope，且可能存在 `refresh_anchor_commit`
+- **WHEN** 用户执行 `openspec bootstrap init --mode refresh --restart`
+- **THEN** 新 workspace SHALL 继承上一轮 scope，除非用户显式传入新的 `--scope`
+- **AND** 新 workspace SHALL 继承可用的 `refresh_anchor_commit`
+- **AND** `source_fingerprint`、`candidate_fingerprint`、`review_fingerprint` 与 `candidate_spec_paths` SHALL 被显式清空
+
+#### Scenario: restart falls back to full scan when no prior anchor exists
+
+- **GIVEN** 已完成 retained workspace 没有可用的 `refresh_anchor_commit`
+- **WHEN** 用户执行 `openspec bootstrap init --mode refresh --restart`
+- **THEN** restart SHALL 仍然成功创建新的 refresh workspace
+- **AND** 后续 refresh scan SHALL 回退到全量扫描，直到新的 promote 写入锚点

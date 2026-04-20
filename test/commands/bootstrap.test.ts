@@ -447,7 +447,34 @@ code_refs:
     const output = await withCwd(testDir, () => captureTextOutput(() => bootstrapPromoteCommand({ yes: true })));
 
     expect(output).toContain(
-      'Bootstrap workspace retained at openspec/bootstrap/. You may delete it manually once you no longer need it.'
+      'Bootstrap workspace retained at openspec/bootstrap/. To start the next refresh run, use `openspec bootstrap init --mode refresh --restart`; delete it only when you no longer need the audit trail.'
     );
+  });
+
+  it('reports completed retained workspaces as restartable instead of resumable', async () => {
+    await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.yaml'), 'schema_version: 1\nproject:\n  id: demo\n  name: Demo\n', 'utf-8');
+    await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.relations.yaml'), 'schema_version: 1\nrelations: []\n', 'utf-8');
+    await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.code-map.yaml'), 'schema_version: 1\nnodes: []\n', 'utf-8');
+    await initBootstrap(testDir, { mode: 'refresh' });
+    await setBootstrapPhase(testDir, 'promote');
+
+    const metadataPath = path.join(testDir, 'openspec', 'bootstrap', '.bootstrap.yaml');
+    const metadata = parseYaml(await fs.readFile(metadataPath, 'utf-8')) as Record<string, unknown>;
+    metadata.completed_at = '2026-04-20T00:00:00.000Z';
+    metadata.refresh_anchor_commit = 'abc123';
+    await fs.writeFile(metadataPath, stringifyYaml(metadata, { lineWidth: 0 }), 'utf-8');
+
+    const statusJson = await withCwd(testDir, () => captureJsonOutput(() => bootstrapStatusCommand({ json: true })));
+    expect(statusJson.workspaceState).toBe('completed');
+    expect(statusJson.nextAction).toBe('restart');
+    expect(statusJson.restartCommand).toBe('openspec bootstrap init --mode refresh --restart');
+
+    const instructions = await withCwd(
+      testDir,
+      () => captureTextOutput(() => bootstrapInstructionsCommand(undefined, { json: false }))
+    );
+    expect(instructions).toContain('## Bootstrap: completed workspace');
+    expect(instructions).toContain('openspec bootstrap init --mode refresh --restart');
+    expect(instructions).not.toContain('## Bootstrap: promote phase');
   });
 });

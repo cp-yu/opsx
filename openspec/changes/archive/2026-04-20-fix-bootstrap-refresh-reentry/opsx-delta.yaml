@@ -1,0 +1,11 @@
+schema_version: 1
+MODIFIED:
+  capabilities:
+    - id: cap.opsx.bootstrap
+      type: capability
+      intent: 提供基于现有 CLI 的 bootstrap 工作流，支持 TTY 模式选择、invalid domain-map 诊断、gate 驱动的五阶段生命周期，以及对 retained workspace 的显式 completed/restart 语义；promote 后保留工作区并通过显式 restart 路径开启下一轮 run
+      status: active
+    - id: cap.opsx.bootstrap-refresh
+      type: capability
+      intent: 为已有 formal OPSX 项目提供显式 refresh 生命周期，基于现有 OPSX、specs 与保留/快照后的 bootstrap 工作区生成可审查增量，并通过 merge/delta 安全更新正式 OPSX
+      status: active

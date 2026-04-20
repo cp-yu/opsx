@@ -257,4 +257,72 @@ describe('openspec bootstrap refresh', () => {
     expect(review).toContain('src/auth/untracked.ts');
     expect(review).toContain('MODIFIED: 2 nodes');
   });
+
+  it('restarts a completed retained workspace by snapshotting it into bootstrap-history', async () => {
+    const projectDir = await createTempProject();
+    await writeFormalBaseline(projectDir);
+
+    expect((await runCLI(['bootstrap', 'init', '--mode', 'refresh'], { cwd: projectDir })).exitCode).toBe(0);
+    await writeFile(projectDir, 'openspec/bootstrap/evidence.yaml', 'domains: []\n');
+    await writeFile(projectDir, 'openspec/bootstrap/review.md', '# Completed review\n');
+    await writeFile(projectDir, 'openspec/bootstrap/candidate/project.opsx.yaml', 'schema_version: 1\nproject:\n  id: proj.demo\n  name: Demo\n');
+    await writeFile(projectDir, 'openspec/bootstrap/scope.yaml', stringifyYaml({
+      mode: 'refresh',
+      include: ['src/auth'],
+      exclude: ['vendor'],
+      granularity: 'fine',
+    }, { lineWidth: 0 }));
+    await setBootstrapMetadata(projectDir, (metadata) => {
+      metadata.phase = 'promote';
+      metadata.completed_at = '2026-04-20T00:00:00.000Z';
+      metadata.refresh_anchor_commit = 'restart-anchor';
+      metadata.source_fingerprint = 'source';
+      metadata.candidate_fingerprint = 'candidate';
+      metadata.review_fingerprint = 'review';
+      metadata.candidate_spec_paths = ['openspec/bootstrap/candidate/specs/auth/spec.md'];
+    });
+
+    const restartResult = await runCLI(['bootstrap', 'init', '--mode', 'refresh', '--restart'], { cwd: projectDir });
+    expect(restartResult.exitCode).toBe(0);
+    expect(restartResult.stdout).toContain('Previous workspace snapshot: openspec/bootstrap-history');
+    expect(restartResult.stdout).toContain('This run starts fresh from init while retaining the previous workspace as audit history.');
+
+    const historyRoot = path.join(projectDir, 'openspec', 'bootstrap-history');
+    const historyEntries = await fs.readdir(historyRoot);
+    expect(historyEntries).toHaveLength(1);
+    const historyDir = path.join(historyRoot, historyEntries[0]);
+    await expect(readFile(projectDir, path.join('openspec', 'bootstrap-history', historyEntries[0], 'review.md'))).resolves.toContain('# Completed review');
+    await expect(readFile(projectDir, path.join('openspec', 'bootstrap', 'review.md'))).rejects.toThrow();
+
+    const metadata = parseYaml(await readFile(projectDir, 'openspec/bootstrap/.bootstrap.yaml')) as Record<string, unknown>;
+    expect(metadata.phase).toBe('init');
+    expect(metadata.completed_at).toBeNull();
+    expect(metadata.refresh_anchor_commit).toBe('restart-anchor');
+    expect(metadata.source_fingerprint).toBeNull();
+    expect(metadata.candidate_fingerprint).toBeNull();
+    expect(metadata.review_fingerprint).toBeNull();
+    expect(metadata.candidate_spec_paths).toEqual([]);
+    const scope = parseYaml(await readFile(projectDir, 'openspec/bootstrap/scope.yaml')) as Record<string, unknown>;
+    expect(scope).toMatchObject({
+      mode: 'refresh',
+      include: ['src/auth'],
+      exclude: ['vendor'],
+      granularity: 'fine',
+    });
+    await expect(fs.stat(historyDir)).resolves.toBeDefined();
+  });
+
+  it('rejects --restart for an in-progress workspace without moving it', async () => {
+    const projectDir = await createTempProject();
+    await writeFormalBaseline(projectDir);
+
+    expect((await runCLI(['bootstrap', 'init', '--mode', 'refresh'], { cwd: projectDir })).exitCode).toBe(0);
+    await writeFile(projectDir, 'openspec/bootstrap/review.md', '# In progress\n');
+
+    const restartResult = await runCLI(['bootstrap', 'init', '--mode', 'refresh', '--restart'], { cwd: projectDir });
+    expect(restartResult.exitCode).toBe(1);
+    expect(restartResult.stderr).toContain('`--restart` only works after promote completes');
+    await expect(readFile(projectDir, 'openspec/bootstrap/review.md')).resolves.toContain('# In progress');
+    await expect(fs.stat(path.join(projectDir, 'openspec', 'bootstrap-history'))).rejects.toThrow();
+  });
 });

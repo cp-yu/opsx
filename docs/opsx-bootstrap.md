@@ -58,6 +58,9 @@ openspec bootstrap init --mode opsx-first
 # Or, on a repository with an existing formal OPSX bundle:
 openspec bootstrap init --mode refresh
 
+# If a completed retained workspace already exists:
+openspec bootstrap init --mode refresh --restart
+
 # Follow phase instructions
 openspec bootstrap instructions --json
 
@@ -72,7 +75,8 @@ Key behavior:
 1. `validate` regenerates `review.md`, candidate OPSX files, and candidate specs from current `evidence.yaml` and `domain-map/*.yaml`
 2. If evidence or mappings change, previous review approval becomes stale and must be redone
 3. `promote -y` re-checks scan, map, and review gates before any formal write; refresh merges reviewed deltas while the non-refresh modes write the reviewed candidate bundle
-4. Successful promote retains `openspec/bootstrap/` for later inspection or manual cleanup
+4. Successful promote retains `openspec/bootstrap/` as audit history
+5. The next refresh run should use `openspec bootstrap init --mode refresh --restart`, which snapshots the retained workspace into `openspec/bootstrap-history/` before creating a fresh workspace
 
 ## What Gets Generated
 
@@ -94,6 +98,7 @@ Key behavior:
   - Reviews ADDED / MODIFIED / REMOVED deltas instead of the whole system
   - Merges reviewed OPSX deltas back into the existing formal files
   - Preserves existing formal specs, writes only missing specs for newly added capabilities, and fails fast on conflicts
+  - Retains the completed workspace for audit history; restart is explicit via `--restart`, not manual deletion
 
 ### Minimal Example
 
@@ -276,7 +281,7 @@ For large codebases, bootstrap incrementally by changing the supported CLI input
 
 ```bash
 # Focus on main business logic first
-openspec bootstrap init --mode full --scope src/core --scope src/api
+openspec bootstrap init --mode full --scope src/core,src/api
 ```
 
 ### Phase 2: Refine evidence and domain maps
@@ -335,6 +340,7 @@ Once you've reviewed and refined:
 1. **Commit the structure** — `git add openspec/project.opsx*.yaml openspec/specs && git commit`
 2. **Start using OPSX** — new changes will now update this structure
 3. **For opsx-first repositories** — add specs incrementally later with normal `/opsx:propose` and `/opsx:archive` workflows
+4. **For future refresh runs** — keep the retained workspace as audit history and use `openspec bootstrap init --mode refresh --restart` instead of deleting `openspec/bootstrap/`
 
 ## Maintenance
 

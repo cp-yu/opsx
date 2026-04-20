@@ -21,6 +21,7 @@ import {
 export interface BootstrapInitOptions {
   mode?: string;
   scope?: string;
+  restart?: boolean;
 }
 
 export interface BootstrapStatusOptions {
@@ -83,13 +84,17 @@ export async function bootstrapInitCommand(options: BootstrapInitOptions): Promi
   const mode = await resolveBootstrapMode(projectRoot, options.mode);
   const scope = options.scope ? options.scope.split(',').map(s => s.trim()) : undefined;
 
-  const spinner = ora(`Initializing bootstrap workspace (mode: ${mode})...`).start();
+  const spinner = ora(`${options.restart ? 'Restarting' : 'Initializing'} bootstrap workspace (mode: ${mode})...`).start();
 
   try {
-    const metadata = await initBootstrap(projectRoot, { mode, scope });
-    spinner.succeed(`Bootstrap workspace created at openspec/bootstrap/`);
+    const result = await initBootstrap(projectRoot, { mode, scope, restart: options.restart });
+    const metadata = result.metadata;
+    spinner.succeed(`Bootstrap workspace ${result.restarted ? 'restarted' : 'created'} at openspec/bootstrap/`);
     console.log(`  Phase: ${metadata.phase}`);
     console.log(`  Mode: ${metadata.mode}`);
+    if (result.historyPath) {
+      console.log(`  Previous workspace snapshot: ${result.historyPath}`);
+    }
     console.log();
     if (metadata.mode === 'opsx-first') {
       console.log('This mode writes the formal OPSX bundle plus a README-only specs starter. Add behavior specs later through normal change workflows.');
@@ -100,6 +105,10 @@ export async function bootstrapInitCommand(options: BootstrapInitOptions): Promi
       console.log();
     } else if (metadata.baseline_type === 'raw') {
       console.log('Full mode will generate the formal OPSX bundle plus complete valid candidate specs for each capability.');
+      console.log();
+    }
+    if (result.restarted) {
+      console.log('This run starts fresh from init while retaining the previous workspace as audit history.');
       console.log();
     }
     console.log('Next: Run the scan phase to discover domains.');
@@ -148,11 +157,21 @@ function printBootstrapStatus(status: BootstrapStatus): void {
     return;
   }
 
+  console.log(`Workspace: ${status.workspaceState}`);
   const phaseIdx = BOOTSTRAP_PHASES.indexOf(status.phase);
-
-  console.log(`Phase: ${status.phase} (${phaseIdx + 1}/${BOOTSTRAP_PHASES.length})`);
   console.log(`Baseline: ${status.baselineType}`);
   console.log(`Mode: ${status.mode}`);
+  if (status.workspaceState === 'completed') {
+    console.log(`Completed at: ${status.completedAt ?? 'legacy retained workspace'}`);
+    if (status.restartCommand) {
+      console.log();
+      console.log(`Next: ${status.restartCommand}`);
+      console.log('Restart snapshots the retained workspace into openspec/bootstrap-history/ before creating a fresh openspec/bootstrap/.');
+    }
+    return;
+  }
+
+  console.log(`Phase: ${status.phase} (${phaseIdx + 1}/${BOOTSTRAP_PHASES.length})`);
   console.log(`Candidate: ${status.candidateState}`);
   console.log(`Review: ${status.reviewState}${status.reviewApproved ? ' (approved)' : ''}`);
 
@@ -222,7 +241,9 @@ export async function bootstrapInstructionsCommand(
     }
 
     const targetPhase = (phase ?? status.phase) as BootstrapPhase;
-    const instructions = getPhaseInstructions(targetPhase, status.mode, status.baselineType);
+    const instructions = status.workspaceState === 'completed'
+      ? getCompletedWorkspaceInstructions(status)
+      : getPhaseInstructions(targetPhase, status.mode, status.baselineType);
 
     if (options.json) {
       console.log(JSON.stringify({
@@ -231,18 +252,49 @@ export async function bootstrapInstructionsCommand(
         currentPhase: status.phase,
         baselineType: status.baselineType,
         mode: status.mode,
+        workspaceState: status.workspaceState,
+        completedAt: status.completedAt,
+        restartCommand: status.restartCommand,
+        nextAction: status.nextAction,
         instruction: instructions,
       }, null, 2));
       return;
     }
 
-    console.log(`## Bootstrap: ${targetPhase} phase`);
+    console.log(status.workspaceState === 'completed'
+      ? '## Bootstrap: completed workspace'
+      : `## Bootstrap: ${targetPhase} phase`);
     console.log();
     console.log(instructions);
   } catch (error) {
     spinner?.stop();
     throw error;
   }
+}
+
+function getCompletedWorkspaceInstructions(status: Extract<BootstrapStatus, { initialized: true }>): string {
+  const lines = [
+    'The retained bootstrap workspace belongs to a completed run.',
+    '',
+    `Baseline: ${status.baselineType}`,
+    `Mode: ${status.mode}`,
+  ];
+
+  if (status.completedAt) {
+    lines.push(`Completed at: ${status.completedAt}`);
+  } else {
+    lines.push('Completed at: legacy retained workspace (inferred)');
+  }
+
+  if (status.restartCommand) {
+    lines.push('', `Run: ${status.restartCommand}`);
+    lines.push('Restart moves the current openspec/bootstrap/ into openspec/bootstrap-history/ and creates a fresh workspace from init.');
+    lines.push('Use the retained snapshot for audit or diff; do not delete openspec/bootstrap/ as the normal restart path.');
+  } else {
+    lines.push('', 'The current repository baseline does not expose a supported restart mode.');
+  }
+
+  return lines.join('\n');
 }
 
 function getPreInitInstructions(status: Extract<BootstrapStatus, { initialized: false }>, requestedPhase: BootstrapPhase): string {
@@ -354,14 +406,15 @@ When all checkboxes are checked, proceed to promote.`;
 Run: openspec bootstrap promote
 
 This re-validates scan, map, and review gates before writing any formal OPSX files.
-Successful promotion writes the three formal OPSX files and retains the bootstrap workspace for manual cleanup.
+Successful promotion writes the three formal OPSX files and retains the bootstrap workspace as audit history.
 ${mode === 'opsx-first'
   ? 'Opsx-first writes the formal OPSX bundle plus only openspec/specs/README.md.'
   : mode === 'refresh'
     ? 'Refresh merges the reviewed delta back into the existing formal OPSX bundle, preserves existing specs, adds only missing specs for newly added capabilities, and fails fast on spec-path conflicts.'
-  : baselineType === 'specs-based'
+    : baselineType === 'specs-based'
     ? 'Full mode preserves your existing specs, adds only missing capability specs, and fails fast on target-path conflicts.'
-    : 'Full mode writes the formal OPSX bundle and one validated spec file per mapped capability.'}`;
+    : 'Full mode writes the formal OPSX bundle and one validated spec file per mapped capability.'}
+After a completed retained workspace, start the next refresh run with: openspec bootstrap init --mode refresh --restart`;
   }
 }
 
@@ -445,7 +498,7 @@ export async function bootstrapPromoteCommand(options: BootstrapPromoteOptions):
   const projectRoot = process.cwd();
 
   if (!options.yes) {
-    console.log('This will write formal OPSX files and retain the bootstrap workspace for manual cleanup.');
+    console.log('This will write formal OPSX files and retain the bootstrap workspace as audit history.');
     console.log('Run with -y to confirm, or use the /opsx:bootstrap skill.');
     return;
   }

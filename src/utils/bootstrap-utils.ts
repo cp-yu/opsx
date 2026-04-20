@@ -36,10 +36,11 @@ import {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 export const BOOTSTRAP_DIR = 'openspec/bootstrap';
+export const BOOTSTRAP_HISTORY_DIR = 'openspec/bootstrap-history';
 export const DEFAULT_BOOTSTRAP_PROJECT_ID = 'project';
 export const DEFAULT_BOOTSTRAP_PROJECT_NAME = 'Project';
 export const BOOTSTRAP_WORKSPACE_RETAINED_NOTICE =
-  'Bootstrap workspace retained at openspec/bootstrap/. You may delete it manually once you no longer need it.';
+  'Bootstrap workspace retained at openspec/bootstrap/. To start the next refresh run, use `openspec bootstrap init --mode refresh --restart`; delete it only when you no longer need the audit trail.';
 export const BOOTSTRAP_METADATA_FILE = '.bootstrap.yaml';
 export const BOOTSTRAP_SCOPE_FILE = 'scope.yaml';
 export const BOOTSTRAP_EVIDENCE_FILE = 'evidence.yaml';
@@ -90,6 +91,7 @@ const BootstrapMetadataDiskSchema = z.object({
   baseline_type: BaselineTypeDiskSchema.optional(),
   mode: BootstrapDiskModeSchema,
   created_at: z.string(),
+  completed_at: z.string().nullable().optional(),
   source_fingerprint: z.string().nullable().optional(),
   candidate_fingerprint: z.string().nullable().optional(),
   review_fingerprint: z.string().nullable().optional(),
@@ -180,11 +182,13 @@ export interface BootstrapMetadata {
   baseline_type: BootstrapBaselineType;
   mode: BootstrapMode;
   created_at: string;
+  completed_at: string | null;
   source_fingerprint: string | null;
   candidate_fingerprint: string | null;
   review_fingerprint: string | null;
   refresh_anchor_commit: string | null;
   candidate_spec_paths: string[];
+  completed_marker_present: boolean;
 }
 
 export interface ScopeConfig {
@@ -255,7 +259,11 @@ export interface BootstrapInitializedStatus {
   phase: BootstrapPhase;
   baselineType: BootstrapBaselineType;
   mode: BootstrapMode;
-  nextAction: BootstrapPhase | null;
+  workspaceState: BootstrapWorkspaceState;
+  completedAt: string | null;
+  completionSource: BootstrapCompletionSource;
+  restartCommand: string | null;
+  nextAction: BootstrapPhase | 'restart' | null;
   created_at: string;
   domains: DomainStatus[];
   totalDomains: number;
@@ -276,6 +284,15 @@ export interface BootstrapPreInitStatus {
 }
 
 export type BootstrapStatus = BootstrapInitializedStatus | BootstrapPreInitStatus;
+export type BootstrapWorkspaceState = 'in-progress' | 'completed';
+export type BootstrapCompletionSource = 'explicit' | 'legacy-refresh-anchor' | 'legacy-formal-opsx' | null;
+
+export interface BootstrapInitResult {
+  metadata: BootstrapMetadata;
+  restarted: boolean;
+  historyPath: string | null;
+  workspacePath: string;
+}
 
 export interface DomainStatus {
   id: string;
@@ -311,10 +328,25 @@ export interface PromoteBootstrapResult {
   retainedWorkspaceNotice: string;
 }
 
+interface BootstrapWorkspaceCompletion {
+  state: BootstrapWorkspaceState;
+  completedAt: string | null;
+  source: BootstrapCompletionSource;
+}
+
 // ─── Path Helpers ────────────────────────────────────────────────────────────
 
 function bootstrapPath(projectRoot: string, ...segments: string[]): string {
   return FileSystemUtils.joinPath(projectRoot, BOOTSTRAP_DIR, ...segments);
+}
+
+function bootstrapHistoryPath(projectRoot: string, ...segments: string[]): string {
+  return FileSystemUtils.joinPath(projectRoot, BOOTSTRAP_HISTORY_DIR, ...segments);
+}
+
+function toDisplayPath(projectRoot: string, absolutePath: string): string {
+  const relative = path.relative(projectRoot, absolutePath);
+  return relative || '.';
 }
 
 function normalizeBootstrapMode(mode: BootstrapMode | 'seed'): BootstrapMode {
@@ -352,21 +384,113 @@ async function inferLegacyBaselineType(projectRoot: string): Promise<BootstrapBa
   return await hasRealSpecContent(projectRoot) ? 'specs-based' : 'raw';
 }
 
+function formatBootstrapHistoryStamp(date = new Date()): string {
+  return date.toISOString().replace(/[:.]/g, '-');
+}
+
+function buildBootstrapRestartCommand(baselineType: BootstrapBaselineType): string | null {
+  const allowedModes = getAllowedBootstrapModes(baselineType);
+  if (allowedModes.length === 0) {
+    return null;
+  }
+
+  return `openspec bootstrap init --mode ${allowedModes[0]} --restart`;
+}
+
+function hasExplicitCompletionMarker(metadata: BootstrapMetadata): boolean {
+  return metadata.completed_marker_present;
+}
+
+async function resolveBootstrapWorkspaceCompletion(
+  projectRoot: string,
+  metadata: BootstrapMetadata
+): Promise<BootstrapWorkspaceCompletion> {
+  if (hasExplicitCompletionMarker(metadata)) {
+    return {
+      state: metadata.completed_at ? 'completed' : 'in-progress',
+      completedAt: metadata.completed_at,
+      source: metadata.completed_at ? 'explicit' : null,
+    };
+  }
+
+  if (metadata.mode === 'refresh') {
+    if (metadata.phase === 'promote' && metadata.refresh_anchor_commit) {
+      return {
+        state: 'completed',
+        completedAt: metadata.created_at,
+        source: 'legacy-refresh-anchor',
+      };
+    }
+    return {
+      state: 'in-progress',
+      completedAt: null,
+      source: null,
+    };
+  }
+
+  if (metadata.phase === 'promote' && await countExistingFormalOpsxFiles(projectRoot) === 3) {
+    return {
+      state: 'completed',
+      completedAt: metadata.created_at,
+      source: 'legacy-formal-opsx',
+    };
+  }
+
+  return {
+    state: 'in-progress',
+    completedAt: null,
+    source: null,
+  };
+}
+
+async function moveBootstrapWorkspaceToHistory(
+  projectRoot: string,
+  bootstrapDir: string
+): Promise<string> {
+  const historyRoot = bootstrapHistoryPath(projectRoot);
+  await FileSystemUtils.createDirectory(historyRoot);
+
+  const stamp = formatBootstrapHistoryStamp();
+  let historyDir = bootstrapHistoryPath(projectRoot, stamp);
+  let suffix = 1;
+  while (await FileSystemUtils.directoryExists(historyDir)) {
+    suffix += 1;
+    historyDir = bootstrapHistoryPath(projectRoot, `${stamp}-${suffix}`);
+  }
+
+  try {
+    await fs.rename(bootstrapDir, historyDir);
+  } catch (error: any) {
+    const code = error?.code;
+    if (code === 'EPERM' || code === 'EXDEV') {
+      await fs.cp(bootstrapDir, historyDir, { recursive: true });
+      await fs.rm(bootstrapDir, { recursive: true, force: true });
+    } else {
+      throw error;
+    }
+  }
+
+  return historyDir;
+}
+
 function parseBootstrapMetadata(
   raw: unknown,
   fallbackBaselineType: BootstrapBaselineType
 ): BootstrapMetadata {
   const parsed = BootstrapMetadataDiskSchema.parse(raw);
+  const rawRecord = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
   return {
     phase: parsed.phase,
     baseline_type: parsed.baseline_type ?? fallbackBaselineType,
     mode: normalizeBootstrapMode(parsed.mode),
     created_at: parsed.created_at,
+    completed_at: parsed.completed_at ?? null,
     source_fingerprint: parsed.source_fingerprint ?? null,
     candidate_fingerprint: parsed.candidate_fingerprint ?? null,
     review_fingerprint: parsed.review_fingerprint ?? null,
     refresh_anchor_commit: parsed.refresh_anchor_commit ?? null,
     candidate_spec_paths: parsed.candidate_spec_paths ?? [],
+    completed_marker_present: Object.prototype.hasOwnProperty.call(rawRecord, 'completed_at'),
   };
 }
 
@@ -1420,14 +1544,9 @@ function assembleRefreshDelta(
 
 export async function initBootstrap(
   projectRoot: string,
-  options: { mode?: BootstrapMode; scope?: string[] } = {}
-): Promise<BootstrapMetadata> {
+  options: { mode?: BootstrapMode; scope?: string[]; restart?: boolean } = {}
+): Promise<BootstrapInitResult> {
   const bsDir = bootstrapPath(projectRoot);
-
-  if (await FileSystemUtils.directoryExists(bsDir)) {
-    throw new Error('Bootstrap workspace already exists. Run `openspec bootstrap status` or delete openspec/bootstrap/ to restart.');
-  }
-
   const mode = options.mode ?? 'full';
   const baselineType = await detectBootstrapBaseline(projectRoot);
   const preInitStatus = buildBootstrapPreInitStatus(baselineType);
@@ -1435,6 +1554,36 @@ export async function initBootstrap(
     throw new Error(preInitStatus.reason);
   }
   assertBootstrapModeAllowed(baselineType, mode);
+
+  let historyPath: string | null = null;
+  let inheritedScope: ScopeConfig | null = null;
+  let inheritedAnchorCommit: string | null = null;
+
+  if (await FileSystemUtils.directoryExists(bsDir)) {
+    const existingState = await readBootstrapState(projectRoot);
+    const completion = await resolveBootstrapWorkspaceCompletion(projectRoot, existingState.metadata);
+    if (!options.restart) {
+      if (completion.state === 'completed') {
+        const restartCommand = buildBootstrapRestartCommand(baselineType) ?? `openspec bootstrap init --mode ${mode} --restart`;
+        throw new Error(
+          `Bootstrap workspace already exists and the previous run is complete. Run \`${restartCommand}\` to start a new run from the retained workspace.`
+        );
+      }
+
+      throw new Error('Bootstrap workspace already exists and is still in progress. Run `openspec bootstrap status` or `openspec bootstrap instructions` to resume the current phase.');
+    }
+
+    if (completion.state !== 'completed') {
+      throw new Error('Bootstrap workspace is still in progress. `--restart` only works after promote completes. Run `openspec bootstrap status` or `openspec bootstrap instructions` to resume the current phase.');
+    }
+
+    inheritedScope = existingState.scope;
+    inheritedAnchorCommit = existingState.metadata.refresh_anchor_commit;
+    historyPath = await moveBootstrapWorkspaceToHistory(projectRoot, bsDir);
+  } else if (options.restart) {
+    throw new Error('No retained bootstrap workspace exists. Remove `--restart` to create a new workspace.');
+  }
+
   const now = new Date().toISOString();
 
   const metadata: BootstrapMetadata = {
@@ -1442,18 +1591,20 @@ export async function initBootstrap(
     baseline_type: baselineType,
     mode,
     created_at: now,
+    completed_at: null,
     source_fingerprint: null,
     candidate_fingerprint: null,
     review_fingerprint: null,
-    refresh_anchor_commit: null,
+    refresh_anchor_commit: inheritedAnchorCommit,
     candidate_spec_paths: [],
+    completed_marker_present: true,
   };
 
   const scope: ScopeConfig = {
     mode,
-    include: options.scope ?? [],
-    exclude: [],
-    granularity: 'coarse',
+    include: options.scope ?? inheritedScope?.include ?? [],
+    exclude: inheritedScope?.exclude ?? [],
+    granularity: inheritedScope?.granularity ?? 'coarse',
   };
 
   // Create workspace
@@ -1462,10 +1613,15 @@ export async function initBootstrap(
   await FileSystemUtils.createDirectory(bootstrapPath(projectRoot, BOOTSTRAP_CANDIDATE_DIR));
 
   // Write files
-  await writeYaml(bootstrapPath(projectRoot, BOOTSTRAP_METADATA_FILE), metadata);
+  await writeBootstrapMetadata(projectRoot, metadata);
   await writeYaml(bootstrapPath(projectRoot, BOOTSTRAP_SCOPE_FILE), scope);
 
-  return metadata;
+  return {
+    metadata,
+    restarted: options.restart === true,
+    historyPath: historyPath ? toDisplayPath(projectRoot, historyPath) : null,
+    workspacePath: bsDir,
+  };
 }
 
 export async function readBootstrapState(projectRoot: string): Promise<BootstrapState> {
@@ -1521,9 +1677,8 @@ export async function readBootstrapState(projectRoot: string): Promise<Bootstrap
 }
 
 export async function advancePhase(projectRoot: string, targetPhase: BootstrapPhase): Promise<void> {
-  const metaPath = bootstrapPath(projectRoot, BOOTSTRAP_METADATA_FILE);
   const fallbackBaselineType = await inferLegacyBaselineType(projectRoot);
-  const metaRaw = await readYaml(metaPath);
+  const metaRaw = await readYaml(bootstrapPath(projectRoot, BOOTSTRAP_METADATA_FILE));
   const metadata = parseBootstrapMetadata(metaRaw, fallbackBaselineType);
 
   const currentIdx = BOOTSTRAP_PHASES.indexOf(metadata.phase);
@@ -1538,7 +1693,7 @@ export async function advancePhase(projectRoot: string, targetPhase: BootstrapPh
   }
 
   metadata.phase = targetPhase;
-  await writeYaml(metaPath, metadata);
+  await writeBootstrapMetadata(projectRoot, metadata);
 }
 
 export async function updateDomainProgress(
@@ -1557,6 +1712,10 @@ export async function getBootstrapStatus(projectRoot: string): Promise<Bootstrap
   }
 
   const state = await readBootstrapState(projectRoot);
+  const completion = await resolveBootstrapWorkspaceCompletion(projectRoot, state.metadata);
+  const currentBaselineType = completion.state === 'completed'
+    ? await detectBootstrapBaseline(projectRoot)
+    : state.metadata.baseline_type;
   const derived = await deriveBootstrapArtifacts(projectRoot, state);
   const domains: DomainStatus[] = [];
 
@@ -1581,9 +1740,13 @@ export async function getBootstrapStatus(projectRoot: string): Promise<Bootstrap
   return {
     initialized: true,
     phase: state.metadata.phase,
-    baselineType: state.metadata.baseline_type,
+    baselineType: currentBaselineType,
     mode: state.metadata.mode,
-    nextAction: getNextBootstrapAction(state.metadata.phase),
+    workspaceState: completion.state,
+    completedAt: completion.completedAt,
+    completionSource: completion.source,
+    restartCommand: completion.state === 'completed' ? buildBootstrapRestartCommand(currentBaselineType) : null,
+    nextAction: completion.state === 'completed' ? 'restart' : getNextBootstrapAction(state.metadata.phase),
     created_at: state.metadata.created_at,
     domains,
     totalDomains: domains.length,
@@ -1829,7 +1992,18 @@ function localizeBootstrapText(
 }
 
 async function writeBootstrapMetadata(projectRoot: string, metadata: BootstrapMetadata): Promise<void> {
-  await writeYaml(bootstrapPath(projectRoot, BOOTSTRAP_METADATA_FILE), metadata);
+  await writeYaml(bootstrapPath(projectRoot, BOOTSTRAP_METADATA_FILE), {
+    phase: metadata.phase,
+    baseline_type: metadata.baseline_type,
+    mode: metadata.mode,
+    created_at: metadata.created_at,
+    completed_at: metadata.completed_at,
+    source_fingerprint: metadata.source_fingerprint,
+    candidate_fingerprint: metadata.candidate_fingerprint,
+    review_fingerprint: metadata.review_fingerprint,
+    refresh_anchor_commit: metadata.refresh_anchor_commit,
+    candidate_spec_paths: metadata.candidate_spec_paths,
+  });
 }
 
 async function writeCandidateFiles(
@@ -2319,12 +2493,15 @@ export async function promoteBootstrap(projectRoot: string): Promise<PromoteBoot
     throw error;
   }
 
-  if (state.metadata.mode === 'refresh') {
-    await writeBootstrapMetadata(projectRoot, {
-      ...state.metadata,
-      refresh_anchor_commit: await resolveCurrentGitHead(projectRoot),
-    });
-  }
+  const completedAt = new Date().toISOString();
+  await writeBootstrapMetadata(projectRoot, {
+    ...state.metadata,
+    completed_at: completedAt,
+    completed_marker_present: true,
+    refresh_anchor_commit: state.metadata.mode === 'refresh'
+      ? await resolveCurrentGitHead(projectRoot)
+      : state.metadata.refresh_anchor_commit,
+  });
 
   return {
     retainedWorkspaceNotice: BOOTSTRAP_WORKSPACE_RETAINED_NOTICE,

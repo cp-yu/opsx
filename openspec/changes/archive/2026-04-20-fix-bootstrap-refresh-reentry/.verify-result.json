@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-04-20T05:39:57.536Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "3f78d9c72a96f10ca146b1c70a2d08d51d454ff55c9a96ccdab6431a9d8c7f30",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "reread",
+    "evidenceFiles": [
+      "docs/opsx-bootstrap.md",
+      "openspec/changes/fix-bootstrap-refresh-reentry/design.md",
+      "openspec/changes/fix-bootstrap-refresh-reentry/proposal.md",
+      "openspec/changes/fix-bootstrap-refresh-reentry/specs/bootstrap-init-ux/spec.md",
+      "openspec/changes/fix-bootstrap-refresh-reentry/specs/bootstrap-refresh-mode/spec.md",
+      "openspec/changes/fix-bootstrap-refresh-reentry/specs/bootstrap/spec.md",
+      "openspec/changes/fix-bootstrap-refresh-reentry/tasks.md",
+      "openspec/specs/bootstrap-init-ux/spec.md",
+      "openspec/specs/bootstrap-refresh-mode/spec.md",
+      "openspec/specs/bootstrap/spec.md",
+      "schemas/bootstrap/templates/promote.md",
+      "src/cli/index.ts",
+      "src/commands/bootstrap.ts",
+      "src/core/templates/workflows/bootstrap-opsx.ts",
+      "src/utils/bootstrap-utils.ts",
+      "test/cli-e2e/bootstrap-lifecycle.test.ts",
+      "test/cli-e2e/bootstrap-phase1.test.ts",
+      "test/cli-e2e/bootstrap-refresh.test.ts",
+      "test/commands/bootstrap.test.ts",
+      "test/utils/bootstrap-refresh-utils.test.ts",
+      "test/utils/bootstrap-utils.test.ts"
+    ],
+    "evidenceFingerprint": "3bc7b337d856af5dd1ab051052081e7bef732bfc3e8e5de8620c70da35d10b59",
+    "gitHeadCommit": "e4fe581c58e08434755370847bd0f38ac75cb23a",
+    "gitDiffSummary": "docs/opsx-bootstrap.md                         |  10 +-\n openspec/specs/bootstrap-init-ux/spec.md       |  25 ++-\n openspec/specs/bootstrap-refresh-mode/spec.md  |  28 +++\n openspec/specs/bootstrap/spec.md               |  18 ++\n schemas/bootstrap/templates/promote.md         |   2 +-\n src/cli/index.ts                               |   1 +\n src/commands/bootstrap.ts                      |  75 ++++++--\n src/core/templates/workflows/bootstrap-opsx.ts |  17 +-\n src/utils/bootstrap-utils.ts                   | 231 ++++++++++++++++++++++---\n test/cli-e2e/bootstrap-refresh.test.ts         |  68 ++++++++\n test/commands/bootstrap.test.ts                |  29 +++-\n test/utils/bootstrap-refresh-utils.test.ts     | 117 +++++++++++++\n 12 files changed, 572 insertions(+), 49 deletions(-)"
+  }
+}
