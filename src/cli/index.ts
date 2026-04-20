@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
 import ora from 'ora';
 import path from 'path';
 import { promises as fs } from 'fs';
@@ -601,4 +602,13 @@ bootstrapCmd
     }
   });
 
-await program.parseAsync(process.argv);
+export async function runCli(argv: string[] = process.argv): Promise<void> {
+  await program.parseAsync(argv);
+}
+
+const currentFile = fileURLToPath(import.meta.url);
+const entryFile = process.argv[1] ? path.resolve(process.argv[1]) : null;
+
+if (entryFile === currentFile) {
+  await runCli(process.argv);
+}

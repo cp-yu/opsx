@@ -5,18 +5,12 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
-import {
-  CONFORMANCE_CHECK_RULES,
-  VERIFY_WRITEBACK_RULES,
-} from '../fragments/opsx-fragments.js';
+import { VERIFY_FRESHNESS_RULES } from '../fragments/opsx-fragments.js';
 
-export function getArchiveChangeSkillTemplate(): SkillTemplate {
-  return {
-    name: 'openspec-archive-change',
-    description: 'Archive a completed change in the experimental workflow. Use when the user wants to finalize and archive a change after implementation is complete.',
-    instructions: `Archive a completed change in the experimental workflow.
+function buildArchiveInstructions(inputLine: string): string {
+  return `Archive a completed change in the experimental workflow.
 
-**Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+**Input**: ${inputLine}
 
 When archive guidance discusses embedded sync or artifact write-back, treat \`openspec/config.yaml\` as the compact source of truth and follow the shared prompt/runtime projection contract rather than reinterpreting raw config keys inside the template body.
 
@@ -31,24 +25,53 @@ When archive guidance discusses embedded sync or artifact write-back, treat \`op
 
    **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
 
-2. **Apply expanded-mode verify gate**
+2. **Unified Full Verify Gate**
 
-   Determine whether the current workflow surface is running in \`expanded\` mode.
+   Build the verify result path with \`path.join(changeDir, '.verify-result.json')\`.
 
-   **If running in expanded mode:**
-   - Build \`path.join(changeDir, '.verify-result.json')\`
-   - If the verify result file does not exist:
-     - Soft-prompt the user: "No verify result found. Run \`/opsx:verify\` first?"
-     - Allow the user to continue if they explicitly confirm
-   - If the file exists:
-     - Read \`result\`, \`timestamp\`, \`issues\`, and \`tasksFileHash\`
-     - Hash the current \`tasks.md\` contents and compare to \`tasksFileHash\`
-     - If \`result === 'FAIL_NEEDS_REMEDIATION'\`: hard-block archive and direct the user to fix remediation items first
-     - If the hash does not match: treat the verify result as stale and soft-prompt before continuing
-     - If \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\` and the hash is fresh: continue without prompting
+${VERIFY_FRESHNESS_RULES}
 
-   **If running in core mode:**
-   - Skip this verify stamp gate because core mode has no standalone \`/opsx:verify\`
+   **If \`.verify-result.json\` does not exist**:
+   - Inform the user: "No verify result found. Executing full verify before archive..."
+   - Execute the full verify contract in Step 2.5
+
+   **If \`.verify-result.json\` exists**:
+   - Read \`result\`, \`timestamp\`, \`issues\`, \`tasksFileHash\`, and \`verificationContext\`
+   - Recompute freshness by:
+     - hashing the current \`tasks.md\` contents
+     - recomputing \`verificationContext.evidenceFingerprint\`
+     - checking \`verificationContext.contractVersion === "1.0"\`
+     - checking \`verificationContext.gitHeadCommit\` against the current HEAD when it was recorded
+   - If ANY freshness check fails:
+     - Inform the user: "Verify result is stale. Re-executing full verify before archive..."
+     - Execute the full verify contract in Step 2.5
+   - Otherwise reload the verify result from disk and treat that persisted file as the source of truth
+
+   **After reuse or re-execution**:
+   - If \`result === 'FAIL_NEEDS_REMEDIATION'\`:
+     - HARD-BLOCK archive
+     - Display the CRITICAL issues from the \`issues\` array
+     - Instruct the user to fix remediation items and re-run \`/opsx:apply\` or \`/opsx:verify\`
+     - Preserve the active change directory and STOP here
+   - If \`result === 'PASS'\` or \`result === 'PASS_WITH_WARNINGS'\`:
+     - Inform the user that a fresh verify result was accepted
+     - Continue to Step 3
+
+2.5. **Execute Full Verify**
+
+   When the verify result is missing or stale, execute the same verify contract as \`/opsx:verify\`:
+   - Follow the tool-appropriate clean-context protocol
+   - Re-read change artifacts, git evidence, and final file contents
+   - Run completeness, git-evidence, correctness, and coherence checks
+   - Persist a fresh \`.verify-result.json\` before returning to archive
+   - In \`core\`, this verify contract is embedded inside archive because there is no standalone verify surface
+   - In \`expanded\`, you MAY invoke \`/opsx:verify\` or execute the same contract inline, but the semantics MUST stay identical
+
+   **Important**:
+   - This is the ONLY verify gate for archive
+   - There is no archive-only mini check
+   - There is no bypass path after a failed verify
+   - \`core\` and \`expanded\` modes use the same archive gate logic
 
 3. **Check artifact completion status**
 
@@ -58,10 +81,10 @@ When archive guidance discusses embedded sync or artifact write-back, treat \`op
    - \`schemaName\`: The workflow being used
    - \`artifacts\`: List of artifacts with their status (\`done\` or other)
 
-   **If any artifacts are not \`done\`:**
+   **If any artifacts are not \`done\`**:
    - Display warning listing incomplete artifacts
-   - Use **AskUserQuestion tool** to confirm user wants to proceed
-   - Proceed if user confirms
+   - Use the **AskUserQuestion tool** to confirm the user wants to proceed
+   - Proceed only if the user confirms
 
 4. **Check task completion status**
 
@@ -69,52 +92,36 @@ When archive guidance discusses embedded sync or artifact write-back, treat \`op
 
    Count tasks marked with \`- [ ]\` (incomplete) vs \`- [x]\` (complete).
 
-   **If incomplete tasks found:**
-   - Display warning showing count of incomplete tasks
-   - Use **AskUserQuestion tool** to confirm user wants to proceed
-   - Proceed if user confirms
+   **If incomplete tasks are found**:
+   - Display a warning showing the count of incomplete tasks
+   - Use the **AskUserQuestion tool** to confirm the user wants to proceed
+   - Proceed only if the user confirms
 
-   **If no tasks file exists:** Proceed without task-related warning.
-
-   **Core mode inline conformance check (Step 4.5):**
-   - Only run this branch in \`core\` mode after all tasks are currently marked complete
-   - If no delta specs exist in \`openspec/changes/<name>/specs/\`, skip the inline conformance check entirely
-   - If delta specs exist, run a lightweight conformance pass before archive using the shared rules below
-
-${CONFORMANCE_CHECK_RULES}
-
-${VERIFY_WRITEBACK_RULES}
-
-   - If CRITICAL issues are found:
-     - Unmark affected completed tasks
-     - Append or refresh the \`## Remediation\` section
-     - Abort archive and tell the user to re-run \`/opsx:apply\` on the reopened tasks
-   - If only WARNING/SUGGESTION issues are found:
-     - Report them, but continue to sync/archive flow
+   **If no tasks file exists**: proceed without task-related warning.
 
 5. **Assess delta sync state**
 
    Check for delta specs at \`openspec/changes/<name>/specs/\` and for \`openspec/changes/<name>/opsx-delta.yaml\`. If neither exists, proceed directly to archive.
 
-   **If any delta exists:**
+   **If any delta exists**:
    - Compare each delta spec with its corresponding main spec at \`openspec/specs/<capability>/spec.md\`
    - If \`opsx-delta.yaml\` exists, compare it with the three OPSX files (\`project.opsx.yaml\`, \`project.opsx.relations.yaml\`, \`project.opsx.code-map.yaml\`) and determine ADDED / MODIFIED / REMOVED capability changes
-   - In \`core\` mode, reconcile both the delta specs and the OPSX delta inline as part of archive. Do **not** require a separate \`/opsx:sync\` skill.
-   - Abort archive if sync preparation or validation fails, leaving main specs, OPSX files, and the active change directory unchanged.
-   - In \`expanded\` mode, \`/opsx:sync\` may still exist as a standalone workflow, but archive MUST follow the same sync-state contract.
+   - In \`core\`, reconcile delta specs and OPSX delta inline as part of archive. Do **not** require a separate \`/opsx:sync\` skill
+   - Abort archive if sync preparation or validation fails, leaving main specs, OPSX files, and the active change directory unchanged
+   - In \`expanded\`, \`/opsx:sync\` may still exist as a standalone workflow, but archive MUST follow the same sync-state contract
 
 6. **Perform the archive**
 
-   Create the archive directory if it doesn't exist:
+   Create the archive directory if it does not exist:
    \`\`\`bash
    mkdir -p openspec/changes/archive
    \`\`\`
 
-   Generate target name using current date: \`YYYY-MM-DD-<change-name>\`
+   Generate the target name using the current date: \`YYYY-MM-DD-<change-name>\`
 
-   **Check if target already exists:**
-   - If yes: Fail with error, suggest renaming existing archive or using different date
-   - If no: Move the change directory to archive
+   **Check if the target already exists**:
+   - If yes: fail with an error and suggest renaming or removing the existing archive entry
+   - If no: move the change directory to archive
 
    \`\`\`bash
    mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
@@ -127,7 +134,8 @@ ${VERIFY_WRITEBACK_RULES}
    - Schema that was used
    - Archive location
    - Whether specs / OPSX were synced (if applicable)
-   - Note about any warnings (incomplete artifacts/tasks)
+   - Whether a fresh verify result was reused or archive had to execute full verify
+   - Any warnings about incomplete artifacts or tasks
 
 **Output On Success**
 
@@ -137,19 +145,30 @@ ${VERIFY_WRITEBACK_RULES}
 **Change:** <change-name>
 **Schema:** <schema-name>
 **Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
+**Verify Gate:** Fresh PASS or PASS_WITH_WARNINGS result confirmed
 **Specs / OPSX:** ✓ Synced to main specs and project OPSX (or "No deltas" or "Skipped all archive-time sync writes")
 
-All artifacts complete. All tasks complete.
+Archive completed after satisfying the unified full verify gate.
 \`\`\`
 
 **Guardrails**
 - Always prompt for change selection if not provided
-- Use artifact graph (openspec status --json) for completion checking
-- Don't block archive on warnings - just inform and confirm
-- Preserve .openspec.yaml when moving to archive (it moves with the directory)
-- Show clear summary of what happened
-- Do not require \`/opsx:sync\` in \`core\` mode
-- If delta specs or \`opsx-delta.yaml\` exist, always run the shared sync assessment before moving the change directory`,
+- Use artifact graph (\`openspec status --json\`) for completion checking
+- Do not downgrade the verify gate into a lightweight archive-only check
+- Preserve \`.openspec.yaml\` when moving to archive (it moves with the directory)
+- Show clearly whether verify was reused or re-executed
+- Do not require a separate \`/opsx:sync\` in \`core\`
+- If delta specs or \`opsx-delta.yaml\` exist, always run the shared sync assessment before moving the change directory`;
+}
+
+export function getArchiveChangeSkillTemplate(): SkillTemplate {
+  return {
+    name: 'openspec-archive-change',
+    description:
+      'Archive a completed change in the experimental workflow. Use when the user wants to finalize and archive a completed change after implementation is complete.',
+    instructions: buildArchiveInstructions(
+      'Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.'
+    ),
     license: 'MIT',
     compatibility: 'Requires openspec CLI.',
     metadata: { author: 'openspec', version: '1.0' },
@@ -162,188 +181,8 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
     description: 'Archive a completed change in the experimental workflow',
     category: 'Workflow',
     tags: ['workflow', 'archive', 'experimental'],
-    content: `Archive a completed change in the experimental workflow.
-
-**Input**: Optionally specify a change name after \`/opsx:archive\` (e.g., \`/opsx:archive add-auth\`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
-
-When archive guidance discusses embedded sync or artifact write-back, treat \`openspec/config.yaml\` as the compact source of truth and follow the shared prompt/runtime projection contract rather than reinterpreting raw config keys inside the template body.
-
-**Steps**
-
-1. **If no change name provided, prompt for selection**
-
-   Run \`openspec list --json\` to get available changes. Use the **AskUserQuestion tool** to let the user select.
-
-   Show only active changes (not already archived).
-   Include the schema used for each change if available.
-
-   **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
-
-2. **Apply expanded-mode verify gate**
-
-   Determine whether the current workflow surface is running in \`expanded\` mode.
-
-   **If running in expanded mode:**
-   - Build \`path.join(changeDir, '.verify-result.json')\`
-   - If the verify result file does not exist:
-     - Prompt the user: "No verify result found. Run \`/opsx:verify\` first?"
-     - Allow the user to continue if they explicitly confirm
-   - If the file exists:
-     - Read \`result\`, \`timestamp\`, \`issues\`, and \`tasksFileHash\`
-     - Hash the current \`tasks.md\` contents and compare to \`tasksFileHash\`
-     - If \`result === 'FAIL_NEEDS_REMEDIATION'\`: hard-block archive and direct the user to fix remediation items first
-     - If the hash does not match: treat the verify result as stale and prompt before continuing
-     - If \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\` and the hash is fresh: continue without prompting
-
-   **If running in core mode:**
-   - Skip this verify stamp gate because core mode has no standalone \`/opsx:verify\`
-
-3. **Check artifact completion status**
-
-   Run \`openspec status --change "<name>" --json\` to check artifact completion.
-
-   Parse the JSON to understand:
-   - \`schemaName\`: The workflow being used
-   - \`artifacts\`: List of artifacts with their status (\`done\` or other)
-
-   **If any artifacts are not \`done\`:**
-   - Display warning listing incomplete artifacts
-   - Prompt user for confirmation to continue
-   - Proceed if user confirms
-
-4. **Check task completion status**
-
-   Read the tasks file (typically \`tasks.md\`) to check for incomplete tasks.
-
-   Count tasks marked with \`- [ ]\` (incomplete) vs \`- [x]\` (complete).
-
-   **If incomplete tasks found:**
-   - Display warning showing count of incomplete tasks
-   - Prompt user for confirmation to continue
-   - Proceed if user confirms
-
-   **If no tasks file exists:** Proceed without task-related warning.
-
-   **Core mode inline conformance check (Step 4.5):**
-   - Only run this branch in \`core\` mode after all tasks are currently marked complete
-   - If no delta specs exist in \`openspec/changes/<name>/specs/\`, skip the inline conformance check entirely
-   - If delta specs exist, run a lightweight conformance pass before archive using the shared rules below
-
-${CONFORMANCE_CHECK_RULES}
-
-${VERIFY_WRITEBACK_RULES}
-
-   - If CRITICAL issues are found:
-     - Unmark affected completed tasks
-     - Append or refresh the \`## Remediation\` section
-     - Abort archive and tell the user to re-run \`/opsx:apply\` on the reopened tasks
-   - If only WARNING/SUGGESTION issues are found:
-     - Report them, but continue to sync/archive flow
-
-5. **Assess delta sync state**
-
-   Check for delta specs at \`openspec/changes/<name>/specs/\` and for \`openspec/changes/<name>/opsx-delta.yaml\`. If neither exists, proceed directly to archive.
-
-   **If any delta exists:**
-   - Compare each delta spec with its corresponding main spec at \`openspec/specs/<capability>/spec.md\`
-   - If \`opsx-delta.yaml\` exists, compare it with the three OPSX files (\`project.opsx.yaml\`, \`project.opsx.relations.yaml\`, \`project.opsx.code-map.yaml\`) and determine ADDED / MODIFIED / REMOVED capability changes
-   - In \`core\` mode, reconcile both the delta specs and the OPSX delta inline as part of archive. Do **not** require a separate \`/opsx:sync\` skill.
-   - Abort archive if sync preparation or validation fails, leaving main specs, OPSX files, and the active change directory unchanged.
-   - In \`expanded\` mode, \`/opsx:sync\` may still exist as a standalone workflow, but archive MUST follow the same sync-state contract.
-
-6. **Perform the archive**
-
-   Create the archive directory if it doesn't exist:
-   \`\`\`bash
-   mkdir -p openspec/changes/archive
-   \`\`\`
-
-   Generate target name using current date: \`YYYY-MM-DD-<change-name>\`
-
-   **Check if target already exists:**
-   - If yes: Fail with error, suggest renaming existing archive or using different date
-   - If no: Move the change directory to archive
-
-   \`\`\`bash
-   mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
-   \`\`\`
-
-7. **Display summary**
-
-   Show archive completion summary including:
-   - Change name
-   - Schema that was used
-   - Archive location
-   - Specs / OPSX sync status (synced / skipped all archive-time sync writes / no deltas)
-   - Note about any warnings (incomplete artifacts/tasks)
-
-**Output On Success**
-
-\`\`\`
-## Archive Complete
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs / OPSX:** ✓ Synced to main specs and project OPSX
-
-All artifacts complete. All tasks complete.
-\`\`\`
-
-**Output On Success (No Delta Specs)**
-
-\`\`\`
-## Archive Complete
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs / OPSX:** No deltas
-
-All artifacts complete. All tasks complete.
-\`\`\`
-
-**Output On Success With Warnings**
-
-\`\`\`
-## Archive Complete (with warnings)
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs / OPSX:** Skipped all archive-time sync writes
-
-**Warnings:**
-- Archived with 2 incomplete artifacts
-- Archived with 3 incomplete tasks
-- Skipped all archive-time sync writes
-
-Review the archive if this was not intentional.
-\`\`\`
-
-**Output On Error (Archive Exists)**
-
-\`\`\`
-## Archive Failed
-
-**Change:** <change-name>
-**Target:** openspec/changes/archive/YYYY-MM-DD-<name>/
-
-Target archive directory already exists.
-
-**Options:**
-1. Rename the existing archive
-2. Delete the existing archive if it's a duplicate
-3. Wait until a different date to archive
-\`\`\`
-
-**Guardrails**
-- Always prompt for change selection if not provided
-- Use artifact graph (openspec status --json) for completion checking
-- Don't block archive on warnings - just inform and confirm
-- Preserve .openspec.yaml when moving to archive (it moves with the directory)
-- Show clear summary of what happened
-- Do not require \`/opsx:sync\` in \`core\` mode
-- If delta specs or \`opsx-delta.yaml\` exist, always run the shared sync assessment before moving the change directory`
+    content: buildArchiveInstructions(
+      'Optionally specify a change name after `/opsx:archive` (e.g., `/opsx:archive add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.'
+    ),
   };
 }

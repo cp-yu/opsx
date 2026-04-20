@@ -1,7 +1,7 @@
 # opsx-apply-skill Specification
 
 ## Purpose
-TBD - created by archiving change add-verify-writeback. Update Purpose after archive.
+定义 `/opsx:apply` 如何消费 verify 诊断和 remediation 上下文，以便实现循环优先修复被验证阶段发现的关键问题。
 ## Requirements
 ### Requirement: Apply 读取 Verify 诊断信息
 
@@ -38,4 +38,3 @@ TBD - created by archiving change add-verify-writeback. Update Purpose after arc
 - **WHEN** apply 遇到 `[artifact_fix]` 类型的 remediation 条目
 - **THEN** apply SHALL 修改对应的 artifact（spec 或 design）而非代码
 - **AND** 标记该 remediation 为完成
-

@@ -6,18 +6,28 @@
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
 import {
+  CLEAN_CONTEXT_VERIFY_PROTOCOL_REREAD,
   CONFORMANCE_CHECK_RULES,
+  GIT_EVIDENCE_PROTOCOL,
   OPSX_VERIFY_ALIGNMENT,
   VERIFY_WRITEBACK_RULES,
 } from '../fragments/opsx-fragments.js';
 
-export function getVerifyChangeSkillTemplate(): SkillTemplate {
-  return {
-    name: 'openspec-verify-change',
-    description: 'Verify implementation matches change artifacts. Use when the user wants to validate that implementation is complete, correct, and coherent before archiving.',
-    instructions: `Verify that an implementation matches the change artifacts (specs, tasks, design).
+interface VerifyTemplateText {
+  input: string;
+  commandPrefix?: string;
+}
 
-**Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+function buildVerifyInstructions(
+  text: VerifyTemplateText,
+  cleanContextProtocol: string
+): string {
+  const verifyInvocation = `${text.commandPrefix ?? '/opsx:'}verify`;
+  const continueInvocation = `${text.commandPrefix ?? '/opsx:'}continue`;
+
+  return `Verify that an implementation matches the change artifacts (specs, tasks, design).
+
+**Input**: ${text.input}
 
 When verification writes remediation guidance or instructs artifact updates, treat \`openspec/config.yaml\` as the compact source of truth and follow the shared prompt/runtime projection contract. Preserve \`tasks.md\` structure tokens, checkboxes, requirement references, and canonical section headings.
 
@@ -32,6 +42,10 @@ When verification writes remediation guidance or instructs artifact updates, tre
    Mark changes with incomplete tasks as "(In Progress)".
 
    **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
+
+1.5. **Clean-Context Verification Setup**
+
+${cleanContextProtocol}
 
 2. **Check status to understand the schema**
    \`\`\`bash
@@ -61,39 +75,49 @@ When verification writes remediation guidance or instructs artifact updates, tre
 5. **Verify Completeness**
 
    **Task Completion**:
-   - If tasks.md exists in contextFiles, read it
+   - If \`tasks.md\` exists in \`contextFiles\`, read it
    - Parse checkboxes: \`- [ ]\` (incomplete) vs \`- [x]\` (complete)
    - Count complete vs total tasks
    - If incomplete tasks exist:
-     - Add CRITICAL issue for each incomplete task
+     - Add one CRITICAL issue per incomplete task
      - Recommendation: "Complete task: <description>" or "Mark as done if already implemented"
 
    **Spec Coverage**:
    - If delta specs exist in \`openspec/changes/<name>/specs/\`:
      - Extract all requirements (marked with "### Requirement:")
      - For each requirement:
-       - Search codebase for keywords related to the requirement
-       - Assess if implementation likely exists
+       - Search for candidate implementation files
+       - Read the final file contents for those candidates
+       - Assess whether credible implementation evidence exists
      - If requirements appear unimplemented:
        - Add CRITICAL issue: "Requirement not found: <requirement name>"
        - Recommendation: "Implement requirement X: <description>"
+
+5.5. **Git Evidence Investigation**
+
+${GIT_EVIDENCE_PROTOCOL}
+
+   Use git commands to guide the investigation:
+   - Run \`git status\` to find modified, added, and deleted files
+   - Run \`git diff\` to identify candidate implementation areas and suspicious omissions
+   - Run \`git log -5 --oneline\` to understand recent context if needed
 
 6. **Verify Correctness**
 
    **Requirement Implementation Mapping**:
    - For each requirement from delta specs:
-     - Search codebase for implementation evidence
-     - If found, note file paths and line ranges
-     - Assess if implementation matches requirement intent
-     - If divergence detected:
+     - Search for implementation evidence in code and tests
+     - Read final file contents before assigning status
+     - Record supporting and contradicting evidence with specific file paths and line ranges
+     - If divergence is detected:
        - Add WARNING: "Implementation may diverge from spec: <details>"
        - Recommendation: "Review <file>:<lines> against requirement X"
 
    **Scenario Coverage**:
    - For each scenario in delta specs (marked with "#### Scenario:"):
-     - Check if conditions are handled in code
-     - Check if tests exist covering the scenario
-     - If scenario appears uncovered:
+     - Check whether the scenario conditions are handled in code
+     - Check whether tests cover the scenario
+     - If scenario coverage is incomplete or unclear:
        - Add WARNING: "Scenario not covered: <scenario name>"
        - Recommendation: "Add test or implementation for scenario: <description>"
 
@@ -104,18 +128,18 @@ ${OPSX_VERIFY_ALIGNMENT}
 7. **Verify Coherence**
 
    **Design Adherence**:
-   - If design.md exists in contextFiles:
+   - If \`design.md\` exists in \`contextFiles\`:
      - Extract key decisions (look for sections like "Decision:", "Approach:", "Architecture:")
      - Verify implementation follows those decisions
-     - If contradiction detected:
+     - If contradiction is detected:
        - Add WARNING: "Design decision not followed: <decision>"
        - Recommendation: "Update implementation or revise design.md to match reality"
-   - If no design.md: Skip design adherence check, note "No design.md to verify against"
+   - If no \`design.md\` exists: skip design adherence and state why
 
    **Code Pattern Consistency**:
-   - Review new code for consistency with project patterns
-   - Check file naming, directory structure, coding style
-   - If significant deviations found:
+   - Review new code for consistency with existing project patterns
+   - Check naming, directory structure, and testing shape
+   - If significant deviation is found:
      - Add SUGGESTION: "Code pattern deviation: <details>"
      - Recommendation: "Consider following project pattern: <example>"
 
@@ -135,30 +159,19 @@ ${OPSX_VERIFY_ALIGNMENT}
 
    **Issues by Priority**:
 
-   1. **CRITICAL** (Must fix before archive):
-      - Incomplete tasks
-      - Missing requirement implementations
-      - Each with specific, actionable recommendation
-
-   2. **WARNING** (Should fix):
-      - Spec/design divergences
-      - Missing scenario coverage
-      - Each with specific recommendation
-
-   3. **SUGGESTION** (Nice to fix):
-      - Pattern inconsistencies
-      - Minor improvements
-      - Each with specific recommendation
+   1. **CRITICAL** (must fix before archive)
+   2. **WARNING** (should fix or consciously accept)
+   3. **SUGGESTION** (non-blocking improvements)
 
    **Final Assessment**:
-   - If CRITICAL issues: "X critical issue(s) found. Fix before archiving." and set result to \`FAIL_NEEDS_REMEDIATION\`
-   - If only warnings: "No critical issues. Y warning(s) to consider. Ready for archive (with noted improvements)." and set result to \`PASS_WITH_WARNINGS\`
-   - If all clear: "All checks passed. Ready for archive." and set result to \`PASS\`
+   - If CRITICAL issues exist: set result to \`FAIL_NEEDS_REMEDIATION\`
+   - If no CRITICAL issues exist but warnings or suggestions remain: set result to \`PASS_WITH_WARNINGS\`
+   - If all checks are clear: set result to \`PASS\`
 
    **Exit / Result Semantics**:
-   - \`PASS\`: no CRITICAL, WARNING, or SUGGESTION issue requires follow-up
+   - \`PASS\`: no CRITICAL, WARNING, or SUGGESTION follow-up is needed
    - \`PASS_WITH_WARNINGS\`: no CRITICAL issues, but warnings or suggestions remain
-   - \`FAIL_NEEDS_REMEDIATION\`: one or more CRITICAL issues were found and write-back is required
+   - \`FAIL_NEEDS_REMEDIATION\`: one or more CRITICAL issues require write-back and rework
 
 9. **Write Back CRITICAL Issues**
 
@@ -168,240 +181,102 @@ ${VERIFY_WRITEBACK_RULES}
    - If CRITICAL issues were found:
      - Unmark each affected completed task
      - Append or refresh the \`## Remediation\` section with typed fix items
-     - Include the requirement name, issue summary, and owning task in each remediation entry when possible
+     - Include the requirement name, issue summary, and owning task when possible
 
 10. **Persist Verification Result**
 
-   - Build the verify result file path with \`path.join(changeDir, '.verify-result.json')\`
+   - Build the verify result path with \`path.join(changeDir, '.verify-result.json')\`
    - Write a JSON object with:
      - \`timestamp\`: ISO 8601 completion time
      - \`result\`: \`PASS\` / \`PASS_WITH_WARNINGS\` / \`FAIL_NEEDS_REMEDIATION\`
      - \`issues\`: the full issue list with severity, requirement, task linkage, and recommendations
      - \`tasksFileHash\`: hash of the current \`tasks.md\` contents after any write-back
-   - Persist the file even when verification fails so archive/apply can consume the latest diagnostics
+     - \`verificationContext\`:
+       - \`contractVersion\`: \`"1.0"\`
+       - \`executionMode\`: derived from Step 1.5
+       - \`evidenceFiles\`: sorted list of examined files using relative POSIX paths
+       - \`evidenceFingerprint\`: SHA-256 of sorted evidence file path + modification time + size tuples
+       - \`gitHeadCommit\`: current HEAD commit SHA if available
+       - \`gitDiffSummary\`: output of \`git diff --stat\` if useful
+   - Compute \`evidenceFingerprint\` by sorting \`evidenceFiles\`, collecting each file's normalized relative path, mtime, and size, then hashing the concatenated string
+   - Use \`path.join()\`, \`path.resolve()\`, and \`path.normalize()\` for all path handling
+   - Persist the file even when verification fails so \`${verifyInvocation}\`, \`${continueInvocation}\`, and archive can consume the latest diagnostics
 
 **Verification Heuristics**
 
-- **Completeness**: Focus on objective checklist items (checkboxes, requirements list)
-- **Correctness**: Use keyword search, file path analysis, reasonable inference - don't require perfect certainty
-- **Coherence**: Look for glaring inconsistencies, don't nitpick style
-- **False Positives**: When uncertain, prefer SUGGESTION over WARNING, WARNING over CRITICAL
-- **Actionability**: Every issue must have a specific recommendation with file/line references where applicable
+- **Completeness**: focus on objective checklist items and explicit requirement coverage
+- **Correctness**: require concrete evidence from final file contents before declaring PASS
+- **Coherence**: look for meaningful contradictions, not cosmetic nitpicks
+- **False positives**: when uncertain, prefer SUGGESTION over WARNING and WARNING over CRITICAL
+- **Actionability**: every issue must include a concrete next action and file references when applicable
 
 **Graceful Degradation**
 
-- If only tasks.md exists: verify task completion only, skip spec/design checks
-- If tasks + specs exist: verify completeness and correctness, skip design
-- If full artifacts: verify all three dimensions
-- Always note which checks were skipped and why
+- If only \`tasks.md\` exists: verify task completion only and report skipped checks
+- If tasks and specs exist: verify completeness and correctness, skip design checks
+- If full artifacts exist: verify all three dimensions
+- Always state which checks were skipped and why
 
 **Output Format**
 
 Use clear markdown with:
-- Table for summary scorecard
-- Grouped lists for issues (CRITICAL/WARNING/SUGGESTION)
-- Code references in format: \`file.ts:123\`
+- A table for the summary scorecard
+- Grouped lists for CRITICAL, WARNING, and SUGGESTION issues
+- Code references in \`file.ts:123\` format
 - Specific, actionable recommendations
-- No vague suggestions like "consider reviewing"`,
+- No vague language like "consider reviewing"`;
+}
+
+function createVerifySkillTemplate(cleanContextProtocol: string): SkillTemplate {
+  return {
+    name: 'openspec-verify-change',
+    description:
+      'Verify implementation matches change artifacts. Use when the user wants to validate that implementation is complete, correct, and coherent before archiving.',
+    instructions: buildVerifyInstructions(
+      {
+        input:
+          'Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.',
+      },
+      cleanContextProtocol
+    ),
     license: 'MIT',
     compatibility: 'Requires openspec CLI.',
     metadata: { author: 'openspec', version: '1.0' },
   };
 }
 
-export function getOpsxVerifyCommandTemplate(): CommandTemplate {
+function createVerifyCommandTemplate(cleanContextProtocol: string): CommandTemplate {
   return {
     name: 'OPSX: Verify',
     description: 'Verify implementation matches change artifacts before archiving',
     category: 'Workflow',
     tags: ['workflow', 'verify', 'experimental'],
-    content: `Verify that an implementation matches the change artifacts (specs, tasks, design).
-
-**Input**: Optionally specify a change name after \`/opsx:verify\` (e.g., \`/opsx:verify add-auth\`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
-
-When verification writes remediation guidance or instructs artifact updates, treat \`openspec/config.yaml\` as the compact source of truth and follow the shared prompt/runtime projection contract. Preserve \`tasks.md\` structure tokens, checkboxes, requirement references, and canonical section headings.
-
-**Steps**
-
-1. **If no change name provided, prompt for selection**
-
-   Run \`openspec list --json\` to get available changes. Use the **AskUserQuestion tool** to let the user select.
-
-   Show changes that have implementation tasks (tasks artifact exists).
-   Include the schema used for each change if available.
-   Mark changes with incomplete tasks as "(In Progress)".
-
-   **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
-
-2. **Check status to understand the schema**
-   \`\`\`bash
-   openspec status --change "<name>" --json
-   \`\`\`
-   Parse the JSON to understand:
-   - \`schemaName\`: The workflow being used (e.g., "spec-driven")
-   - Which artifacts exist for this change
-
-3. **Get the change directory and load artifacts**
-
-   \`\`\`bash
-   openspec instructions apply --change "<name>" --json
-   \`\`\`
-
-   This returns the change directory and context files. Read all available artifacts from \`contextFiles\`.
-
-4. **Initialize verification report structure**
-
-   Create a report structure with three dimensions:
-   - **Completeness**: Track tasks and spec coverage
-   - **Correctness**: Track requirement implementation and scenario coverage
-   - **Coherence**: Track design adherence and pattern consistency
-
-   Each dimension can have CRITICAL, WARNING, or SUGGESTION issues.
-
-5. **Verify Completeness**
-
-   **Task Completion**:
-   - If tasks.md exists in contextFiles, read it
-   - Parse checkboxes: \`- [ ]\` (incomplete) vs \`- [x]\` (complete)
-   - Count complete vs total tasks
-   - If incomplete tasks exist:
-     - Add CRITICAL issue for each incomplete task
-     - Recommendation: "Complete task: <description>" or "Mark as done if already implemented"
-
-   **Spec Coverage**:
-   - If delta specs exist in \`openspec/changes/<name>/specs/\`:
-     - Extract all requirements (marked with "### Requirement:")
-     - For each requirement:
-       - Search codebase for keywords related to the requirement
-       - Assess if implementation likely exists
-     - If requirements appear unimplemented:
-       - Add CRITICAL issue: "Requirement not found: <requirement name>"
-       - Recommendation: "Implement requirement X: <description>"
-
-6. **Verify Correctness**
-
-   **Requirement Implementation Mapping**:
-   - For each requirement from delta specs:
-     - Search codebase for implementation evidence
-     - If found, note file paths and line ranges
-     - Assess if implementation matches requirement intent
-     - If divergence detected:
-       - Add WARNING: "Implementation may diverge from spec: <details>"
-       - Recommendation: "Review <file>:<lines> against requirement X"
-
-   **Scenario Coverage**:
-   - For each scenario in delta specs (marked with "#### Scenario:"):
-     - Check if conditions are handled in code
-     - Check if tests exist covering the scenario
-     - If scenario appears uncovered:
-       - Add WARNING: "Scenario not covered: <scenario name>"
-       - Recommendation: "Add test or implementation for scenario: <description>"
-
-${CONFORMANCE_CHECK_RULES}
-
-${OPSX_VERIFY_ALIGNMENT}
-
-7. **Verify Coherence**
-
-   **Design Adherence**:
-   - If design.md exists in contextFiles:
-     - Extract key decisions (look for sections like "Decision:", "Approach:", "Architecture:")
-     - Verify implementation follows those decisions
-     - If contradiction detected:
-       - Add WARNING: "Design decision not followed: <decision>"
-       - Recommendation: "Update implementation or revise design.md to match reality"
-   - If no design.md: Skip design adherence check, note "No design.md to verify against"
-
-   **Code Pattern Consistency**:
-   - Review new code for consistency with project patterns
-   - Check file naming, directory structure, coding style
-   - If significant deviations found:
-     - Add SUGGESTION: "Code pattern deviation: <details>"
-     - Recommendation: "Consider following project pattern: <example>"
-
-8. **Generate Verification Report**
-
-   **Summary Scorecard**:
-   \`\`\`
-   ## Verification Report: <change-name>
-
-   ### Summary
-   | Dimension    | Status           |
-   |--------------|------------------|
-   | Completeness | X/Y tasks, N reqs|
-   | Correctness  | M/N reqs covered |
-   | Coherence    | Followed/Issues  |
-   \`\`\`
-
-   **Issues by Priority**:
-
-   1. **CRITICAL** (Must fix before archive):
-      - Incomplete tasks
-      - Missing requirement implementations
-      - Each with specific, actionable recommendation
-
-   2. **WARNING** (Should fix):
-      - Spec/design divergences
-      - Missing scenario coverage
-      - Each with specific recommendation
-
-   3. **SUGGESTION** (Nice to fix):
-      - Pattern inconsistencies
-      - Minor improvements
-      - Each with specific recommendation
-
-   **Final Assessment**:
-   - If CRITICAL issues: "X critical issue(s) found. Fix before archiving." and set result to \`FAIL_NEEDS_REMEDIATION\`
-   - If only warnings: "No critical issues. Y warning(s) to consider. Ready for archive (with noted improvements)." and set result to \`PASS_WITH_WARNINGS\`
-   - If all clear: "All checks passed. Ready for archive." and set result to \`PASS\`
-
-   **Exit / Result Semantics**:
-   - \`PASS\`: no CRITICAL, WARNING, or SUGGESTION issue requires follow-up
-   - \`PASS_WITH_WARNINGS\`: no CRITICAL issues, but warnings or suggestions remain
-   - \`FAIL_NEEDS_REMEDIATION\`: one or more CRITICAL issues were found and write-back is required
-
-9. **Write Back CRITICAL Issues**
-
-${VERIFY_WRITEBACK_RULES}
-
-   - If no CRITICAL issues were found, leave \`tasks.md\` unchanged
-   - If CRITICAL issues were found:
-     - Unmark each affected completed task
-     - Append or refresh the \`## Remediation\` section with typed fix items
-     - Include the requirement name, issue summary, and owning task in each remediation entry when possible
-
-10. **Persist Verification Result**
-
-   - Build the verify result file path with \`path.join(changeDir, '.verify-result.json')\`
-   - Write a JSON object with:
-     - \`timestamp\`: ISO 8601 completion time
-     - \`result\`: \`PASS\` / \`PASS_WITH_WARNINGS\` / \`FAIL_NEEDS_REMEDIATION\`
-     - \`issues\`: the full issue list with severity, requirement, task linkage, and recommendations
-     - \`tasksFileHash\`: hash of the current \`tasks.md\` contents after any write-back
-   - Persist the file even when verification fails so archive/apply can consume the latest diagnostics
-
-**Verification Heuristics**
-
-- **Completeness**: Focus on objective checklist items (checkboxes, requirements list)
-- **Correctness**: Use keyword search, file path analysis, reasonable inference - don't require perfect certainty
-- **Coherence**: Look for glaring inconsistencies, don't nitpick style
-- **False Positives**: When uncertain, prefer SUGGESTION over WARNING, WARNING over CRITICAL
-- **Actionability**: Every issue must have a specific recommendation with file/line references where applicable
-
-**Graceful Degradation**
-
-- If only tasks.md exists: verify task completion only, skip spec/design checks
-- If tasks + specs exist: verify completeness and correctness, skip design
-- If full artifacts: verify all three dimensions
-- Always note which checks were skipped and why
-
-**Output Format**
-
-Use clear markdown with:
-- Table for summary scorecard
-- Grouped lists for issues (CRITICAL/WARNING/SUGGESTION)
-- Code references in format: \`file.ts:123\`
-- Specific, actionable recommendations
-- No vague suggestions like "consider reviewing"`
+    content: buildVerifyInstructions(
+      {
+        input:
+          'Optionally specify a change name after `/opsx:verify` (e.g., `/opsx:verify add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.',
+      },
+      cleanContextProtocol
+    ),
   };
+}
+
+export function createVerifyChangeSkillTemplate(
+  cleanContextProtocol: string = CLEAN_CONTEXT_VERIFY_PROTOCOL_REREAD
+): SkillTemplate {
+  return createVerifySkillTemplate(cleanContextProtocol);
+}
+
+export function createOpsxVerifyCommandTemplate(
+  cleanContextProtocol: string = CLEAN_CONTEXT_VERIFY_PROTOCOL_REREAD
+): CommandTemplate {
+  return createVerifyCommandTemplate(cleanContextProtocol);
+}
+
+export function getVerifyChangeSkillTemplate(): SkillTemplate {
+  return createVerifyChangeSkillTemplate();
+}
+
+export function getOpsxVerifyCommandTemplate(): CommandTemplate {
+  return createOpsxVerifyCommandTemplate();
 }

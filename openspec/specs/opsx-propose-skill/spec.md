@@ -1,7 +1,7 @@
 # opsx-propose-skill Specification
 
 ## Purpose
-TBD - created by archiving change add-propose-post-validation. Update Purpose after archive.
+定义 `/opsx:propose` 在生成工件后执行轻量校验、单轮修复以及最终 warning 汇总的行为边界。
 ## Requirements
 ### Requirement: Post-propose warning validation
 `/opsx:propose` 在生成 apply-required artifacts 后 SHALL 执行一次 post-propose warning validation。
@@ -78,4 +78,3 @@ TBD - created by archiving change add-propose-post-validation. Update Purpose af
 - **WHEN** 单轮修复后 warning 已消除
 - **THEN** 最终总结 SHALL 说明 post-propose validation 已通过
 - **AND** SHALL 输出 ready for apply
-

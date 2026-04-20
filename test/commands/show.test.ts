@@ -1,15 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
+import { runCLI } from '../helpers/run-cli.js';
 
 describe('top-level show command', () => {
   const projectRoot = process.cwd();
   const testDir = path.join(projectRoot, 'test-show-command-tmp');
   const changesDir = path.join(testDir, 'openspec', 'changes');
   const specsDir = path.join(testDir, 'openspec', 'specs');
-  const openspecBin = path.join(projectRoot, 'bin', 'openspec.js');
-
 
   beforeEach(async () => {
     await fs.mkdir(changesDir, { recursive: true });
@@ -28,53 +26,32 @@ describe('top-level show command', () => {
     await fs.rm(testDir, { recursive: true, force: true });
   });
 
-  it('prints hint and non-zero exit when no args and non-interactive', () => {
-    const originalCwd = process.cwd();
-    const originalEnv = { ...process.env };
-    try {
-      process.chdir(testDir);
-      process.env.OPEN_SPEC_INTERACTIVE = '0';
-      let err: any;
-      try {
-        execSync(`node ${openspecBin} show`, { encoding: 'utf-8' });
-      } catch (e) { err = e; }
-      expect(err).toBeDefined();
-      expect(err.status).not.toBe(0);
-      const stderr = err.stderr.toString();
-      expect(stderr).toContain('Nothing to show.');
-      expect(stderr).toContain('openspec show <item>');
-      expect(stderr).toContain('openspec change show');
-      expect(stderr).toContain('openspec spec show');
-    } finally {
-      process.chdir(originalCwd);
-      process.env = originalEnv;
-    }
+  it('prints hint and non-zero exit when no args and non-interactive', async () => {
+    const result = await runCLI(['show'], {
+      cwd: testDir,
+      env: { OPEN_SPEC_INTERACTIVE: '0' },
+    });
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('Nothing to show.');
+    expect(result.stderr).toContain('openspec show <item>');
+    expect(result.stderr).toContain('openspec change show');
+    expect(result.stderr).toContain('openspec spec show');
   });
 
-  it('auto-detects change id and supports --json', () => {
-    const originalCwd = process.cwd();
-    try {
-      process.chdir(testDir);
-      const output = execSync(`node ${openspecBin} show demo --json`, { encoding: 'utf-8' });
-      const json = JSON.parse(output);
-      expect(json.id).toBe('demo');
-      expect(Array.isArray(json.deltas)).toBe(true);
-    } finally {
-      process.chdir(originalCwd);
-    }
+  it('auto-detects change id and supports --json', async () => {
+    const result = await runCLI(['show', 'demo', '--json'], { cwd: testDir });
+    expect(result.exitCode).toBe(0);
+    const json = JSON.parse(result.stdout);
+    expect(json.id).toBe('demo');
+    expect(Array.isArray(json.deltas)).toBe(true);
   });
 
-  it('auto-detects spec id and supports spec-only flags', () => {
-    const originalCwd = process.cwd();
-    try {
-      process.chdir(testDir);
-      const output = execSync(`node ${openspecBin} show auth --json --requirements`, { encoding: 'utf-8' });
-      const json = JSON.parse(output);
-      expect(json.id).toBe('auth');
-      expect(Array.isArray(json.requirements)).toBe(true);
-    } finally {
-      process.chdir(originalCwd);
-    }
+  it('auto-detects spec id and supports spec-only flags', async () => {
+    const result = await runCLI(['show', 'auth', '--json', '--requirements'], { cwd: testDir });
+    expect(result.exitCode).toBe(0);
+    const json = JSON.parse(result.stdout);
+    expect(json.id).toBe('auth');
+    expect(Array.isArray(json.requirements)).toBe(true);
   });
 
   it('handles ambiguity and suggests --type', async () => {
@@ -84,40 +61,16 @@ describe('top-level show command', () => {
     await fs.mkdir(path.join(specsDir, 'foo'), { recursive: true });
     await fs.writeFile(path.join(specsDir, 'foo', 'spec.md'), '## Purpose\n\n## Requirements\n\n### Requirement: R\nX', 'utf-8');
 
-    const originalCwd = process.cwd();
-    try {
-      process.chdir(testDir);
-      let err: any;
-      try {
-        execSync(`node ${openspecBin} show foo`, { encoding: 'utf-8' });
-      } catch (e) { err = e; }
-      expect(err).toBeDefined();
-      expect(err.status).not.toBe(0);
-      const stderr = err.stderr.toString();
-      expect(stderr).toContain('Ambiguous item');
-      expect(stderr).toContain('--type change|spec');
-    } finally {
-      process.chdir(originalCwd);
-    }
+    const result = await runCLI(['show', 'foo'], { cwd: testDir });
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain('Ambiguous item');
+    expect(result.stderr).toContain('--type change|spec');
   });
 
-  it('prints nearest matches when not found', () => {
-    const originalCwd = process.cwd();
-    try {
-      process.chdir(testDir);
-      let err: any;
-      try {
-        execSync(`node ${openspecBin} show unknown-item`, { encoding: 'utf-8' });
-      } catch (e) { err = e; }
-      expect(err).toBeDefined();
-      expect(err.status).not.toBe(0);
-      const stderr = err.stderr.toString();
-      expect(stderr).toContain("Unknown item 'unknown-item'");
-      expect(stderr).toContain('Did you mean:');
-    } finally {
-      process.chdir(originalCwd);
-    }
+  it('prints nearest matches when not found', async () => {
+    const result = await runCLI(['show', 'unknown-item'], { cwd: testDir });
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain("Unknown item 'unknown-item'");
+    expect(result.stderr).toContain('Did you mean:');
   });
 });
-
-

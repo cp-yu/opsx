@@ -1,19 +1,13 @@
-import { spawn } from 'child_process';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { format } from 'util';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const projectRoot = path.resolve(__dirname, '..', '..');
-const cliEntry = path.join(projectRoot, 'dist', 'cli', 'index.js');
-
-let buildPromise: Promise<void> | undefined;
-
-interface RunCommandOptions {
-  cwd?: string;
-  env?: NodeJS.ProcessEnv;
-}
+const cliEntry = path.join(projectRoot, 'src', 'cli', 'index.ts');
+let cliModulePromise: Promise<{ runCli: (argv: string[]) => Promise<void> }> | undefined;
 
 interface RunCLIOptions {
   cwd?: string;
@@ -31,108 +25,157 @@ export interface RunCLIResult {
   command: string;
 }
 
-function runCommand(command: string, args: string[], options: RunCommandOptions = {}) {
-  return new Promise<void>((resolve, reject) => {
-    const child = spawn(command, args, {
-      cwd: options.cwd ?? projectRoot,
-      env: { ...process.env, ...options.env },
-      stdio: 'inherit',
-      shell: process.platform === 'win32',
-    });
-
-    child.on('error', (error) => reject(error));
-    child.on('close', (code, signal) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        const reason = signal ? `signal ${signal}` : `exit code ${code}`;
-        reject(new Error(`Command failed (${reason}): ${command} ${args.join(' ')}`));
-      }
-    });
-  });
-}
-
-export async function ensureCliBuilt() {
-  if (!buildPromise) {
-    buildPromise = runCommand('pnpm', ['run', 'build']).catch((error) => {
-      buildPromise = undefined;
-      throw error;
-    });
-  }
-
-  await buildPromise;
-}
-
 export async function runCLI(args: string[] = [], options: RunCLIOptions = {}): Promise<RunCLIResult> {
-  await ensureCliBuilt();
-
   const finalArgs = Array.isArray(args) ? args : [args];
   const invocation = [cliEntry, ...finalArgs].join(' ');
+  const argv = [process.execPath, cliEntry, ...finalArgs];
 
-  return new Promise<RunCLIResult>((resolve, reject) => {
-    const child = spawn(process.execPath, [cliEntry, ...finalArgs], {
-      cwd: options.cwd ?? projectRoot,
-      env: {
-        ...process.env,
-        OPEN_SPEC_INTERACTIVE: '0',
-        ...options.env,
-      },
-      stdio: ['pipe', 'pipe', 'pipe'],
-      windowsHide: true,
-    });
+  let stdout = '';
+  let stderr = '';
+  let exitCode: number | null = 0;
+  let timedOut = false;
 
-    let stdout = '';
-    let stderr = '';
-    let timedOut = false;
+  const originalCwd = process.cwd();
+  const originalStdoutWrite = process.stdout.write;
+  const originalStderrWrite = process.stderr.write;
+  const originalExit = process.exit;
+  const originalConsole = globalThis.console;
+  const originalExitCode = process.exitCode;
+  const env = { OPEN_SPEC_INTERACTIVE: '0', ...options.env };
+  const envBackup = new Map<string, string | undefined>();
+  const exitSignal = Symbol('run-cli-exit');
+  let timeoutHandle: NodeJS.Timeout | undefined;
 
-    const timeout = options.timeoutMs
-      ? setTimeout(() => {
-          timedOut = true;
-          child.kill('SIGKILL');
-        }, options.timeoutMs)
-      : undefined;
-
-    child.stdout?.setEncoding('utf-8');
-    child.stdout?.on('data', (chunk) => {
-      stdout += chunk;
-    });
-
-    child.stderr?.setEncoding('utf-8');
-    child.stderr?.on('data', (chunk) => {
-      stderr += chunk;
-    });
-
-    child.on('error', (error) => {
-      if (timeout) clearTimeout(timeout);
-      // Explicitly destroy streams to prevent hanging handles
-      child.stdout?.destroy();
-      child.stderr?.destroy();
-      child.stdin?.destroy();
-      reject(error);
-    });
-
-    child.on('close', (code, signal) => {
-      if (timeout) clearTimeout(timeout);
-      // Explicitly destroy streams to prevent hanging handles
-      child.stdout?.destroy();
-      child.stderr?.destroy();
-      child.stdin?.destroy();
-      resolve({
-        exitCode: code,
-        signal,
-        stdout,
-        stderr,
-        timedOut,
-        command: `node ${invocation}`,
-      });
-    });
-
-    if (options.input && child.stdin) {
-      child.stdin.end(options.input);
-    } else if (child.stdin) {
-      child.stdin.end();
+  const writeTo = (target: 'stdout' | 'stderr', chunk: unknown, encoding?: BufferEncoding) => {
+    const text = Buffer.isBuffer(chunk)
+      ? chunk.toString(encoding ?? 'utf-8')
+      : String(chunk);
+    if (target === 'stdout') {
+      stdout += text;
+    } else {
+      stderr += text;
     }
-  });
+  };
+
+  process.stdout.write = ((chunk: unknown, encoding?: BufferEncoding | (() => void), callback?: () => void) => {
+    writeTo('stdout', chunk, typeof encoding === 'string' ? encoding : undefined);
+    if (typeof encoding === 'function') {
+      encoding();
+    } else if (callback) {
+      callback();
+    }
+    return true;
+  }) as typeof process.stdout.write;
+
+  process.stderr.write = ((chunk: unknown, encoding?: BufferEncoding | (() => void), callback?: () => void) => {
+    writeTo('stderr', chunk, typeof encoding === 'string' ? encoding : undefined);
+    if (typeof encoding === 'function') {
+      encoding();
+    } else if (callback) {
+      callback();
+    }
+    return true;
+  }) as typeof process.stderr.write;
+
+  process.exit = ((code?: string | number | null | undefined) => {
+    exitCode = typeof code === 'number' ? code : Number(code ?? 0);
+    throw exitSignal;
+  }) as typeof process.exit;
+
+  const capturedConsole = Object.create(originalConsole) as Console;
+  capturedConsole.log = (...items: unknown[]) => {
+    stdout += `${format(...items)}\n`;
+  };
+  capturedConsole.info = (...items: unknown[]) => {
+    stdout += `${format(...items)}\n`;
+  };
+  capturedConsole.warn = (...items: unknown[]) => {
+    stderr += `${format(...items)}\n`;
+  };
+  capturedConsole.error = (...items: unknown[]) => {
+    stderr += `${format(...items)}\n`;
+  };
+  globalThis.console = capturedConsole;
+
+  try {
+    process.chdir(options.cwd ?? projectRoot);
+    process.exitCode = undefined;
+
+    for (const [key, value] of Object.entries(env)) {
+      envBackup.set(key, process.env[key]);
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+
+    if (!cliModulePromise) {
+      cliModulePromise = import(pathToFileURL(cliEntry).href) as Promise<{
+        runCli: (argv: string[]) => Promise<void>;
+      }>;
+    }
+
+    const { runCli } = await cliModulePromise;
+    const execution = runCli(argv);
+
+    if (options.timeoutMs) {
+      await Promise.race([
+        execution,
+        new Promise<void>((resolve) => {
+          timeoutHandle = setTimeout(() => {
+            timedOut = true;
+            exitCode = null;
+            resolve();
+          }, options.timeoutMs);
+          timeoutHandle.unref?.();
+        }),
+      ]);
+    } else {
+      await execution;
+    }
+
+    if (exitCode === 0 && typeof process.exitCode === 'number') {
+      exitCode = process.exitCode;
+    }
+  } catch (error) {
+    if (error !== exitSignal) {
+      exitCode = 1;
+      stderr += error instanceof Error ? `${error.stack ?? error.message}\n` : `${String(error)}\n`;
+    }
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.stderr.write = originalStderrWrite;
+    process.exit = originalExit;
+    process.exitCode = originalExitCode;
+    globalThis.console = originalConsole;
+    if (timeoutHandle) {
+      clearTimeout(timeoutHandle);
+    }
+
+    for (const [key, value] of envBackup) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+
+    process.chdir(originalCwd);
+  }
+
+  return {
+    exitCode,
+    signal: null,
+    stdout,
+    stderr,
+    timedOut,
+    command: `node ${invocation}`,
+  };
+}
+
+export async function ensureCliBuilt(): Promise<void> {
+  // The CLI is executed in-process from source during tests.
 }
 
 export const cliProjectRoot = projectRoot;

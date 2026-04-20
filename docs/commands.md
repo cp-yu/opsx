@@ -28,7 +28,7 @@ For workflow patterns and when to use each command, see [Workflows](workflows.md
 | `/opsx:onboard` | Guided tutorial through the complete workflow |
 | `/opsx:bootstrap` | Bootstrap OPSX architecture tracking from an existing codebase via the CLI-backed workflow |
 
-The default global profile is `core`. In `core`, `/opsx:archive` performs archive-time spec + OPSX sync inline. To enable the standalone expanded workflow commands, run `openspec config profile`, select `expanded`, then run `openspec update` in your project.
+The default global profile is `core`. In `core`, `/opsx:archive` performs a full verify gate and archive-time spec + OPSX sync inline. To enable the standalone expanded workflow commands, run `openspec config profile`, select `expanded`, then run `openspec update` in your project.
 
 ---
 
@@ -337,9 +337,9 @@ Validate that implementation matches your change artifacts. Checks completeness,
 
 **What it does:**
 - Checks three dimensions of implementation quality
-- Searches codebase for implementation evidence
+- Uses git evidence only to guide investigation, then judges against final file contents
 - Reports issues categorized as CRITICAL, WARNING, or SUGGESTION
-- Does not block archive, but surfaces issues
+- Persists `.verify-result.json` so archive can reuse a fresh result
 
 **Verification dimensions:**
 
@@ -382,10 +382,10 @@ AI:  Verifying add-dark-mode...
 ```
 
 **Tips:**
-- Run before archiving to catch mismatches early
-- Warnings don't block archive but indicate potential issues
-- Good for reviewing AI's work before committing
-- Can reveal drift between artifacts and implementation
+- Run before archiving to catch mismatches early and let archive reuse a fresh result
+- On Claude Code and Codex, verify should run with a clean-context reviewer subagent
+- On other tools, verify should explicitly re-read artifacts, git evidence, and final files before judging
+- Warnings do not block archive, but `FAIL_NEEDS_REMEDIATION` does
 
 ---
 
@@ -465,6 +465,10 @@ Archive a completed change. Finalizes the change and moves it to the archive fol
 | `change-name` | No | Which change to archive (inferred from context if not provided) |
 
 **What it does:**
+- Requires a fresh full verify result before archive continues
+- Reuses an existing fresh `PASS` / `PASS_WITH_WARNINGS` result when available
+- Re-runs full verify when `.verify-result.json` is missing or stale
+- Hard-blocks on `FAIL_NEEDS_REMEDIATION` with no skip option
 - Checks artifact completion status
 - Checks task completion (warns if incomplete)
 - Assesses delta specs and `opsx-delta` before moving the change
@@ -477,7 +481,9 @@ Archive a completed change. Finalizes the change and moves it to the archive fol
 You: /opsx:archive
 
 AI:  Archiving add-dark-mode...
-
+     ✓ Verify result is stale. Re-executing full verify before archive...
+     ✓ Full verify passed
+     
      Artifact status:
      ✓ proposal.md exists
      ✓ specs/ exists
@@ -494,10 +500,10 @@ AI:  ✓ Synced specs to openspec/specs/ui/spec.md
 ```
 
 **Tips:**
-- Archive won't block on incomplete tasks, but will warn
-- In `core`, archive is the built-in sync path; in `expanded`, `/opsx:sync` stays available if you want to sync earlier
+- Archive will not skip verification anymore; missing or stale verify evidence forces a full verify run
+- Freshness is based on `tasksFileHash`, `verificationContext.evidenceFingerprint`, `contractVersion`, and optional `gitHeadCommit`
+- In `core`, archive is the built-in verify + sync path; in `expanded`, `/opsx:sync` stays available if you want to sync earlier
 - Archived changes are preserved for history
-- Use `/opsx:verify` first to catch issues
 
 ---
 

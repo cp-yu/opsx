@@ -42,52 +42,62 @@ The skill SHALL check artifact completion status using the artifact graph before
 
 ### Requirement: Task Completion Check
 
-The skill SHALL check task completion status from tasks.md before archiving, with mode-aware verification behavior.
+The skill SHALL 在归档前检查 `tasks.md` 的任务完成状态，并执行强制性的完整验证门禁。
 
-#### Scenario: Expanded 模式 — verify stamp 前置检查
+#### Scenario: 统一 verify gate - 复用 fresh verify result
 
-- **WHEN** agent executes `/opsx:archive` in `expanded` mode
-- **AND** `tasks.md` exists with tasks marked complete
-- **THEN** the skill SHALL check for `.verify-result.json` in the change directory
-- **AND** if file does not exist, SHALL prompt user: "未找到验证结果。建议先运行 `/opsx:verify`。是否继续归档？"
-- **AND** if file exists but result is `FAIL_NEEDS_REMEDIATION`, SHALL hard-block archive with message: "验证未通过，存在 CRITICAL 问题。请先修复后重新运行 `/opsx:verify`。"
-- **AND** if file exists but `tasksFileHash` does not match current `tasks.md` content, SHALL treat as stale and prompt user
+- **WHEN** agent 执行 `/opsx:archive`（无论 `core` 或 `expanded` mode）
+- **AND** change 目录中存在 `.verify-result.json`
+- **AND** verify result 经 freshness 判定仍然 fresh（见 verify-writeback spec）
+- **AND** result 为 `PASS` 或 `PASS_WITH_WARNINGS`
+- **THEN** the skill SHALL 复用该 verify result 作为 archive gate
+- **AND** 在不重新执行 verify 的前提下继续剩余归档检查
+- **AND** 告知用户："Fresh verify result found (${result}). Proceeding with archive..."
 
-#### Scenario: Core 模式 — inline conformance check
+#### Scenario: 统一 verify gate - 缺失或 stale 时执行 full verify
 
-- **WHEN** agent executes `/opsx:archive` in `core` mode
-- **AND** `tasks.md` exists with all tasks marked complete
-- **AND** delta specs exist in `openspec/changes/<name>/specs/`
-- **THEN** the skill SHALL perform inline conformance check using shared verification rules
-- **AND** for each CRITICAL issue found, SHALL unmark the corresponding task in `tasks.md`
-- **AND** SHALL append remediation section to `tasks.md`
-- **AND** SHALL abort archive if any CRITICAL issues remain
+- **WHEN** agent 执行 `/opsx:archive`（无论 `core` 或 `expanded` mode）
+- **AND** `.verify-result.json` 缺失或经 freshness 判定为 stale
+- **THEN** the skill SHALL 在归档前执行一次 full verify
+- **AND** 该 full verify SHALL 使用与 `/opsx:verify` 相同的验证合同（见 opsx-verify-skill spec）
+- **AND** 告知用户："No verify result found" 或 "Verify result is stale. Executing full verify before archive..."
+- **AND** 仅当 verify 返回 `PASS` 或 `PASS_WITH_WARNINGS` 时才继续归档
 
-#### Scenario: Core 模式 — 无 delta specs 时跳过 conformance check
+#### Scenario: 统一 verify gate - 无 core/expanded 分支差异
 
-- **WHEN** agent executes `/opsx:archive` in `core` mode
-- **AND** no delta specs exist
-- **THEN** the skill SHALL skip inline conformance check
-- **AND** proceed with existing task completion check behavior
+- **WHEN** agent 执行 `/opsx:archive`
+- **THEN** the skill SHALL 使用统一的 verify gate 逻辑
+- **AND** SHALL NOT 因 `core` 或 `expanded` mode 而有不同的验证深度或门禁标准
+- **AND** SHALL NOT 保留任何 lightweight inline conformance check 路径
+- **AND** 具体实现见 `prompts.md` 中 archive-change.ts Step 2
 
-#### Scenario: Incomplete tasks found
+#### Scenario: 验证门禁 hard-block on FAIL_NEEDS_REMEDIATION
 
-- **WHEN** agent reads tasks.md
-- **AND** incomplete tasks are found (marked with `- [ ]`)
-- **THEN** display warning showing count of incomplete tasks
-- **AND** prompt user for confirmation to continue
-- **AND** proceed if user confirms
+- **WHEN** archive 读取或执行 verify 后得到 result 为 `FAIL_NEEDS_REMEDIATION`
+- **THEN** the skill SHALL 强制阻断 archive（HARD-BLOCK）
+- **AND** SHALL 保持该 change 继续处于 active 状态（不移动到 archive/）
+- **AND** SHALL 显示 CRITICAL issues 列表
+- **AND** SHALL 指示用户："Verification failed. Fix CRITICAL issues and re-run `/opsx:verify` or `/opsx:apply`"
+- **AND** SHALL NOT 提供任何 skip 或 continue 选项
 
-#### Scenario: All tasks complete
+#### Scenario: 存在未完成任务
 
-- **WHEN** agent reads tasks.md
-- **AND** all tasks are complete (marked with `- [x]`)
-- **THEN** proceed without task-related warning
+- **WHEN** agent 读取 `tasks.md`
+- **AND** 发现未完成任务（标记为 `- [ ]`）
+- **THEN** 展示 warning，说明未完成任务数量
+- **AND** 提示用户确认是否继续
+- **AND** 用户确认后才继续
 
-#### Scenario: No tasks file
+#### Scenario: 所有任务均已完成
 
-- **WHEN** tasks.md does not exist
-- **THEN** proceed without task-related warning
+- **WHEN** agent 读取 `tasks.md`
+- **AND** 所有任务均已完成（标记为 `- [x]`）
+- **THEN** 在没有 task warning 的情况下继续
+
+#### Scenario: 不存在 tasks 文件
+
+- **WHEN** `tasks.md` 不存在
+- **THEN** 在没有 task warning 的情况下继续
 
 ### Requirement: Spec Sync Prompt
 

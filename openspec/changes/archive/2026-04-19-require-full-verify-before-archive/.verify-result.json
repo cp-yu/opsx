@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-04-19T18:29:35+08:00",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "43eb11f8456a1550c81d87d4b2876416509440bcc0d8d676c0cfc0b1145a2fa1",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "current-agent-reread",
+    "evidenceFiles": [
+      "README.md",
+      "docs/commands.md",
+      "docs/getting-started.md",
+      "docs/opsx.md",
+      "docs/workflows.md",
+      "openspec/changes/require-full-verify-before-archive/design.md",
+      "openspec/changes/require-full-verify-before-archive/prompts.md",
+      "openspec/changes/require-full-verify-before-archive/proposal.md",
+      "openspec/changes/require-full-verify-before-archive/specs/archive-verify-gate/spec.md",
+      "openspec/changes/require-full-verify-before-archive/specs/opsx-archive-skill/spec.md",
+      "openspec/changes/require-full-verify-before-archive/specs/opsx-verify-skill/spec.md",
+      "openspec/changes/require-full-verify-before-archive/specs/verify-writeback/spec.md",
+      "openspec/changes/require-full-verify-before-archive/tasks.md",
+      "src/core/shared/skill-generation.ts",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "src/core/templates/workflows/.claude/verify-change.ts",
+      "src/core/templates/workflows/.codex/verify-change.ts",
+      "src/core/templates/workflows/archive-change.ts",
+      "src/core/templates/workflows/verify-change.ts",
+      "src/core/workflow-installation.ts",
+      "src/core/workflow-surface.ts",
+      "test/core/shared/skill-generation.test.ts",
+      "test/core/templates/opsx-fragments.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts",
+      "test/core/templates/verify-writeback-templates.test.ts"
+    ],
+    "evidenceFingerprint": "5906c99ac397f169309b62e2f980b1b9e078c3069a8083ed71b35509a097ba07",
+    "gitHeadCommit": "34e2783c165865a5054ec0a8087de9dbec4a7635",
+    "gitDiffSummary": " README.md                                          |  12 +-\n bin/openspec.js                                    |   4 +-\n docs/commands.md                                   |  28 +-\n docs/getting-started.md                            |   3 +\n docs/installation.md                               |   4 +-\n docs/opsx.md                                       |  18 +-\n docs/workflows.md                                  |  24 +-\n .../require-full-verify-before-archive/tasks.md    |  86 ++---\n openspec/specs/opsx-apply-skill/spec.md            |   3 +-\n openspec/specs/opsx-propose-skill/spec.md          |   3 +-\n openspec/specs/tool-invocation-references/spec.md  |   3 +-\n openspec/specs/verify-writeback/spec.md            |   3 +-\n package.json                                       |   2 +-\n src/cli/index.ts                                   |  12 +-\n src/core/shared/skill-generation.ts                |  54 ++-\n src/core/templates/fragments/opsx-fragments.ts     | 114 +++++++\n src/core/templates/workflows/archive-change.ts     | 343 ++++++-------------\n src/core/templates/workflows/verify-change.ts      | 363 +++++++--------------\n src/core/workflow-installation.ts                  |  12 +-\n test/commands/change.interactive-show.test.ts      |  32 +-\n test/commands/change.interactive-validate.test.ts  |  32 +-\n test/commands/show.test.ts                         | 111 ++-----\n test/commands/spec.interactive-show.test.ts        |  30 +-\n test/commands/spec.interactive-validate.test.ts    |  30 +-\n test/commands/spec.test.ts                         | 319 ++++++------------\n test/commands/validate.enriched-output.test.ts     |  29 +-\n test/core/shared/skill-generation.test.ts          |  27 ++\n test/core/templates/opsx-fragments.test.ts         |  26 +-\n test/core/templates/skill-templates-parity.test.ts |  56 ++--\n test/core/templates/verify-writeback-templates.test.ts   |  57 +++-\n test/helpers/run-cli.ts                            | 253 ++++++++------\n vitest.config.ts                                   |  12 +-\n 32 files changed, 958 insertions(+), 1147 deletions(-)"
+  }
+}

@@ -38,6 +38,8 @@ New installs default to `core`, which provides:
 - `/opsx:apply`
 - `/opsx:archive`
 
+`core` still intentionally exposes only these four surfaces. It does **not** add `/opsx:verify`, but `/opsx:archive` now embeds the same full verify contract before it archives.
+
 Typical flow:
 
 ```text
@@ -229,8 +231,8 @@ The recommended completion flow:
 ```text
 /opsx:apply ──► /opsx:verify ──► /opsx:archive
                     │                 │
-              validates          prompts to sync
-              implementation     if needed
+              validates          reuses fresh verify
+              implementation     or runs full verify
 ```
 
 #### Verify: Check Your Work
@@ -276,16 +278,17 @@ AI:  Verifying add-auth...
 | Correctness | Implementation matches spec intent, edge cases handled |
 | Coherence | Design decisions reflected in code, patterns consistent |
 
-Verify won't block archive, but it surfaces issues you might want to address first.
+Verify is not optional in the archive contract anymore. In `expanded`, running `/opsx:verify` early is the fastest path because archive can reuse a fresh `PASS` or `PASS_WITH_WARNINGS` result. If no fresh result exists, archive will execute the same full verify contract before it proceeds.
 
 #### Archive: Finalize the Change
 
-`/opsx:archive` completes the change and moves it to the archive:
+`/opsx:archive` completes the change and moves it to the archive, but only after a fresh full verify result exists:
 
 ```text
 You: /opsx:archive
 
 AI:  Archiving add-auth...
+     ✓ Fresh verify result found (PASS_WITH_WARNINGS). Proceeding with archive...
 
      Artifact status:
      ✓ proposal.md exists
@@ -302,7 +305,18 @@ AI:  ✓ Synced specs to openspec/specs/auth/spec.md
      Change archived successfully.
 ```
 
-In `core`, archive performs sync inline. In `expanded`, `/opsx:sync` remains available as a separate optional step. Archive won't block on incomplete tasks, but it will warn you.
+In `core`, archive performs full verify plus sync inline. In `expanded`, `/opsx:sync` remains available as a separate optional step, but archive still enforces the same full verify gate. Archive continues to warn on incomplete tasks, and it hard-blocks on `FAIL_NEEDS_REMEDIATION`.
+
+## Verification in Core vs Expanded
+
+Both modes now share one verification standard.
+
+| Mode | User-visible surface | How verify runs | Archive behavior |
+|------|----------------------|-----------------|------------------|
+| `core` | `propose`, `explore`, `apply`, `archive` | Embedded inside `/opsx:archive` | Always runs full verify if no fresh result exists |
+| `expanded` | Adds `/opsx:verify` and other workflows | You can run `/opsx:verify` explicitly | Reuses fresh verify result or re-runs full verify when stale |
+
+The difference is workflow ergonomics, not rigor. `core` keeps the surface minimal; `expanded` exposes the verify action directly. Both must satisfy the same clean-context review contract and the same archive gate.
 
 ## When to Use What
 

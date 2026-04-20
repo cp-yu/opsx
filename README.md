@@ -66,7 +66,9 @@ AI:  Implementing tasks...
      All tasks complete!
 
 You: /opsx:archive
-AI:  Archived to openspec/changes/archive/2025-01-23-add-dark-mode/
+AI:  Running full verify gate...
+     ✓ Fresh verify result confirmed
+     Archived to openspec/changes/archive/2025-01-23-add-dark-mode/
      Specs updated. Ready for the next feature.
 ```
 
@@ -86,10 +88,10 @@ AI:  Archived to openspec/changes/archive/2025-01-23-add-dark-mode/
 Install the packaged release tarball from GitHub Releases:
 
 ```bash
-npm install -g https://github.com/cp-yu/opsx/releases/download/v1.2.0-cpyu.6/fission-ai-openspec-1.2.0-cpyu.6.tgz
+npm install -g https://github.com/cp-yu/opsx/releases/download/v1.2.0-cpyu.7/fission-ai-openspec-1.2.0-cpyu.7.tgz
 ```
 
-For future versions, replace both occurrences of `1.2.0-cpyu.6` with the release tag you want to pin.
+For future versions, replace both occurrences of `1.2.0-cpyu.7` with the release tag you want to pin.
 
 Then navigate to your project directory and initialize:
 
@@ -100,7 +102,7 @@ openspec init
 
 Now tell your AI: `/opsx:propose <what-you-want-to-build>`
 
-If you want the `expanded` workflow preset (`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:sync`, `/opsx:bulk-archive`, `/opsx:onboard`), select it with `openspec config profile` and apply with `openspec update`. In the default `core` preset, `/opsx:archive` performs the same spec + OPSX sync inline.
+If you want the `expanded` workflow preset (`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:sync`, `/opsx:bulk-archive`, `/opsx:onboard`), select it with `openspec config profile` and apply with `openspec update`. In the default `core` preset, `/opsx:archive` still exposes only one user-facing command, but it now runs the same full verify gate before archive and then performs spec + OPSX sync inline.
 
 > [!NOTE]
 > Not sure if your tool is supported? [View the full list](docs/supported-tools.md) – we support 20+ tools and growing.
@@ -142,7 +144,7 @@ AI coding assistants are powerful but unpredictable when requirements live only 
 **Reinstall from GitHub Releases**
 
 ```bash
-npm install -g https://github.com/cp-yu/opsx/releases/download/v1.2.0-cpyu.6/fission-ai-openspec-1.2.0-cpyu.6.tgz
+npm install -g https://github.com/cp-yu/opsx/releases/download/v1.2.0-cpyu.7/fission-ai-openspec-1.2.0-cpyu.7.tgz
 ```
 
 **Refresh agent instructions**

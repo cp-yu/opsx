@@ -19,6 +19,7 @@ OpenSpec helps you and your AI coding assistant agree on what to build before an
 ```
 
 The default global profile is `core`, which includes `propose`, `explore`, `apply`, and `archive`. In `core`, `/opsx:archive` syncs delta specs and `opsx-delta` inline before archiving. You can switch to the `expanded` preset with `openspec config profile` and then `openspec update`.
+The key difference is user-visible surface area, not verification standards: `core` still has four surfaces, but `/opsx:archive` now runs a full verify gate before archive. In `expanded`, you may run `/opsx:verify` explicitly and archive will reuse a fresh verify result when possible.
 
 ## What OpenSpec Creates
 
@@ -223,6 +224,8 @@ During implementation, if you discover the design needs adjustment, just update 
 You: /opsx:archive
 
 AI:  Archiving add-dark-mode...
+     ✓ No fresh verify result found, running full verify
+     ✓ Full verify passed
      ✓ Merged specs into openspec/specs/ui/spec.md
      ✓ Moved to openspec/changes/archive/2025-01-24-add-dark-mode/
      Done! Ready for the next feature.

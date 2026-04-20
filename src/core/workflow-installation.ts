@@ -111,9 +111,15 @@ export function createToolWorkflowArtifactPlan(
     ? resolveEffectiveWorkflows(projectPath, workflows)
     : normalizeWorkflowIds(workflows);
   const effectiveDelivery = resolveToolWorkflowDelivery(toolId, delivery);
-  const skillTemplates = effectiveDelivery.shouldGenerateSkills ? getSkillTemplates(normalizedWorkflows) : [];
-  const commandTemplates = effectiveDelivery.shouldGenerateCommands ? getCommandTemplates(normalizedWorkflows) : [];
-  const commandContents = effectiveDelivery.shouldGenerateCommands ? getCommandContents(normalizedWorkflows) : [];
+  const skillTemplates = effectiveDelivery.shouldGenerateSkills
+    ? getSkillTemplates(normalizedWorkflows, toolId)
+    : [];
+  const commandTemplates = effectiveDelivery.shouldGenerateCommands
+    ? getCommandTemplates(normalizedWorkflows, toolId)
+    : [];
+  const commandContents = effectiveDelivery.shouldGenerateCommands
+    ? getCommandContents(normalizedWorkflows, toolId)
+    : [];
 
   return {
     workflows: normalizedWorkflows,

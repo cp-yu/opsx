@@ -87,6 +87,17 @@ describe('skill-generation', () => {
       expect(filtered[0].workflowId).toBe('propose');
       expect(filtered[0].dirName).toBe('openspec-propose');
     });
+
+    it('should use tool-specific verify skill templates when available', () => {
+      const defaultVerify = getSkillTemplates(['verify'])[0];
+      const claudeVerify = getSkillTemplates(['verify'], 'claude')[0];
+      const codexVerify = getSkillTemplates(['verify'], 'codex')[0];
+
+      expect(defaultVerify.template.instructions).toContain("executionMode: 'current-agent-reread'");
+      expect(defaultVerify.template.instructions).not.toContain("executionMode: 'clean-context-reviewer'");
+      expect(claudeVerify.template.instructions).toContain("executionMode: 'clean-context-reviewer'");
+      expect(codexVerify.template.instructions).toContain("executionMode: 'clean-context-reviewer'");
+    });
   });
 
   describe('getCommandTemplates', () => {
@@ -149,6 +160,14 @@ describe('skill-generation', () => {
       const filtered = getCommandTemplates(['nonexistent']);
       expect(filtered).toHaveLength(0);
     });
+
+    it('should use tool-specific verify command templates when available', () => {
+      const defaultVerify = getCommandTemplates(['verify'])[0];
+      const claudeVerify = getCommandTemplates(['verify'], 'claude')[0];
+
+      expect(defaultVerify.template.content).toContain("executionMode: 'current-agent-reread'");
+      expect(claudeVerify.template.content).toContain("executionMode: 'clean-context-reviewer'");
+    });
   });
 
   describe('getCommandContents', () => {
@@ -198,6 +217,14 @@ describe('skill-generation', () => {
       const all = getCommandContents();
       const noFilter = getCommandContents(undefined);
       expect(noFilter).toHaveLength(all.length);
+    });
+
+    it('should produce tool-specific verify command content when requested', () => {
+      const defaultVerify = getCommandContents(['verify'])[0];
+      const claudeVerify = getCommandContents(['verify'], 'claude')[0];
+
+      expect(defaultVerify.body).toContain("executionMode: 'current-agent-reread'");
+      expect(claudeVerify.body).toContain("executionMode: 'clean-context-reviewer'");
     });
   });
 

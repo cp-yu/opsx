@@ -65,7 +65,7 @@ openspec init
 
 This creates skills in `.claude/skills/` (or equivalent) that AI coding assistants auto-detect.
 
-By default, OpenSpec uses the `core` workflow profile (`propose`, `explore`, `apply`, `archive`). In `core`, `/opsx:archive` performs delta spec sync plus OPSX sync inline. If you want the standalone expanded workflow commands (`new`, `continue`, `ff`, `verify`, `sync`, `bulk-archive`, `onboard`), configure the `expanded` preset with `openspec config profile` and apply with `openspec update`.
+By default, OpenSpec uses the `core` workflow profile (`propose`, `explore`, `apply`, `archive`). In `core`, `/opsx:archive` now embeds the same full verify gate used by `expanded`, then performs delta spec sync plus OPSX sync inline. If you want the standalone expanded workflow commands (`new`, `continue`, `ff`, `verify`, `sync`, `bulk-archive`, `onboard`), configure the `expanded` preset with `openspec config profile` and apply with `openspec update`.
 
 During setup, you'll be prompted to create a **project config** (`openspec/config.yaml`). This is optional but recommended.
 
@@ -163,9 +163,9 @@ rules:
 | `/opsx:continue` | Create the next artifact (expanded workflow) |
 | `/opsx:ff` | Fast-forward planning artifacts (expanded workflow) |
 | `/opsx:apply` | Implement tasks, updating artifacts as needed |
-| `/opsx:verify` | Validate implementation against artifacts (expanded workflow) |
+| `/opsx:verify` | Validate implementation against artifacts (expanded workflow, but same archive gate contract) |
 | `/opsx:sync` | Sync delta specs and OPSX state without archiving (expanded workflow, optional) |
-| `/opsx:archive` | Archive when done; in `core`, this includes inline sync |
+| `/opsx:archive` | Archive when done; in `core`, this includes embedded full verify plus inline sync |
 | `/opsx:bulk-archive` | Archive multiple completed changes (expanded workflow) |
 | `/opsx:onboard` | Guided walkthrough of an end-to-end change (expanded workflow) |
 
@@ -210,8 +210,18 @@ Works through tasks, checking them off as you go. If you're juggling multiple ch
 
 ### Finish up
 ```
-/opsx:archive   # Move to archive when done (syncs specs + OPSX inline in core)
+/opsx:archive   # Move to archive when done (runs full verify, then syncs specs + OPSX inline in core)
 ```
+
+## Verification System
+
+OpenSpec now treats verification as a single contract rather than an optional extra step.
+
+- `archive` requires a fresh full verify result in both `core` and `expanded`
+- Claude Code and Codex should execute verify with a clean-context reviewer subagent
+- Other tools must explicitly re-read change artifacts, git evidence, and final file contents before judging
+- Git diff is only an investigation aid; final file contents are the authoritative evidence
+- Archive freshness checks use persisted verification context such as `evidenceFiles`, `evidenceFingerprint`, `contractVersion`, and optional `gitHeadCommit`
 
 ## When to Update vs. Start Fresh
 

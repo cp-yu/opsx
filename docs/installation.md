@@ -9,10 +9,10 @@
 Install the packaged tarball from a GitHub Release:
 
 ```bash
-npm install -g https://github.com/cp-yu/opsx/releases/download/v1.2.0-cpyu.6/fission-ai-openspec-1.2.0-cpyu.6.tgz
+npm install -g https://github.com/cp-yu/opsx/releases/download/v1.2.0-cpyu.7/fission-ai-openspec-1.2.0-cpyu.7.tgz
 ```
 
-Replace `1.2.0-cpyu.6` with the version you want to install.
+Replace `1.2.0-cpyu.7` with the version you want to install.
 
 This installs a prebuilt package asset, so users do not need a Git dependency build during installation.
 

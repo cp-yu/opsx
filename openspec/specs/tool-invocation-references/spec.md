@@ -1,7 +1,7 @@
 # tool-invocation-references Specification
 
 ## Purpose
-TBD - created by archiving change fix-codex-skill-invocation-prefix. Update Purpose after archive.
+定义 workflow 引用在不同工具表面上的渲染规则，确保生成的指令始终使用显式注册的技能名或命令名，而不是字符串猜测。
 ## Requirements
 ### Requirement: Workflow 引用 SHALL 通过显式工具表面元数据渲染
 系统 SHALL 通过共享 workflow surface 元数据渲染生成 guidance 中的用户可调用 workflow 引用，而不是把 `/opsx:*` 文本原样写入所有工具 surface。
@@ -24,4 +24,3 @@ TBD - created by archiving change fix-codex-skill-invocation-prefix. Update Purp
 - **THEN** 系统 SHALL 仅替换能够通过共享 workflow surface manifest 显式解析的引用
 - **AND** SHALL 使用显式 lookup 而不是通配符或猜测式正则来生成 skill / command 名称
 - **AND** 无法解析为已注册 workflow surface 的普通文本 SHALL 保持原样
-

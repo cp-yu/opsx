@@ -65,6 +65,108 @@ export const OPSX_POST_PROPOSE_VALIDATION = `
 `.trim();
 
 /**
+ * Fragment: Verify result freshness rules
+ * Used in: archive-change
+ */
+export const VERIFY_FRESHNESS_RULES = `
+**Verify Result Freshness Rules**:
+
+A verify result is considered **FRESH** if ALL of the following hold:
+- \`.verify-result.json\` exists in the change directory
+- \`tasksFileHash\` matches the hash of the current \`tasks.md\` contents
+- \`verificationContext.evidenceFingerprint\` matches the current workspace fingerprint
+- \`verificationContext.contractVersion\` is \`"1.0"\`
+- \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\`
+
+A verify result is considered **STALE** if ANY of the following hold:
+- \`tasksFileHash\` does not match the current \`tasks.md\`
+- \`verificationContext.evidenceFiles\` is missing or the file list changed
+- \`verificationContext.evidenceFingerprint\` does not match the recomputed fingerprint
+- \`verificationContext.gitHeadCommit\` does not match the current HEAD (if recorded)
+- \`verificationContext.contractVersion\` is missing or not \`"1.0"\`
+- \`result\` is not \`PASS\` or \`PASS_WITH_WARNINGS\`
+
+**When verify result is STALE or MISSING**:
+- Archive MUST execute full verify before continuing
+- Do NOT attempt to repair or reuse a stale verify result
+
+**Fingerprint Computation**:
+- Sort \`evidenceFiles\` alphabetically before hashing
+- For each evidence file, collect normalized relative path + modification time + size
+- Hash the concatenated string with SHA-256 (or equivalent)
+- Use \`path.join()\`, \`path.resolve()\`, and \`path.normalize()\` for all path handling
+- Persist \`evidenceFiles\` as relative POSIX paths for cross-platform comparison
+`.trim();
+
+/**
+ * Fragment: Git evidence usage rules
+ * Used in: verify-change
+ */
+export const GIT_EVIDENCE_PROTOCOL = `
+**Git Evidence Usage Protocol**:
+- Use \`git status\`, \`git diff\`, and \`git log -5 --oneline\` to discover candidate files and suspicious gaps
+- Git diff hunks are investigation clues, NOT sufficient proof that a requirement is satisfied
+- Final judgment MUST be based on the final file contents after all changes
+- If a diff looks correct but the final file still diverges from the spec, report the divergence
+- If a requirement is satisfied outside the current diff, still mark it covered and cite the final file evidence
+
+**Evidence Priority Order**:
+1. Change artifacts (proposal, specs, design, tasks) define what should exist
+2. Git evidence points to likely implementation areas
+3. Final file contents are the authoritative basis for judgment
+4. Tests and test results confirm scenario coverage
+`.trim();
+
+/**
+ * Fragment: Clean-context verify protocol for tools with subagents
+ * Used in: tool-specific verify-change templates
+ */
+export const CLEAN_CONTEXT_VERIFY_PROTOCOL_SUBAGENT = `
+**Clean-Context Verification Protocol**:
+
+Spawn a clean-context reviewer subagent to perform verification.
+
+**Inputs to pass to the reviewer subagent**:
+- Change artifacts: \`proposal.md\`, \`specs/\`, \`design.md\`, \`tasks.md\`
+- Git evidence: output of \`git status\`, \`git diff\`, and \`git log -5 --oneline\`
+- Final file contents for candidate implementation files identified from git evidence
+- Prior \`.verify-result.json\` if it exists
+
+**Reviewer subagent contract**:
+- Treat implementation conversation history as unavailable and non-authoritative
+- Base every judgment only on the explicit inputs provided
+- For each requirement, cite specific file paths and line ranges as evidence
+- Follow the step-by-step objective verification protocol before assigning severity
+
+**Record in verify result**:
+- \`executionMode: 'clean-context-reviewer'\`
+`.trim();
+
+/**
+ * Fragment: Clean-context verify protocol for tools without subagents
+ * Used in: verify-change
+ */
+export const CLEAN_CONTEXT_VERIFY_PROTOCOL_REREAD = `
+**Clean-Context Verification Protocol**:
+
+Execute verification in the current agent with an explicit re-read protocol.
+
+**Before making ANY verification judgment**:
+1. Re-read all change artifacts from disk: \`proposal.md\`, \`specs/\`, \`design.md\`, \`tasks.md\`
+2. Re-run git commands: \`git status\`, \`git diff\`, \`git log -5 --oneline\`
+3. Re-read the final file contents for candidate implementation files identified from git evidence
+4. Re-read prior \`.verify-result.json\` if it exists
+
+**Important**:
+- Treat implementation conversation history as non-authoritative background context
+- Base all judgments ONLY on freshly read evidence
+- Follow the step-by-step objective verification protocol before assigning severity
+
+**Record in verify result**:
+- \`executionMode: 'current-agent-reread'\`
+`.trim();
+
+/**
  * Fragment: Verify OPSX alignment
  * Used in: verify-change
  */
@@ -93,6 +195,18 @@ export const CONFORMANCE_CHECK_RULES = `
 - Map every issue to the most specific requirement and, when possible, the task that claimed completion
 - Cite file paths and line ranges for both supporting evidence and missing evidence
 - Only escalate to **CRITICAL** when the confidence is high enough to justify automatic task write-back
+- Follow a step-by-step objective verification loop:
+  1. **Locate**: identify candidate files from requirement keywords and git evidence
+  2. **Read**: inspect actual final file contents, not just search hits or diffs
+  3. **Analyze**: compare implementation details against requirement intent and scenarios
+  4. **Cite**: record concrete file paths and line ranges as evidence
+  5. **Judge**: assign PASS / WARNING / CRITICAL based on evidence strength
+  6. **Explain**: state exactly what is missing, divergent, or still uncertain
+- Evidence standards:
+  - PASS requires clear, cited evidence from final file contents
+  - WARNING is appropriate when implementation likely exists but confidence is not high enough for PASS
+  - CRITICAL requires a thorough search with no credible implementation evidence
+  - Always cite file:line evidence for both positive and negative findings
 `.trim();
 
 /**

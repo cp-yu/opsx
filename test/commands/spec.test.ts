@@ -1,13 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
+import { runCLI } from '../helpers/run-cli.js';
 
 describe('spec command', () => {
   const projectRoot = process.cwd();
   const testDir = path.join(projectRoot, 'test-spec-command-tmp');
   const specsDir = path.join(testDir, 'openspec', 'specs');
-  const openspecBin = path.join(projectRoot, 'bin', 'openspec.js');
+
+  async function runSpecCli(args: string[]) {
+    return runCLI(args, { cwd: testDir });
+  }
   
   
   beforeEach(async () => {
@@ -56,191 +59,108 @@ The system SHALL process credit card payments securely`;
 
   describe('spec show', () => {
     it('should display spec in text format', async () => {
-      const originalCwd = process.cwd();
-      try {
-        process.chdir(testDir);
-        const output = execSync(`node ${openspecBin} spec show auth`, {
-          encoding: 'utf-8'
-        });
-        
-        // Raw passthrough should match spec.md content
-        const raw = await fs.readFile(path.join(specsDir, 'auth', 'spec.md'), 'utf-8');
-        expect(output.trim()).toBe(raw.trim());
-      } finally {
-        process.chdir(originalCwd);
-      }
+      const result = await runSpecCli(['spec', 'show', 'auth']);
+      expect(result.exitCode).toBe(0);
+
+      const raw = await fs.readFile(path.join(specsDir, 'auth', 'spec.md'), 'utf-8');
+      expect(result.stdout.trim()).toBe(raw.trim());
     });
 
-    it('should output spec as JSON with --json flag', () => {
-      const originalCwd = process.cwd();
-      try {
-        process.chdir(testDir);
-        const output = execSync(`node ${openspecBin} spec show auth --json`, {
-          encoding: 'utf-8'
-        });
-        
-        const json = JSON.parse(output);
-        expect(json.id).toBe('auth');
-        expect(json.title).toBe('auth');
-        expect(json.overview).toContain('test specification');
-        expect(json.requirements).toHaveLength(2);
-        expect(json.metadata.format).toBe('openspec');
-      } finally {
-        process.chdir(originalCwd);
-      }
+    it('should output spec as JSON with --json flag', async () => {
+      const result = await runSpecCli(['spec', 'show', 'auth', '--json']);
+      expect(result.exitCode).toBe(0);
+
+      const json = JSON.parse(result.stdout);
+      expect(json.id).toBe('auth');
+      expect(json.title).toBe('auth');
+      expect(json.overview).toContain('test specification');
+      expect(json.requirements).toHaveLength(2);
+      expect(json.metadata.format).toBe('openspec');
     });
 
-    it('should filter to show only requirements with --requirements flag (JSON only)', () => {
-      const originalCwd = process.cwd();
-      try {
-        process.chdir(testDir);
-        const output = execSync(`node ${openspecBin} spec show auth --json --requirements`, {
-          encoding: 'utf-8'
-        });
-        
-        const json = JSON.parse(output);
-        expect(json.requirements).toHaveLength(2);
-        // Scenarios should be excluded when --requirements is used
-        expect(json.requirements.every((r: any) => Array.isArray(r.scenarios) && r.scenarios.length === 0)).toBe(true);
-      } finally {
-        process.chdir(originalCwd);
-      }
+    it('should filter to show only requirements with --requirements flag (JSON only)', async () => {
+      const result = await runSpecCli(['spec', 'show', 'auth', '--json', '--requirements']);
+      expect(result.exitCode).toBe(0);
+
+      const json = JSON.parse(result.stdout);
+      expect(json.requirements).toHaveLength(2);
+      expect(json.requirements.every((r: any) => Array.isArray(r.scenarios) && r.scenarios.length === 0)).toBe(true);
     });
 
-    it('should exclude scenarios with --no-scenarios flag (JSON only)', () => {
-      const originalCwd = process.cwd();
-      try {
-        process.chdir(testDir);
-        const output = execSync(`node ${openspecBin} spec show auth --json --no-scenarios`, {
-          encoding: 'utf-8'
-        });
-        
-        const json = JSON.parse(output);
-        expect(json.requirements).toHaveLength(2);
-        expect(json.requirements.every((r: any) => Array.isArray(r.scenarios) && r.scenarios.length === 0)).toBe(true);
-      } finally {
-        process.chdir(originalCwd);
-      }
+    it('should exclude scenarios with --no-scenarios flag (JSON only)', async () => {
+      const result = await runSpecCli(['spec', 'show', 'auth', '--json', '--no-scenarios']);
+      expect(result.exitCode).toBe(0);
+
+      const json = JSON.parse(result.stdout);
+      expect(json.requirements).toHaveLength(2);
+      expect(json.requirements.every((r: any) => Array.isArray(r.scenarios) && r.scenarios.length === 0)).toBe(true);
     });
 
-    it('should show specific requirement with -r flag (JSON only)', () => {
-      const originalCwd = process.cwd();
-      try {
-        process.chdir(testDir);
-        const output = execSync(`node ${openspecBin} spec show auth --json -r 1`, {
-          encoding: 'utf-8'
-        });
-        
-        const json = JSON.parse(output);
-        expect(json.requirements).toHaveLength(1);
-        expect(json.requirements[0].text).toContain('The system SHALL provide secure user authentication');
-      } finally {
-        process.chdir(originalCwd);
-      }
+    it('should show specific requirement with -r flag (JSON only)', async () => {
+      const result = await runSpecCli(['spec', 'show', 'auth', '--json', '-r', '1']);
+      expect(result.exitCode).toBe(0);
+
+      const json = JSON.parse(result.stdout);
+      expect(json.requirements).toHaveLength(1);
+      expect(json.requirements[0].text).toContain('The system SHALL provide secure user authentication');
     });
 
-    it('should return JSON with filtered requirements', () => {
-      const originalCwd = process.cwd();
-      try {
-        process.chdir(testDir);
-        const output = execSync(`node ${openspecBin} spec show auth --json --no-scenarios`, {
-          encoding: 'utf-8'
-        });
-        
-        const json = JSON.parse(output);
-        expect(json.requirements).toHaveLength(2);
-        expect(json.requirements[0].scenarios).toHaveLength(0);
-      } finally {
-        process.chdir(originalCwd);
-      }
+    it('should return JSON with filtered requirements', async () => {
+      const result = await runSpecCli(['spec', 'show', 'auth', '--json', '--no-scenarios']);
+      expect(result.exitCode).toBe(0);
+
+      const json = JSON.parse(result.stdout);
+      expect(json.requirements).toHaveLength(2);
+      expect(json.requirements[0].scenarios).toHaveLength(0);
     });
   });
 
   describe('spec list', () => {
-    it('should list all available specs (IDs only by default)', () => {
-      const originalCwd = process.cwd();
-      try {
-        process.chdir(testDir);
-        const output = execSync(`node ${openspecBin} spec list`, {
-          encoding: 'utf-8'
-        });
-        
-        expect(output).toContain('auth');
-        expect(output).toContain('payment');
-        // Default should not include counts or teasers
-        expect(output).not.toMatch(/Requirements:\s*\d+/);
-      } finally {
-        process.chdir(originalCwd);
-      }
+    it('should list all available specs (IDs only by default)', async () => {
+      const result = await runSpecCli(['spec', 'list']);
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain('auth');
+      expect(result.stdout).toContain('payment');
+      expect(result.stdout).not.toMatch(/Requirements:\s*\d+/);
     });
 
-    it('should output spec list as JSON with --json flag', () => {
-      const originalCwd = process.cwd();
-      try {
-        process.chdir(testDir);
-        const output = execSync(`node ${openspecBin} spec list --json`, {
-          encoding: 'utf-8'
-        });
-        
-        const json = JSON.parse(output);
-        expect(json).toHaveLength(2);
-        expect(json.find((s: any) => s.id === 'auth')).toBeDefined();
-        expect(json.find((s: any) => s.id === 'payment')).toBeDefined();
-        expect(json[0].requirementCount).toBeDefined();
-      } finally {
-        process.chdir(originalCwd);
-      }
+    it('should output spec list as JSON with --json flag', async () => {
+      const result = await runSpecCli(['spec', 'list', '--json']);
+      expect(result.exitCode).toBe(0);
+
+      const json = JSON.parse(result.stdout);
+      expect(json).toHaveLength(2);
+      expect(json.find((s: any) => s.id === 'auth')).toBeDefined();
+      expect(json.find((s: any) => s.id === 'payment')).toBeDefined();
+      expect(json[0].requirementCount).toBeDefined();
     });
   });
 
   describe('spec validate', () => {
-    it('should validate a valid spec', () => {
-      const originalCwd = process.cwd();
-      try {
-        process.chdir(testDir);
-        const output = execSync(`node ${openspecBin} spec validate auth`, {
-          encoding: 'utf-8'
-        });
-        
-        expect(output).toContain("Specification 'auth' is valid");
-      } finally {
-        process.chdir(originalCwd);
-      }
+    it('should validate a valid spec', async () => {
+      const result = await runSpecCli(['spec', 'validate', 'auth']);
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain("Specification 'auth' is valid");
     });
 
-    it('should output validation report as JSON with --json flag', () => {
-      const originalCwd = process.cwd();
-      try {
-        process.chdir(testDir);
-        const output = execSync(`node ${openspecBin} spec validate auth --json`, {
-          encoding: 'utf-8'
-        });
-        
-        const json = JSON.parse(output);
-        expect(json.valid).toBeDefined();
-        expect(json.issues).toBeDefined();
-        expect(json.summary).toBeDefined();
-        expect(json.summary.errors).toBeDefined();
-        expect(json.summary.warnings).toBeDefined();
-      } finally {
-        process.chdir(originalCwd);
-      }
+    it('should output validation report as JSON with --json flag', async () => {
+      const result = await runSpecCli(['spec', 'validate', 'auth', '--json']);
+      expect(result.exitCode).toBe(0);
+
+      const json = JSON.parse(result.stdout);
+      expect(json.valid).toBeDefined();
+      expect(json.issues).toBeDefined();
+      expect(json.summary).toBeDefined();
+      expect(json.summary.errors).toBeDefined();
+      expect(json.summary.warnings).toBeDefined();
     });
 
-    it('should validate with strict mode', () => {
-      const originalCwd = process.cwd();
-      try {
-        process.chdir(testDir);
-        const output = execSync(`node ${openspecBin} spec validate auth --strict --json`, {
-          encoding: 'utf-8'
-        });
-        
-        const json = JSON.parse(output);
-        expect(json.valid).toBeDefined();
-        // In strict mode, warnings also affect validity
-      } finally {
-        process.chdir(originalCwd);
-      }
+    it('should validate with strict mode', async () => {
+      const result = await runSpecCli(['spec', 'validate', 'auth', '--strict', '--json']);
+      expect(result.exitCode).toBe(0);
+
+      const json = JSON.parse(result.stdout);
+      expect(json.valid).toBeDefined();
     });
 
     it('should detect invalid spec structure', async () => {
@@ -252,73 +172,30 @@ This section has no actual requirements`;
       await fs.mkdir(path.join(specsDir, 'invalid'), { recursive: true });
       await fs.writeFile(path.join(specsDir, 'invalid', 'spec.md'), invalidSpec);
 
-      const originalCwd = process.cwd();
-      try {
-        process.chdir(testDir);
-        
-        // This should exit with non-zero code
-        let exitCode = 0;
-        try {
-          execSync(`node ${openspecBin} spec validate invalid`, {
-            encoding: 'utf-8'
-          });
-        } catch (error: any) {
-          exitCode = error.status;
-        }
-        
-        expect(exitCode).not.toBe(0);
-      } finally {
-        process.chdir(originalCwd);
-      }
+      const result = await runSpecCli(['spec', 'validate', 'invalid']);
+      expect(result.exitCode).not.toBe(0);
     });
   });
 
   describe('error handling', () => {
-    it('should handle non-existent spec gracefully', () => {
-      const originalCwd = process.cwd();
-      try {
-        process.chdir(testDir);
-        
-        let error: any;
-        try {
-          execSync(`node ${openspecBin} spec show nonexistent`, {
-            encoding: 'utf-8'
-          });
-        } catch (e) {
-          error = e;
-        }
-        
-        expect(error).toBeDefined();
-        expect(error.status).not.toBe(0);
-        expect(error.stderr.toString()).toContain('not found');
-      } finally {
-        process.chdir(originalCwd);
-      }
+    it('should handle non-existent spec gracefully', async () => {
+      const result = await runSpecCli(['spec', 'show', 'nonexistent']);
+      expect(result.exitCode).not.toBe(0);
+      expect(result.stderr).toContain('not found');
     });
 
     it('should handle missing specs directory gracefully', async () => {
       await fs.rm(specsDir, { recursive: true, force: true });
-      const originalCwd = process.cwd();
-      try {
-        process.chdir(testDir);
-        const output = execSync(`node ${openspecBin} spec list`, { encoding: 'utf-8' });
-        expect(output.trim()).toBe('No items found');
-      } finally {
-        process.chdir(originalCwd);
-      }
+      const result = await runSpecCli(['spec', 'list']);
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout.trim()).toBe('No items found');
     });
 
-    it('should honor --no-color (no ANSI escapes)', () => {
-      const originalCwd = process.cwd();
-      try {
-        process.chdir(testDir);
-        const output = execSync(`node ${openspecBin} --no-color spec list --long`, { encoding: 'utf-8' });
-        // Basic ANSI escape pattern
-        const hasAnsi = /\u001b\[[0-9;]*m/.test(output);
-        expect(hasAnsi).toBe(false);
-      } finally {
-        process.chdir(originalCwd);
-      }
+    it('should honor --no-color (no ANSI escapes)', async () => {
+      const result = await runSpecCli(['--no-color', 'spec', 'list', '--long']);
+      expect(result.exitCode).toBe(0);
+      const hasAnsi = /\u001b\[[0-9;]*m/.test(result.stdout);
+      expect(hasAnsi).toBe(false);
     });
   });
 });
