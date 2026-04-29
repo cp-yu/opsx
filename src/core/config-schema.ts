@@ -10,6 +10,12 @@ export const GlobalConfigSchema = z
       .record(z.string(), z.boolean())
       .optional()
       .default({}),
+    optimization: z
+      .object({
+        enabled: z.boolean().optional().default(true),
+      })
+      .optional()
+      .default({ enabled: true }),
     profile: z
       .enum(['core', 'expanded', 'custom'])
       .optional()
@@ -31,6 +37,9 @@ export type GlobalConfigType = z.infer<typeof GlobalConfigSchema>;
  */
 export const DEFAULT_CONFIG: GlobalConfigType = {
   featureFlags: {},
+  optimization: {
+    enabled: true,
+  },
   profile: 'core',
   delivery: 'both',
 };
@@ -58,6 +67,19 @@ export function validateConfigKeyPath(path: string): { valid: boolean; reason?: 
       return { valid: false, reason: 'featureFlags values are booleans and do not support nested keys' };
     }
     return { valid: true };
+  }
+
+  if (rootKey === 'optimization') {
+    if (rawKeys.length === 1) {
+      return { valid: true };
+    }
+    if (rawKeys.length === 2 && rawKeys[1] === 'enabled') {
+      return { valid: true };
+    }
+    return {
+      valid: false,
+      reason: 'optimization only supports the nested key "enabled"',
+    };
   }
 
   if (rawKeys.length > 1) {

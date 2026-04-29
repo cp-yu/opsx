@@ -63,9 +63,11 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
    - **spec-driven**: proposal, specs, design, tasks
    - Other schemas: follow the contextFiles from CLI output
    - Build \`path.join(changeDir, '.verify-result.json')\` and check whether the previous verify result exists
+   - Read \`.verify-result.json\` defensively: newer results may include an \`optimization\` object in addition to \`result\`, \`issues\`, and \`verificationContext\`
    - If the file exists and \`result === 'FAIL_NEEDS_REMEDIATION'\`:
      - Read the persisted \`issues\` array
      - Keep only CRITICAL issues as mandatory remediation context
+   - If \`optimization.status\` is \`DEGRADED\` or \`ABORTED_UNSAFE\`, treat it as advisory context only; do NOT let it override the canonical Phase 1 remediation signal
    - If \`tasks.md\` contains a \`## Remediation\` section:
      - Parse each checkbox item
      - Track whether the item is tagged \`[code_fix]\` or \`[artifact_fix]\`
@@ -241,9 +243,11 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
    - **spec-driven**: proposal, specs, design, tasks
    - Other schemas: follow the contextFiles from CLI output
    - Build \`path.join(changeDir, '.verify-result.json')\` and check whether the previous verify result exists
+   - Read \`.verify-result.json\` defensively: newer results may include an \`optimization\` object in addition to \`result\`, \`issues\`, and \`verificationContext\`
    - If the file exists and \`result === 'FAIL_NEEDS_REMEDIATION'\`:
      - Read the persisted \`issues\` array
      - Keep only CRITICAL issues as mandatory remediation context
+   - If \`optimization.status\` is \`DEGRADED\` or \`ABORTED_UNSAFE\`, treat it as advisory context only; do NOT let it override the canonical Phase 1 remediation signal
    - If \`tasks.md\` contains a \`## Remediation\` section:
      - Parse each checkbox item
      - Track whether the item is tagged \`[code_fix]\` or \`[artifact_fix]\`

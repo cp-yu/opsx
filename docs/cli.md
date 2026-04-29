@@ -47,6 +47,8 @@ These commands support `--json` output for programmatic use by AI agents and scr
 | `openspec templates` | Find template paths | `--json` for path resolution |
 | `openspec schemas` | List available schemas | `--json` for schema discovery |
 
+For AI workflow surfaces, `/opsx:verify` now runs a two-phase gate by default and accepts `--skip-optimization` when you want a Phase 1 conformance-only pass. When Phase 2 runs, it keeps a `git stash` checkpoint so failed optimization attempts can restore the exact Phase 1 baseline.
+
 ---
 
 ## Global Options

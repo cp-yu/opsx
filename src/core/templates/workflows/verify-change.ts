@@ -9,6 +9,7 @@ import {
   CLEAN_CONTEXT_VERIFY_PROTOCOL_REREAD,
   CONFORMANCE_CHECK_RULES,
   GIT_EVIDENCE_PROTOCOL,
+  OPTIMIZATION_PROTOCOL_SUBAGENT,
   OPSX_VERIFY_ALIGNMENT,
   VERIFY_WRITEBACK_RULES,
 } from '../fragments/opsx-fragments.js';
@@ -150,11 +151,12 @@ ${OPSX_VERIFY_ALIGNMENT}
    ## Verification Report: <change-name>
 
    ### Summary
-   | Dimension    | Status           |
-   |--------------|------------------|
-   | Completeness | X/Y tasks, N reqs|
-   | Correctness  | M/N reqs covered |
-   | Coherence    | Followed/Issues  |
+   | Dimension    | Status                |
+   |--------------|-----------------------|
+   | Completeness | X/Y tasks, N reqs     |
+   | Correctness  | M/N reqs covered      |
+   | Coherence    | Followed/Issues       |
+   | Optimization | SKIPPED / IMPROVED... |
    \`\`\`
 
    **Issues by Priority**:
@@ -183,10 +185,10 @@ ${VERIFY_WRITEBACK_RULES}
      - Append or refresh the \`## Remediation\` section with typed fix items
      - Include the requirement name, issue summary, and owning task when possible
 
-10. **Persist Verification Result**
+10. **Prepare the Canonical Phase 1 Result**
 
-   - Build the verify result path with \`path.join(changeDir, '.verify-result.json')\`
-   - Write a JSON object with:
+   - Assemble the canonical Phase 1 payload before any optimization attempt
+   - Record:
      - \`timestamp\`: ISO 8601 completion time
      - \`result\`: \`PASS\` / \`PASS_WITH_WARNINGS\` / \`FAIL_NEEDS_REMEDIATION\`
      - \`issues\`: the full issue list with severity, requirement, task linkage, and recommendations
@@ -200,6 +202,86 @@ ${VERIFY_WRITEBACK_RULES}
        - \`gitDiffSummary\`: output of \`git diff --stat\` if useful
    - Compute \`evidenceFingerprint\` by sorting \`evidenceFiles\`, collecting each file's normalized relative path, mtime, and size, then hashing the concatenated string
    - Use \`path.join()\`, \`path.resolve()\`, and \`path.normalize()\` for all path handling
+   - Treat this payload as the immutable \`optimization.baseline\`
+
+11. **Run Phase 2 Optimality Check**
+
+   - Phase 2 is only eligible when the canonical Phase 1 \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\`
+   - Read \`optimization.enabled\` from \`openspec/config.yaml\`; default it to \`true\` when the field is absent
+   - Respect a user-provided \`--skip-optimization\` flag if the workflow surface supports flags
+   - If the user passed \`--skip-optimization\` or config disables optimization:
+     - Skip Phase 2
+     - Set \`optimization.status\` to \`SKIPPED\`
+     - Keep the canonical Phase 1 \`result\` unchanged
+   - Otherwise create a checkpoint with \`git stash push -u -m "verify-phase2-checkpoint"\`
+   - Record the exact stash entry or hash before applying any optimization edits
+   - Immediately restore the canonical Phase 1 baseline into the worktree while keeping the checkpoint available, for example with \`git stash apply <checkpointRef>\`
+   - If checkpoint creation or baseline restoration fails:
+     - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
+     - Report that the canonical Phase 1 result was preserved but checkpoint recovery is required
+     - Stop before applying any optimization edits
+
+${OPTIMIZATION_PROTOCOL_SUBAGENT}
+
+   **Main-agent application contract**:
+   - Parse every Search/Replace block before touching the filesystem
+   - Resolve target paths with \`path.join()\`, \`path.resolve()\`, and \`path.normalize()\`
+   - Use \`path.join()\` for any checkpoint-adjacent bookkeeping paths; never hardcode path separators
+   - Reject blocks that create, delete, rename, or target untracked files
+   - Pre-validate all blocks, then apply them atomically
+   - If the subagent returns \`No optimization opportunities found\`, set \`optimization.status\` to \`NOT_NEEDED\` and keep the canonical Phase 1 \`result\`
+
+12. **Re-verify Candidate Changes and Enforce Retry Budgets**
+
+   - Re-run the same verification contract in \`P1_SPECULATIVE_FENCE\` mode after applying candidate Search/Replace blocks
+   - \`P1_SPECULATIVE_FENCE\` MUST reuse the same completeness/correctness/coherence checks but MUST NOT:
+     - write back to \`tasks.md\`
+     - rewrite the canonical \`.verify-result.json\`
+   - On speculative \`PASS\` or \`PASS_WITH_WARNINGS\`:
+     - Finalize the optimized files
+     - Drop the checkpoint with \`git stash drop\`
+     - Set \`optimization.status\` to \`IMPROVED\`
+   - On speculative \`FAIL_NEEDS_REMEDIATION\`:
+     - Discard speculative edits completely
+     - Restore the exact canonical Phase 1 baseline from the checkpoint, for example with \`git reset --hard HEAD\`, \`git clean -fd\`, then \`git stash apply <checkpointRef>\`
+     - Increment the behavior retry counter
+     - Request a materially different optimization strategy
+   - Retry budgets are fixed:
+     - \`maxFormatRetries = 2\`
+     - \`maxMatchRetries = 2\`
+     - \`maxBehaviorFailures = 3\`
+   - Count format errors separately from behavioral regressions:
+     - malformed Search/Replace blocks consume format retries
+     - zero-match or multi-match SEARCH anchors consume match retries
+     - speculative re-verify failures consume behavior retries
+   - If the format or match budget is exhausted:
+     - Restore the exact canonical Phase 1 baseline from the checkpoint if any speculative edits were applied
+     - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
+     - Keep the canonical Phase 1 \`result\`
+   - If behavior failures reach 3:
+     - Restore the exact canonical Phase 1 baseline from the checkpoint
+     - Report: \`Phase 1 PASS. 3 optimization attempts safely reverted.\`
+     - Set \`optimization.status\` to \`DEGRADED\`
+     - Set top-level \`result\` to \`PASS_WITH_WARNINGS\`
+   - If the optimization subagent times out or internal safety is uncertain:
+     - Restore the exact canonical Phase 1 baseline from the checkpoint if any speculative edits were applied
+     - Report: \`Optimization phase aborted, but canonical verification passed.\`
+     - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
+     - Keep the canonical Phase 1 \`result\`
+
+13. **Persist Final Verification Result**
+
+   - Build the verify result path with \`path.join(changeDir, '.verify-result.json')\`
+   - Write the final JSON object after Phase 2 completes or is skipped
+   - Persist:
+     - the canonical Phase 1 payload
+     - the final top-level \`result\`
+     - an \`optimization\` object containing:
+       - \`status\`: \`SKIPPED\` / \`NOT_NEEDED\` / \`IMPROVED\` / \`DEGRADED\` / \`ABORTED_UNSAFE\`
+       - \`score\`: optional optimization assessment summary when the tool can justify one
+       - \`attempts\`: an ordered log of format, match, and behavior retries
+       - \`baseline\`: reference to the canonical Phase 1 payload
+       - \`final\`: the accepted optimized outcome or the safe rollback outcome
    - Persist the file even when verification fails so \`${verifyInvocation}\`, \`${continueInvocation}\`, and archive can consume the latest diagnostics
 
 **Verification Heuristics**
@@ -207,6 +289,7 @@ ${VERIFY_WRITEBACK_RULES}
 - **Completeness**: focus on objective checklist items and explicit requirement coverage
 - **Correctness**: require concrete evidence from final file contents before declaring PASS
 - **Coherence**: look for meaningful contradictions, not cosmetic nitpicks
+- **Optimization**: improve code only when behavior can be preserved under checkpoint protection
 - **False positives**: when uncertain, prefer SUGGESTION over WARNING and WARNING over CRITICAL
 - **Actionability**: every issue must include a concrete next action and file references when applicable
 
@@ -235,7 +318,7 @@ function createVerifySkillTemplate(cleanContextProtocol: string): SkillTemplate 
     instructions: buildVerifyInstructions(
       {
         input:
-          'Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.',
+          'Optionally specify a change name and optionally request `--skip-optimization`. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.',
       },
       cleanContextProtocol
     ),
@@ -254,7 +337,7 @@ function createVerifyCommandTemplate(cleanContextProtocol: string): CommandTempl
     content: buildVerifyInstructions(
       {
         input:
-          'Optionally specify a change name after `/opsx:verify` (e.g., `/opsx:verify add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.',
+          'Optionally specify a change name after `/opsx:verify` (e.g., `/opsx:verify add-auth`) and optionally pass `--skip-optimization`. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.',
       },
       cleanContextProtocol
     ),

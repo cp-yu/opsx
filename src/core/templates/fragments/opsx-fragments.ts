@@ -86,6 +86,11 @@ A verify result is considered **STALE** if ANY of the following hold:
 - \`verificationContext.contractVersion\` is missing or not \`"1.0"\`
 - \`result\` is not \`PASS\` or \`PASS_WITH_WARNINGS\`
 
+**Optimization metadata compatibility**:
+- \`optimization\` metadata is advisory for archive gating, not part of the freshness hash inputs
+- Legacy verify results without \`optimization\` may still be fresh if every freshness rule above passes
+- If \`optimization.status\` exists, evaluate its acceptability separately from freshness
+
 **When verify result is STALE or MISSING**:
 - Archive MUST execute full verify before continuing
 - Do NOT attempt to repair or reuse a stale verify result
@@ -164,6 +169,46 @@ Execute verification in the current agent with an explicit re-read protocol.
 
 **Record in verify result**:
 - \`executionMode: 'current-agent-reread'\`
+`.trim();
+
+/**
+ * Fragment: Phase 2 optimization protocol for tools with subagents
+ * Used in: verify-change
+ */
+export const OPTIMIZATION_PROTOCOL_SUBAGENT = `
+**Phase 2 Optimization Protocol**:
+
+Spawn a second clean-context optimization subagent only after the canonical Phase 1 result is \`PASS\` or \`PASS_WITH_WARNINGS\`.
+
+**Inputs to pass to the optimization subagent**:
+- Canonical Phase 1 summary, issues, and evidence file list
+- Change artifacts: \`proposal.md\`, \`specs/\`, \`design.md\`, \`tasks.md\`
+- Final file contents for the candidate implementation files
+- Project policy context from \`openspec/config.yaml\`, including \`optimization.enabled\`
+
+**Optimization subagent contract**:
+- Treat prior implementation conversation as unavailable and non-authoritative
+- Optimize existing tracked files only; do NOT create, delete, or rename files
+- Prefer simpler structure, lower duplication, clearer control flow, and better locality without changing behavior
+- If no meaningful improvement is needed, return exactly: \`No optimization opportunities found\`
+- Otherwise return one or more Search/Replace blocks with explicit file paths
+
+**Search/Replace block format**:
+\`\`\`text
+<<<PATH: relative/path/to/file.ts
+<<<SEARCH
+exact old text
+===
+replacement new text
+>>>REPLACE
+\`\`\`
+
+**Search/Replace constraints**:
+- Each block must target exactly one existing file
+- The SEARCH payload must be specific enough to match exactly one location
+- The main agent applies blocks by trying exact match first, then whitespace-normalized matching
+- All blocks must pre-validate before any file write occurs
+- A block that matches zero or multiple locations is invalid and must be regenerated
 `.trim();
 
 /**

@@ -75,6 +75,27 @@ rules:
         expect(consoleWarnSpy).not.toHaveBeenCalled();
       });
 
+      it('should parse optimization policy when present', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+optimization:
+  enabled: false
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          optimization: {
+            enabled: false,
+          },
+        });
+      });
+
       it('should return partial config when schema is invalid', () => {
         const configDir = path.join(tempDir, 'openspec');
         fs.mkdirSync(configDir, { recursive: true });
@@ -168,6 +189,28 @@ rules: ["not", "an", "object"]
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
           expect.stringContaining("Invalid 'rules' field")
+        );
+      });
+
+      it('should return partial config when optimization is invalid', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+optimization: "bad"
+context: Valid context
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          context: 'Valid context',
+        });
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("Invalid 'optimization' field")
         );
       });
 
@@ -570,6 +613,9 @@ rules:
         schema: ' spec-driven ',
         docLanguage: ' 中文 ',
         context: '  Team context  ',
+        optimization: {
+          enabled: false,
+        },
         rules: {
           proposal: ['  Rule 1  ', ' ', 'Rule 2'],
           '  ': ['ignored'],
@@ -580,6 +626,9 @@ rules:
         schema: 'spec-driven',
         docLanguage: '中文',
         context: 'Team context',
+        optimization: {
+          enabled: false,
+        },
         rules: {
           proposal: ['Rule 1', 'Rule 2'],
         },

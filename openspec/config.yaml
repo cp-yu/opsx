@@ -12,6 +12,11 @@ context: |
   - Tests must use path.join() for expected path values, not hardcoded strings
   - Consider case sensitivity differences in file systems
 
+# Verify Phase 2 optimization policy.
+# Set enabled: false to keep verify in Phase 1 conformance-only mode.
+optimization:
+  enabled: true
+
 rules:
   specs:
     - Include scenarios for Windows path handling when dealing with file paths

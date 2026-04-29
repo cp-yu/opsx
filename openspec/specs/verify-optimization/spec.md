@@ -1,11 +1,8 @@
-# Verify Optimization Specification
+# verify-optimization Specification
 
 ## Purpose
-
-定义 `/opsx:verify` Phase 2 最优性检验行为——在一致性检验通过后，对代码质量、设计模式、效率维度进行诊断，生成 Search/Replace 块供主 agent 在 checkpoint 保护下应用。
-
-## ADDED Requirements
-
+此规约记录变更 enhance-verify-with-optimization 引入的行为，请在后续同步或归档前补全正式 Purpose。
+## Requirements
 ### Requirement: 最优性检验执行
 
 系统 SHALL 在 Phase 1 一致性检验通过后，自动进入 Phase 2 最优性检验，除非通过配置或 CLI flag 显式跳过。
@@ -31,12 +28,13 @@
 - **THEN** 系统 SHALL 跳过 Phase 2
 - **AND** 行为等同于 `--skip-optimization`
 
-#### Scenario: Dirty worktree 跳过 Phase 2
+#### Scenario: Phase 1 副作用不会阻止 Phase 2
 
-- **WHEN** 工作区有未提交的变更（dirty worktree）
-- **THEN** 系统 SHALL 跳过 Phase 2
-- **AND** 输出提示 "Phase 2 skipped: worktree is dirty"
-- **AND** 保留 Phase 1 canonical 结果
+- **WHEN** Phase 1 已经写回 `tasks.md` 或 `.verify-result.json`
+- **AND** 用户未传入 `--skip-optimization`
+- **AND** `optimization.enabled` 不是 `false`
+- **THEN** 系统 SHALL 继续进入 Phase 2
+- **AND** SHALL NOT 因当前 worktree 非空而自动跳过 optimization
 
 ### Requirement: Search/Replace 块生成
 
@@ -72,6 +70,7 @@
 - **WHEN** 主 agent 准备应用 Search/Replace 块
 - **THEN** 系统 SHALL 执行 `git stash push -u -m "verify-phase2-checkpoint"`
 - **AND** 在 apply 前记录当前栈顶 hash 用于精准恢复
+- **AND** SHALL 立即将 Phase 1 canonical baseline 恢复回工作区，同时保留该 stash 作为恢复点
 - **AND** 在进程退出时输出 checkpoint 恢复信息
 
 #### Scenario: Apply 成功且 re-verify 通过
@@ -85,7 +84,8 @@
 
 - **WHEN** Search/Replace 块应用成功
 - **AND** P1_SPECULATIVE_FENCE re-verify 返回 FAIL
-- **THEN** 系统 SHALL 执行 `git stash pop` 恢复原代码
+- **THEN** 系统 SHALL 丢弃 speculative edits
+- **AND** SHALL 从 checkpoint 恢复完整的 Phase 1 canonical baseline
 - **AND** `behaviorRetryCounter` 递增
 - **AND** 如果 `behaviorRetryCounter >= 3`：进入 Degraded Pass
 

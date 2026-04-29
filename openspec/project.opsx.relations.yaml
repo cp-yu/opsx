@@ -222,6 +222,9 @@ relations:
   - from: cap.ai.verify-writeback
     type: depends_on
     to: cap.ai.workflow-templates
+  - from: cap.verify.optimize
+    type: depends_on
+    to: cap.ai.workflow-templates
   - from: cap.ai.tool-invocation-references
     type: contains
     to: dom.ai-integration
@@ -243,3 +246,9 @@ relations:
   - from: cap.opsx.bootstrap-refresh
     type: depends_on
     to: cap.opsx.delta-merge
+  - from: cap.verify.optimize
+    type: contains
+    to: dom.verify
+  - from: dom.verify
+    type: depends_on
+    to: dom.validation

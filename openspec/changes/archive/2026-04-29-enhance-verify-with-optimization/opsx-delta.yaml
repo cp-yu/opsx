@@ -5,11 +5,13 @@ ADDED:
     - id: dom.verify
       type: domain
       intent: 两阶段质量门禁——在一致性检验通过后，对代码进行最优性检验，将代码从"可用"提升到"精良"
+      status: active
 
   capabilities:
     - id: cap.verify.optimize
       type: capability
       intent: 在一致性检验通过后，对代码进行最优性检验——诊断代码质量、设计模式、效率维度，生成 Search/Replace 块供主 agent 在 checkpoint 保护下应用。支持默认启用、可跳过、自动回滚和 Degraded Pass 降级策略
+      status: active
 
   relations:
     - from: cap.verify.optimize
@@ -25,7 +27,9 @@ ADDED:
 MODIFIED:
   capabilities:
     - id: cap.ai.workflow-templates
+      type: capability
       intent: 提供面向 Agent 的工作流模板（propose、apply、explore、archive、verify 等），通过共享配置投影消费项目级 authoring 约束与 runtime policy 边界。verify 模板现包含两阶段质量门禁（一致性 + 最优性）
+      status: active
 
 REMOVED:
   domains:

@@ -7,6 +7,7 @@ import {
   coerceValue,
   formatValueYaml,
   validateConfig,
+  validateConfigKeyPath,
   GlobalConfigSchema,
   DEFAULT_CONFIG,
 } from '../../src/core/config-schema.js';
@@ -228,6 +229,11 @@ describe('config-schema', () => {
       expect(result.success).toBe(true);
     });
 
+    it('should accept valid optimization config', () => {
+      const result = validateConfig({ optimization: { enabled: false } });
+      expect(result.success).toBe(true);
+    });
+
     it('should accept empty featureFlags', () => {
       const result = validateConfig({ featureFlags: {} });
       expect(result.success).toBe(true);
@@ -330,11 +336,32 @@ describe('config-schema', () => {
       const result = GlobalConfigSchema.parse({});
       expect(result.featureFlags).toEqual({});
     });
+
+    it('should provide default optimization config', () => {
+      const result = GlobalConfigSchema.parse({});
+      expect(result.optimization).toEqual({ enabled: true });
+    });
   });
 
   describe('DEFAULT_CONFIG', () => {
     it('should have empty featureFlags', () => {
       expect(DEFAULT_CONFIG.featureFlags).toEqual({});
+    });
+
+    it('should enable optimization by default', () => {
+      expect(DEFAULT_CONFIG.optimization).toEqual({ enabled: true });
+    });
+  });
+
+  describe('validateConfigKeyPath', () => {
+    it('allows optimization root key and enabled subkey', () => {
+      expect(validateConfigKeyPath('optimization').valid).toBe(true);
+      expect(validateConfigKeyPath('optimization.enabled').valid).toBe(true);
+    });
+
+    it('rejects unknown nested optimization keys', () => {
+      expect(validateConfigKeyPath('optimization.mode').valid).toBe(false);
+      expect(validateConfigKeyPath('optimization.enabled.extra').valid).toBe(false);
     });
   });
 });

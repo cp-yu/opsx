@@ -53,16 +53,6 @@ There are two versions of this step depending on whether the tool supports subag
      - Set `optimization.status = "SKIPPED"` in `.verify-result.json`
      - Rewrite `.verify-result.json` with the `optimization` object
      - Skip directly to verification complete
-   - Check worktree dirty status using the pre-Phase-1 git state captured in Phase 1 Step 5.5
-     - Compare current worktree state against that pre-Phase-1 baseline
-     - In the comparison, ignore `tasks.md` and the change directory's `.verify-result.json` (these may have been modified by Phase 1 Steps 9-10)
-     - If any other files differ, the pre-existing worktree was dirty
-   - If the pre-existing worktree was dirty:
-     - Output: "Phase 2 skipped: worktree is dirty. Commit or stash changes before re-running verify"
-     - Set `optimization.status = "SKIPPED"` in `.verify-result.json`
-     - Rewrite `.verify-result.json` with the `optimization` object
-     - Skip directly to verification complete
-
    **11.2 Create Checkpoint**
 
    - Output: "Creating safety checkpoint for optimization..."
@@ -79,7 +69,7 @@ There are two versions of this step depending on whether the tool supports subag
      - Rewrite `.verify-result.json`
      - Output: "Phase 2 aborted: checkpoint hash capture failed. Verify git repository state"
      - Output: "Checkpoint hash: <checkpointHash>"
-     - Output: "Recovery: git stash list | grep <checkpointHash> && git stash pop <checkpointRef>"
+     - Output: "Recovery: git reset --hard HEAD && git clean -fd && git stash apply <checkpointRef>"
      - STOP
    - Immediately restore the Phase 1 baseline back into the worktree while keeping the stash entry:
      ```bash
@@ -91,7 +81,7 @@ There are two versions of this step depending on whether the tool supports subag
      - Rewrite `.verify-result.json`
      - Output: "Phase 2 aborted: baseline restoration failed. Verify git repository state"
      - Output: "Checkpoint hash: <checkpointHash>"
-     - Output: "Recovery: git stash list | grep <checkpointHash> && git stash pop <checkpointRef>"
+     - Output: "Recovery: git reset --hard HEAD && git clean -fd && git stash apply <checkpointRef>"
      - STOP
    - Treat `checkpointHash` as the authoritative recovery token for unexpected exits
    - Output: "Checkpoint created: <checkpointHash>"
@@ -137,7 +127,7 @@ ${OPTIMIZATION_PROTOCOL_SUBAGENT}
    - Preserve the Phase 1 top-level `result`
    - Rewrite `.verify-result.json` with the `optimization` object
    - Output: "Checkpoint hash: <checkpointHash>"
-   - Output: "Recovery: git stash list | grep <checkpointHash> && git stash pop <checkpointRef>"
+   - Output: "Recovery: git reset --hard HEAD && git clean -fd && git stash apply <checkpointRef>"
    - STOP
 
    **If subagent returns Search/Replace blocks:**
@@ -161,7 +151,7 @@ ${OPTIMIZATION_PROTOCOL_SUBAGENT}
           - Preserve the Phase 1 top-level `result`
           - Rewrite `.verify-result.json` with the `optimization` object
           - Output: "Checkpoint hash: <checkpointHash>"
-          - Output: "Recovery: git stash list | grep <checkpointHash> && git stash pop <checkpointRef>"
+          - Output: "Recovery: git reset --hard HEAD && git clean -fd && git stash apply <checkpointRef>"
           - STOP
 
    f) **Match validation pass:**
@@ -191,7 +181,7 @@ ${OPTIMIZATION_PROTOCOL_SUBAGENT}
           - Preserve the Phase 1 top-level `result`
           - Rewrite `.verify-result.json` with the `optimization` object
           - Output: "Checkpoint hash: <checkpointHash>"
-          - Output: "Recovery: git stash list | grep <checkpointHash> && git stash pop <checkpointRef>"
+          - Output: "Recovery: git reset --hard HEAD && git clean -fd && git stash apply <checkpointRef>"
           - STOP
 
    g) **Atomic apply:**
@@ -230,7 +220,7 @@ ${OPTIMIZATION_PROTOCOL_SUBAGENT}
           - Set `optimization.status = "ABORTED_UNSAFE"`, rewrite `.verify-result.json`
           - Output: "Phase 2 aborted: checkpoint hash mismatch after re-verify PASS"
           - Output: "Checkpoint hash: <checkpointHash>"
-          - Output: "Recovery: git stash list | grep <checkpointHash> && git stash pop <checkpointRef>"
+          - Output: "Recovery: git reset --hard HEAD && git clean -fd && git stash apply <checkpointRef>"
           - STOP
         - Set `optimization.status = "IMPROVED"`
         - Set `optimization.score` to the accepted quality score
@@ -247,9 +237,11 @@ ${OPTIMIZATION_PROTOCOL_SUBAGENT}
         - Rewrite `.verify-result.json` with the final `optimization` object
         - STOP
       - **If re-verify FAIL (would be FAIL_NEEDS_REMEDIATION):**
-        - Restore the Phase 1 baseline by applying the checkpoint (this both recovers files AND removes the stash entry):
+        - Discard speculative edits completely and restore the Phase 1 baseline from the checkpoint:
           ```bash
-          git stash pop <checkpointRef>
+          git reset --hard HEAD
+          git clean -fd
+          git stash apply <checkpointRef>
           ```
         - Verify `git rev-parse --verify <checkpointRef>` still matches `checkpointHash`
         - If it does NOT match:
@@ -257,7 +249,7 @@ ${OPTIMIZATION_PROTOCOL_SUBAGENT}
           - Set `optimization.status = "ABORTED_UNSAFE"`, rewrite `.verify-result.json`
           - Output: "Phase 2 aborted: checkpoint hash mismatch during rollback"
           - Output: "Checkpoint hash: <checkpointHash>"
-          - Output: "Recovery: git stash list | grep <checkpointHash> && git stash pop <checkpointRef>"
+          - Output: "Recovery: git reset --hard HEAD && git clean -fd && git stash apply <checkpointRef>"
           - STOP
         - Increment `behaviorRetryCounter`
         - Record the failed attempt in `optimization.attempts[]` with:
@@ -267,13 +259,6 @@ ${OPTIMIZATION_PROTOCOL_SUBAGENT}
           - Re-verify CRITICAL issues: <first CRITICAL issue message, or "regression detected" if none>
         - If `behaviorRetryCounter < 3`:
           - Output: "Phase 2 attempt <N>/3: optimization caused regression. Rolled back. Trying new strategy..."
-          - Create a fresh checkpoint (`git stash push -u -m "verify-phase2-checkpoint-retry<N>"`) from the restored baseline
-          - Capture new hash and update baseline:
-            ```bash
-            checkpointRef=$(git stash list --format="%H" -1)
-            checkpointHash=$(git rev-parse --verify "$checkpointRef")
-            ```
-          - Update `optimization.baseline = { checkpointHash: <new hash>, phase1Result: <unchanged>, timestamp: <current ISO 8601> }`
           - Request a COMPLETELY different optimization strategy from the subagent
           - Retry from step (a)
         - If `behaviorRetryCounter >= 3`:
@@ -317,7 +302,7 @@ ${OPTIMIZATION_PROTOCOL_SUBAGENT}
    - On any exit after checkpoint creation, print:
      ```
      Checkpoint hash: <checkpointHash>
-     Recovery: git stash list | grep <checkpointHash> && git stash pop <checkpointRef>
+     Recovery: git reset --hard HEAD && git clean -fd && git stash apply <checkpointRef>
      ```
    - This ensures manual recovery is possible even if the process terminates abnormally
 

@@ -187,6 +187,16 @@ describe('config key validation', () => {
     const { validateConfigKeyPath } = await import('../../src/core/config-schema.js');
     expect(validateConfigKeyPath('workflows').valid).toBe(true);
   });
+
+  it('allows optimization.enabled key', async () => {
+    const { validateConfigKeyPath } = await import('../../src/core/config-schema.js');
+    expect(validateConfigKeyPath('optimization.enabled').valid).toBe(true);
+  });
+
+  it('rejects unsupported optimization nesting', async () => {
+    const { validateConfigKeyPath } = await import('../../src/core/config-schema.js');
+    expect(validateConfigKeyPath('optimization.enabled.extra').valid).toBe(false);
+  });
 });
 
 describe('config profile command', () => {

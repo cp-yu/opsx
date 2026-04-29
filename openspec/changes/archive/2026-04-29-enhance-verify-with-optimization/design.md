@@ -16,7 +16,7 @@
 - 不修改 CLI 命令结构（不新增命令）
 - 不新增持久化文件类型，只扩展 `.verify-result.json`
 - 顶层 `result` 三值语义不变（消费者：archive、apply 模板）
-- dirty worktree 时不能阻塞 verify 主流程
+- 当前 worktree 非空时不能仅凭 dirty 判定阻止 Phase 2；需要依赖 checkpoint 保留并恢复 Phase 1 基线
 - 跨平台兼容（Windows/Linux/macOS）
 
 ## Goals / Non-Goals
@@ -24,9 +24,9 @@
 **Goals:**
 - 将 verify 升级为两阶段质量门禁：Phase 1 一致性检验 + Phase 2 最优性检验
 - Phase 2 使用 Search/Replace 块替代 unified diff（容忍 LLM 格式误差）
-- 使用 `git stash push/pop` 做 checkpoint 保护优化操作
+- 使用 `git stash` checkpoint 完整保存并恢复 Phase 1 基线
 - 三类预算控制防止无限循环
-- dirty worktree 时自动跳过 Phase 2，不影响 canonical 结果
+- 不因当前 worktree 非空而自动跳过 Phase 2；显式跳过仅由 config/CLI 控制
 - 扩展 `.verify-result.json` 的 `optimization` 对象，不影响现有 consumers
 
 **Non-Goals:**
@@ -53,13 +53,13 @@
 - 所有 blocks 先预校验再原子应用
 - 禁止 rename/create/delete（只允许修改既有 tracked 文件）
 
-### Decision 2: 使用 git stash push/pop 做 checkpoint
+### Decision 2: 使用 git stash checkpoint 保存并恢复 Phase 1 基线
 
-**选择**: `git stash push -u -m "verify-phase2-checkpoint"` 创建 checkpoint，`git stash pop` 回滚。
+**选择**: `git stash push -u -m "verify-phase2-checkpoint"` 创建 checkpoint，随后 `git stash apply` 将 Phase 1 基线恢复回工作区；优化失败时通过丢弃 speculative edits 后再次 `git stash apply` 完整恢复。
 
 **替代方案**: `git commit-tree` + `git write-tree`（隐式快照）、`git restore` 回滚到 HEAD。
 
-**理由**: git stash 对用户更直观，可以同时保存 tracked 和 untracked 文件（`-u` 标志），pop 后自动清理。相比 `commit-tree`/`write-tree` 不会创建孤儿引用。主要风险是嵌套 stash 和并发操作，需要在 Phase 2 启动前记录 stash 栈顶 hash 并精准 pop/drop。
+**理由**: git stash 对用户更直观，可以同时保存 tracked 和 untracked 文件（`-u` 标志），并且允许主 agent 在保留 checkpoint 的同时继续工作于同一份 Phase 1 基线。相比 `commit-tree`/`write-tree` 不会创建孤儿引用。主要风险是嵌套 stash 和并发操作，需要在 Phase 2 启动前记录 stash 栈顶 hash，并在成功时 drop、失败时精确恢复。
 
 ### Decision 3: P1 拆分为 canonical 和 speculative 两种模式
 
@@ -88,7 +88,7 @@
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| git stash 嵌套/并发冲突 | 工作区状态丢失 | Phase 2 前记录栈顶 hash，精准 pop/drop |
+| git stash 嵌套/并发冲突 | 工作区状态丢失 | Phase 2 前记录栈顶 hash；成功时 drop，失败时丢弃 speculative edits 后精确 apply 恢复 |
 | Search/Replace 匹配到多个位置 | 误修改错误代码 | 唯一性约束，失败降级到格式重试 |
 | P1_SPECULATIVE 意外 write-back | 污染 canonical 状态 | 显式禁止指令 + coordinator 层二次检查 |
 | Phase 2 增加 verify 延迟 | 用户体验下降 | `--skip-optimization` flag + `config.yaml` 开关 |

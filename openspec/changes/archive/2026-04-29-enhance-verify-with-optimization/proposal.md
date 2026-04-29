@@ -9,9 +9,9 @@
 - **`verify` 升级为两阶段质量门禁**：Phase 1 一致性检验（现有）→ Phase 2 最优性检验（新增），先确保正确，再追求优雅
 - Phase 2 由独立的 clean-context subagent 执行，输出 Search/Replace 块（替代 unified diff）供主 agent 应用
 - Phase 2 默认启用，可通过 `openspec/config.yaml` 配置 `optimization.enabled` 关闭，或 CLI `--skip-optimization` flag 跳过
-- 使用 `git stash push/pop` 做 checkpoint 保护，优化失败时自动回滚
+- 使用 `git stash` 做 checkpoint 保护，优化失败时完整恢复到 Phase 1 已验证完成的基线
 - 三类预算控制：格式重试上限 2 + 匹配重试上限 2 + 行为重试上限 3，防止无限循环
-- dirty worktree 时自动跳过 Phase 2，保留 canonical verify 结果
+- 不再因当前 worktree 非空而自动跳过 Phase 2；只要未显式禁用，就依赖 checkpoint 执行和回滚
 - 3 次真正失败后静默回滚 + Degraded Pass，不影响流程继续
 - **消除独立命令族**：不创建 `openspec refine` 命令，不创建 refine 系列持久化文件
 - **消除 feedback-loop 独立状态**：不创建 `quality-context.yaml`，不实现跨项目学习机制

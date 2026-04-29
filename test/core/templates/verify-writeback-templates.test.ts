@@ -21,7 +21,10 @@ describe('verify write-back workflow templates', () => {
 
     for (const template of [skill, command]) {
       expect(template).toContain('9. **Write Back CRITICAL Issues**');
-      expect(template).toContain('10. **Persist Verification Result**');
+      expect(template).toContain('10. **Prepare the Canonical Phase 1 Result**');
+      expect(template).toContain('11. **Run Phase 2 Optimality Check**');
+      expect(template).toContain('12. **Re-verify Candidate Changes and Enforce Retry Budgets**');
+      expect(template).toContain('13. **Persist Final Verification Result**');
       expect(template).toContain("path.join(changeDir, '.verify-result.json')");
       expect(template).toContain('FAIL_NEEDS_REMEDIATION');
       expect(template).toContain('PASS_WITH_WARNINGS');
@@ -36,6 +39,17 @@ describe('verify write-back workflow templates', () => {
       expect(template).toContain('contractVersion');
       expect(template).toContain('evidenceFingerprint');
       expect(template).toContain('gitDiffSummary');
+      expect(template).toContain('optimization.enabled');
+      expect(template).toContain('--skip-optimization');
+      expect(template).toContain('git stash push -u -m "verify-phase2-checkpoint"');
+      expect(template).toContain('No optimization opportunities found');
+      expect(template).toContain('optimization.status');
+      expect(template).toContain('maxFormatRetries = 2');
+      expect(template).toContain('maxMatchRetries = 2');
+      expect(template).toContain('maxBehaviorFailures = 3');
+      expect(template).toContain('P1_SPECULATIVE_FENCE');
+      expect(template).toContain('Phase 1 PASS. 3 optimization attempts safely reverted.');
+      expect(template).toContain('Optimization phase aborted, but canonical verification passed.');
     }
   });
 
@@ -46,6 +60,8 @@ describe('verify write-back workflow templates', () => {
     for (const template of [skill, command]) {
       expect(template).toContain("path.join(changeDir, '.verify-result.json')");
       expect(template).toContain("result === 'FAIL_NEEDS_REMEDIATION'");
+      expect(template).toContain('optimization.status');
+      expect(template).toContain('advisory context only');
       expect(template).toContain('Summary of prior CRITICAL verify issues');
       expect(template).toContain('## Remediation');
       expect(template).toContain('[code_fix]');
@@ -66,6 +82,9 @@ describe('verify write-back workflow templates', () => {
       expect(template).toContain("If `.verify-result.json` does not exist");
       expect(template).toContain('If ANY freshness check fails');
       expect(template).toContain("result === 'PASS_WITH_WARNINGS'");
+      expect(template).toContain('optimization.status === \'ABORTED_UNSAFE\'');
+      expect(template).toContain('legacy verify result');
+      expect(template).toContain('archive-compatible metadata');
       expect(template).toContain('There is no archive-only mini check');
       expect(template).toContain('There is no bypass path after a failed verify');
       expect(template).not.toContain('Core mode inline conformance check (Step 4.5)');
@@ -101,6 +120,39 @@ describe('verify write-back workflow templates', () => {
       expect(template).toContain('path.resolve()');
       expect(template).toContain('path.normalize()');
       expect(template).toContain('relative POSIX paths');
+    }
+  });
+
+  it('documents phase 2 success, degraded, and skip scenarios', () => {
+    for (const template of [
+      getVerifyChangeSkillTemplate().instructions,
+      getOpsxVerifyCommandTemplate().content,
+    ]) {
+      expect(template).toContain('optimization.status');
+      expect(template).toContain('SKIPPED');
+      expect(template).toContain('NOT_NEEDED');
+      expect(template).toContain('IMPROVED');
+      expect(template).toContain('DEGRADED');
+      expect(template).toContain('ABORTED_UNSAFE');
+      expect(template).not.toContain('Phase 2 skipped: worktree is dirty');
+      expect(template).toContain('If the user passed `--skip-optimization` or config disables optimization');
+    }
+  });
+
+  it('documents checkpoint rollback and retry budgets for phase 2', () => {
+    for (const template of [
+      getVerifyChangeSkillTemplate().instructions,
+      getOpsxVerifyCommandTemplate().content,
+    ]) {
+      expect(template).toContain('git stash push -u -m "verify-phase2-checkpoint"');
+      expect(template).toContain('git stash apply <checkpointRef>');
+      expect(template).toContain('git stash drop');
+      expect(template).toContain('git reset --hard HEAD');
+      expect(template).toContain('git clean -fd');
+      expect(template).toContain('maxFormatRetries = 2');
+      expect(template).toContain('maxMatchRetries = 2');
+      expect(template).toContain('maxBehaviorFailures = 3');
+      expect(template).toContain('checkpoint-adjacent bookkeeping paths');
     }
   });
 });

@@ -12,7 +12,7 @@
  *
  * Valid optimization.status enum values:
 + *   PENDING        - Initial placeholder, persisted before P2 starts; indicates incomplete run
- *   SKIPPED        - Phase 2 not executed (config disabled, CLI flag, dirty worktree, or CRITICAL issues)
+ *   SKIPPED        - Phase 2 not executed (config disabled or CLI flag)
  *   NOT_APPLICABLE - Tool does not support subagent execution
  *   NOT_NEEDED     - Subagent found no optimization opportunities
  *   IMPROVED       - Optimization applied and verified successfully
@@ -35,8 +35,8 @@ Spawn a second clean-context optimizer subagent. This subagent is separate from 
 **Pre-conditions (verified by the main agent before spawning)**:
 - \`openspec/config.yaml\` \`optimization.enabled\` is \`true\` (default when absent)
 - CLI \`--skip-optimization\` flag is NOT present
-- Worktree is clean (no uncommitted changes)
 - A \`git stash push -u -m "verify-phase2-checkpoint"\` checkpoint has been created
+- The canonical Phase 1 baseline has been restored back into the worktree from that checkpoint
 - The stash stack-top hash has been recorded for precise recovery
 
 **Inputs to pass to the optimizer subagent**:

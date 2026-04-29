@@ -35,6 +35,18 @@ export function serializeConfig(config: Partial<ProjectConfig>): string {
   lines.push('#     Domain: e-commerce platform');
   lines.push('');
 
+  // Optimization section with comments
+  lines.push('# Verify Phase 2 optimization policy (optional)');
+  lines.push('# Set enabled: false to keep verify in Phase 1 conformance-only mode.');
+  lines.push('# Example:');
+  lines.push('#   optimization:');
+  lines.push('#     enabled: true');
+  if (config.optimization) {
+    lines.push('optimization:');
+    lines.push(`  enabled: ${config.optimization.enabled !== false}`);
+  }
+  lines.push('');
+
   // Rules section with comments
   lines.push('# Per-artifact rules (optional)');
   lines.push('# Add custom rules for specific artifacts.');

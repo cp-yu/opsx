@@ -39,6 +39,10 @@ domains:
     intent: OPSX 编程基础设施，用于架构追踪，包含 YAML 操作、验证和分片
     type: domain
     boundary: 拥有 OPSX 文件 I/O、Schema 验证和 delta 合并。不拥有 OPSX 内容生成。
+  - id: dom.verify
+    intent: 两阶段质量门禁——在一致性检验通过后，对代码进行最优性检验，将代码从"可用"提升到"精良"
+    status: active
+    type: domain
 capabilities:
   - id: cap.ai.agent-docs
     intent: 生成面向 Agent 的指令文档，并让所有会生成或回写 artifact 的 workflow surface 共享同一套配置投影合同
@@ -60,7 +64,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 提供面向 Agent 的工作流模板（propose、apply、explore、archive、verify 等），通过共享配置投影消费项目级 authoring 约束与 runtime policy 边界
+    intent: 提供面向 Agent 的工作流模板（propose、apply、explore、archive、verify 等），通过共享配置投影消费项目级 authoring 约束与 runtime policy 边界。verify 模板现包含两阶段质量门禁（一致性 + 最优性）
     status: active
     type: capability
   - id: cap.artifact-graph.instruction-loader
@@ -253,6 +257,10 @@ capabilities:
     type: capability
   - id: cap.ai.verify-writeback
     intent: 验证结果回写 tasks.md（unmark 未真正完成的任务）并生成分类 remediation 清单（code_fix / artifact_fix），同时让 write-back prose 遵守统一 runtime projection
+    status: active
+    type: capability
+  - id: cap.verify.optimize
+    intent: 在一致性检验通过后执行 Phase 2 最优性检验，基于 clean-context subagent 生成 Search/Replace 块，并在 checkpoint 保护下应用、重试或安全回滚
     status: active
     type: capability
   - id: cap.ai.tool-invocation-references

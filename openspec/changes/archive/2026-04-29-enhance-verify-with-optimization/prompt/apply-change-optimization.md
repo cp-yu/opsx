@@ -54,8 +54,8 @@ Display:
 +      "Optimization was in progress but did not complete.
 +       Consider re-running verify."
 +    - If status is `SKIPPED`:
-+      "Optimization was skipped. Run verify with --skip-optimization to reproduce,
-+       or check verify output for the reason."
++      "Optimization was skipped by config or CLI flag.
++       Check the prior verify output for the exact reason."
 +    - If status is `NOT_NEEDED`:
 +      "Optimization: no improvements identified. Code quality was already high."
 +    - If optimization object is absent:

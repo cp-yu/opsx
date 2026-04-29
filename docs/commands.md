@@ -327,7 +327,7 @@ Validate that implementation matches your change artifacts. Checks completeness,
 
 **Syntax:**
 ```
-/opsx:verify [change-name]
+/opsx:verify [change-name] [--skip-optimization]
 ```
 
 **Arguments:**
@@ -336,10 +336,12 @@ Validate that implementation matches your change artifacts. Checks completeness,
 | `change-name` | No | Which change to verify (inferred from context if not provided) |
 
 **What it does:**
-- Checks three dimensions of implementation quality
+- Runs Phase 1 conformance verification, then Phase 2 optimization unless skipped
+- Checks three dimensions of implementation quality before any optimization attempt
 - Uses git evidence only to guide investigation, then judges against final file contents
 - Reports issues categorized as CRITICAL, WARNING, or SUGGESTION
-- Persists `.verify-result.json` so archive can reuse a fresh result
+- Persists `.verify-result.json` so archive can reuse a fresh result, including `optimization` metadata
+- Supports `--skip-optimization` and `optimization.enabled: false`; otherwise Phase 2 relies on a stash checkpoint for full rollback to the Phase 1 baseline
 
 **Verification dimensions:**
 

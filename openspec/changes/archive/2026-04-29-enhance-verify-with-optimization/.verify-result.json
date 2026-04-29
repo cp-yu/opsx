@@ -1,0 +1,57 @@
+{
+  "timestamp": "2026-04-29T07:32:29.000Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "5bf8f34e45006feeb8252342d3a7433c8450856f7b6a3a259a9e099a0dc51607",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "current-agent-reread",
+    "evidenceFiles": [
+      "docs/cli.md",
+      "docs/commands.md",
+      "openspec/changes/archive/2026-04-29-enhance-verify-with-optimization/design.md",
+      "openspec/changes/archive/2026-04-29-enhance-verify-with-optimization/opsx-delta.yaml",
+      "openspec/changes/archive/2026-04-29-enhance-verify-with-optimization/proposal.md",
+      "openspec/changes/archive/2026-04-29-enhance-verify-with-optimization/specs/archive-verify-gate/spec.md",
+      "openspec/changes/archive/2026-04-29-enhance-verify-with-optimization/specs/opsx-verify-skill/spec.md",
+      "openspec/changes/archive/2026-04-29-enhance-verify-with-optimization/specs/verify-optimization/spec.md",
+      "openspec/changes/archive/2026-04-29-enhance-verify-with-optimization/tasks.md",
+      "openspec/config.yaml",
+      "openspec/project.opsx.code-map.yaml",
+      "openspec/project.opsx.relations.yaml",
+      "openspec/project.opsx.yaml",
+      "openspec/specs/archive-verify-gate/spec.md",
+      "openspec/specs/opsx-verify-skill/spec.md",
+      "openspec/specs/verify-optimization/spec.md",
+      "src/core/config-projection.ts",
+      "src/core/config-prompts.ts",
+      "src/core/config-schema.ts",
+      "src/core/project-config.ts",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "src/core/templates/workflows/apply-change.ts",
+      "src/core/templates/workflows/archive-change.ts",
+      "src/core/templates/workflows/verify-change.ts",
+      "test/commands/config.test.ts",
+      "test/core/config-schema.test.ts",
+      "test/core/project-config.test.ts",
+      "test/core/templates/opsx-fragments.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts",
+      "test/core/templates/verify-writeback-templates.test.ts"
+    ],
+    "evidenceFingerprint": "8b2c9168fbf112b1cf89e2621a4a1c42a7620a3da1395f5c65c4e42d633be0c8",
+    "gitHeadCommit": "b09d94b3ad52001b9e4927a2399d77d08aa34854",
+    "gitDiffSummary": "31 files changed, 437 insertions(+), 55 deletions(-)"
+  },
+  "optimization": {
+    "status": "SKIPPED",
+    "score": null,
+    "attempts": [],
+    "baseline": {
+      "result": "PASS"
+    },
+    "final": {
+      "result": "skipped",
+      "reason": "manual archived-change re-verify validated the canonical result and freshness only; the official verify Phase 2 workflow was not executed for this archived change"
+    }
+  }
+}

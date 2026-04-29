@@ -164,9 +164,9 @@ The agent SHALL verify that implementation is sensible and follows design decisi
 
 ### Requirement: Verification Report Format
 
-The agent SHALL produce a structured, prioritized report with exit code semantics.
+The agent SHALL produce a structured, prioritized report with exit code semantics, now including optimization phase results.
 
-#### Scenario: Report summary
+#### Scenario: Report summary with optimization
 
 - **WHEN** verification completes
 - **THEN** display summary scorecard:
@@ -179,42 +179,21 @@ The agent SHALL produce a structured, prioritized report with exit code semantic
   | Completeness | X/Y      |
   | Correctness  | X/Y      |
   | Coherence    | Followed |
+  | Optimization | <status> |
   ```
+- **AND** the optimization row shows the Phase 2 outcome（`SKIPPED`、`NOT_NEEDED`、`IMPROVED`、`DEGRADED`、`ABORTED_UNSAFE`）
 
-#### Scenario: Issue prioritization
-
-- **WHEN** issues are found
-- **THEN** group and display in priority order:
-  1. CRITICAL - Must fix before archive (missing implementation, incomplete tasks)
-  2. WARNING - Should fix (divergence from spec/design, missing tests)
-  3. SUGGESTION - Nice to fix (pattern inconsistencies, minor improvements)
-
-#### Scenario: Actionable recommendations
-
-- **WHEN** reporting an issue
-- **THEN** include specific, actionable fix recommendation
-- **AND** reference relevant files and line numbers where applicable
-- **AND** avoid vague suggestions like "consider reviewing"
-
-#### Scenario: All checks pass
+#### Scenario: All checks pass with optimization
 
 - **WHEN** no issues found across all dimensions
-- **THEN** display: `All checks passed. Ready for archive.`
+- **AND** Phase 2 completed with `IMPROVED`
+- **THEN** display: `All checks passed. Code optimized. Ready for archive.`
 - **AND** persist result as `PASS`
 
-#### Scenario: Critical issues found with write-back
+#### Scenario: Degraded Pass with warnings
 
-- **WHEN** CRITICAL issues exist
-- **THEN** display: `X critical issue(s) found. Fix before archiving.`
-- **AND** execute write-back: unmark affected tasks in `tasks.md`
-- **AND** append remediation section to `tasks.md`
-- **AND** persist result as `FAIL_NEEDS_REMEDIATION`
-- **AND** do NOT suggest running archive
-
-#### Scenario: Only warnings/suggestions
-
-- **WHEN** no CRITICAL issues but warnings exist
-- **THEN** display: `No critical issues. Y warning(s) to consider. Ready for archive (with noted improvements).`
+- **WHEN** Phase 2 reached `DEGRADED` after 3 failed behavior attempts
+- **THEN** display: `Phase 1 PASS. 3 optimization attempts safely reverted.`
 - **AND** persist result as `PASS_WITH_WARNINGS`
 
 ### Requirement: Verify Write-back
@@ -237,21 +216,21 @@ The agent SHALL write back high-confidence CRITICAL verification failures into `
 - **AND** SHALL avoid duplicating the same remediation item across repeated runs
 
 ### Requirement: Verify Result Persistence
-The agent SHALL persist verification results for downstream apply/archive flows.
 
-#### Scenario: Verify result file written
+The agent SHALL persist verification results including optimization data for downstream apply/archive flows.
+
+#### Scenario: Verify result file written with optimization
+
 - **WHEN** verify completes
 - **THEN** the agent SHALL write `openspec/changes/<name>/.verify-result.json`
-- **AND** the file SHALL include `timestamp`, `result`, `issues`, and `tasksFileHash`
+- **AND** the file SHALL include `timestamp`、`result`、`issues`、`tasksFileHash`、`verificationContext`、**`optimization`**
+- **AND** `optimization` SHALL contain `status`、`score`、`attempts`、`baseline`、`final`
 
-#### Scenario: tasks hash captured after write-back
-- **WHEN** verify writes `.verify-result.json`
-- **THEN** `tasksFileHash` SHALL describe the current `tasks.md` contents after any task unmark or remediation update
+#### Scenario: optimization 对象不改变顶层 result 语义
 
-#### Scenario: Cross-platform verify result path
-- **WHEN** the agent reads or writes `.verify-result.json`
-- **THEN** it SHALL build the path with `path.join()`
-- **AND** SHALL NOT rely on hardcoded path separators
+- **WHEN** Phase 1 result is `PASS` and optimization.status is `DEGRADED`
+- **THEN** `.verify-result.json` 顶层 `result` SHALL be `PASS_WITH_WARNINGS`
+- **AND** 详细优化状态仅在 `optimization.status` 中记录
 
 ### Requirement: Flexible Artifact Handling
 The agent SHALL gracefully handle changes with varying artifact completeness.

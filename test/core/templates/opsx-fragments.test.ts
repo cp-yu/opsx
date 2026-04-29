@@ -4,6 +4,7 @@ import {
   CLEAN_CONTEXT_VERIFY_PROTOCOL_SUBAGENT,
   CONFORMANCE_CHECK_RULES,
   GIT_EVIDENCE_PROTOCOL,
+  OPTIMIZATION_PROTOCOL_SUBAGENT,
   OPSX_NAVIGATION_GUIDANCE,
   OPSX_POST_PROPOSE_VALIDATION,
   OPSX_READ_CONTEXT,
@@ -52,6 +53,7 @@ describe('OPSX shared context fragments', () => {
     expect(getVerifyChangeSkillTemplate().instructions).toContain(OPSX_VERIFY_ALIGNMENT);
     expect(getVerifyChangeSkillTemplate().instructions).toContain(CLEAN_CONTEXT_VERIFY_PROTOCOL_REREAD);
     expect(getVerifyChangeSkillTemplate().instructions).toContain(GIT_EVIDENCE_PROTOCOL);
+    expect(getVerifyChangeSkillTemplate().instructions).toContain(OPTIMIZATION_PROTOCOL_SUBAGENT);
 
     expect(getArchiveChangeSkillTemplate().instructions).toContain(VERIFY_FRESHNESS_RULES);
   });
@@ -66,6 +68,13 @@ describe('OPSX shared context fragments', () => {
     expect(getCodexVerifyChangeSkillTemplate().instructions).toContain(
       CLEAN_CONTEXT_VERIFY_PROTOCOL_SUBAGENT
     );
+  });
+
+  it('defines optimization search/replace matching constraints explicitly', () => {
+    expect(OPTIMIZATION_PROTOCOL_SUBAGENT).toContain('exact match first');
+    expect(OPTIMIZATION_PROTOCOL_SUBAGENT).toContain('whitespace-normalized matching');
+    expect(OPTIMIZATION_PROTOCOL_SUBAGENT).toContain('matches zero or multiple locations is invalid');
+    expect(OPTIMIZATION_PROTOCOL_SUBAGENT).toContain('No optimization opportunities found');
   });
 
   it('keeps projection contract wording aligned across explore, sync, archive, verify, and onboard surfaces', () => {

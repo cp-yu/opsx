@@ -1,5 +1,5 @@
 schema_version: 1
-generated_at: 2026-04-20T05:43:41.889Z
+generated_at: 2026-04-29T06:53:56.961Z
 nodes:
   - id: cap.ai.agent-docs
     refs:
@@ -24,6 +24,11 @@ nodes:
       - path: src/core/templates/workflows/
       - path: src/core/templates/skill-templates.ts
       - path: src/core/templates/fragments/opsx-fragments.ts
+  - id: cap.verify.optimize
+    refs:
+      - path: src/core/templates/fragments/opsx-fragments.ts
+      - path: src/core/templates/workflows/verify-change.ts
+      - path: src/core/templates/workflows/archive-change.ts
   - id: cap.artifact-graph.instruction-loader
     refs:
       - path: src/core/artifact-graph/instruction-loader.ts

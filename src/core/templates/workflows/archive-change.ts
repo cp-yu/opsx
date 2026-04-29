@@ -36,7 +36,7 @@ ${VERIFY_FRESHNESS_RULES}
    - Execute the full verify contract in Step 2.5
 
    **If \`.verify-result.json\` exists**:
-   - Read \`result\`, \`timestamp\`, \`issues\`, \`tasksFileHash\`, and \`verificationContext\`
+   - Read \`result\`, \`timestamp\`, \`issues\`, \`tasksFileHash\`, \`verificationContext\`, and optional \`optimization\`
    - Recompute freshness by:
      - hashing the current \`tasks.md\` contents
      - recomputing \`verificationContext.evidenceFingerprint\`
@@ -46,6 +46,14 @@ ${VERIFY_FRESHNESS_RULES}
      - Inform the user: "Verify result is stale. Re-executing full verify before archive..."
      - Execute the full verify contract in Step 2.5
    - Otherwise reload the verify result from disk and treat that persisted file as the source of truth
+   - If \`optimization\` is missing:
+     - Treat the file as a legacy verify result
+     - Accept it when freshness checks pass and top-level \`result\` is acceptable
+   - If \`optimization.status === 'ABORTED_UNSAFE'\`:
+     - If top-level \`result\` is still \`PASS\` or \`PASS_WITH_WARNINGS\`, continue
+     - Inform the user: "Optimization phase aborted, but canonical verification passed."
+   - If \`optimization.status\` is \`SKIPPED\`, \`NOT_NEEDED\`, \`IMPROVED\`, or \`DEGRADED\`:
+     - Treat it as archive-compatible metadata
 
    **After reuse or re-execution**:
    - If \`result === 'FAIL_NEEDS_REMEDIATION'\`:

@@ -4,6 +4,9 @@ export interface NormalizedProjectConfig {
   schema?: string;
   docLanguage?: string;
   context?: string;
+  optimization?: {
+    enabled: boolean;
+  };
   rules: Record<string, string[]>;
 }
 
@@ -97,6 +100,11 @@ export function normalizeProjectConfig(config: ProjectConfig | null): Normalized
     schema: normalizeString(config.schema),
     docLanguage: normalizeString(config.docLanguage),
     context: normalizeString(config.context),
+    optimization: config.optimization
+      ? {
+          enabled: config.optimization.enabled !== false,
+        }
+      : undefined,
     rules,
   };
 }

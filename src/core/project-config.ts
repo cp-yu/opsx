@@ -37,6 +37,14 @@ export const ProjectConfigSchema = z.object({
     .optional()
     .describe('Project context injected into all artifact instructions'),
 
+  // Optional: verify Phase 2 optimization policy
+  optimization: z
+    .object({
+      enabled: z.boolean().optional().default(true),
+    })
+    .optional()
+    .describe('Project-level Phase 2 optimization policy for verify workflows'),
+
   // Optional: per-artifact rules (additive to schema's built-in guidance)
   rules: z
     .record(
@@ -129,6 +137,20 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
         }
       } else {
         console.warn(`Invalid 'context' field in config (must be string)`);
+      }
+    }
+
+    // Parse optimization field using Zod
+    if (raw.optimization !== undefined) {
+      const optimizationField = z.object({
+        enabled: z.boolean().optional().default(true),
+      });
+      const optimizationResult = optimizationField.safeParse(raw.optimization);
+
+      if (optimizationResult.success) {
+        config.optimization = optimizationResult.data;
+      } else {
+        console.warn(`Invalid 'optimization' field in config (must be an object with boolean 'enabled')`);
       }
     }
 
