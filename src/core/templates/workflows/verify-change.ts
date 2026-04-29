@@ -6,24 +6,27 @@
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
 import {
+  CLEAN_CONTEXT_VERIFY_PROTOCOL_SUBAGENT,
   CLEAN_CONTEXT_VERIFY_PROTOCOL_REREAD,
   CONFORMANCE_CHECK_RULES,
   GIT_EVIDENCE_PROTOCOL,
   OPTIMIZATION_PROTOCOL_SUBAGENT,
   OPSX_VERIFY_ALIGNMENT,
+  VERIFY_REVIEWER_SUBAGENT_CONTRACT,
   VERIFY_WRITEBACK_RULES,
 } from '../fragments/opsx-fragments.js';
+import {
+  REREAD_VERIFY_EXECUTION_MODEL,
+  SUBAGENT_VERIFY_EXECUTION_MODEL,
+  type VerifyExecutionModel,
+} from './verify-execution-model.js';
 
 interface VerifyTemplateText {
   input: string;
   commandPrefix?: string;
 }
 
-function buildVerifyInstructions(
-  text: VerifyTemplateText,
-  cleanContextProtocol: string
-): string {
-  const verifyInvocation = `${text.commandPrefix ?? '/opsx:'}verify`;
+function buildVerifyIntro(text: VerifyTemplateText, cleanContextProtocol: string): string {
   const continueInvocation = `${text.commandPrefix ?? '/opsx:'}continue`;
 
   return `Verify that an implementation matches the change artifacts (specs, tasks, design).
@@ -63,6 +66,185 @@ ${cleanContextProtocol}
    \`\`\`
 
    This returns the change directory and context files. Read all available artifacts from \`contextFiles\`.
+
+3.5. **Stop early if no verifyable tasks exist**
+
+   - If \`tasks.md\` is missing from \`contextFiles\`, unreadable, or contains no checkbox tasks:
+     - Report exactly: "没有可供 verify 的任务"
+     - Recommend running \`${continueInvocation}\` to create tasks
+     - Stop the workflow before any completeness / correctness / coherence judgment
+     - Do NOT write \`.verify-result.json\`
+`;
+}
+
+function buildCanonicalPhase1Step(stepNumber: number): string {
+  return `${stepNumber}. **Prepare the Canonical Phase 1 Result**
+
+   - Assemble the canonical Phase 1 payload before any optimization attempt
+   - Record:
+     - \`timestamp\`: ISO 8601 completion time
+     - \`result\`: \`PASS\` / \`PASS_WITH_WARNINGS\` / \`FAIL_NEEDS_REMEDIATION\`
+     - \`issues\`: the full issue list with severity, requirement, task linkage, and recommendations
+     - \`tasksFileHash\`: hash of the current \`tasks.md\` contents after any write-back
+     - \`verificationContext\`:
+       - \`contractVersion\`: \`"1.0"\`
+       - \`executionMode\`: derived from Step 1.5
+       - \`evidenceFiles\`: sorted list of examined files using relative POSIX paths
+       - \`evidenceFingerprint\`: SHA-256 of sorted evidence file path + modification time + size tuples
+       - \`gitHeadCommit\`: current HEAD commit SHA if available
+       - \`gitDiffSummary\`: output of \`git diff --stat\` if useful
+   - Compute \`evidenceFingerprint\` by sorting \`evidenceFiles\`, collecting each file's normalized relative path, mtime, and size, then hashing the concatenated string
+   - Use \`path.join()\`, \`path.resolve()\`, and \`path.normalize()\` for all path handling
+   - Treat this payload as the immutable \`optimization.baseline\``;
+}
+
+function buildPhase2Step(stepNumber: number): string {
+  return `${stepNumber}. **Run Phase 2 Optimality Check**
+
+   - Phase 2 is only eligible when the canonical Phase 1 \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\`
+   - Read \`optimization.enabled\` from \`openspec/config.yaml\`; default it to \`true\` when the field is absent
+   - Respect a user-provided \`--skip-optimization\` flag if the workflow surface supports flags
+   - If the user passed \`--skip-optimization\` or config disables optimization:
+     - Skip Phase 2
+     - Set \`optimization.status\` to \`SKIPPED\`
+     - Keep the canonical Phase 1 \`result\` unchanged
+   - Otherwise run an explicit checkpoint state machine:
+     - \`CREATED\`: after \`git stash push -u -m "verify-phase2-checkpoint"\`
+     - \`BASELINE_RESTORED_FOR_RETRY\`: after \`git stash apply <checkpointRef>\` restores the canonical Phase 1 baseline while preserving the checkpoint for retries
+     - \`TERMINAL_ACCEPTED\`: after a successful optimized result is accepted and \`git stash drop <checkpointRef>\` consumes the checkpoint
+     - \`TERMINAL_RESTORED\`: after a final rollback succeeds and \`git stash pop <checkpointRef>\` (or an equivalent restore-then-drop sequence) consumes the checkpoint
+   - Record the exact stash entry or hash before applying any optimization edits
+   - Immediately restore the canonical Phase 1 baseline into the worktree while keeping the checkpoint available, for example with \`git stash apply <checkpointRef>\`
+   - If checkpoint creation or baseline restoration fails:
+     - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
+     - Preserve the stash entry whenever manual recovery still depends on it
+     - Report that the canonical Phase 1 result was preserved but checkpoint recovery is required
+     - Stop before applying any optimization edits
+   - Treat \`git stash apply <checkpointRef>\` as the retry-only restore path
+   - Treat \`git stash pop <checkpointRef>\` as the preferred terminal restore path once no further retries are allowed
+   - Any branch that still outputs manual recovery instructions MUST NOT run \`git stash drop <checkpointRef>\` first
+
+${OPTIMIZATION_PROTOCOL_SUBAGENT}
+
+   **Main-agent application contract**:
+   - Parse every Search/Replace block before touching the filesystem
+   - Resolve target paths with \`path.join()\`, \`path.resolve()\`, and \`path.normalize()\`
+   - Use \`path.join()\` for any checkpoint-adjacent bookkeeping paths; never hardcode path separators
+   - Reject blocks that create, delete, rename, or target untracked files
+   - Pre-validate all blocks, then apply them atomically
+   - If the subagent returns \`No optimization opportunities found\`, set \`optimization.status\` to \`NOT_NEEDED\` and keep the canonical Phase 1 \`result\``;
+}
+
+function buildReverifyStep(stepNumber: number, speculativeFenceContract: string): string {
+  return `${stepNumber}. **Re-verify Candidate Changes and Enforce Retry Budgets**
+
+   - Re-run the same verification contract in \`P1_SPECULATIVE_FENCE\` mode after applying candidate Search/Replace blocks
+${speculativeFenceContract}
+   - \`P1_SPECULATIVE_FENCE\` MUST reuse the same completeness/correctness/coherence checks but MUST NOT:
+     - write back to \`tasks.md\`
+     - rewrite the canonical \`.verify-result.json\`
+   - On speculative \`PASS\` or \`PASS_WITH_WARNINGS\`:
+     - Finalize the optimized files
+     - Consume the checkpoint with \`git stash drop <checkpointRef>\` only after the optimized result is accepted
+     - Transition the checkpoint state to \`TERMINAL_ACCEPTED\`
+     - Set \`optimization.status\` to \`IMPROVED\`
+   - On speculative \`FAIL_NEEDS_REMEDIATION\`:
+     - Discard speculative edits completely
+     - Restore the exact canonical Phase 1 baseline from the checkpoint, for example with \`git reset --hard HEAD\`, \`git clean -fd\`, then \`git stash apply <checkpointRef>\`
+     - Keep the checkpoint for the next retry and transition back to \`BASELINE_RESTORED_FOR_RETRY\`
+     - Increment the behavior retry counter
+     - Request a materially different optimization strategy
+   - Retry budgets are fixed:
+     - \`maxFormatRetries = 2\`
+     - \`maxMatchRetries = 2\`
+     - \`maxBehaviorFailures = 3\`
+   - Count format errors separately from behavioral regressions:
+     - malformed Search/Replace blocks consume format retries
+     - zero-match or multi-match SEARCH anchors consume match retries
+     - speculative re-verify failures consume behavior retries
+   - If the format or match budget is exhausted:
+     - Restore the exact canonical Phase 1 baseline from the checkpoint if any speculative edits were applied
+     - Finish the workflow with a terminal restore: prefer \`git stash pop <checkpointRef>\`, or use an equivalent restore-success-then-drop sequence
+     - If terminal restore succeeds:
+       - Transition the checkpoint state to \`TERMINAL_RESTORED\`
+       - Resolve the run as a warning-only, non-\`ABORTED_UNSAFE\` terminal outcome because the baseline was safely restored
+       - Keep the canonical Phase 1 \`result\` or widen it to \`PASS_WITH_WARNINGS\` only when the final report needs to disclose degraded optimization coverage
+     - If terminal restore fails:
+       - Preserve the stash entry for manual recovery
+       - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
+       - Output cross-platform recovery instructions using \`git reset --hard HEAD\`, \`git clean -fd\`, and \`git stash apply <checkpointRef>\`
+   - If behavior failures reach 3:
+     - Discard speculative edits and restore the exact canonical Phase 1 baseline from the checkpoint
+     - Consume the checkpoint only after baseline restoration succeeds, preferably with \`git stash pop <checkpointRef>\`
+     - Transition the checkpoint state to \`TERMINAL_RESTORED\`
+     - Report: \`Phase 1 PASS. 3 optimization attempts safely reverted.\`
+     - Set \`optimization.status\` to \`DEGRADED\`
+     - Set top-level \`result\` to \`PASS_WITH_WARNINGS\`
+   - If the optimization subagent times out or internal safety is uncertain:
+     - Restore the exact canonical Phase 1 baseline from the checkpoint if any speculative edits were applied
+     - Attempt terminal recovery without consuming the checkpoint until restore success is confirmed
+     - If recovery succeeds:
+       - Transition the checkpoint state to \`TERMINAL_RESTORED\`
+       - Report a warning-only outcome because optimization stopped early but the canonical baseline was safely restored
+       - Keep the canonical Phase 1 \`result\` or widen it to \`PASS_WITH_WARNINGS\` if the final report needs to disclose degraded optimization coverage
+     - If recovery fails:
+       - Preserve the stash entry for manual recovery
+       - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
+       - Keep the canonical Phase 1 \`result\``;
+}
+
+function buildPersistStep(
+  stepNumber: number,
+  verifyInvocation: string,
+  continueInvocation: string
+): string {
+  return `${stepNumber}. **Persist Final Verification Result**
+
+   - Build the verify result path with \`path.join(changeDir, '.verify-result.json')\`
+   - Write the final JSON object after Phase 2 completes or is skipped
+   - Persist:
+     - the canonical Phase 1 payload
+     - the final top-level \`result\`
+     - an \`optimization\` object containing:
+       - \`status\`: \`SKIPPED\` / \`NOT_NEEDED\` / \`IMPROVED\` / \`DEGRADED\` / \`ABORTED_UNSAFE\`
+       - \`score\`: optional optimization assessment summary when the tool can justify one
+       - \`attempts\`: an ordered log of format, match, and behavior retries
+       - \`baseline\`: reference to the canonical Phase 1 payload
+       - \`final\`: the accepted optimized outcome or the safe rollback outcome
+   - Persist the file even when verification fails so \`${verifyInvocation}\`, \`${continueInvocation}\`, and archive can consume the latest diagnostics`;
+}
+
+const VERIFY_HEURISTICS_AND_OUTPUT = `
+**Verification Heuristics**:
+
+- **Completeness**: focus on objective checklist items and explicit requirement coverage
+- **Correctness**: require concrete evidence from final file contents before declaring PASS
+- **Coherence**: look for meaningful contradictions, not cosmetic nitpicks
+- **Optimization**: improve code only when behavior can be preserved under checkpoint protection
+- **False positives**: when uncertain, prefer SUGGESTION over WARNING and WARNING over CRITICAL
+- **Actionability**: every issue must include a concrete next action and file references when applicable
+
+**Graceful Degradation**:
+
+- If only \`tasks.md\` exists: verify task completion only and report skipped checks
+- If tasks and specs exist: verify completeness and correctness, skip design checks
+- If full artifacts exist: verify all three dimensions
+- Always state which checks were skipped and why
+
+**Output Format**:
+
+Use clear markdown with:
+- A table for the summary scorecard
+- Grouped lists for CRITICAL, WARNING, and SUGGESTION issues
+- Code references in \`file.ts:123\` format
+- Specific, actionable recommendations
+- No vague language like "consider reviewing"`;
+
+function buildRereadVerifyInstructions(text: VerifyTemplateText): string {
+  const verifyInvocation = `${text.commandPrefix ?? '/opsx:'}verify`;
+  const continueInvocation = `${text.commandPrefix ?? '/opsx:'}continue`;
+
+  return `${buildVerifyIntro(text, CLEAN_CONTEXT_VERIFY_PROTOCOL_REREAD)}
 
 4. **Initialize verification report structure**
 
@@ -185,157 +367,98 @@ ${VERIFY_WRITEBACK_RULES}
      - Append or refresh the \`## Remediation\` section with typed fix items
      - Include the requirement name, issue summary, and owning task when possible
 
-10. **Prepare the Canonical Phase 1 Result**
+${buildCanonicalPhase1Step(10)}
 
-   - Assemble the canonical Phase 1 payload before any optimization attempt
-   - Record:
-     - \`timestamp\`: ISO 8601 completion time
-     - \`result\`: \`PASS\` / \`PASS_WITH_WARNINGS\` / \`FAIL_NEEDS_REMEDIATION\`
-     - \`issues\`: the full issue list with severity, requirement, task linkage, and recommendations
-     - \`tasksFileHash\`: hash of the current \`tasks.md\` contents after any write-back
-     - \`verificationContext\`:
-       - \`contractVersion\`: \`"1.0"\`
-       - \`executionMode\`: derived from Step 1.5
-       - \`evidenceFiles\`: sorted list of examined files using relative POSIX paths
-       - \`evidenceFingerprint\`: SHA-256 of sorted evidence file path + modification time + size tuples
-       - \`gitHeadCommit\`: current HEAD commit SHA if available
-       - \`gitDiffSummary\`: output of \`git diff --stat\` if useful
-   - Compute \`evidenceFingerprint\` by sorting \`evidenceFiles\`, collecting each file's normalized relative path, mtime, and size, then hashing the concatenated string
-   - Use \`path.join()\`, \`path.resolve()\`, and \`path.normalize()\` for all path handling
-   - Treat this payload as the immutable \`optimization.baseline\`
+${buildPhase2Step(11)}
 
-11. **Run Phase 2 Optimality Check**
+${buildReverifyStep(
+  12,
+  `   - In \`${REREAD_VERIFY_EXECUTION_MODEL}\` mode, the current agent MUST re-read artifacts, git evidence, and final file contents again before assigning the speculative verdict\n`
+)}
 
-   - Phase 2 is only eligible when the canonical Phase 1 \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\`
-   - Read \`optimization.enabled\` from \`openspec/config.yaml\`; default it to \`true\` when the field is absent
-   - Respect a user-provided \`--skip-optimization\` flag if the workflow surface supports flags
-   - If the user passed \`--skip-optimization\` or config disables optimization:
-     - Skip Phase 2
-     - Set \`optimization.status\` to \`SKIPPED\`
-     - Keep the canonical Phase 1 \`result\` unchanged
-   - Otherwise run an explicit checkpoint state machine:
-     - \`CREATED\`: after \`git stash push -u -m "verify-phase2-checkpoint"\`
-     - \`BASELINE_RESTORED_FOR_RETRY\`: after \`git stash apply <checkpointRef>\` restores the canonical Phase 1 baseline while preserving the checkpoint for retries
-     - \`TERMINAL_ACCEPTED\`: after a successful optimized result is accepted and \`git stash drop <checkpointRef>\` consumes the checkpoint
-     - \`TERMINAL_RESTORED\`: after a final rollback succeeds and \`git stash pop <checkpointRef>\` (or an equivalent restore-then-drop sequence) consumes the checkpoint
-   - Record the exact stash entry or hash before applying any optimization edits
-   - Immediately restore the canonical Phase 1 baseline into the worktree while keeping the checkpoint available, for example with \`git stash apply <checkpointRef>\`
-   - If checkpoint creation or baseline restoration fails:
-     - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
-     - Preserve the stash entry whenever manual recovery still depends on it
-     - Report that the canonical Phase 1 result was preserved but checkpoint recovery is required
-     - Stop before applying any optimization edits
-   - Treat \`git stash apply <checkpointRef>\` as the retry-only restore path
-   - Treat \`git stash pop <checkpointRef>\` as the preferred terminal restore path once no further retries are allowed
-   - Any branch that still outputs manual recovery instructions MUST NOT run \`git stash drop <checkpointRef>\` first
+${buildPersistStep(13, verifyInvocation, continueInvocation)}
 
-${OPTIMIZATION_PROTOCOL_SUBAGENT}
-
-   **Main-agent application contract**:
-   - Parse every Search/Replace block before touching the filesystem
-   - Resolve target paths with \`path.join()\`, \`path.resolve()\`, and \`path.normalize()\`
-   - Use \`path.join()\` for any checkpoint-adjacent bookkeeping paths; never hardcode path separators
-   - Reject blocks that create, delete, rename, or target untracked files
-   - Pre-validate all blocks, then apply them atomically
-   - If the subagent returns \`No optimization opportunities found\`, set \`optimization.status\` to \`NOT_NEEDED\` and keep the canonical Phase 1 \`result\`
-
-12. **Re-verify Candidate Changes and Enforce Retry Budgets**
-
-   - Re-run the same verification contract in \`P1_SPECULATIVE_FENCE\` mode after applying candidate Search/Replace blocks
-   - \`P1_SPECULATIVE_FENCE\` MUST reuse the same completeness/correctness/coherence checks but MUST NOT:
-     - write back to \`tasks.md\`
-     - rewrite the canonical \`.verify-result.json\`
-   - On speculative \`PASS\` or \`PASS_WITH_WARNINGS\`:
-     - Finalize the optimized files
-     - Consume the checkpoint with \`git stash drop <checkpointRef>\` only after the optimized result is accepted
-     - Transition the checkpoint state to \`TERMINAL_ACCEPTED\`
-     - Set \`optimization.status\` to \`IMPROVED\`
-   - On speculative \`FAIL_NEEDS_REMEDIATION\`:
-     - Discard speculative edits completely
-     - Restore the exact canonical Phase 1 baseline from the checkpoint, for example with \`git reset --hard HEAD\`, \`git clean -fd\`, then \`git stash apply <checkpointRef>\`
-     - Keep the checkpoint for the next retry and transition back to \`BASELINE_RESTORED_FOR_RETRY\`
-     - Increment the behavior retry counter
-     - Request a materially different optimization strategy
-   - Retry budgets are fixed:
-     - \`maxFormatRetries = 2\`
-     - \`maxMatchRetries = 2\`
-     - \`maxBehaviorFailures = 3\`
-   - Count format errors separately from behavioral regressions:
-     - malformed Search/Replace blocks consume format retries
-     - zero-match or multi-match SEARCH anchors consume match retries
-     - speculative re-verify failures consume behavior retries
-   - If the format or match budget is exhausted:
-     - Restore the exact canonical Phase 1 baseline from the checkpoint if any speculative edits were applied
-     - Finish the workflow with a terminal restore: prefer \`git stash pop <checkpointRef>\`, or use an equivalent restore-success-then-drop sequence
-     - If terminal restore succeeds:
-       - Transition the checkpoint state to \`TERMINAL_RESTORED\`
-       - Resolve the run as a warning-only, non-\`ABORTED_UNSAFE\` terminal outcome because the baseline was safely restored
-       - Keep the canonical Phase 1 \`result\` or widen it to \`PASS_WITH_WARNINGS\` only when the final report needs to disclose degraded optimization coverage
-     - If terminal restore fails:
-       - Preserve the stash entry for manual recovery
-       - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
-       - Output cross-platform recovery instructions using \`git reset --hard HEAD\`, \`git clean -fd\`, and \`git stash apply <checkpointRef>\`
-   - If behavior failures reach 3:
-     - Discard speculative edits and restore the exact canonical Phase 1 baseline from the checkpoint
-     - Consume the checkpoint only after baseline restoration succeeds, preferably with \`git stash pop <checkpointRef>\`
-     - Transition the checkpoint state to \`TERMINAL_RESTORED\`
-     - Report: \`Phase 1 PASS. 3 optimization attempts safely reverted.\`
-     - Set \`optimization.status\` to \`DEGRADED\`
-     - Set top-level \`result\` to \`PASS_WITH_WARNINGS\`
-   - If the optimization subagent times out or internal safety is uncertain:
-     - Restore the exact canonical Phase 1 baseline from the checkpoint if any speculative edits were applied
-     - Attempt terminal recovery without consuming the checkpoint until restore success is confirmed
-     - If recovery succeeds:
-       - Transition the checkpoint state to \`TERMINAL_RESTORED\`
-       - Report a warning-only outcome because optimization stopped early but the canonical baseline was safely restored
-       - Keep the canonical Phase 1 \`result\` or widen it to \`PASS_WITH_WARNINGS\` if the final report needs to disclose degraded optimization coverage
-     - If recovery fails:
-       - Preserve the stash entry for manual recovery
-       - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
-       - Keep the canonical Phase 1 \`result\`
-
-13. **Persist Final Verification Result**
-
-   - Build the verify result path with \`path.join(changeDir, '.verify-result.json')\`
-   - Write the final JSON object after Phase 2 completes or is skipped
-   - Persist:
-     - the canonical Phase 1 payload
-     - the final top-level \`result\`
-     - an \`optimization\` object containing:
-       - \`status\`: \`SKIPPED\` / \`NOT_NEEDED\` / \`IMPROVED\` / \`DEGRADED\` / \`ABORTED_UNSAFE\`
-       - \`score\`: optional optimization assessment summary when the tool can justify one
-       - \`attempts\`: an ordered log of format, match, and behavior retries
-       - \`baseline\`: reference to the canonical Phase 1 payload
-       - \`final\`: the accepted optimized outcome or the safe rollback outcome
-   - Persist the file even when verification fails so \`${verifyInvocation}\`, \`${continueInvocation}\`, and archive can consume the latest diagnostics
-
-**Verification Heuristics**
-
-- **Completeness**: focus on objective checklist items and explicit requirement coverage
-- **Correctness**: require concrete evidence from final file contents before declaring PASS
-- **Coherence**: look for meaningful contradictions, not cosmetic nitpicks
-- **Optimization**: improve code only when behavior can be preserved under checkpoint protection
-- **False positives**: when uncertain, prefer SUGGESTION over WARNING and WARNING over CRITICAL
-- **Actionability**: every issue must include a concrete next action and file references when applicable
-
-**Graceful Degradation**
-
-- If only \`tasks.md\` exists: verify task completion only and report skipped checks
-- If tasks and specs exist: verify completeness and correctness, skip design checks
-- If full artifacts exist: verify all three dimensions
-- Always state which checks were skipped and why
-
-**Output Format**
-
-Use clear markdown with:
-- A table for the summary scorecard
-- Grouped lists for CRITICAL, WARNING, and SUGGESTION issues
-- Code references in \`file.ts:123\` format
-- Specific, actionable recommendations
-- No vague language like "consider reviewing"`;
+${VERIFY_HEURISTICS_AND_OUTPUT}`;
 }
 
-function createVerifySkillTemplate(cleanContextProtocol: string): SkillTemplate {
+function buildSubagentVerifyInstructions(text: VerifyTemplateText): string {
+  const verifyInvocation = `${text.commandPrefix ?? '/opsx:'}verify`;
+  const continueInvocation = `${text.commandPrefix ?? '/opsx:'}continue`;
+
+  return `${buildVerifyIntro(text, CLEAN_CONTEXT_VERIFY_PROTOCOL_SUBAGENT)}
+
+4. **Assemble the Explicit Evidence Bundle**
+
+   - Read every available artifact from \`contextFiles\`
+   - Run \`git status\`, \`git diff\`, and \`git log -5 --oneline\`
+   - Identify candidate implementation files from git evidence and requirement keywords
+   - Read the final file contents for every candidate before handing control to a reviewer subagent
+   - Read prior \`.verify-result.json\` if it exists
+   - Normalize evidence file paths as relative POSIX paths for the reviewer payload
+   - The top-level agent MAY gather evidence, but MUST NOT assign completeness, correctness, or coherence verdicts here
+
+5. **Run the Reviewer Subagent for Canonical Phase 1**
+
+   Spawn a clean-context reviewer subagent with the explicit evidence bundle from Step 4.
+
+${VERIFY_REVIEWER_SUBAGENT_CONTRACT}
+
+${GIT_EVIDENCE_PROTOCOL}
+
+${CONFORMANCE_CHECK_RULES}
+
+${OPSX_VERIFY_ALIGNMENT}
+
+6. **Validate the Reviewer Payload**
+
+   - Fail closed if the reviewer payload is missing, malformed, or unsupported
+   - Validate:
+     - \`result\` is one of \`PASS\`, \`PASS_WITH_WARNINGS\`, or \`FAIL_NEEDS_REMEDIATION\`
+     - every issue includes severity, concrete next action, and evidence citations
+     - every evidence citation uses specific file paths and line ranges
+     - every \`writeBackPlan\` entry targets \`tasks.md\` only and maps to a CRITICAL issue
+   - If validation fails:
+     - Stop verification
+     - Report the payload defect explicitly
+     - Do NOT silently downgrade to the reread skeleton
+
+7. **Write Back CRITICAL Issues**
+
+${VERIFY_WRITEBACK_RULES}
+
+   - If the reviewer found no CRITICAL issues, leave \`tasks.md\` unchanged
+   - If CRITICAL issues exist:
+     - Apply the validated \`writeBackPlan\` to \`tasks.md\`
+     - Unmark each affected completed task
+     - Append or refresh the \`## Remediation\` section with typed fix items
+     - Keep the top-level agent limited to deterministic file updates; judgment stays in the reviewer payload
+
+${buildCanonicalPhase1Step(8)}
+
+${buildPhase2Step(9)}
+
+${buildReverifyStep(
+  10,
+  `   - In \`${SUBAGENT_VERIFY_EXECUTION_MODEL}\` mode, rebuild the explicit evidence bundle for the speculative worktree and invoke the reviewer subagent again for the speculative verdict\n   - The top-level agent MUST NOT substitute its own completeness / correctness / coherence judgment during \`P1_SPECULATIVE_FENCE\`\n`
+)}
+
+${buildPersistStep(11, verifyInvocation, continueInvocation)}
+
+${VERIFY_HEURISTICS_AND_OUTPUT}`;
+}
+
+function buildVerifyInstructions(
+  text: VerifyTemplateText,
+  executionModel: VerifyExecutionModel
+): string {
+  if (executionModel === SUBAGENT_VERIFY_EXECUTION_MODEL) {
+    return buildSubagentVerifyInstructions(text);
+  }
+
+  return buildRereadVerifyInstructions(text);
+}
+
+function createVerifySkillTemplate(executionModel: VerifyExecutionModel): SkillTemplate {
   return {
     name: 'openspec-verify-change',
     description:
@@ -343,9 +466,9 @@ function createVerifySkillTemplate(cleanContextProtocol: string): SkillTemplate 
     instructions: buildVerifyInstructions(
       {
         input:
-          'Optionally specify a change name and optionally request `--skip-optimization`. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.',
+          'Optionally specify a change name and optionally request `--skip-optimization`. If omitted, you MUST prompt for available changes.',
       },
-      cleanContextProtocol
+      executionModel
     ),
     license: 'MIT',
     compatibility: 'Requires openspec CLI.',
@@ -353,7 +476,7 @@ function createVerifySkillTemplate(cleanContextProtocol: string): SkillTemplate 
   };
 }
 
-function createVerifyCommandTemplate(cleanContextProtocol: string): CommandTemplate {
+function createVerifyCommandTemplate(executionModel: VerifyExecutionModel): CommandTemplate {
   return {
     name: 'OPSX: Verify',
     description: 'Verify implementation matches change artifacts before archiving',
@@ -362,29 +485,37 @@ function createVerifyCommandTemplate(cleanContextProtocol: string): CommandTempl
     content: buildVerifyInstructions(
       {
         input:
-          'Optionally specify a change name after `/opsx:verify` (e.g., `/opsx:verify add-auth`) and optionally pass `--skip-optimization`. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.',
+          'Optionally specify a change name after `/opsx:verify` (e.g., `/opsx:verify add-auth`) and optionally pass `--skip-optimization`. If omitted, you MUST prompt for available changes.',
       },
-      cleanContextProtocol
+      executionModel
     ),
   };
 }
 
-export function createVerifyChangeSkillTemplate(
-  cleanContextProtocol: string = CLEAN_CONTEXT_VERIFY_PROTOCOL_REREAD
+export function createVerifyChangeSkillTemplateForExecutionModel(
+  executionModel: VerifyExecutionModel = REREAD_VERIFY_EXECUTION_MODEL
 ): SkillTemplate {
-  return createVerifySkillTemplate(cleanContextProtocol);
+  return createVerifySkillTemplate(executionModel);
 }
 
-export function createOpsxVerifyCommandTemplate(
-  cleanContextProtocol: string = CLEAN_CONTEXT_VERIFY_PROTOCOL_REREAD
+export function createOpsxVerifyCommandTemplateForExecutionModel(
+  executionModel: VerifyExecutionModel = REREAD_VERIFY_EXECUTION_MODEL
 ): CommandTemplate {
-  return createVerifyCommandTemplate(cleanContextProtocol);
+  return createVerifyCommandTemplate(executionModel);
+}
+
+export function createVerifyChangeSkillTemplate(): SkillTemplate {
+  return createVerifyChangeSkillTemplateForExecutionModel();
+}
+
+export function createOpsxVerifyCommandTemplate(): CommandTemplate {
+  return createOpsxVerifyCommandTemplateForExecutionModel();
 }
 
 export function getVerifyChangeSkillTemplate(): SkillTemplate {
-  return createVerifyChangeSkillTemplate();
+  return createVerifyChangeSkillTemplateForExecutionModel();
 }
 
 export function getOpsxVerifyCommandTemplate(): CommandTemplate {
-  return createOpsxVerifyCommandTemplate();
+  return createOpsxVerifyCommandTemplateForExecutionModel();
 }

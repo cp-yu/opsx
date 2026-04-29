@@ -92,11 +92,15 @@ describe('skill-generation', () => {
       const defaultVerify = getSkillTemplates(['verify'])[0];
       const claudeVerify = getSkillTemplates(['verify'], 'claude')[0];
       const codexVerify = getSkillTemplates(['verify'], 'codex')[0];
+      const defaultArchive = getSkillTemplates(['archive'])[0];
+      const claudeArchive = getSkillTemplates(['archive'], 'claude')[0];
 
       expect(defaultVerify.template.instructions).toContain("executionMode: 'current-agent-reread'");
-      expect(defaultVerify.template.instructions).not.toContain("executionMode: 'clean-context-reviewer'");
-      expect(claudeVerify.template.instructions).toContain("executionMode: 'clean-context-reviewer'");
-      expect(codexVerify.template.instructions).toContain("executionMode: 'clean-context-reviewer'");
+      expect(defaultVerify.template.instructions).not.toContain("executionMode: 'subagent-orchestrated'");
+      expect(claudeVerify.template.instructions).toContain("executionMode: 'subagent-orchestrated'");
+      expect(codexVerify.template.instructions).toContain("executionMode: 'subagent-orchestrated'");
+      expect(defaultArchive.template.instructions).toContain('current-agent-reread');
+      expect(claudeArchive.template.instructions).toContain('subagent-orchestrated');
     });
   });
 
@@ -164,9 +168,13 @@ describe('skill-generation', () => {
     it('should use tool-specific verify command templates when available', () => {
       const defaultVerify = getCommandTemplates(['verify'])[0];
       const claudeVerify = getCommandTemplates(['verify'], 'claude')[0];
+      const defaultArchive = getCommandTemplates(['archive'])[0];
+      const claudeArchive = getCommandTemplates(['archive'], 'claude')[0];
 
       expect(defaultVerify.template.content).toContain("executionMode: 'current-agent-reread'");
-      expect(claudeVerify.template.content).toContain("executionMode: 'clean-context-reviewer'");
+      expect(claudeVerify.template.content).toContain("executionMode: 'subagent-orchestrated'");
+      expect(defaultArchive.template.content).toContain('current-agent-reread');
+      expect(claudeArchive.template.content).toContain('subagent-orchestrated');
     });
   });
 
@@ -222,9 +230,13 @@ describe('skill-generation', () => {
     it('should produce tool-specific verify command content when requested', () => {
       const defaultVerify = getCommandContents(['verify'])[0];
       const claudeVerify = getCommandContents(['verify'], 'claude')[0];
+      const defaultArchive = getCommandContents(['archive'])[0];
+      const claudeArchive = getCommandContents(['archive'], 'claude')[0];
 
       expect(defaultVerify.body).toContain("executionMode: 'current-agent-reread'");
-      expect(claudeVerify.body).toContain("executionMode: 'clean-context-reviewer'");
+      expect(claudeVerify.body).toContain("executionMode: 'subagent-orchestrated'");
+      expect(defaultArchive.body).toContain('current-agent-reread');
+      expect(claudeArchive.body).toContain('subagent-orchestrated');
     });
   });
 

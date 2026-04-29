@@ -9,10 +9,15 @@ import {
   getVerifyChangeSkillTemplate,
 } from '../../../src/core/templates/skill-templates.js';
 import {
+  createArchiveChangeSkillTemplateForExecutionModel,
+  createOpsxArchiveCommandTemplateForExecutionModel,
+} from '../../../src/core/templates/workflows/archive-change.js';
+import {
   getClaudeOpsxVerifyCommandTemplate,
   getClaudeVerifyChangeSkillTemplate,
 } from '../../../src/core/templates/workflows/.claude/verify-change.js';
 import { getCodexVerifyChangeSkillTemplate } from '../../../src/core/templates/workflows/.codex/verify-change.js';
+import { SUBAGENT_VERIFY_EXECUTION_MODEL } from '../../../src/core/templates/workflows/verify-execution-model.js';
 
 describe('verify write-back workflow templates', () => {
   it('describes verify write-back and persistence semantics in both surfaces', () => {
@@ -20,6 +25,11 @@ describe('verify write-back workflow templates', () => {
     const command = getOpsxVerifyCommandTemplate().content;
 
     for (const template of [skill, command]) {
+      expect(template).toContain('3.5. **Stop early if no verifyable tasks exist**');
+      expect(template).toContain('没有可供 verify 的任务');
+      expect(template).toContain('Recommend running `/opsx:continue` to create tasks');
+      expect(template).toContain('If omitted, you MUST prompt for available changes.');
+      expect(template).not.toContain('check if it can be inferred from conversation context');
       expect(template).toContain('9. **Write Back CRITICAL Issues**');
       expect(template).toContain('10. **Prepare the Canonical Phase 1 Result**');
       expect(template).toContain('11. **Run Phase 2 Optimality Check**');
@@ -88,6 +98,7 @@ describe('verify write-back workflow templates', () => {
       expect(template).toContain('Treat freshness and archive compatibility as separate checks');
       expect(template).toContain('Verify result is fresh, but optimization recovery state is unsafe.');
       expect(template).toContain('Do NOT reuse this verify result for archive');
+      expect(template).toContain('current-agent-reread');
       expect(template).toContain('Execute the verify workflow end-to-end, including Phase 2 whenever the `/opsx:verify` contract would make it eligible');
       expect(template).toContain("`optimization.status = 'SKIPPED'` is only valid when config disables optimization or the user explicitly requested `--skip-optimization`");
       expect(template).toContain('There is no archive-only mini check');
@@ -97,15 +108,32 @@ describe('verify write-back workflow templates', () => {
     }
   });
 
+  it('uses the subagent-orchestrated archive rerun contract when requested', () => {
+    const skill = createArchiveChangeSkillTemplateForExecutionModel(
+      SUBAGENT_VERIFY_EXECUTION_MODEL
+    ).instructions;
+    const command = createOpsxArchiveCommandTemplateForExecutionModel(
+      SUBAGENT_VERIFY_EXECUTION_MODEL
+    ).content;
+
+    for (const template of [skill, command]) {
+      expect(template).toContain('subagent-orchestrated');
+      expect(template).toContain('Spawn the reviewer subagent for canonical Phase 1');
+      expect(template).toContain('P1_SPECULATIVE_FENCE');
+      expect(template).toContain('MUST NOT inline a current-agent review skeleton');
+      expect(template).toContain('silently downgrade to reread mode');
+    }
+  });
+
   it('uses subagent clean-context verify variants for claude and codex', () => {
     expect(getClaudeVerifyChangeSkillTemplate().instructions).toContain(
-      "executionMode: 'clean-context-reviewer'"
+      "executionMode: 'subagent-orchestrated'"
     );
     expect(getClaudeOpsxVerifyCommandTemplate().content).toContain(
-      "executionMode: 'clean-context-reviewer'"
+      "executionMode: 'subagent-orchestrated'"
     );
     expect(getCodexVerifyChangeSkillTemplate().instructions).toContain(
-      "executionMode: 'clean-context-reviewer'"
+      "executionMode: 'subagent-orchestrated'"
     );
     expect(getVerifyChangeSkillTemplate().instructions).toContain(
       "executionMode: 'current-agent-reread'"
@@ -113,6 +141,28 @@ describe('verify write-back workflow templates', () => {
     expect(getOpsxVerifyCommandTemplate().content).toContain(
       "executionMode: 'current-agent-reread'"
     );
+  });
+
+  it('keeps phase 1 judgment out of the subagent top-level verify skeleton', () => {
+    for (const template of [
+      getClaudeVerifyChangeSkillTemplate().instructions,
+      getClaudeOpsxVerifyCommandTemplate().content,
+      getCodexVerifyChangeSkillTemplate().instructions,
+    ]) {
+      expect(template).toContain('4. **Assemble the Explicit Evidence Bundle**');
+      expect(template).toContain('5. **Run the Reviewer Subagent for Canonical Phase 1**');
+      expect(template).toContain('6. **Validate the Reviewer Payload**');
+      expect(template).toContain('7. **Write Back CRITICAL Issues**');
+      expect(template).toContain('8. **Prepare the Canonical Phase 1 Result**');
+      expect(template).toContain('9. **Run Phase 2 Optimality Check**');
+      expect(template).toContain('10. **Re-verify Candidate Changes and Enforce Retry Budgets**');
+      expect(template).toContain('11. **Persist Final Verification Result**');
+      expect(template).toContain('subagent-orchestrated');
+      expect(template).not.toContain('5. **Verify Completeness**');
+      expect(template).not.toContain('6. **Verify Correctness**');
+      expect(template).not.toContain('7. **Verify Coherence**');
+      expect(template).not.toContain('8. **Generate Verification Report**');
+    }
   });
 
   it('documents cross-platform evidence path handling in verify persistence', () => {

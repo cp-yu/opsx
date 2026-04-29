@@ -1,0 +1,30 @@
+schema_version: 1
+
+ADDED:
+  capabilities:
+    - id: cap.verify.execution-model-selection
+      type: capability
+      intent: 为 verify / archive full verify 按 execution model 选择模板骨架；支持 clean-context subagent 的工具使用 orchestration-only verify skeleton，不支持的工具继续使用 current-agent-reread skeleton
+      status: active
+
+  relations:
+    - from: cap.verify.execution-model-selection
+      to: dom.verify
+      type: contains
+
+MODIFIED:
+  capabilities:
+    - id: cap.ai.workflow-templates
+      type: capability
+      intent: 提供面向 Agent 的工作流模板（propose、apply、explore、archive、verify 等），通过共享配置投影消费项目级 authoring 约束与 runtime policy 边界。verify 模板按 execution model 分为 orchestration-only subagent skeleton 与 current-agent-reread skeleton；archive 缺失或 stale verify result 时复用相同骨架
+      status: active
+
+    - id: cap.change.archive
+      type: capability
+      intent: 归档已完成的变更，将规约合并到主目录并移动变更到 archive；仅复用 checkpoint 生命周期已安全闭环的 verify 结果，不接受 `optimization.status = ABORTED_UNSAFE` 的结果直接归档，并在缺失或 stale verify result 时按 execution model 复用与 `/opsx:verify` 相同的 full verify contract
+      status: active
+
+    - id: cap.verify.optimize
+      type: capability
+      intent: 在一致性检验通过后，对代码进行最优性检验——诊断代码质量、设计模式、效率维度，生成 Search/Replace 块供主 agent 在 checkpoint 保护下应用。checkpoint 生命周期区分中间重试恢复与终局恢复清理；`P1_SPECULATIVE_FENCE` 在 subagent-capable 工具上复用 clean-context reviewer subagent verdict，在 reread 工具上保留 current-agent verification
+      status: active

@@ -10,6 +10,7 @@ import {
   OPSX_READ_CONTEXT,
   OPSX_SHARED_CONTEXT,
   OPSX_VERIFY_ALIGNMENT,
+  VERIFY_REVIEWER_SUBAGENT_CONTRACT,
   VERIFY_FRESHNESS_RULES,
   VERIFY_WRITEBACK_RULES,
 } from '../../../src/core/templates/fragments/opsx-fragments.js';
@@ -18,6 +19,10 @@ import {
   getClaudeVerifyChangeSkillTemplate,
 } from '../../../src/core/templates/workflows/.claude/verify-change.js';
 import { getCodexVerifyChangeSkillTemplate } from '../../../src/core/templates/workflows/.codex/verify-change.js';
+import {
+  createArchiveChangeSkillTemplateForExecutionModel,
+  createOpsxArchiveCommandTemplateForExecutionModel,
+} from '../../../src/core/templates/workflows/archive-change.js';
 import { getExploreSkillTemplate } from '../../../src/core/templates/workflows/explore.js';
 import { getOnboardSkillTemplate } from '../../../src/core/templates/workflows/onboard.js';
 import {
@@ -26,6 +31,7 @@ import {
 } from '../../../src/core/templates/workflows/propose.js';
 import { getApplyChangeSkillTemplate } from '../../../src/core/templates/workflows/apply-change.js';
 import { getArchiveChangeSkillTemplate } from '../../../src/core/templates/workflows/archive-change.js';
+import { SUBAGENT_VERIFY_EXECUTION_MODEL } from '../../../src/core/templates/workflows/verify-execution-model.js';
 import { getSyncSpecsSkillTemplate } from '../../../src/core/templates/workflows/sync-specs.js';
 import { getVerifyChangeSkillTemplate } from '../../../src/core/templates/workflows/verify-change.js';
 
@@ -68,6 +74,24 @@ describe('OPSX shared context fragments', () => {
     expect(getCodexVerifyChangeSkillTemplate().instructions).toContain(
       CLEAN_CONTEXT_VERIFY_PROTOCOL_SUBAGENT
     );
+    expect(getClaudeVerifyChangeSkillTemplate().instructions).toContain(
+      VERIFY_REVIEWER_SUBAGENT_CONTRACT
+    );
+  });
+
+  it('reuses execution-model-specific archive contracts for subagent-capable tools', () => {
+    const skill = createArchiveChangeSkillTemplateForExecutionModel(
+      SUBAGENT_VERIFY_EXECUTION_MODEL
+    ).instructions;
+    const command = createOpsxArchiveCommandTemplateForExecutionModel(
+      SUBAGENT_VERIFY_EXECUTION_MODEL
+    ).content;
+
+    for (const template of [skill, command]) {
+      expect(template).toContain('subagent-orchestrated');
+      expect(template).toContain('Spawn the reviewer subagent for canonical Phase 1');
+      expect(template).toContain('MUST NOT inline a current-agent review skeleton');
+    }
   });
 
   it('defines optimization search/replace matching constraints explicitly', () => {

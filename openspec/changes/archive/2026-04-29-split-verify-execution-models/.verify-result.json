@@ -1,0 +1,48 @@
+{
+  "timestamp": "2026-04-29T11:41:30.443Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "62910cb3b2e83710a7949c2f8ca32d8f52dbd5f95df02985f1a8e34db60c62c6",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      "openspec/changes/split-verify-execution-models/design.md",
+      "openspec/changes/split-verify-execution-models/opsx-delta.yaml",
+      "openspec/changes/split-verify-execution-models/proposal.md",
+      "openspec/changes/split-verify-execution-models/specs/archive-verify-gate/spec.md",
+      "openspec/changes/split-verify-execution-models/specs/opsx-archive-skill/spec.md",
+      "openspec/changes/split-verify-execution-models/specs/opsx-verify-skill/spec.md",
+      "openspec/changes/split-verify-execution-models/specs/verify-execution-model-selection/spec.md",
+      "openspec/changes/split-verify-execution-models/specs/verify-optimization/spec.md",
+      "openspec/changes/split-verify-execution-models/tasks.md",
+      "src/core/shared/skill-generation.ts",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "src/core/templates/workflows/.claude/verify-change.ts",
+      "src/core/templates/workflows/.codex/verify-change.ts",
+      "src/core/templates/workflows/archive-change.ts",
+      "src/core/templates/workflows/verify-change.ts",
+      "src/core/templates/workflows/verify-execution-model.ts",
+      "src/core/workflow-installation.ts",
+      "test/core/shared/skill-generation.test.ts",
+      "test/core/templates/opsx-fragments.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts",
+      "test/core/templates/verify-writeback-templates.test.ts"
+    ],
+    "evidenceFingerprint": "95d31a85dd0d9506359b6da677b411317c2f7393545e88f089cffcf705f6ce1e",
+    "gitHeadCommit": "ffc51e799c21f5392d5074503b8466c468afab95",
+    "gitDiffSummary": "Current worktree contains the staged split-verify-execution-models change plus 4 unstaged follow-up edits: openspec/changes/split-verify-execution-models/specs/opsx-verify-skill/spec.md, src/core/templates/workflows/verify-change.ts, test/core/templates/skill-templates-parity.test.ts, and test/core/templates/verify-writeback-templates.test.ts. `git diff --stat` shows 4 files changed, 21 insertions(+), 6 deletions(-); `git diff --cached --stat` shows 19 files changed, 816 insertions(+), 193 deletions(-)."
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "score": null,
+    "attempts": [],
+    "baseline": {
+      "result": "PASS"
+    },
+    "final": {
+      "result": "not_needed",
+      "reason": "Phase 2 optimization subagent returned `No optimization opportunities found`."
+    }
+  }
+}

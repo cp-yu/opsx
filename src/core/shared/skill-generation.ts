@@ -9,9 +9,30 @@ import {
   type CommandTemplate,
 } from '../templates/skill-templates.js';
 import type { CommandContent } from '../command-generation/index.js';
-import { getClaudeOpsxVerifyCommandTemplate, getClaudeVerifyChangeSkillTemplate } from '../templates/workflows/.claude/verify-change.js';
-import { getCodexVerifyChangeSkillTemplate } from '../templates/workflows/.codex/verify-change.js';
+import {
+  createArchiveChangeSkillTemplateForExecutionModel,
+  createOpsxArchiveCommandTemplateForExecutionModel,
+} from '../templates/workflows/archive-change.js';
+import {
+  createOpsxVerifyCommandTemplateForExecutionModel,
+  createVerifyChangeSkillTemplateForExecutionModel,
+} from '../templates/workflows/verify-change.js';
+import { resolveVerifyExecutionModel } from '../templates/workflows/verify-execution-model.js';
 import { getWorkflowSurfaces, type CommandId, type WorkflowId } from '../workflow-surface.js';
+
+const EXECUTION_MODEL_SKILL_TEMPLATES: Partial<
+  Record<WorkflowId, (executionModel: ReturnType<typeof resolveVerifyExecutionModel>) => SkillTemplate>
+> = {
+  archive: createArchiveChangeSkillTemplateForExecutionModel,
+  verify: createVerifyChangeSkillTemplateForExecutionModel,
+};
+
+const EXECUTION_MODEL_COMMAND_TEMPLATES: Partial<
+  Record<WorkflowId, (executionModel: ReturnType<typeof resolveVerifyExecutionModel>) => CommandTemplate>
+> = {
+  archive: createOpsxArchiveCommandTemplateForExecutionModel,
+  verify: createOpsxVerifyCommandTemplateForExecutionModel,
+};
 
 /**
  * Skill template with directory name and workflow ID mapping.
@@ -36,13 +57,9 @@ function resolveSkillTemplate(
   toolId: string | undefined,
   fallback: () => SkillTemplate
 ): SkillTemplate {
-  if (workflowId === 'verify') {
-    if (toolId === 'claude') {
-      return getClaudeVerifyChangeSkillTemplate();
-    }
-    if (toolId === 'codex') {
-      return getCodexVerifyChangeSkillTemplate();
-    }
+  const createTemplate = EXECUTION_MODEL_SKILL_TEMPLATES[workflowId];
+  if (createTemplate) {
+    return createTemplate(resolveVerifyExecutionModel(toolId));
   }
 
   return fallback();
@@ -53,8 +70,9 @@ function resolveCommandTemplate(
   toolId: string | undefined,
   fallback: () => CommandTemplate
 ): CommandTemplate {
-  if (workflowId === 'verify' && toolId === 'claude') {
-    return getClaudeOpsxVerifyCommandTemplate();
+  const createTemplate = EXECUTION_MODEL_COMMAND_TEMPLATES[workflowId];
+  if (createTemplate) {
+    return createTemplate(resolveVerifyExecutionModel(toolId));
   }
 
   return fallback();

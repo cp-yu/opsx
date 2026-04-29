@@ -252,3 +252,6 @@ relations:
   - from: dom.verify
     type: depends_on
     to: dom.validation
+  - from: cap.verify.execution-model-selection
+    type: contains
+    to: dom.verify

@@ -6,8 +6,34 @@
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
 import { VERIFY_FRESHNESS_RULES } from '../fragments/opsx-fragments.js';
+import {
+  REREAD_VERIFY_EXECUTION_MODEL,
+  SUBAGENT_VERIFY_EXECUTION_MODEL,
+  type VerifyExecutionModel,
+} from './verify-execution-model.js';
 
-function buildArchiveInstructions(inputLine: string): string {
+function buildArchiveFullVerifyContract(executionModel: VerifyExecutionModel): string {
+  if (executionModel === SUBAGENT_VERIFY_EXECUTION_MODEL) {
+    return `   When the verify result is missing or stale, execute the same verify contract as \`/opsx:verify\` using the \`${SUBAGENT_VERIFY_EXECUTION_MODEL}\` skeleton:
+   - Build the explicit evidence bundle from change artifacts, git evidence, final file contents, and prior \`.verify-result.json\` when present
+   - Spawn the reviewer subagent for canonical Phase 1 and keep completeness / correctness / coherence judgment inside the reviewer contract
+   - Validate the reviewer payload, apply only deterministic \`tasks.md\` write-back in the main workspace, and persist the canonical Phase 1 payload
+   - Execute the verify workflow end-to-end, including Phase 2 whenever the \`/opsx:verify\` contract would make it eligible
+   - In \`P1_SPECULATIVE_FENCE\`, rebuild the speculative evidence bundle and invoke the reviewer subagent again for the speculative verdict
+   - The top-level archive flow MUST NOT inline a current-agent review skeleton or silently downgrade to reread mode`;
+  }
+
+  return `   When the verify result is missing or stale, execute the same verify contract as \`/opsx:verify\` using the \`${REREAD_VERIFY_EXECUTION_MODEL}\` skeleton:
+   - Re-read change artifacts, git evidence, and final file contents in the current agent before any verify judgment
+   - Run completeness, git-evidence, correctness, and coherence checks in the current agent
+   - Execute the verify workflow end-to-end, including Phase 2 whenever the \`/opsx:verify\` contract would make it eligible
+   - In \`P1_SPECULATIVE_FENCE\`, the current agent re-runs the reread contract against the speculative worktree`;
+}
+
+function buildArchiveInstructions(
+  inputLine: string,
+  executionModel: VerifyExecutionModel
+): string {
   return `Archive a completed change in the experimental workflow.
 
 **Input**: ${inputLine}
@@ -70,11 +96,7 @@ ${VERIFY_FRESHNESS_RULES}
 
 2.5. **Execute Full Verify**
 
-   When the verify result is missing or stale, execute the same verify contract as \`/opsx:verify\`:
-   - Follow the tool-appropriate clean-context protocol
-   - Re-read change artifacts, git evidence, and final file contents
-   - Run completeness, git-evidence, correctness, and coherence checks
-   - Execute the verify workflow end-to-end, including Phase 2 whenever the \`/opsx:verify\` contract would make it eligible
+${buildArchiveFullVerifyContract(executionModel)}
    - If the canonical Phase 1 \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\`, and optimization is not disabled by config or an explicit \`--skip-optimization\` request, archive-time full verify MUST continue into Phase 2
    - Archive-time caution about speculative edits is NOT a valid reason to downgrade the run into a Phase-1-only verify
    - \`optimization.status = 'SKIPPED'\` is only valid when config disables optimization or the user explicitly requested \`--skip-optimization\`
@@ -176,13 +198,16 @@ Archive completed after satisfying the unified full verify gate.
 - If delta specs or \`opsx-delta.yaml\` exist, always run the shared sync assessment before moving the change directory`;
 }
 
-export function getArchiveChangeSkillTemplate(): SkillTemplate {
+export function createArchiveChangeSkillTemplateForExecutionModel(
+  executionModel: VerifyExecutionModel = REREAD_VERIFY_EXECUTION_MODEL
+): SkillTemplate {
   return {
     name: 'openspec-archive-change',
     description:
       'Archive a completed change in the experimental workflow. Use when the user wants to finalize and archive a completed change after implementation is complete.',
     instructions: buildArchiveInstructions(
-      'Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.'
+      'Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.',
+      executionModel
     ),
     license: 'MIT',
     compatibility: 'Requires openspec CLI.',
@@ -190,14 +215,25 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
   };
 }
 
-export function getOpsxArchiveCommandTemplate(): CommandTemplate {
+export function createOpsxArchiveCommandTemplateForExecutionModel(
+  executionModel: VerifyExecutionModel = REREAD_VERIFY_EXECUTION_MODEL
+): CommandTemplate {
   return {
     name: 'OPSX: Archive',
     description: 'Archive a completed change in the experimental workflow',
     category: 'Workflow',
     tags: ['workflow', 'archive', 'experimental'],
     content: buildArchiveInstructions(
-      'Optionally specify a change name after `/opsx:archive` (e.g., `/opsx:archive add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.'
+      'Optionally specify a change name after `/opsx:archive` (e.g., `/opsx:archive add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.',
+      executionModel
     ),
   };
+}
+
+export function getArchiveChangeSkillTemplate(): SkillTemplate {
+  return createArchiveChangeSkillTemplateForExecutionModel();
+}
+
+export function getOpsxArchiveCommandTemplate(): CommandTemplate {
+  return createOpsxArchiveCommandTemplateForExecutionModel();
 }

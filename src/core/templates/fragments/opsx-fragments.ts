@@ -129,22 +129,41 @@ export const GIT_EVIDENCE_PROTOCOL = `
 export const CLEAN_CONTEXT_VERIFY_PROTOCOL_SUBAGENT = `
 **Clean-Context Verification Protocol**:
 
-Spawn a clean-context reviewer subagent to perform verification.
+Use the subagent-orchestrated verify skeleton.
 
-**Inputs to pass to the reviewer subagent**:
+**Top-level agent responsibilities before invoking the reviewer subagent**:
 - Change artifacts: \`proposal.md\`, \`specs/\`, \`design.md\`, \`tasks.md\`
 - Git evidence: output of \`git status\`, \`git diff\`, and \`git log -5 --oneline\`
 - Final file contents for candidate implementation files identified from git evidence
 - Prior \`.verify-result.json\` if it exists
 
-**Reviewer subagent contract**:
-- Treat implementation conversation history as unavailable and non-authoritative
-- Base every judgment only on the explicit inputs provided
-- For each requirement, cite specific file paths and line ranges as evidence
-- Follow the step-by-step objective verification protocol before assigning severity
+**Top-level agent restrictions**:
+- Collect and validate evidence, but do NOT assign completeness / correctness / coherence judgments directly
+- Pass only the explicit evidence bundle to the reviewer subagent
+- Apply any write-back plan in the main workspace after validating the reviewer payload
 
 **Record in verify result**:
-- \`executionMode: 'clean-context-reviewer'\`
+- \`executionMode: 'subagent-orchestrated'\`
+`.trim();
+
+/**
+ * Fragment: Structured reviewer contract for subagent-orchestrated verify
+ * Used in: verify-change, archive-change
+ */
+export const VERIFY_REVIEWER_SUBAGENT_CONTRACT = `
+**Reviewer Subagent Contract**:
+- Treat implementation conversation history as unavailable and non-authoritative
+- Base every judgment only on the explicit inputs provided by the top-level agent
+- Own all completeness, correctness, coherence, and speculative fence verdicts
+- For each requirement, cite specific file paths and line ranges as evidence
+- Follow the step-by-step objective verification protocol before assigning severity
+- Return a structured assessment containing:
+  - \`result\`: \`PASS\` / \`PASS_WITH_WARNINGS\` / \`FAIL_NEEDS_REMEDIATION\`
+  - \`issues\`: severity, requirement linkage, task linkage, recommendations, and evidence citations
+  - \`summary\`: scorecard data for completeness / correctness / coherence
+  - \`writeBackPlan\`: typed instructions for \`tasks.md\` updates when CRITICAL issues exist
+  - \`evidenceFiles\`: the relative POSIX paths actually used for judgment
+  - \`gitDiffSummary\`: a concise summary of git evidence considered
 `.trim();
 
 /**
