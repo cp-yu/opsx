@@ -51,6 +51,11 @@ export function getWorkflowReferenceTransformer(toolId: string): ((text: string)
     return (text: string) => transformWorkflowReferences(text, toolId);
   }
 
+  // pi uses hyphen-based command names, same transformation as opencode
+  if (toolId === 'pi') {
+    return transformToHyphenCommands;
+  }
+
   return undefined;
 }
 
