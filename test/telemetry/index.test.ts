@@ -18,6 +18,23 @@ vi.mock('posthog-node', () => {
 import { isTelemetryEnabled, maybeShowTelemetryNotice, shutdown, trackCommand } from '../../src/telemetry/index.js';
 import { PostHog } from 'posthog-node';
 
+async function withInteractiveTTY(callback: () => Promise<void>): Promise<void> {
+  const originalIsTTY = process.stdin.isTTY;
+  Object.defineProperty(process.stdin, 'isTTY', {
+    configurable: true,
+    value: true,
+  });
+
+  try {
+    await callback();
+  } finally {
+    Object.defineProperty(process.stdin, 'isTTY', {
+      configurable: true,
+      value: originalIsTTY,
+    });
+  }
+}
+
 describe('telemetry/index', () => {
   let tempDir: string;
   let originalEnv: NodeJS.ProcessEnv;
@@ -187,80 +204,99 @@ describe('telemetry/index', () => {
       delete process.env.OPENSPEC_TELEMETRY;
       delete process.env.DO_NOT_TRACK;
       delete process.env.CI;
+      delete process.env.OPEN_SPEC_INTERACTIVE;
 
-      await trackCommand('test', '1.0.0');
+      await withInteractiveTTY(async () => {
+        await trackCommand('test', '1.0.0');
 
-      expect(PostHog).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          host: 'https://edge.openspec.dev',
-          flushAt: 1,
-          flushInterval: 0,
-          fetchRetryCount: 0,
-          requestTimeout: 1000,
-          preloadFeatureFlags: false,
-          disableRemoteConfig: true,
-          disableSurveys: true,
-          fetch: expect.any(Function),
-        })
-      );
+        expect(PostHog).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            host: 'https://edge.openspec.dev',
+            flushAt: 1,
+            flushInterval: 0,
+            fetchRetryCount: 0,
+            requestTimeout: 1000,
+            preloadFeatureFlags: false,
+            disableRemoteConfig: true,
+            disableSurveys: true,
+            fetch: expect.any(Function),
+          })
+        );
+      });
     });
 
     it('should return a synthetic success response when fetch throws a network error', async () => {
       delete process.env.OPENSPEC_TELEMETRY;
       delete process.env.DO_NOT_TRACK;
       delete process.env.CI;
-      await trackCommand('test', '1.0.0');
+      delete process.env.OPEN_SPEC_INTERACTIVE;
 
-      const fetchFn = (PostHog as any).mock.calls[0][1].fetch as typeof fetch;
-      fetchSpy.mockRejectedValueOnce(new Error('network down'));
+      await withInteractiveTTY(async () => {
+        await trackCommand('test', '1.0.0');
 
-      const response = await fetchFn('https://edge.openspec.dev/batch/', { method: 'POST' });
+        const fetchFn = (PostHog as any).mock.calls[0][1].fetch as typeof fetch;
+        fetchSpy.mockRejectedValueOnce(new Error('network down'));
 
-      expect(response.status).toBe(204);
+        const response = await fetchFn('https://edge.openspec.dev/batch/', { method: 'POST' });
+
+        expect(response.status).toBe(204);
+      });
     });
 
     it('should return a synthetic success response when fetch aborts', async () => {
       delete process.env.OPENSPEC_TELEMETRY;
       delete process.env.DO_NOT_TRACK;
       delete process.env.CI;
-      await trackCommand('test', '1.0.0');
+      delete process.env.OPEN_SPEC_INTERACTIVE;
 
-      const fetchFn = (PostHog as any).mock.calls[0][1].fetch as typeof fetch;
-      fetchSpy.mockRejectedValueOnce(new DOMException('This operation was aborted', 'AbortError'));
+      await withInteractiveTTY(async () => {
+        await trackCommand('test', '1.0.0');
 
-      const response = await fetchFn('https://edge.openspec.dev/batch/', { method: 'POST' });
+        const fetchFn = (PostHog as any).mock.calls[0][1].fetch as typeof fetch;
+        fetchSpy.mockRejectedValueOnce(new DOMException('This operation was aborted', 'AbortError'));
 
-      expect(response.status).toBe(204);
+        const response = await fetchFn('https://edge.openspec.dev/batch/', { method: 'POST' });
+
+        expect(response.status).toBe(204);
+      });
     });
 
     it('should return a synthetic success response for non-2xx responses', async () => {
       delete process.env.OPENSPEC_TELEMETRY;
       delete process.env.DO_NOT_TRACK;
       delete process.env.CI;
-      await trackCommand('test', '1.0.0');
+      delete process.env.OPEN_SPEC_INTERACTIVE;
 
-      const fetchFn = (PostHog as any).mock.calls[0][1].fetch as typeof fetch;
-      fetchSpy.mockResolvedValueOnce(new Response('forbidden', { status: 403 }));
+      await withInteractiveTTY(async () => {
+        await trackCommand('test', '1.0.0');
 
-      const response = await fetchFn('https://edge.openspec.dev/batch/', { method: 'POST' });
+        const fetchFn = (PostHog as any).mock.calls[0][1].fetch as typeof fetch;
+        fetchSpy.mockResolvedValueOnce(new Response('forbidden', { status: 403 }));
 
-      expect(response.status).toBe(204);
+        const response = await fetchFn('https://edge.openspec.dev/batch/', { method: 'POST' });
+
+        expect(response.status).toBe(204);
+      });
     });
 
     it('should pass through successful responses from fetch', async () => {
       delete process.env.OPENSPEC_TELEMETRY;
       delete process.env.DO_NOT_TRACK;
       delete process.env.CI;
-      await trackCommand('test', '1.0.0');
+      delete process.env.OPEN_SPEC_INTERACTIVE;
 
-      const fetchFn = (PostHog as any).mock.calls[0][1].fetch as typeof fetch;
-      const expectedResponse = new Response(null, { status: 200 });
-      fetchSpy.mockResolvedValueOnce(expectedResponse);
+      await withInteractiveTTY(async () => {
+        await trackCommand('test', '1.0.0');
 
-      const response = await fetchFn('https://edge.openspec.dev/batch/', { method: 'POST' });
+        const fetchFn = (PostHog as any).mock.calls[0][1].fetch as typeof fetch;
+        const expectedResponse = new Response(null, { status: 200 });
+        fetchSpy.mockResolvedValueOnce(expectedResponse);
 
-      expect(response).toBe(expectedResponse);
+        const response = await fetchFn('https://edge.openspec.dev/batch/', { method: 'POST' });
+
+        expect(response).toBe(expectedResponse);
+      });
     });
   });
 

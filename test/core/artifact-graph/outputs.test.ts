@@ -4,6 +4,10 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import { artifactOutputExists, resolveArtifactOutputs } from '../../../src/core/artifact-graph/outputs.js';
 
+function canonical(targetPath: string): string {
+  return fs.realpathSync(targetPath);
+}
+
 describe('artifact-graph/outputs', () => {
   let tempDir: string;
 
