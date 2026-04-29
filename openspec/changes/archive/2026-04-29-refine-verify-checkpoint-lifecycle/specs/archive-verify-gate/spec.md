@@ -1,8 +1,5 @@
-# archive-verify-gate Specification
+## MODIFIED Requirements
 
-## Purpose
-此规约记录变更 require-full-verify-before-archive 引入的行为，请在后续同步或归档前补全正式 Purpose。
-## Requirements
 ### Requirement: 归档前必须具备新鲜的完整验证结果
 
 系统 SHALL 在归档任意活动 change 之前取得一份 fresh 的 full verify 结果，并以该结果作为归档门禁。该结果 SHALL 包含 optimization 字段，且其终局状态必须与 verify 的 checkpoint 生命周期语义一致。
@@ -31,16 +28,6 @@
 - **AND** SHALL NOT 直接复用该结果继续归档，即使顶层 `result` 为 `PASS` 或 `PASS_WITH_WARNINGS`
 - **AND** SHALL 提示用户先完成工作区恢复或重新执行 full verify
 
-### Requirement: Core 保持四个 workflow surface
-
-系统 SHALL 保持 `core` profile 的用户可见 workflow surface 仍为 `propose`、`explore`、`apply`、`archive`，即使验证结果包含 optimization 数据。
-
-#### Scenario: Core profile 保持当前 surface 列表
-
-- **WHEN** 项目使用 `core` profile
-- **THEN** 安装的 core workflow surface SHALL 仍然只包含 `propose`、`explore`、`apply`、`archive`
-- **AND** SHALL NOT 因为优化功能而新增独立 `verify` surface
-
 ### Requirement: Freshness 基于显式验证证据判定
 
 系统 SHALL 基于显式持久化的 verification context 判定 `.verify-result.json` 是否 fresh。`optimization` 字段存在不影响 freshness 判定，但其终局状态会影响 archive 是否可复用该结果。
@@ -62,4 +49,3 @@
 - **AND** `optimization.status` 为 `ABORTED_UNSAFE`
 - **THEN** archive SHALL 仍然拒绝复用该结果
 - **AND** SHALL 将其报告为“验证结果新鲜，但优化恢复状态不安全”
-

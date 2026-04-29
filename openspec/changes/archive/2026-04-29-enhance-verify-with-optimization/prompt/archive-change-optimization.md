@@ -1,115 +1,64 @@
-## archive-change.ts 修改：优化结果处理
+## archive-change.ts 优化门禁语义校正
 
-### 修改位置
+这份草稿的目的不是发明新分支，而是把 archive 对 verify 结果的消费规则说清楚，避免把 freshness 和 archive compatibility 混为一谈。
 
-`src/core/templates/workflows/archive-change.ts`，Step 2 "Unified Full Verify Gate"。
+### 正确规则
 
-### 修改内容
+- freshness 只回答一件事：这份 `.verify-result.json` 是否仍然对应当前工作区证据。
+- archive compatibility 额外回答第二件事：这份 fresh 结果是否可以安全作为归档门禁复用。
+- `optimization` 字段不参与 freshness 哈希输入，但会影响 archive compatibility。
 
-#### 2.1 读取 verify result 时新增 optimization 字段
+### Step 2 应有的判断顺序
 
-在 Step 2 读取 `.verify-result.json` 的说明中：
+1. 读取 `.verify-result.json`，包含可选 `optimization`。
+2. 按 `VERIFY_FRESHNESS_RULES` 判定 fresh 或 stale。
+3. 如果结果是 stale 或 missing：
+   - 执行 full verify。
+4. 如果结果是 fresh：
+   - 再判断是否 archive-compatible。
 
-```diff
-- Build the verify result path with `path.join(changeDir, '.verify-result.json')`.
-- Read `result`, `timestamp`, `issues`, `tasksFileHash`, and `verificationContext`.
-+ Build the verify result path with `path.join(changeDir, '.verify-result.json')`.
-+ Read `result`, `timestamp`, `issues`, `tasksFileHash`, `verificationContext`, and optional `optimization`.
-```
+### archive-compatible 判定
 
-#### 2.2 freshness 判定不变
+#### 可直接复用
 
-`VERIFY_FRESHNESS_RULES` fragment 中的 freshness 判定标准保持不变。optimization 字段的存在与否不影响 FRESH/STALE 判定：
+以下状态在顶层 `result` 为 `PASS` 或 `PASS_WITH_WARNINGS` 时可直接复用：
 
-```
-**Verify Result Freshness Rules**:
+- `optimization.status = "SKIPPED"`
+- `optimization.status = "NOT_NEEDED"`
+- `optimization.status = "IMPROVED"`
+- `optimization.status = "DEGRADED"`
+- 缺失 `optimization` 的 legacy verify result
 
-A verify result is considered **FRESH** if ALL of the following hold:
-- `.verify-result.json` exists in the change directory
-- `tasksFileHash` matches the hash of the current `tasks.md` contents
-- `verificationContext.evidenceFingerprint` matches the current workspace fingerprint
-- `verificationContext.contractVersion` is `"1.0"`
-- `result` is `PASS` or `PASS_WITH_WARNINGS`
+#### 不可直接复用
 
-A verify result is considered **STALE** if ANY of the following hold:
-- `tasksFileHash` does not match the current `tasks.md`
-- `verificationContext.evidenceFiles` is missing or the file list changed
-- `verificationContext.evidenceFingerprint` does not match the recomputed fingerprint
-- `verificationContext.gitHeadCommit` does not match the current HEAD (if recorded)
-- `verificationContext.contractVersion` is missing or not `"1.0"`
-- `result` is not `PASS` or `PASS_WITH_WARNINGS`
-```
+以下状态即使 freshness 通过，也不得直接归档：
 
-> optimization 字段不参与 freshness 判定。缺失 optimization 的旧版 verify result 仍然可以被判定为 FRESH。
+- `optimization.status = "ABORTED_UNSAFE"`
 
-#### 2.3 freshness 通过后新增 optimization 状态检查
+此时 archive 必须报告：
 
-在 freshness 确认通过、`result` 为 `PASS` 或 `PASS_WITH_WARNINGS` 之后，添加以下 optimization 门禁检查：
+> Verify result is fresh, but optimization recovery state is unsafe.
 
-```
-**Optimization Status Check** (performed after freshness is confirmed):
+并执行以下动作：
 
-Read the `optimization` object from `.verify-result.json` if it exists.
+- 不复用这份 verify result
+- 不继续 archive
+- 要求用户先完成工作区恢复，或重新执行 full verify
 
-If `optimization` is **present**:
-  - If `optimization.status === "PENDING"`:
-      Warn:
-      "Warning: Optimization was in progress but did not complete.
-       Consider re-running `/opsx:verify` before archiving."
-      Do NOT block archive — Phase 1 canonical result may be valid.
-      (Treat as if optimization is absent for remaining logic and skip the display below.)
-  - Display the optimization status in the archive summary:
-    "Optimization: <status> (score: <score>/100)"
+### 需要明确删除的旧说法
 
-  - If `optimization.status === "SKIPPED"`:
-      Display: "Optimization: skipped. Check verify output for the specific reason."
+以下叙述是错误的，必须从 prompt 中排除：
 
-  - If `optimization.status === "NOT_APPLICABLE"`:
-      Display: "Optimization: not applicable (tool does not support subagents)"
-      (Treat identically to SKIPPED for logic purposes)
+- “`ABORTED_UNSAFE` 只是优化没完成，但 canonical result 仍然有效，所以 archive 可以继续”
+- “只要 fresh 就一定 archive-compatible”
+- “optimization 只是展示信息，不影响归档门禁”
 
-  - If `optimization.status === "NOT_NEEDED"`:
-      Display: "Optimization: no improvements identified (code quality already high)"
+### 输出摘要也要跟着修正
 
-  - If `optimization.status === "IMPROVED"`:
-      Display: "Optimization: code was improved during verify (score: <score>/100)"
+archive 成功时应表达为：
 
-  - If `optimization.status === "DEGRADED"`:
-      Inform:
-      "Note: Phase 2 optimization was degraded (optimization attempts exhausted).
-       Phase 1 canonical result is preserved.
-       Best score: <score>/100.
-       The top-level result may have been widened from PASS to PASS_WITH_WARNINGS."
-      Do NOT block archive — Phase 1 canonical result is preserved and valid
+- Fresh and archive-compatible verify result accepted
 
-  - If `optimization.status === "ABORTED_UNSAFE"`:
-      Warn:
-      "Warning: Phase 2 optimization was aborted during previous verify.
-       Consider re-running `/opsx:verify` to attempt optimization before archiving."
-      Do NOT block archive — Phase 1 canonical result is preserved and valid
+而不是模糊地只说：
 
-If `optimization` is **absent** (pre-existing verify result from older version):
-  - Proceed without warning
-  - This is backward-compatible with verify results generated before Phase 2 was introduced
-  - Do NOT treat missing optimization as an error or freshness issue
-```
-
-#### 2.4 Step 7 显示摘要中增加 optimization 行
-
-在 archive 成功输出模板中，在 `**Verify Gate:**` 行之后添加：
-
-```
-**Optimization:** <status> (score: <score>/100)
-```
-
-如果 optimization 对象不存在，则显示：
-```
-**Optimization:** Not available
-```
-
-### 设计理由
-
-1. **不阻断 archive** — 只有 Phase 1 canonical result 决定归档资格。optimization 是锦上添花，不是门禁条件。
-2. **向后兼容** — 旧版 verify result 缺失 optimization 字段时静默处理，不做任何警告。
-3. **透明告知** — 在 archive 输出中显示优化状态，包括 DEGRADED 可能导致的 PASS 到 PASS_WITH_WARNINGS 扩展。
-4. **完整覆盖** — 处理全部六种状态（SKIPPED、NOT_APPLICABLE、NOT_NEEDED、IMPROVED、DEGRADED、ABORTED_UNSAFE）。
+- Fresh verify result accepted

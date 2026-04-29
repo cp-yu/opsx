@@ -47,7 +47,7 @@ These commands support `--json` output for programmatic use by AI agents and scr
 | `openspec templates` | Find template paths | `--json` for path resolution |
 | `openspec schemas` | List available schemas | `--json` for schema discovery |
 
-For AI workflow surfaces, `/opsx:verify` now runs a two-phase gate by default and accepts `--skip-optimization` when you want a Phase 1 conformance-only pass. When Phase 2 runs, it keeps a `git stash` checkpoint so failed optimization attempts can restore the exact Phase 1 baseline.
+For AI workflow surfaces, `/opsx:verify` now runs a two-phase gate by default and accepts `--skip-optimization` when you want a Phase 1 conformance-only pass. When Phase 2 runs, it keeps a `git stash` checkpoint so failed optimization attempts can restore the exact Phase 1 baseline. `/opsx:archive` reuses a fresh verify result when possible, but if it must re-run full verify, that rerun is required to honor the same Phase 2 contract whenever optimization is still eligible.
 
 ---
 

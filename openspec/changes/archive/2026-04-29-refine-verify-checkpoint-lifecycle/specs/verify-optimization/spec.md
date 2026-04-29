@@ -1,65 +1,4 @@
-# verify-optimization Specification
-
-## Purpose
-此规约记录变更 enhance-verify-with-optimization 引入的行为，请在后续同步或归档前补全正式 Purpose。
-## Requirements
-### Requirement: 最优性检验执行
-
-系统 SHALL 在 Phase 1 一致性检验通过后，自动进入 Phase 2 最优性检验，除非通过配置或 CLI flag 显式跳过。
-
-#### Scenario: Phase 1 PASS 后自动进入 Phase 2
-
-- **WHEN** Phase 1 返回 `PASS` 或 `PASS_WITH_WARNINGS`
-- **AND** `config.yaml` 中 `optimization.enabled` 为 `true`（默认）
-- **AND** CLI 未传入 `--skip-optimization` flag
-- **THEN** 系统 SHALL 启动 Phase 2 最优性检验
-- **AND** 将当前工作区状态保存为 checkpoint
-
-#### Scenario: --skip-optimization 跳过 Phase 2
-
-- **WHEN** 用户执行 verify 时传入 `--skip-optimization` flag
-- **THEN** 系统 SHALL 跳过 Phase 2
-- **AND** `.verify-result.json` 中 `optimization.status` 记录为 `SKIPPED`
-- **AND** 不影响 Phase 1 的 canonical 结果
-
-#### Scenario: config.yaml 禁用优化
-
-- **WHEN** `openspec/config.yaml` 中 `optimization.enabled` 为 `false`
-- **THEN** 系统 SHALL 跳过 Phase 2
-- **AND** 行为等同于 `--skip-optimization`
-
-#### Scenario: Phase 1 副作用不会阻止 Phase 2
-
-- **WHEN** Phase 1 已经写回 `tasks.md` 或 `.verify-result.json`
-- **AND** 用户未传入 `--skip-optimization`
-- **AND** `optimization.enabled` 不是 `false`
-- **THEN** 系统 SHALL 继续进入 Phase 2
-- **AND** SHALL NOT 因当前 worktree 非空而自动跳过 optimization
-
-### Requirement: Search/Replace 块生成
-
-系统 SHALL 由第二个 clean-context subagent 生成 Search/Replace 块，描述优化建议。
-
-#### Scenario: Subagent 生成有效优化建议
-
-- **WHEN** Phase 2 启动
-- **THEN** 系统 SHALL spawn 第二个 clean-context subagent
-- **AND** subagent 接收代码文件 + spec + design.md 作为输入
-- **AND** subagent SHALL 输出 Search/Replace 块（非 unified diff）
-- **AND** 每个 block 必须包含显式文件路径和 SEARCH/REPLACE 内容
-
-#### Scenario: Subagent 未发现优化机会
-
-- **WHEN** subagent 分析后认为代码质量已足够
-- **THEN** 系统 SHALL 输出 "No optimization opportunities found"
-- **AND** `.verify-result.json` 中 `optimization.status` 记录为 `NOT_NEEDED`
-
-#### Scenario: Subagent 超时
-
-- **WHEN** subagent 在指定时间内未返回结果
-- **THEN** 系统 SHALL 终止 Phase 2
-- **AND** `optimization.status` 记录为 `ABORTED_UNSAFE`
-- **AND** 保留 Phase 1 canonical 结果
+## MODIFIED Requirements
 
 ### Requirement: Checkpoint 与回滚
 
@@ -109,31 +48,6 @@
 - **AND** SHALL 输出需要用户执行的恢复步骤
 - **AND** SHALL 明确提示当前 `.verify-result.json` 的 canonical Phase 1 judgment 仍可用于诊断，但当前工作区不应被视为已安全恢复
 
-### Requirement: 重试预算控制
-
-系统 SHALL 使用三类独立预算控制重试次数，防止无限循环。
-
-#### Scenario: 格式错误重试
-
-- **WHEN** Search/Replace 块因格式/语法错误无法应用
-- **THEN** `formatRetryCounter` 递增
-- **AND** 如果 `formatRetryCounter < 2`：subagent 重新生成 Search/Replace 块（修正格式）
-- **AND** 如果 `formatRetryCounter >= 2`：停止 Phase 2 并输出建议
-
-#### Scenario: 匹配错误重试
-
-- **WHEN** Search/Replace 块匹配不唯一或找不到锚点
-- **THEN** `matchRetryCounter` 递增
-- **AND** 如果 `matchRetryCounter < 2`：subagent 重新生成 Search/Replace 块（增加上下文锚点）
-- **AND** 如果 `matchRetryCounter >= 2`：停止 Phase 2 并输出建议
-
-#### Scenario: 行为错误重试
-
-- **WHEN** 优化导致 P1_SPECULATIVE_FENCE re-verify 失败
-- **THEN** `behaviorRetryCounter` 递增
-- **AND** 如果 `behaviorRetryCounter < 3`：subagent 生成全新策略的 Search/Replace 块
-- **AND** 如果 `behaviorRetryCounter >= 3`：进入 Degraded Pass
-
 ### Requirement: 优化结果持久化
 
 系统 SHALL 将 Phase 2 结果写入 `.verify-result.json` 的 `optimization` 对象，并使终局状态与 checkpoint 生命周期一致。
@@ -168,4 +82,3 @@
 - **WHEN** 系统在 Windows、Linux 或 macOS 上输出 checkpoint 恢复提示
 - **THEN** 系统 SHALL 仅输出跨平台一致的 Git 命令序列与仓库相对文件路径
 - **AND** SHALL NOT 依赖平台特定的路径分隔符或 shell 路径拼接习惯
-

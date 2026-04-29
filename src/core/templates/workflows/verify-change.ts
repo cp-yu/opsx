@@ -213,13 +213,21 @@ ${VERIFY_WRITEBACK_RULES}
      - Skip Phase 2
      - Set \`optimization.status\` to \`SKIPPED\`
      - Keep the canonical Phase 1 \`result\` unchanged
-   - Otherwise create a checkpoint with \`git stash push -u -m "verify-phase2-checkpoint"\`
+   - Otherwise run an explicit checkpoint state machine:
+     - \`CREATED\`: after \`git stash push -u -m "verify-phase2-checkpoint"\`
+     - \`BASELINE_RESTORED_FOR_RETRY\`: after \`git stash apply <checkpointRef>\` restores the canonical Phase 1 baseline while preserving the checkpoint for retries
+     - \`TERMINAL_ACCEPTED\`: after a successful optimized result is accepted and \`git stash drop <checkpointRef>\` consumes the checkpoint
+     - \`TERMINAL_RESTORED\`: after a final rollback succeeds and \`git stash pop <checkpointRef>\` (or an equivalent restore-then-drop sequence) consumes the checkpoint
    - Record the exact stash entry or hash before applying any optimization edits
    - Immediately restore the canonical Phase 1 baseline into the worktree while keeping the checkpoint available, for example with \`git stash apply <checkpointRef>\`
    - If checkpoint creation or baseline restoration fails:
      - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
+     - Preserve the stash entry whenever manual recovery still depends on it
      - Report that the canonical Phase 1 result was preserved but checkpoint recovery is required
      - Stop before applying any optimization edits
+   - Treat \`git stash apply <checkpointRef>\` as the retry-only restore path
+   - Treat \`git stash pop <checkpointRef>\` as the preferred terminal restore path once no further retries are allowed
+   - Any branch that still outputs manual recovery instructions MUST NOT run \`git stash drop <checkpointRef>\` first
 
 ${OPTIMIZATION_PROTOCOL_SUBAGENT}
 
@@ -239,11 +247,13 @@ ${OPTIMIZATION_PROTOCOL_SUBAGENT}
      - rewrite the canonical \`.verify-result.json\`
    - On speculative \`PASS\` or \`PASS_WITH_WARNINGS\`:
      - Finalize the optimized files
-     - Drop the checkpoint with \`git stash drop\`
+     - Consume the checkpoint with \`git stash drop <checkpointRef>\` only after the optimized result is accepted
+     - Transition the checkpoint state to \`TERMINAL_ACCEPTED\`
      - Set \`optimization.status\` to \`IMPROVED\`
    - On speculative \`FAIL_NEEDS_REMEDIATION\`:
      - Discard speculative edits completely
      - Restore the exact canonical Phase 1 baseline from the checkpoint, for example with \`git reset --hard HEAD\`, \`git clean -fd\`, then \`git stash apply <checkpointRef>\`
+     - Keep the checkpoint for the next retry and transition back to \`BASELINE_RESTORED_FOR_RETRY\`
      - Increment the behavior retry counter
      - Request a materially different optimization strategy
    - Retry budgets are fixed:
@@ -256,18 +266,33 @@ ${OPTIMIZATION_PROTOCOL_SUBAGENT}
      - speculative re-verify failures consume behavior retries
    - If the format or match budget is exhausted:
      - Restore the exact canonical Phase 1 baseline from the checkpoint if any speculative edits were applied
-     - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
-     - Keep the canonical Phase 1 \`result\`
+     - Finish the workflow with a terminal restore: prefer \`git stash pop <checkpointRef>\`, or use an equivalent restore-success-then-drop sequence
+     - If terminal restore succeeds:
+       - Transition the checkpoint state to \`TERMINAL_RESTORED\`
+       - Resolve the run as a warning-only, non-\`ABORTED_UNSAFE\` terminal outcome because the baseline was safely restored
+       - Keep the canonical Phase 1 \`result\` or widen it to \`PASS_WITH_WARNINGS\` only when the final report needs to disclose degraded optimization coverage
+     - If terminal restore fails:
+       - Preserve the stash entry for manual recovery
+       - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
+       - Output cross-platform recovery instructions using \`git reset --hard HEAD\`, \`git clean -fd\`, and \`git stash apply <checkpointRef>\`
    - If behavior failures reach 3:
-     - Restore the exact canonical Phase 1 baseline from the checkpoint
+     - Discard speculative edits and restore the exact canonical Phase 1 baseline from the checkpoint
+     - Consume the checkpoint only after baseline restoration succeeds, preferably with \`git stash pop <checkpointRef>\`
+     - Transition the checkpoint state to \`TERMINAL_RESTORED\`
      - Report: \`Phase 1 PASS. 3 optimization attempts safely reverted.\`
      - Set \`optimization.status\` to \`DEGRADED\`
      - Set top-level \`result\` to \`PASS_WITH_WARNINGS\`
    - If the optimization subagent times out or internal safety is uncertain:
      - Restore the exact canonical Phase 1 baseline from the checkpoint if any speculative edits were applied
-     - Report: \`Optimization phase aborted, but canonical verification passed.\`
-     - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
-     - Keep the canonical Phase 1 \`result\`
+     - Attempt terminal recovery without consuming the checkpoint until restore success is confirmed
+     - If recovery succeeds:
+       - Transition the checkpoint state to \`TERMINAL_RESTORED\`
+       - Report a warning-only outcome because optimization stopped early but the canonical baseline was safely restored
+       - Keep the canonical Phase 1 \`result\` or widen it to \`PASS_WITH_WARNINGS\` if the final report needs to disclose degraded optimization coverage
+     - If recovery fails:
+       - Preserve the stash entry for manual recovery
+       - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
+       - Keep the canonical Phase 1 \`result\`
 
 13. **Persist Final Verification Result**
 

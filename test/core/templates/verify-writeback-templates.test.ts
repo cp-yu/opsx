@@ -49,7 +49,7 @@ describe('verify write-back workflow templates', () => {
       expect(template).toContain('maxBehaviorFailures = 3');
       expect(template).toContain('P1_SPECULATIVE_FENCE');
       expect(template).toContain('Phase 1 PASS. 3 optimization attempts safely reverted.');
-      expect(template).toContain('Optimization phase aborted, but canonical verification passed.');
+      expect(template).toContain('warning-only outcome because optimization stopped early but the canonical baseline was safely restored');
     }
   });
 
@@ -85,6 +85,11 @@ describe('verify write-back workflow templates', () => {
       expect(template).toContain('optimization.status === \'ABORTED_UNSAFE\'');
       expect(template).toContain('legacy verify result');
       expect(template).toContain('archive-compatible metadata');
+      expect(template).toContain('Treat freshness and archive compatibility as separate checks');
+      expect(template).toContain('Verify result is fresh, but optimization recovery state is unsafe.');
+      expect(template).toContain('Do NOT reuse this verify result for archive');
+      expect(template).toContain('Execute the verify workflow end-to-end, including Phase 2 whenever the `/opsx:verify` contract would make it eligible');
+      expect(template).toContain("`optimization.status = 'SKIPPED'` is only valid when config disables optimization or the user explicitly requested `--skip-optimization`");
       expect(template).toContain('There is no archive-only mini check');
       expect(template).toContain('There is no bypass path after a failed verify');
       expect(template).not.toContain('Core mode inline conformance check (Step 4.5)');
@@ -146,7 +151,11 @@ describe('verify write-back workflow templates', () => {
     ]) {
       expect(template).toContain('git stash push -u -m "verify-phase2-checkpoint"');
       expect(template).toContain('git stash apply <checkpointRef>');
-      expect(template).toContain('git stash drop');
+      expect(template).toContain('git stash drop <checkpointRef>');
+      expect(template).toContain('git stash pop <checkpointRef>');
+      expect(template).toContain('BASELINE_RESTORED_FOR_RETRY');
+      expect(template).toContain('TERMINAL_RESTORED');
+      expect(template).toContain('cross-platform recovery instructions');
       expect(template).toContain('git reset --hard HEAD');
       expect(template).toContain('git clean -fd');
       expect(template).toContain('maxFormatRetries = 2');

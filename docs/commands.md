@@ -342,6 +342,7 @@ Validate that implementation matches your change artifacts. Checks completeness,
 - Reports issues categorized as CRITICAL, WARNING, or SUGGESTION
 - Persists `.verify-result.json` so archive can reuse a fresh result, including `optimization` metadata
 - Supports `--skip-optimization` and `optimization.enabled: false`; otherwise Phase 2 relies on a stash checkpoint for full rollback to the Phase 1 baseline
+- When archive has to re-run full verify, that rerun must follow the same Phase 2 eligibility rules; archive is not allowed to silently downgrade it into Phase 1 only
 
 **Verification dimensions:**
 
@@ -470,6 +471,7 @@ Archive a completed change. Finalizes the change and moves it to the archive fol
 - Requires a fresh full verify result before archive continues
 - Reuses an existing fresh `PASS` / `PASS_WITH_WARNINGS` result when available
 - Re-runs full verify when `.verify-result.json` is missing or stale
+- If archive re-runs full verify and Phase 2 is still eligible, it must continue through the same Phase 2 optimization contract unless config disables optimization or the user explicitly requested `--skip-optimization`
 - Hard-blocks on `FAIL_NEEDS_REMEDIATION` with no skip option
 - Checks artifact completion status
 - Checks task completion (warns if incomplete)

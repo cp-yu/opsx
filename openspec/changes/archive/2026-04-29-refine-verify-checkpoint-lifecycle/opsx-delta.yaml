@@ -1,0 +1,18 @@
+schema_version: 1
+
+MODIFIED:
+  capabilities:
+    - id: cap.verify.optimize
+      type: capability
+      intent: 在一致性检验通过后，对代码进行最优性检验——诊断代码质量、设计模式、效率维度，生成 Search/Replace 块供主 agent 在 checkpoint 保护下应用。checkpoint 生命周期区分中间重试恢复与终局恢复清理，确保安全回滚与 archive 兼容性语义一致
+      status: active
+
+    - id: cap.change.archive
+      type: capability
+      intent: 归档已完成的变更，将规约合并到主目录并移动变更到 archive；仅复用 checkpoint 生命周期已安全闭环的 verify 结果，不接受 `optimization.status = ABORTED_UNSAFE` 的结果直接归档
+      status: active
+
+    - id: cap.ai.workflow-templates
+      type: capability
+      intent: 提供面向 Agent 的工作流模板（propose、apply、explore、archive、verify 等），通过共享配置投影消费项目级 authoring 约束与 runtime policy 边界。verify/archive 模板对 checkpoint 生命周期与恢复语义保持一致
+      status: active

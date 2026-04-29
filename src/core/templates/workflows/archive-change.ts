@@ -37,6 +37,7 @@ ${VERIFY_FRESHNESS_RULES}
 
    **If \`.verify-result.json\` exists**:
    - Read \`result\`, \`timestamp\`, \`issues\`, \`tasksFileHash\`, \`verificationContext\`, and optional \`optimization\`
+   - Treat freshness and archive compatibility as separate checks: a result may be fresh but still unsafe to reuse for archive
    - Recompute freshness by:
      - hashing the current \`tasks.md\` contents
      - recomputing \`verificationContext.evidenceFingerprint\`
@@ -50,8 +51,10 @@ ${VERIFY_FRESHNESS_RULES}
      - Treat the file as a legacy verify result
      - Accept it when freshness checks pass and top-level \`result\` is acceptable
    - If \`optimization.status === 'ABORTED_UNSAFE'\`:
-     - If top-level \`result\` is still \`PASS\` or \`PASS_WITH_WARNINGS\`, continue
-     - Inform the user: "Optimization phase aborted, but canonical verification passed."
+     - Inform the user: "Verify result is fresh, but optimization recovery state is unsafe."
+     - Do NOT reuse this verify result for archive, even when top-level \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\`
+     - Instruct the user to finish workspace recovery or re-run full verify before archive
+     - Preserve the active change directory and STOP here
    - If \`optimization.status\` is \`SKIPPED\`, \`NOT_NEEDED\`, \`IMPROVED\`, or \`DEGRADED\`:
      - Treat it as archive-compatible metadata
 
@@ -62,7 +65,7 @@ ${VERIFY_FRESHNESS_RULES}
      - Instruct the user to fix remediation items and re-run \`/opsx:apply\` or \`/opsx:verify\`
      - Preserve the active change directory and STOP here
    - If \`result === 'PASS'\` or \`result === 'PASS_WITH_WARNINGS'\`:
-     - Inform the user that a fresh verify result was accepted
+     - Inform the user that a fresh and archive-compatible verify result was accepted
      - Continue to Step 3
 
 2.5. **Execute Full Verify**
@@ -71,6 +74,10 @@ ${VERIFY_FRESHNESS_RULES}
    - Follow the tool-appropriate clean-context protocol
    - Re-read change artifacts, git evidence, and final file contents
    - Run completeness, git-evidence, correctness, and coherence checks
+   - Execute the verify workflow end-to-end, including Phase 2 whenever the \`/opsx:verify\` contract would make it eligible
+   - If the canonical Phase 1 \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\`, and optimization is not disabled by config or an explicit \`--skip-optimization\` request, archive-time full verify MUST continue into Phase 2
+   - Archive-time caution about speculative edits is NOT a valid reason to downgrade the run into a Phase-1-only verify
+   - \`optimization.status = 'SKIPPED'\` is only valid when config disables optimization or the user explicitly requested \`--skip-optimization\`
    - Persist a fresh \`.verify-result.json\` before returning to archive
    - In \`core\`, this verify contract is embedded inside archive because there is no standalone verify surface
    - In \`expanded\`, you MAY invoke \`/opsx:verify\` or execute the same contract inline, but the semantics MUST stay identical
