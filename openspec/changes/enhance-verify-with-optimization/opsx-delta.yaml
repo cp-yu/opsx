@@ -1,0 +1,73 @@
+schema_version: 1
+
+ADDED:
+  domains:
+    - id: dom.verify
+      type: domain
+      intent: 两阶段质量门禁——在一致性检验通过后，对代码进行最优性检验，将代码从"可用"提升到"精良"
+
+  capabilities:
+    - id: cap.verify.optimize
+      type: capability
+      intent: 在一致性检验通过后，对代码进行最优性检验——诊断代码质量、设计模式、效率维度，生成 Search/Replace 块供主 agent 在 checkpoint 保护下应用。支持默认启用、可跳过、自动回滚和 Degraded Pass 降级策略
+
+  relations:
+    - from: cap.verify.optimize
+      to: dom.verify
+      type: contains
+    - from: cap.verify.optimize
+      to: cap.ai.workflow-templates
+      type: depends_on
+    - from: dom.verify
+      to: dom.validation
+      type: depends_on
+
+MODIFIED:
+  capabilities:
+    - id: cap.ai.workflow-templates
+      intent: 提供面向 Agent 的工作流模板（propose、apply、explore、archive、verify 等），通过共享配置投影消费项目级 authoring 约束与 runtime policy 边界。verify 模板现包含两阶段质量门禁（一致性 + 最优性）
+
+REMOVED:
+  domains:
+    - id: dom.refine
+      type: domain
+      intent: Continuous code quality improvement through diagnosis, bounded auto-fix, and feedback learning — superseded by verify two-phase model
+
+  capabilities:
+    - id: cap.refine.review
+      type: capability
+      intent: Read-only quality diagnosis — superseded by cap.verify.optimize
+
+    - id: cap.refine.fix
+      type: capability
+      intent: Bounded auto-fix loop — superseded by cap.verify.optimize single-round fix with rollback
+
+    - id: cap.refine.feedback-loop
+      type: capability
+      intent: Aggregate baseline+final verified resolved patterns — superseded by agent prompt augmentation approach
+
+  relations:
+    - from: cap.refine.review
+      to: dom.refine
+      type: contains
+    - from: cap.refine.fix
+      to: dom.refine
+      type: contains
+    - from: cap.refine.feedback-loop
+      to: dom.refine
+      type: contains
+    - from: cap.refine.fix
+      to: cap.refine.review
+      type: depends_on
+    - from: cap.refine.feedback-loop
+      to: cap.refine.fix
+      type: depends_on
+    - from: cap.refine.review
+      to: dom.validation
+      type: depends_on
+    - from: cap.refine.fix
+      to: dom.validation
+      type: depends_on
+    - from: dom.refine
+      to: dom.cli
+      type: depends_on
