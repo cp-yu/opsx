@@ -1,0 +1,11 @@
+schema_version: 1
+
+ADDED: {}
+
+MODIFIED:
+  capabilities:
+    - id: cap.cli.completion
+      type: capability
+      intent: 管理 OpenSpec CLI 的 shell 补全，COMMAND_REGISTRY 现已包含 verify 命令及其子命令 phase1、phase2、seal、status
+
+REMOVED: {}

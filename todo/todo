@@ -1,7 +1,17 @@
 # TODO
 
-## 待处理
+## 待处理 
 
+无论core还是extended模式都要求使用 sync完成同步
+
+openspec 使用归档或者同步的时候，验证 verify 两步是否执行， 验证依据 字段是否修改为期望值
+同时需要应用 phase 2 的优化结果，现在会跳过
+phase 2之后的phase1 review依然需要subagent review通过。 这个虽然无法控制使用subagent，但是依然可以使用字段保证verify了
+
+
+    这个 bug 暴露了一个架构上的维护负担：COMMAND_REGISTRY 和 Commander.js 命令定义是两套独立的数据源，靠
+    人工保持同步。如果后续持续添加/修改命令，这种分离会不断产生同类问题。可以考虑从 Commander.js       
+    的命令树自动派生 COMMAND_REGISTRY，但那是更大的重构。                                               
 
 ## 已完成并归档
 

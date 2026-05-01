@@ -598,6 +598,69 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         ],
       },
     ],
+  },
+  {
+    name: 'verify',
+    description: 'Programmatic verify gates for changes',
+    flags: [],
+    subcommands: [
+      {
+        name: 'phase1',
+        description: 'Run phase 1 verification gate',
+        acceptsPositional: true,
+        positionalType: 'change-id',
+        flags: [
+          {
+            name: 'input',
+            description: 'Input file path',
+            takesValue: true,
+          },
+          COMMON_FLAGS.json,
+        ],
+      },
+      {
+        name: 'phase2',
+        description: 'Run phase 2 verification gate',
+        acceptsPositional: true,
+        positionalType: 'change-id',
+        flags: [
+          {
+            name: 'type',
+            description: 'Specify verification type',
+            takesValue: true,
+          },
+          {
+            name: 'files',
+            description: 'Comma-separated file paths',
+            takesValue: true,
+          },
+          {
+            name: 'input',
+            description: 'Input file path',
+            takesValue: true,
+          },
+          COMMON_FLAGS.json,
+        ],
+      },
+      {
+        name: 'seal',
+        description: 'Seal a verified change',
+        acceptsPositional: true,
+        positionalType: 'change-id',
+        flags: [
+          COMMON_FLAGS.json,
+        ],
+      },
+      {
+        name: 'status',
+        description: 'Show verification status for a change',
+        acceptsPositional: true,
+        positionalType: 'change-id',
+        flags: [
+          COMMON_FLAGS.json,
+        ],
+      },
+    ],
   }
 
 ];

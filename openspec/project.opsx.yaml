@@ -112,8 +112,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.completion
-    intent: 管理 OpenSpec CLI 的 shell 补全
-    status: active
+    intent: 管理 OpenSpec CLI 的 shell 补全，COMMAND_REGISTRY 现已包含 verify 命令及其子命令 phase1、phase2、seal、status
     type: capability
   - id: cap.cli.config
     intent: 查看和修改全局 OpenSpec 配置
