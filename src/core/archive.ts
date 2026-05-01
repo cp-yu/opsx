@@ -6,8 +6,14 @@ import chalk from 'chalk';
 import {
   assessChangeSyncState,
   applyPreparedChangeSync,
+  getPendingChangeSync,
   prepareChangeSync,
 } from './change-sync.js';
+import {
+  checkArchiveCompatibility,
+  checkFreshness,
+  formatVerifyGateFailure,
+} from './verify/freshness.js';
 import { selectActiveChange } from './change-utils.js';
 
 /**
@@ -50,7 +56,7 @@ async function moveDirectory(src: string, dest: string): Promise<void> {
 export class ArchiveCommand {
   async execute(
     changeName?: string,
-    options: { yes?: boolean; skipSpecs?: boolean; noValidate?: boolean; validate?: boolean } = {}
+    options: { yes?: boolean; skipSpecs?: boolean; noValidate?: boolean; validate?: boolean; noVerify?: boolean; verify?: boolean } = {}
   ): Promise<void> {
     const targetPath = '.';
     const changesDir = path.join(targetPath, 'openspec', 'changes');
@@ -87,6 +93,28 @@ export class ArchiveCommand {
     }
 
     const skipValidation = options.validate === false || options.noValidate === true;
+    const skipVerify = options.verify === false || options.noVerify === true;
+    if (!skipVerify) {
+      const freshness = await checkFreshness(changeDir, targetPath);
+      const compatibility = freshness.verifyResult
+        ? checkArchiveCompatibility(freshness.verifyResult)
+        : undefined;
+      const syncState = await assessChangeSyncState(targetPath, changeName);
+      const pendingSync = syncState.requiresSync
+        ? await getPendingChangeSync(targetPath, syncState)
+        : null;
+      const failures: string[] = [];
+
+      if (freshness.status !== 'FRESH' || !compatibility?.compatible) {
+        failures.push(formatVerifyGateFailure(freshness, compatibility));
+      }
+      if (pendingSync && (pendingSync.specs > 0 || pendingSync.opsx)) {
+        failures.push('Sync gate failed: pending delta specs or OPSX delta. Run openspec sync <change-name> first, or pass --no-verify to bypass.');
+      }
+      if (failures.length > 0) {
+        throw new Error(failures.join('\n\n'));
+      }
+    }
 
     // Validate specs and change before archiving
     if (!skipValidation) {
@@ -200,18 +228,21 @@ export class ArchiveCommand {
       console.log('Skipping archive-time sync writes (--skip-specs flag provided).');
     } else {
       if (syncState.requiresSync) {
-        const syncTargets: string[] = [];
-        if (syncState.hasDeltaSpecs) {
-          syncTargets.push(`${syncState.specUpdates.length} spec update(s)`);
-        }
-        if (syncState.hasOpsxDelta) {
-          syncTargets.push('OPSX delta');
-        }
-        console.log(`Archive sync state: ${syncTargets.join(' + ')} pending.`);
-
         try {
-          const prepared = await prepareChangeSync(targetPath, syncState, { skipValidation });
-          await applyPreparedChangeSync(targetPath, prepared);
+          const preparedSync = await prepareChangeSync(targetPath, syncState, { skipValidation });
+          if (preparedSync.specs.writes.length === 0 && !preparedSync.opsx) {
+            console.log('No archive-time sync required.');
+          } else {
+            const syncTargets: string[] = [];
+            if (preparedSync.specs.writes.length > 0) {
+              syncTargets.push(`${preparedSync.specs.writes.length} spec update(s)`);
+            }
+            if (preparedSync.opsx) {
+              syncTargets.push('OPSX delta');
+            }
+            console.log(`Archive sync state: ${syncTargets.join(' + ')} pending.`);
+            await applyPreparedChangeSync(targetPath, preparedSync);
+          }
         } catch (err: any) {
           console.log(String(err.message || err));
           console.log('Aborted. No files were changed.');

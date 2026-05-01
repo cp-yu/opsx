@@ -470,6 +470,7 @@ export function applyOpsxDelta(bundle: ProjectOpsxBundle, delta: OpsxDelta): Ops
     if (index === -1) {
       throw new Error(`OPSX MODIFIED failed for domain '${domain.id}' - not found`);
     }
+    if (stableStringify(next.domains[index]) === stableStringify(domain)) continue;
     next.domains[index] = domain;
     counts.modified.domains += 1;
   }
@@ -478,6 +479,7 @@ export function applyOpsxDelta(bundle: ProjectOpsxBundle, delta: OpsxDelta): Ops
     if (index === -1) {
       throw new Error(`OPSX MODIFIED failed for capability '${capability.id}' - not found`);
     }
+    if (stableStringify(next.capabilities[index]) === stableStringify(capability)) continue;
     next.capabilities[index] = capability;
     counts.modified.capabilities += 1;
   }
@@ -487,6 +489,7 @@ export function applyOpsxDelta(bundle: ProjectOpsxBundle, delta: OpsxDelta): Ops
     if (index === -1) {
       throw new Error(`OPSX MODIFIED failed for relation '${relation.from}' -> '${relation.to}' - not found`);
     }
+    if (stableStringify(next.relations[index]) === stableStringify(relation)) continue;
     next.relations[index] = relation;
     counts.modified.relations += 1;
   }
@@ -537,6 +540,19 @@ export function applyOpsxDelta(bundle: ProjectOpsxBundle, delta: OpsxDelta): Ops
     counts,
     changed,
   };
+}
+
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(',')}]`;
+  }
+  if (value && typeof value === 'object') {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, entry]) => `${JSON.stringify(key)}:${stableStringify(entry)}`)
+      .join(',')}}`;
+  }
+  return JSON.stringify(value);
 }
 
 /**

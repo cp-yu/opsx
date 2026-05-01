@@ -255,3 +255,18 @@ relations:
   - from: cap.verify.execution-model-selection
     type: contains
     to: dom.verify
+  - from: cap.verify.cli-gate
+    type: contains
+    to: dom.verify
+  - from: cap.verify.freshness-engine
+    type: contains
+    to: dom.verify
+  - from: cap.verify.cli-gate
+    type: depends_on
+    to: cap.verify.freshness-engine
+  - from: cap.change.archive
+    type: depends_on
+    to: cap.verify.cli-gate
+  - from: cap.change.specs-sync
+    type: depends_on
+    to: cap.verify.cli-gate

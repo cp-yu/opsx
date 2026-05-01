@@ -31,11 +31,13 @@ describe('verify write-back workflow templates', () => {
       expect(template).toContain('If omitted, you MUST prompt for available changes.');
       expect(template).not.toContain('check if it can be inferred from conversation context');
       expect(template).toContain('9. **Write Back CRITICAL Issues**');
-      expect(template).toContain('10. **Prepare the Canonical Phase 1 Result**');
-      expect(template).toContain('11. **Run Phase 2 Optimality Check**');
+      expect(template).toContain('10. **Persist the Canonical Phase 1 Result Through CLI**');
+      expect(template).toContain('11. **Submit Phase 2 Optimization Through CLI**');
       expect(template).toContain('12. **Re-verify Candidate Changes and Enforce Retry Budgets**');
-      expect(template).toContain('13. **Persist Final Verification Result**');
-      expect(template).toContain("path.join(changeDir, '.verify-result.json')");
+      expect(template).toContain('13. **Seal Final Verification Result**');
+      expect(template).toContain('openspec verify phase1 "<change-name>"');
+      expect(template).toContain('openspec verify phase2 "<change-name>" --type=optimization');
+      expect(template).toContain('openspec verify seal "<change-name>"');
       expect(template).toContain('FAIL_NEEDS_REMEDIATION');
       expect(template).toContain('PASS_WITH_WARNINGS');
       expect(template).toContain('PASS');
@@ -86,23 +88,20 @@ describe('verify write-back workflow templates', () => {
 
     for (const template of [skill, command]) {
       expect(template).toContain('2. **Unified Full Verify Gate**');
-      expect(template).toContain("path.join(changeDir, '.verify-result.json')");
+      expect(template).toContain('openspec verify status "<change-name>" --json');
       expect(template).toContain("result === 'FAIL_NEEDS_REMEDIATION'");
       expect(template).toContain('2.5. **Execute Full Verify**');
-      expect(template).toContain("If `.verify-result.json` does not exist");
-      expect(template).toContain('If ANY freshness check fails');
-      expect(template).toContain("result === 'PASS_WITH_WARNINGS'");
-      expect(template).toContain('optimization.status === \'ABORTED_UNSAFE\'');
-      expect(template).toContain('legacy verify result');
-      expect(template).toContain('archive-compatible metadata');
-      expect(template).toContain('Treat freshness and archive compatibility as separate checks');
-      expect(template).toContain('Verify result is fresh, but optimization recovery state is unsafe.');
-      expect(template).toContain('Do NOT reuse this verify result for archive');
+      expect(template).toContain('If the command exits non-zero because the result is MISSING or STALE');
+      expect(template).toContain('rerun `openspec verify status "<change-name>" --json`');
+      expect(template).toContain('PASS_WITH_WARNINGS');
+      expect(template).toContain('optimization.status = ABORTED_UNSAFE');
+      expect(template).toContain('PENDING_VERIFICATION');
       expect(template).toContain('current-agent-reread');
       expect(template).toContain('Execute the verify workflow end-to-end, including Phase 2 whenever the `/opsx:verify` contract would make it eligible');
       expect(template).toContain("`optimization.status = 'SKIPPED'` is only valid when config disables optimization or the user explicitly requested `--skip-optimization`");
       expect(template).toContain('There is no archive-only mini check');
       expect(template).toContain('There is no bypass path after a failed verify');
+      expect(template).toContain('Run `openspec sync "<change-name>"` before archive');
       expect(template).not.toContain('Core mode inline conformance check (Step 4.5)');
       expect(template).not.toContain('Soft-prompt the user');
     }
@@ -153,10 +152,10 @@ describe('verify write-back workflow templates', () => {
       expect(template).toContain('5. **Run the Reviewer Subagent for Canonical Phase 1**');
       expect(template).toContain('6. **Validate the Reviewer Payload**');
       expect(template).toContain('7. **Write Back CRITICAL Issues**');
-      expect(template).toContain('8. **Prepare the Canonical Phase 1 Result**');
-      expect(template).toContain('9. **Run Phase 2 Optimality Check**');
+      expect(template).toContain('8. **Persist the Canonical Phase 1 Result Through CLI**');
+      expect(template).toContain('9. **Submit Phase 2 Optimization Through CLI**');
       expect(template).toContain('10. **Re-verify Candidate Changes and Enforce Retry Budgets**');
-      expect(template).toContain('11. **Persist Final Verification Result**');
+      expect(template).toContain('11. **Seal Final Verification Result**');
       expect(template).toContain('subagent-orchestrated');
       expect(template).not.toContain('5. **Verify Completeness**');
       expect(template).not.toContain('6. **Verify Correctness**');

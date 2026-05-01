@@ -11,6 +11,7 @@ import {
   validateReferentialIntegrity,
   validateCodeMapIntegrity,
   normalizeFromLegacy,
+  applyOpsxDelta,
   readProjectOpsx,
   readProjectOpsxFile,
   readProjectOpsxRelations,
@@ -296,6 +297,34 @@ domains:
       const files = await fs.readdir(opsxDir);
       const hasTmpFile = files.some(f => f.includes('.tmp'));
       expect(hasTmpFile).toBe(false);
+    });
+  });
+
+  describe('applyOpsxDelta', () => {
+    it('should not report unchanged MODIFIED nodes as changed', () => {
+      const capability = {
+        id: 'cap.verify.gate',
+        type: 'capability' as const,
+        intent: 'Verify gate',
+        status: 'active' as const,
+      };
+      const relation = { from: 'cap.verify.gate', to: 'dom.verify', type: 'contains' };
+      const bundle = mkBundle({
+        domains: [{ id: 'dom.verify', type: 'domain', intent: 'Verify domain' }],
+        capabilities: [capability],
+        relations: [relation],
+      });
+
+      const result = applyOpsxDelta(bundle, {
+        schema_version: OPSX_SCHEMA_VERSION,
+        MODIFIED: {
+          capabilities: [{ status: 'active', intent: 'Verify gate', type: 'capability', id: 'cap.verify.gate' }],
+          relations: [{ type: 'contains', to: 'dom.verify', from: 'cap.verify.gate' }],
+        },
+      });
+
+      expect(result.changed).toBe(false);
+      expect(result.counts.modified).toEqual({ domains: 0, capabilities: 0, relations: 0 });
     });
   });
 

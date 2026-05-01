@@ -9,6 +9,11 @@ import {
   writeProjectOpsx,
   type ProjectOpsxBundle,
 } from '../../src/utils/opsx-utils.js';
+import {
+  computeEvidenceFingerprint,
+  computeTasksFileHash,
+} from '../../src/core/verify/freshness.js';
+import type { VerifyResult } from '../../src/core/verify/types.js';
 
 vi.mock('@inquirer/prompts', () => ({
   select: vi.fn(),
@@ -56,6 +61,25 @@ describe('syncCommand', () => {
     return changeDir;
   }
 
+  async function writeFreshVerifyResult(changeDir: string): Promise<void> {
+    await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] verified\n', 'utf-8');
+    await fs.mkdir(path.join(tempDir, 'src'), { recursive: true });
+    await fs.writeFile(path.join(tempDir, 'src', 'sync-evidence.ts'), 'export const ok = true;\n', 'utf-8');
+    const result: VerifyResult = {
+      timestamp: new Date().toISOString(),
+      result: 'PASS',
+      issues: [],
+      tasksFileHash: (await computeTasksFileHash(path.join(changeDir, 'tasks.md')))!,
+      verificationContext: {
+        contractVersion: '1.0',
+        evidenceFiles: ['src/sync-evidence.ts'],
+        evidenceFingerprint: (await computeEvidenceFingerprint(['src/sync-evidence.ts'], tempDir)).hash,
+      },
+      optimization: { status: 'NOT_NEEDED', attempts: [] },
+    };
+    await fs.writeFile(path.join(changeDir, '.verify-result.json'), JSON.stringify(result), 'utf-8');
+  }
+
   it('supports syncing a directly specified change', async () => {
     const syncCommand = await loadSyncCommand();
     const changeDir = await createChange('direct-sync');
@@ -75,7 +99,7 @@ When the user submits the form
 Then the system signs the user in`
     );
 
-    await syncCommand('direct-sync', { noValidate: true });
+    await syncCommand('direct-sync', { noValidate: true, noVerify: true });
 
     const mainSpec = await fs.readFile(
       path.join(tempDir, 'openspec', 'specs', 'auth', 'spec.md'),
@@ -85,6 +109,37 @@ Then the system signs the user in`
     await expect(fs.access(changeDir)).resolves.not.toThrow();
     expect(console.log).toHaveBeenCalledWith("Sync complete for 'direct-sync'.");
     expect(console.log).toHaveBeenCalledWith('opsx: no-delta');
+  });
+
+  it('blocks sync when the verify gate is missing', async () => {
+    const syncCommand = await loadSyncCommand();
+    await createChange('blocked-sync');
+
+    await expect(syncCommand('blocked-sync', { noValidate: true })).rejects.toThrow('Verify gate failed: MISSING');
+  });
+
+  it('allows sync when the verify gate is fresh and archive-compatible', async () => {
+    const syncCommand = await loadSyncCommand();
+    const changeDir = await createChange('verified-sync');
+    await writeFreshVerifyResult(changeDir);
+    const changeSpecDir = path.join(changeDir, 'specs', 'verified');
+    await fs.mkdir(changeSpecDir, { recursive: true });
+    await fs.writeFile(
+      path.join(changeSpecDir, 'spec.md'),
+      `# Verified - Changes
+
+## ADDED Requirements
+
+### Requirement: Verified sync works`
+    );
+
+    await syncCommand('verified-sync', { noValidate: true });
+
+    const mainSpec = await fs.readFile(
+      path.join(tempDir, 'openspec', 'specs', 'verified', 'spec.md'),
+      'utf-8'
+    );
+    expect(mainSpec).toContain('### Requirement: Verified sync works');
   });
 
   it('uses runtime projection when creating a new formal spec skeleton', async () => {
@@ -110,7 +165,7 @@ When the user submits the form
 Then the system signs the user in`
     );
 
-    await syncCommand('localized-sync', { noValidate: true });
+    await syncCommand('localized-sync', { noValidate: true, noVerify: true });
 
     const mainSpec = await fs.readFile(
       path.join(tempDir, 'openspec', 'specs', 'auth', 'spec.md'),
@@ -144,7 +199,7 @@ Then the system signs the user in`
 
     mockSelect.mockResolvedValueOnce(selectedChange);
 
-    await syncCommand(undefined, { noValidate: true });
+    await syncCommand(undefined, { noValidate: true, noVerify: true });
 
     expect(mockSelect).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -161,7 +216,7 @@ Then the system signs the user in`
   it('handles the no active change case without throwing', async () => {
     const syncCommand = await loadSyncCommand();
 
-    await syncCommand(undefined, { noValidate: true });
+    await syncCommand(undefined, { noValidate: true, noVerify: true });
 
     expect(console.log).toHaveBeenCalledWith('No active changes found.');
     expect(console.log).toHaveBeenCalledWith('No change selected. Aborting.');
@@ -172,7 +227,7 @@ Then the system signs the user in`
     const changeDir = await createChange('no-delta-change');
     await fs.writeFile(path.join(changeDir, 'tasks.md'), '## Tasks\n- [ ] Task 1');
 
-    await syncCommand('no-delta-change', { noValidate: true });
+    await syncCommand('no-delta-change', { noValidate: true, noVerify: true });
 
     expect(console.log).toHaveBeenCalledWith('No sync required.');
   });
@@ -219,14 +274,14 @@ Then the system signs the user in`
       })
     );
 
-    await syncCommand(changeName, { noValidate: true });
+    await syncCommand(changeName, { noValidate: true, noVerify: true });
     const specAfterFirst = await fs.readFile(
       path.join(tempDir, 'openspec', 'specs', 'auth', 'spec.md'),
       'utf-8'
     );
     const opsxAfterFirst = await readProjectOpsx(tempDir);
 
-    await syncCommand(changeName, { noValidate: true });
+    await syncCommand(changeName, { noValidate: true, noVerify: true });
     const specAfterSecond = await fs.readFile(
       path.join(tempDir, 'openspec', 'specs', 'auth', 'spec.md'),
       'utf-8'

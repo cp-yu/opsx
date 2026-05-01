@@ -64,7 +64,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 提供面向 Agent 的工作流模板（propose、apply、explore、archive、verify 等），通过共享配置投影消费项目级 authoring 约束与 runtime policy 边界。verify 模板按 execution model 分为 orchestration-only subagent skeleton 与 current-agent-reread skeleton；archive 缺失或 stale verify result 时复用相同骨架
+    intent: 提供面向 Agent 的工作流模板。verify 模板中 Step 8-11 替换为 openspec verify CLI 调用指令；archive 模板中 Step 2 freshness 检查替换为 CLI 调用，Step 5 改为调用 openspec sync CLI 工具
     status: active
     type: capability
   - id: cap.artifact-graph.instruction-loader
@@ -84,7 +84,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.change.archive
-    intent: 归档已完成的变更，将规约合并到主目录并移动变更到 archive；仅复用 checkpoint 生命周期已安全闭环的 verify 结果，不接受 `optimization.status = ABORTED_UNSAFE` 的结果直接归档，并在缺失或 stale verify result 时按 execution model 复用与 `/opsx:verify` 相同的 full verify contract
+    intent: 归档已完成的变更，将规约合并到主目录并移动变更到 archive。archive 入口校验从 AI 文本指令迁移为 CLI 工具调用（openspec verify status），增加 verify + sync 双重门禁联合校验。不通过时合并询问用户如何操作
     status: active
     type: capability
   - id: cap.change.create
@@ -100,7 +100,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.change.specs-sync
-    intent: 将变更中的 delta specs 和 OPSX delta 同步到主规约与主 OPSX，支持幂等合并，并在 standalone sync 与 archive 共享路径中消费统一的 runtime projection
+    intent: 将变更中的 delta specs 和 OPSX delta 同步到主规约与主 OPSX。core 模式下改为调用 openspec sync CLI 工具（而非手动内联 sync）。sync 执行前增加 verify gate 入口校验
     status: active
     type: capability
   - id: cap.cli.archive
@@ -260,7 +260,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.verify.optimize
-    intent: 在一致性检验通过后，对代码进行最优性检验——诊断代码质量、设计模式、效率维度，生成 Search/Replace 块供主 agent 在 checkpoint 保护下应用。checkpoint 生命周期区分中间重试恢复与终局恢复清理；`P1_SPECULATIVE_FENCE` 在 subagent-capable 工具上复用 clean-context reviewer subagent verdict，在 reread 工具上保留 current-agent verification
+    intent: 在一致性检验通过后，对代码进行最优性检验——诊断代码质量、设计模式、效率维度，生成 Search/Replace 块供主 agent 在 checkpoint 保护下应用。Phase 2 通过 CLI 双调用机制强制执行：agent 必须分别调用 --type=optimization 和 --type=verification 完成优化提交和 speculative fence 验证。新增 PENDING_VERIFICATION 中间状态追踪双调用间的状态转换
     status: active
     type: capability
   - id: cap.ai.tool-invocation-references
@@ -272,5 +272,13 @@ capabilities:
     type: capability
   - id: cap.verify.execution-model-selection
     intent: 为 verify / archive full verify 按 execution model 选择模板骨架；支持 clean-context subagent 的工具使用 orchestration-only verify skeleton，不支持的工具继续使用 current-agent-reread skeleton
+    status: active
+    type: capability
+  - id: cap.verify.cli-gate
+    intent: 程序化 verify 门禁 CLI 工具，为 Phase 1/Phase 2/sync/archive 提供入口条件校验、JSON 输入接受、结果写回和下一步指令输出
+    status: active
+    type: capability
+  - id: cap.verify.freshness-engine
+    intent: 确定性 freshness 判定引擎，用 TypeScript 代码实现 tasksFileHash、evidenceFingerprint 计算和 FRESH/STALE/MISSING 判定，替代 AI 文本指令的手动计算
     status: active
     type: capability

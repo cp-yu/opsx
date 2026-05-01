@@ -18,6 +18,7 @@ import { FeedbackCommand } from '../commands/feedback.js';
 import { registerConfigCommand } from '../commands/config.js';
 import { registerSchemaCommand } from '../commands/schema.js';
 import { registerSyncCommand } from '../commands/sync.js';
+import { registerVerifyCommand } from '../commands/verify.js';
 import {
   bootstrapInitCommand,
   bootstrapStatusCommand,
@@ -184,6 +185,7 @@ program
   });
 
 registerSyncCommand(program);
+registerVerifyCommand(program);
 
 program
   .command('list')
@@ -287,7 +289,8 @@ program
   .option('-y, --yes', 'Skip confirmation prompts')
   .option('--skip-specs', 'Skip all archive-time sync writes, including main specs and OPSX updates')
   .option('--no-validate', 'Skip validation (not recommended, requires confirmation)')
-  .action(async (changeName?: string, options?: { yes?: boolean; skipSpecs?: boolean; noValidate?: boolean; validate?: boolean }) => {
+  .option('--no-verify', 'Skip verify and sync gates (not recommended)')
+  .action(async (changeName?: string, options?: { yes?: boolean; skipSpecs?: boolean; noValidate?: boolean; validate?: boolean; verify?: boolean }) => {
     try {
       const archiveCommand = new ArchiveCommand();
       await archiveCommand.execute(changeName, options);

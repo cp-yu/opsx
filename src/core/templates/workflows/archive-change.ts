@@ -53,46 +53,17 @@ When archive guidance discusses embedded sync or artifact write-back, treat \`op
 
 2. **Unified Full Verify Gate**
 
-   Build the verify result path with \`path.join(changeDir, '.verify-result.json')\`.
+   Run the CLI gate:
+   \`\`\`bash
+   openspec verify status "<change-name>" --json
+   \`\`\`
 
 ${VERIFY_FRESHNESS_RULES}
 
-   **If \`.verify-result.json\` does not exist**:
-   - Inform the user: "No verify result found. Executing full verify before archive..."
-   - Execute the full verify contract in Step 2.5
-
-   **If \`.verify-result.json\` exists**:
-   - Read \`result\`, \`timestamp\`, \`issues\`, \`tasksFileHash\`, \`verificationContext\`, and optional \`optimization\`
-   - Treat freshness and archive compatibility as separate checks: a result may be fresh but still unsafe to reuse for archive
-   - Recompute freshness by:
-     - hashing the current \`tasks.md\` contents
-     - recomputing \`verificationContext.evidenceFingerprint\`
-     - checking \`verificationContext.contractVersion === "1.0"\`
-     - checking \`verificationContext.gitHeadCommit\` against the current HEAD when it was recorded
-   - If ANY freshness check fails:
-     - Inform the user: "Verify result is stale. Re-executing full verify before archive..."
-     - Execute the full verify contract in Step 2.5
-   - Otherwise reload the verify result from disk and treat that persisted file as the source of truth
-   - If \`optimization\` is missing:
-     - Treat the file as a legacy verify result
-     - Accept it when freshness checks pass and top-level \`result\` is acceptable
-   - If \`optimization.status === 'ABORTED_UNSAFE'\`:
-     - Inform the user: "Verify result is fresh, but optimization recovery state is unsafe."
-     - Do NOT reuse this verify result for archive, even when top-level \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\`
-     - Instruct the user to finish workspace recovery or re-run full verify before archive
-     - Preserve the active change directory and STOP here
-   - If \`optimization.status\` is \`SKIPPED\`, \`NOT_NEEDED\`, \`IMPROVED\`, or \`DEGRADED\`:
-     - Treat it as archive-compatible metadata
-
-   **After reuse or re-execution**:
-   - If \`result === 'FAIL_NEEDS_REMEDIATION'\`:
-     - HARD-BLOCK archive
-     - Display the CRITICAL issues from the \`issues\` array
-     - Instruct the user to fix remediation items and re-run \`/opsx:apply\` or \`/opsx:verify\`
-     - Preserve the active change directory and STOP here
-   - If \`result === 'PASS'\` or \`result === 'PASS_WITH_WARNINGS'\`:
-     - Inform the user that a fresh and archive-compatible verify result was accepted
-     - Continue to Step 3
+   - If the command exits 0, treat the persisted \`.verify-result.json\` as fresh and archive-compatible, then continue to Step 3
+   - If the command exits non-zero because the result is MISSING or STALE, execute the full verify contract in Step 2.5 and then rerun \`openspec verify status "<change-name>" --json\`
+   - If the command reports \`optimization.status = ABORTED_UNSAFE\` or \`PENDING_VERIFICATION\`, preserve the active change directory and STOP until verify is completed safely
+   - If \`result === 'FAIL_NEEDS_REMEDIATION'\`, HARD-BLOCK archive, display CRITICAL issues from \`issues[]\`, and instruct the user to fix remediation items before rerunning verify
 
 2.5. **Execute Full Verify**
 
@@ -141,10 +112,8 @@ ${buildArchiveFullVerifyContract(executionModel)}
    Check for delta specs at \`openspec/changes/<name>/specs/\` and for \`openspec/changes/<name>/opsx-delta.yaml\`. If neither exists, proceed directly to archive.
 
    **If any delta exists**:
-   - Compare each delta spec with its corresponding main spec at \`openspec/specs/<capability>/spec.md\`
-   - If \`opsx-delta.yaml\` exists, compare it with the three OPSX files (\`project.opsx.yaml\`, \`project.opsx.relations.yaml\`, \`project.opsx.code-map.yaml\`) and determine ADDED / MODIFIED / REMOVED capability changes
-   - In \`core\`, reconcile delta specs and OPSX delta inline as part of archive. Do **not** require a separate \`/opsx:sync\` skill
-   - Abort archive if sync preparation or validation fails, leaving main specs, OPSX files, and the active change directory unchanged
+   - Run \`openspec sync "<change-name>"\` before archive so standalone sync and archive consume the same verify gate and sync contract
+   - Abort archive if \`openspec sync\` fails, leaving main specs, OPSX files, and the active change directory unchanged
    - In \`expanded\`, \`/opsx:sync\` may still exist as a standalone workflow, but archive MUST follow the same sync-state contract
 
 6. **Perform the archive**
@@ -194,7 +163,7 @@ Archive completed after satisfying the unified full verify gate.
 - Do not downgrade the verify gate into a lightweight archive-only check
 - Preserve \`.openspec.yaml\` when moving to archive (it moves with the directory)
 - Show clearly whether verify was reused or re-executed
-- Do not require a separate \`/opsx:sync\` in \`core\`
+- In \`core\`, use \`openspec sync "<change-name>"\` rather than manual inline sync
 - If delta specs or \`opsx-delta.yaml\` exist, always run the shared sync assessment before moving the change directory`;
 }
 

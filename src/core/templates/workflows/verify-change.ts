@@ -78,10 +78,13 @@ ${cleanContextProtocol}
 }
 
 function buildCanonicalPhase1Step(stepNumber: number): string {
-  return `${stepNumber}. **Prepare the Canonical Phase 1 Result**
+  return `${stepNumber}. **Persist the Canonical Phase 1 Result Through CLI**
 
-   - Assemble the canonical Phase 1 payload before any optimization attempt
-   - Record:
+   - Assemble the canonical Phase 1 payload before any optimization attempt, then submit it through:
+     \`\`\`bash
+     openspec verify phase1 "<change-name>" --input '<json>' --json
+     \`\`\`
+   - The CLI records:
      - \`timestamp\`: ISO 8601 completion time
      - \`result\`: \`PASS\` / \`PASS_WITH_WARNINGS\` / \`FAIL_NEEDS_REMEDIATION\`
      - \`issues\`: the full issue list with severity, requirement, task linkage, and recommendations
@@ -93,20 +96,18 @@ function buildCanonicalPhase1Step(stepNumber: number): string {
        - \`evidenceFingerprint\`: SHA-256 of sorted evidence file path + modification time + size tuples
        - \`gitHeadCommit\`: current HEAD commit SHA if available
        - \`gitDiffSummary\`: output of \`git diff --stat\` if useful
-   - Compute \`evidenceFingerprint\` by sorting \`evidenceFiles\`, collecting each file's normalized relative path, mtime, and size, then hashing the concatenated string
-   - Use \`path.join()\`, \`path.resolve()\`, and \`path.normalize()\` for all path handling
-   - Treat this payload as the immutable \`optimization.baseline\``;
+   - Provide \`evidenceFiles\` as relative POSIX paths; the CLI computes \`tasksFileHash\` and \`evidenceFingerprint\` with \`path.join()\`, \`path.resolve()\`, and \`path.normalize()\`
+   - Treat the persisted CLI payload as the immutable \`optimization.baseline\``;
 }
 
 function buildPhase2Step(stepNumber: number): string {
-  return `${stepNumber}. **Run Phase 2 Optimality Check**
+  return `${stepNumber}. **Submit Phase 2 Optimization Through CLI**
 
    - Phase 2 is only eligible when the canonical Phase 1 \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\`
    - Read \`optimization.enabled\` from \`openspec/config.yaml\`; default it to \`true\` when the field is absent
    - Respect a user-provided \`--skip-optimization\` flag if the workflow surface supports flags
    - If the user passed \`--skip-optimization\` or config disables optimization:
-     - Skip Phase 2
-     - Set \`optimization.status\` to \`SKIPPED\`
+     - Call \`openspec verify phase2 "<change-name>" --type=optimization --input '{"status":"SKIPPED"}' --json\`
      - Keep the canonical Phase 1 \`result\` unchanged
    - Otherwise run an explicit checkpoint state machine:
      - \`CREATED\`: after \`git stash push -u -m "verify-phase2-checkpoint"\`
@@ -132,7 +133,16 @@ ${OPTIMIZATION_PROTOCOL_SUBAGENT}
    - Use \`path.join()\` for any checkpoint-adjacent bookkeeping paths; never hardcode path separators
    - Reject blocks that create, delete, rename, or target untracked files
    - Pre-validate all blocks, then apply them atomically
-   - If the subagent returns \`No optimization opportunities found\`, set \`optimization.status\` to \`NOT_NEEDED\` and keep the canonical Phase 1 \`result\``;
+   - If the subagent returns \`No optimization opportunities found\`, call:
+     \`\`\`bash
+     openspec verify phase2 "<change-name>" --type=optimization --input '{"status":"NO_OPTIMIZATION_NEEDED"}' --json
+     \`\`\`
+     The CLI records terminal \`optimization.status = NOT_NEEDED\`
+   - If an optimization is proposed and applied to files, call:
+     \`\`\`bash
+     openspec verify phase2 "<change-name>" --type=optimization --files "path/to/file.ts" --input '{"status":"OPTIMIZATION_PROPOSED","summary":"..."}' --json
+     \`\`\`
+   - The CLI stores \`optimization.status = PENDING_VERIFICATION\`, appends \`optimization.attempts\`, and records \`optimization.affectedFileHashes\``;
 }
 
 function buildReverifyStep(stepNumber: number, speculativeFenceContract: string): string {
@@ -147,13 +157,14 @@ ${speculativeFenceContract}
      - Finalize the optimized files
      - Consume the checkpoint with \`git stash drop <checkpointRef>\` only after the optimized result is accepted
      - Transition the checkpoint state to \`TERMINAL_ACCEPTED\`
-     - Set \`optimization.status\` to \`IMPROVED\`
+     - Call \`openspec verify phase2 "<change-name>" --type=verification --input '{"result":"PASS","issues":[]}' --json\` so the CLI sets \`optimization.status\` to \`IMPROVED\`
    - On speculative \`FAIL_NEEDS_REMEDIATION\`:
      - Discard speculative edits completely
      - Restore the exact canonical Phase 1 baseline from the checkpoint, for example with \`git reset --hard HEAD\`, \`git clean -fd\`, then \`git stash apply <checkpointRef>\`
      - Keep the checkpoint for the next retry and transition back to \`BASELINE_RESTORED_FOR_RETRY\`
      - Increment the behavior retry counter
      - Request a materially different optimization strategy
+     - Call \`openspec verify phase2 "<change-name>" --type=verification --input '{"result":"FAIL_NEEDS_REMEDIATION","issues":[...],"behaviorRetryCounter":N}' --json\` before retrying optimization
    - Retry budgets are fixed:
      - \`maxFormatRetries = 2\`
      - \`maxMatchRetries = 2\`
@@ -198,20 +209,15 @@ function buildPersistStep(
   verifyInvocation: string,
   continueInvocation: string
 ): string {
-  return `${stepNumber}. **Persist Final Verification Result**
+  return `${stepNumber}. **Seal Final Verification Result**
 
-   - Build the verify result path with \`path.join(changeDir, '.verify-result.json')\`
-   - Write the final JSON object after Phase 2 completes or is skipped
-   - Persist:
-     - the canonical Phase 1 payload
-     - the final top-level \`result\`
-     - an \`optimization\` object containing:
-       - \`status\`: \`SKIPPED\` / \`NOT_NEEDED\` / \`IMPROVED\` / \`DEGRADED\` / \`ABORTED_UNSAFE\`
-       - \`score\`: optional optimization assessment summary when the tool can justify one
-       - \`attempts\`: an ordered log of format, match, and behavior retries
-       - \`baseline\`: reference to the canonical Phase 1 payload
-       - \`final\`: the accepted optimized outcome or the safe rollback outcome
-   - Persist the file even when verification fails so \`${verifyInvocation}\`, \`${continueInvocation}\`, and archive can consume the latest diagnostics`;
+   - Do not hand-write the final \`.verify-result.json\`; Phase 1 and Phase 2 CLI calls already persisted it
+   - Run:
+     \`\`\`bash
+     openspec verify seal "<change-name>" --json
+     \`\`\`
+   - The seal command validates the final top-level \`result\`, \`verificationContext\`, terminal \`optimization.status\`, and returns a deterministic seal hash
+   - If verification fails, keep the persisted diagnostics so \`${verifyInvocation}\`, \`${continueInvocation}\`, and archive can consume the latest diagnostics`;
 }
 
 const VERIFY_HEURISTICS_AND_OUTPUT = `

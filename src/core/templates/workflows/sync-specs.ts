@@ -33,6 +33,13 @@ Treat \`openspec/config.yaml\` as the compact source of truth and follow the sha
 
 2. **Find delta specs**
 
+   Before preparing any sync writes, run:
+   \`\`\`bash
+   openspec verify status "<change-name>" --json
+   \`\`\`
+
+   If the verify gate fails, stop and ask the user to run verify, consciously bypass with \`openspec sync "<change-name>" --no-verify\`, or abandon the sync.
+
    Look for delta spec files in \`openspec/changes/<name>/specs/*/spec.md\`.
 
    Each delta spec file contains sections like:
@@ -186,6 +193,13 @@ Treat \`openspec/config.yaml\` as the compact source of truth and follow the sha
    **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
 
 2. **Find delta specs**
+
+   Before preparing any sync writes, run:
+   \`\`\`bash
+   openspec verify status "<change-name>" --json
+   \`\`\`
+
+   If the verify gate fails, stop and ask the user to run verify, consciously bypass with \`openspec sync "<change-name>" --no-verify\`, or abandon the sync.
 
    Look for delta spec files in \`openspec/changes/<name>/specs/*/spec.md\`.
 

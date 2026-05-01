@@ -56,6 +56,11 @@ export interface AppliedChangeSyncSummary {
   opsx: 'no-delta' | 'synced';
 }
 
+export interface PendingChangeSync {
+  specs: number;
+  opsx: boolean;
+}
+
 export async function assessChangeSyncState(
   projectRoot: string,
   changeName: string
@@ -81,6 +86,34 @@ export async function assessChangeSyncState(
     hasOpsxDelta,
     requiresSync: specUpdates.length > 0 || hasOpsxDelta,
   };
+}
+
+export async function getPendingChangeSync(
+  projectRoot: string,
+  state: ChangeSyncState
+): Promise<PendingChangeSync> {
+  let pendingSpecs = 0;
+
+  for (const update of state.specUpdates) {
+    const changeContent = await fs.readFile(update.source, 'utf-8');
+    const originalContent = await readOptionalFile(update.target);
+    if (
+      originalContent !== null &&
+      isDeltaSpecAlreadyApplied(changeContent, originalContent)
+    ) {
+      continue;
+    }
+    pendingSpecs += 1;
+  }
+
+  let pendingOpsx = false;
+  if (state.hasOpsxDelta) {
+    const originalBundle = await readProjectOpsx(projectRoot);
+    const delta = await readOpsxDelta(projectRoot, state.changeName);
+    pendingOpsx = !originalBundle || !delta || applyOpsxDelta(originalBundle, delta).changed;
+  }
+
+  return { specs: pendingSpecs, opsx: pendingOpsx };
 }
 
 export async function prepareChangeSync(
