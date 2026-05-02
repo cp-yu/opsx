@@ -1,0 +1,37 @@
+ADDED:
+  domains:
+    - id: dom.apply
+      type: domain
+      intent: apply 命令作为编译步骤，集成实现、验证、优化的完整生命周期。确保 apply 输出即验证过的制品
+  capabilities:
+    - id: cap.apply.verify-integration
+      type: capability
+      intent: apply 命令内置 Phase 1 一致性验证和 Phase 2 优化循环，由 subagent 执行验证判断和优化提案，主 agent 仅负责编码
+    - id: cap.apply.subagent-orchestration
+      type: capability
+      intent: apply 工作流中严格区分编码角色（主 agent）和判断角色（subagent reviewer/optimizer），保持关注点分离
+  relations:
+    - from: cap.apply.verify-integration
+      to: dom.apply
+      type: contains
+    - from: cap.apply.verify-integration
+      to: cap.verify.cli-gate
+      type: depends_on
+    - from: cap.apply.verify-integration
+      to: cap.verify.optimize
+      type: depends_on
+    - from: cap.apply.verify-integration
+      to: cap.verify.execution-model-selection
+      type: depends_on
+    - from: cap.apply.subagent-orchestration
+      to: dom.apply
+      type: contains
+
+MODIFIED:
+  capabilities:
+    - id: cap.verify.optimize
+      intent: 在一致性检验通过后，对代码进行最优性检验。Phase 2 优化循环由 apply 模板主控，重试预算统一为 config.optimization.optRetries（默认 2），新增 failedDirections 字段避免跨会话重复尝试。格式和匹配问题由 apply 主 agent 直接处理，仅行为回归消耗 optRetries
+    - id: cap.verify.cli-gate
+      intent: 程序化 verify 门禁 CLI 工具。Phase 2 双调用模型保留，但重试上限从硬编码 3 改为读取 config.optimization.optRetries，新增 failedDirections 记录支持
+    - id: cap.ai.workflow-templates
+      intent: 面向 Agent 的工作流模板。apply 模板重构为 Phase 0-3 四阶段编译步骤（实现→验证→优化→Seal），verify 模板保留为 expanded 模式独立 workflow surface
