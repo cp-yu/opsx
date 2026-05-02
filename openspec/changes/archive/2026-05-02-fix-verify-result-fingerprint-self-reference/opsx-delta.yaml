@@ -1,0 +1,7 @@
+schema_version: 1
+
+MODIFIED:
+  capabilities:
+    - id: cap.verify.freshness-engine
+      type: capability
+      intent: 确定性 freshness 判定引擎，用 TypeScript 代码实现 tasksFileHash、evidenceFingerprint 计算和 FRESH/STALE/MISSING 判定。evidenceFingerprint 计算中排除 .verify-result.json 文件以消除自指循环

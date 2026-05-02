@@ -43,6 +43,10 @@ export async function computeEvidenceFingerprint(
         skippedFiles.push(toPosixRelative(root, filePath));
         continue;
       }
+      if (path.basename(filePath) === '.verify-result.json') {
+        skippedFiles.push(toPosixRelative(root, filePath));
+        continue;
+      }
       entries.push({
         path: toPosixRelative(root, filePath),
         mtimeMs: stat.mtimeMs,

@@ -42,6 +42,31 @@ describe('verify freshness engine', () => {
     expect(fingerprint.skippedFiles).toEqual(['missing.ts']);
   });
 
+  it('excludes .verify-result.json from evidence fingerprint entries', async () => {
+    await fs.mkdir(path.join(tempDir, 'src'), { recursive: true });
+    await fs.writeFile(path.join(tempDir, 'src', 'a.ts'), 'a', 'utf-8');
+    await fs.writeFile(path.join(tempDir, '.verify-result.json'), JSON.stringify({ result: 'PASS' }), 'utf-8');
+
+    const fingerprint = await computeEvidenceFingerprint(
+      ['src/a.ts', '.verify-result.json'],
+      tempDir
+    );
+
+    expect(fingerprint.entries).toHaveLength(1);
+    expect(fingerprint.entries[0]).toEqual(expect.objectContaining({ path: 'src/a.ts' }));
+    expect(fingerprint.skippedFiles).toContain('.verify-result.json');
+  });
+
+  it('skips missing .verify-result.json (ENOENT) without error', async () => {
+    const fingerprint = await computeEvidenceFingerprint(
+      ['.verify-result.json'],
+      tempDir
+    );
+
+    expect(fingerprint.entries).toHaveLength(0);
+    expect(fingerprint.skippedFiles).toContain('.verify-result.json');
+  });
+
   it('classifies fresh, stale, and missing verify results', async () => {
     const changeDir = path.join(tempDir, 'openspec', 'changes', 'c1');
     await fs.mkdir(path.join(changeDir, 'src'), { recursive: true });

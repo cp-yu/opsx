@@ -278,6 +278,5 @@ capabilities:
     status: active
     type: capability
   - id: cap.verify.freshness-engine
-    intent: 确定性 freshness 判定引擎，用 TypeScript 代码实现 tasksFileHash、evidenceFingerprint 计算和 FRESH/STALE/MISSING 判定，替代 AI 文本指令的手动计算
-    status: active
+    intent: 确定性 freshness 判定引擎，用 TypeScript 代码实现 tasksFileHash、evidenceFingerprint 计算和 FRESH/STALE/MISSING 判定。evidenceFingerprint 计算中排除 .verify-result.json 文件以消除自指循环
     type: capability

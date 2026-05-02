@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-02T14:09:54.966Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "e9bf9d3f2b5a44cc57c61e60873bf1b5122255b9820b1671082f6370af7da93e",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "evidenceFiles": [
+      "src/core/verify/freshness.ts",
+      "test/core/verify/freshness.test.ts",
+      "openspec/changes/fix-verify-result-fingerprint-self-reference/proposal.md",
+      "openspec/changes/fix-verify-result-fingerprint-self-reference/design.md",
+      "openspec/changes/fix-verify-result-fingerprint-self-reference/specs/verify-freshness-engine/spec.md",
+      "openspec/changes/fix-verify-result-fingerprint-self-reference/tasks.md"
+    ],
+    "evidenceFingerprint": "a3aa46d0ff6fd503b70fc0a9ae8fe7ab16d77567385312c9553aa35170f08171",
+    "gitHeadCommit": "96f41700fc6ed015e7256db1fa73fcf6f23650bc"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": []
+  }
+}
