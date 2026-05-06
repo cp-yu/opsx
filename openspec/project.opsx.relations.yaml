@@ -270,3 +270,27 @@ relations:
   - from: cap.change.specs-sync
     type: depends_on
     to: cap.verify.cli-gate
+  - from: cap.apply.verify-integration
+    type: contains
+    to: dom.apply
+  - from: cap.apply.verify-integration
+    type: depends_on
+    to: cap.verify.cli-gate
+  - from: cap.apply.verify-integration
+    type: depends_on
+    to: cap.verify.optimize
+  - from: cap.apply.verify-integration
+    type: depends_on
+    to: cap.verify.execution-model-selection
+  - from: cap.apply.subagent-orchestration
+    type: contains
+    to: dom.apply
+  - from: cap.ai.agent-prompt-guidance
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.agent-prompt-guidance
+    type: depends_on
+    to: cap.verify.cli-gate
+  - from: cap.ai.agent-prompt-guidance
+    type: depends_on
+    to: cap.ai.workflow-templates

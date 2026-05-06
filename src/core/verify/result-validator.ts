@@ -105,6 +105,13 @@ export function validateVerifyResult(result: unknown): ValidationResult<VerifyRe
         errors.push('optimization.attempts must be an array');
       }
       if (
+        optimization.failedDirections !== undefined &&
+        (!Array.isArray(optimization.failedDirections) ||
+          !optimization.failedDirections.every((item) => typeof item === 'string'))
+      ) {
+        errors.push('optimization.failedDirections must be an array of strings');
+      }
+      if (
         optimization.affectedFileHashes !== undefined &&
         (!isRecord(optimization.affectedFileHashes) ||
           !Object.values(optimization.affectedFileHashes).every(

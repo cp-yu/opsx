@@ -41,9 +41,13 @@ export function serializeConfig(config: Partial<ProjectConfig>): string {
   lines.push('# Example:');
   lines.push('#   optimization:');
   lines.push('#     enabled: true');
+  lines.push('#     optRetries: 2');
   if (config.optimization) {
     lines.push('optimization:');
     lines.push(`  enabled: ${config.optimization.enabled !== false}`);
+    if (config.optimization.optRetries !== undefined) {
+      lines.push(`  optRetries: ${config.optimization.optRetries}`);
+    }
   }
   lines.push('');
 

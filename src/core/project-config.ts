@@ -41,6 +41,7 @@ export const ProjectConfigSchema = z.object({
   optimization: z
     .object({
       enabled: z.boolean().optional().default(true),
+      optRetries: z.number().int().min(0).max(10).optional().default(2),
     })
     .optional()
     .describe('Project-level Phase 2 optimization policy for verify workflows'),
@@ -144,13 +145,14 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
     if (raw.optimization !== undefined) {
       const optimizationField = z.object({
         enabled: z.boolean().optional().default(true),
+        optRetries: z.number().int().min(0).max(10).optional().default(2),
       });
       const optimizationResult = optimizationField.safeParse(raw.optimization);
 
       if (optimizationResult.success) {
         config.optimization = optimizationResult.data;
       } else {
-        console.warn(`Invalid 'optimization' field in config (must be an object with boolean 'enabled')`);
+        console.warn(`Invalid 'optimization' field in config (must be an object with boolean 'enabled' and optional integer 'optRetries')`);
       }
     }
 

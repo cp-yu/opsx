@@ -13,9 +13,10 @@ export const GlobalConfigSchema = z
     optimization: z
       .object({
         enabled: z.boolean().optional().default(true),
+        optRetries: z.number().int().min(0).max(10).optional().default(2),
       })
       .optional()
-      .default({ enabled: true }),
+      .default({ enabled: true, optRetries: 2 }),
     profile: z
       .enum(['core', 'expanded', 'custom'])
       .optional()
@@ -39,6 +40,7 @@ export const DEFAULT_CONFIG: GlobalConfigType = {
   featureFlags: {},
   optimization: {
     enabled: true,
+    optRetries: 2,
   },
   profile: 'core',
   delivery: 'both',
@@ -73,12 +75,12 @@ export function validateConfigKeyPath(path: string): { valid: boolean; reason?: 
     if (rawKeys.length === 1) {
       return { valid: true };
     }
-    if (rawKeys.length === 2 && rawKeys[1] === 'enabled') {
+    if (rawKeys.length === 2 && (rawKeys[1] === 'enabled' || rawKeys[1] === 'optRetries')) {
       return { valid: true };
     }
     return {
       valid: false,
-      reason: 'optimization only supports the nested key "enabled"',
+      reason: 'optimization only supports the nested keys "enabled" and "optRetries"',
     };
   }
 

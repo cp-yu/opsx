@@ -65,10 +65,6 @@
 - **AND** SHALL 输出 "Phase 2: N次优化尝试已安全回滚。可进入 sync/archive"
 - **AND** 以 exit 0 退出
 
-### Requirement: Phase 2 调用顺序错误
-
-系统 SHALL 拒绝不合法的 Phase 2 调用顺序。当 `--type=verification` 调用到达时，若 `optimization.status` 不是 `PENDING_VERIFICATION`，则 SHALL 拒绝并指示正确的调用顺序。
-
 #### Scenario: Phase 2 调用顺序错误
 
 - **WHEN** agent 执行 `openspec verify phase2 <change-name> --type=verification`

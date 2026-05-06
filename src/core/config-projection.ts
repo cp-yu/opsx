@@ -6,6 +6,7 @@ export interface NormalizedProjectConfig {
   context?: string;
   optimization?: {
     enabled: boolean;
+    optRetries: number;
   };
   rules: Record<string, string[]>;
 }
@@ -103,6 +104,7 @@ export function normalizeProjectConfig(config: ProjectConfig | null): Normalized
     optimization: config.optimization
       ? {
           enabled: config.optimization.enabled !== false,
+          optRetries: config.optimization.optRetries ?? 2,
         }
       : undefined,
     rules,

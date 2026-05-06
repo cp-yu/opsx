@@ -92,6 +92,7 @@ optimization:
           schema: 'spec-driven',
           optimization: {
             enabled: false,
+            optRetries: 2,
           },
         });
       });
@@ -615,6 +616,7 @@ rules:
         context: '  Team context  ',
         optimization: {
           enabled: false,
+          optRetries: 2,
         },
         rules: {
           proposal: ['  Rule 1  ', ' ', 'Rule 2'],
@@ -628,6 +630,7 @@ rules:
         context: 'Team context',
         optimization: {
           enabled: false,
+          optRetries: 2,
         },
         rules: {
           proposal: ['Rule 1', 'Rule 2'],

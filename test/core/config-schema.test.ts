@@ -230,7 +230,7 @@ describe('config-schema', () => {
     });
 
     it('should accept valid optimization config', () => {
-      const result = validateConfig({ optimization: { enabled: false } });
+      const result = validateConfig({ optimization: { enabled: false, optRetries: 3 } });
       expect(result.success).toBe(true);
     });
 
@@ -339,7 +339,7 @@ describe('config-schema', () => {
 
     it('should provide default optimization config', () => {
       const result = GlobalConfigSchema.parse({});
-      expect(result.optimization).toEqual({ enabled: true });
+      expect(result.optimization).toEqual({ enabled: true, optRetries: 2 });
     });
   });
 
@@ -349,7 +349,7 @@ describe('config-schema', () => {
     });
 
     it('should enable optimization by default', () => {
-      expect(DEFAULT_CONFIG.optimization).toEqual({ enabled: true });
+      expect(DEFAULT_CONFIG.optimization).toEqual({ enabled: true, optRetries: 2 });
     });
   });
 
@@ -357,6 +357,7 @@ describe('config-schema', () => {
     it('allows optimization root key and enabled subkey', () => {
       expect(validateConfigKeyPath('optimization').valid).toBe(true);
       expect(validateConfigKeyPath('optimization.enabled').valid).toBe(true);
+      expect(validateConfigKeyPath('optimization.optRetries').valid).toBe(true);
     });
 
     it('rejects unknown nested optimization keys', () => {

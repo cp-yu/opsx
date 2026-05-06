@@ -88,6 +88,7 @@ export interface VerifyOptimization {
   score?: string;
   attempts: OptimizationAttempt[];
   affectedFileHashes?: Record<string, string>;
+  failedDirections?: string[];
   baseline?: unknown;
   final?: unknown;
 }

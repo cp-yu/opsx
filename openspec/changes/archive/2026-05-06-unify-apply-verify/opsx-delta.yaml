@@ -10,6 +10,9 @@ ADDED:
     - id: cap.apply.subagent-orchestration
       type: capability
       intent: apply 工作流中严格区分编码角色（主 agent）和判断角色（subagent reviewer/optimizer），保持关注点分离
+    - id: cap.ai.agent-prompt-guidance
+      type: capability
+      intent: 面向 Agent 的 verify gate 提示词指引系统。在 opsx-fragments.ts 中提供共享的 ASCII 状态机流程图、JSON schema 速查表、CLI 错误恢复决策树和简单变更快速路径指引，供 archive/verify/apply 三个 skill 模板复用，替代各自内联的 CLI 调用格式
   relations:
     - from: cap.apply.verify-integration
       to: dom.apply
@@ -26,12 +29,24 @@ ADDED:
     - from: cap.apply.subagent-orchestration
       to: dom.apply
       type: contains
+    - from: cap.ai.agent-prompt-guidance
+      to: dom.ai-integration
+      type: contains
+    - from: cap.ai.agent-prompt-guidance
+      to: cap.verify.cli-gate
+      type: depends_on
+    - from: cap.ai.agent-prompt-guidance
+      to: cap.ai.workflow-templates
+      type: depends_on
 
 MODIFIED:
   capabilities:
     - id: cap.verify.optimize
-      intent: 在一致性检验通过后，对代码进行最优性检验。Phase 2 优化循环由 apply 模板主控，重试预算统一为 config.optimization.optRetries（默认 2），新增 failedDirections 字段避免跨会话重复尝试。格式和匹配问题由 apply 主 agent 直接处理，仅行为回归消耗 optRetries
+      type: capability
+      intent: 在一致性检验通过后，对代码进行最优性检验。Phase 2 优化循环由 apply 模板主控，每次提案+补丁+验证循环（无论成功或失败）消耗一次 config.optimization.optRetries（默认 2）配额，达到上限后强制终止。新增 failedDirections 字段避免跨会话重复尝试。格式和匹配问题由 apply 主 agent 直接处理
     - id: cap.verify.cli-gate
+      type: capability
       intent: 程序化 verify 门禁 CLI 工具。Phase 2 双调用模型保留，但重试上限从硬编码 3 改为读取 config.optimization.optRetries，新增 failedDirections 记录支持
     - id: cap.ai.workflow-templates
+      type: capability
       intent: 面向 Agent 的工作流模板。apply 模板重构为 Phase 0-3 四阶段编译步骤（实现→验证→优化→Seal），verify 模板保留为 expanded 模式独立 workflow surface

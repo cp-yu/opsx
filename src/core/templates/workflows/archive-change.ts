@@ -5,7 +5,11 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
-import { VERIFY_FRESHNESS_RULES } from '../fragments/opsx-fragments.js';
+import {
+  VERIFY_CLI_JSON_SCHEMA_REFERENCE,
+  VERIFY_FRESHNESS_RULES,
+  VERIFY_STATE_MACHINE_DIAGRAM,
+} from '../fragments/opsx-fragments.js';
 import {
   REREAD_VERIFY_EXECUTION_MODEL,
   SUBAGENT_VERIFY_EXECUTION_MODEL,
@@ -60,10 +64,22 @@ When archive guidance discusses embedded sync or artifact write-back, treat \`op
 
 ${VERIFY_FRESHNESS_RULES}
 
+${VERIFY_STATE_MACHINE_DIAGRAM}
+
+${VERIFY_CLI_JSON_SCHEMA_REFERENCE}
+
    - If the command exits 0, treat the persisted \`.verify-result.json\` as fresh and archive-compatible, then continue to Step 3
    - If the command exits non-zero because the result is MISSING or STALE, execute the full verify contract in Step 2.5 and then rerun \`openspec verify status "<change-name>" --json\`
-   - If the command reports \`optimization.status = ABORTED_UNSAFE\` or \`PENDING_VERIFICATION\`, preserve the active change directory and STOP until verify is completed safely
    - If \`result === 'FAIL_NEEDS_REMEDIATION'\`, HARD-BLOCK archive, display CRITICAL issues from \`issues[]\`, and instruct the user to fix remediation items before rerunning verify
+   - **If \`optimization.status\` is \`PENDING_VERIFICATION\`** — do NOT stop. Follow the recovery table below to resolve the incomplete state:
+
+     | 子状态 | 恢复路径 |
+     |--------|---------|
+     | \`PENDING_VERIFICATION\` 且 **无** \`affectedFileHashes\` (或为空) | Phase 1 刚完成，尚未进入 Phase 2。Agent 应判断变更复杂度：若为简单变更（纯删除/重命名/参数移除），直接调用 \`openspec verify phase2 "<name>" --type=optimization --input '{"status":"NO_OPTIMIZATION_NEEDED"}' --json\`。否则执行 Phase 2 优化分析后调用同命令。完成后 \`optimization.status\` 变为 \`NOT_NEEDED\`，archive 门禁通过 |
+     | \`PENDING_VERIFICATION\` 且 **有** \`affectedFileHashes\` | 优化提案已生成，等待验证确认。先执行 verification：\`openspec verify phase2 "<name>" --type=verification --input '{"result":"PASS","issues":[]}' --json\`。完成后 \`optimization.status\` 变为 \`IMPROVED\` 或 \`DEGRADED\`，archive 门禁通过 |
+
+     After resolving \`PENDING_VERIFICATION\`, re-run \`openspec verify status "<change-name>" --json\` to confirm the gate passes.
+   - **If \`optimization.status\` is \`ABORTED_UNSAFE\`** — HARD STOP. 工作区状态不安全，需人工恢复。不提供自动恢复路径
 
 2.5. **Execute Full Verify**
 

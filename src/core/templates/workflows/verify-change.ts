@@ -12,6 +12,10 @@ import {
   GIT_EVIDENCE_PROTOCOL,
   OPTIMIZATION_PROTOCOL_SUBAGENT,
   OPSX_VERIFY_ALIGNMENT,
+  VERIFY_CLI_JSON_SCHEMA_REFERENCE,
+  VERIFY_ERROR_RECOVERY_GUIDE,
+  VERIFY_SIMPLE_CHANGE_FAST_PATH,
+  VERIFY_STATE_MACHINE_DIAGRAM,
   VERIFY_REVIEWER_SUBAGENT_CONTRACT,
   VERIFY_WRITEBACK_RULES,
 } from '../fragments/opsx-fragments.js';
@@ -96,6 +100,7 @@ function buildCanonicalPhase1Step(stepNumber: number): string {
        - \`evidenceFingerprint\`: SHA-256 of sorted evidence file path + modification time + size tuples
        - \`gitHeadCommit\`: current HEAD commit SHA if available
        - \`gitDiffSummary\`: output of \`git diff --stat\` if useful
+${VERIFY_CLI_JSON_SCHEMA_REFERENCE}
    - Provide \`evidenceFiles\` as relative POSIX paths; the CLI computes \`tasksFileHash\` and \`evidenceFingerprint\` with \`path.join()\`, \`path.resolve()\`, and \`path.normalize()\`
    - Treat the persisted CLI payload as the immutable \`optimization.baseline\``;
 }
@@ -105,10 +110,13 @@ function buildPhase2Step(stepNumber: number): string {
 
    - Phase 2 is only eligible when the canonical Phase 1 \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\`
    - Read \`optimization.enabled\` from \`openspec/config.yaml\`; default it to \`true\` when the field is absent
+   - Read \`optimization.optRetries\` from \`openspec/config.yaml\`; default it to \`2\` when the field is absent
    - Respect a user-provided \`--skip-optimization\` flag if the workflow surface supports flags
    - If the user passed \`--skip-optimization\` or config disables optimization:
      - Call \`openspec verify phase2 "<change-name>" --type=optimization --input '{"status":"SKIPPED"}' --json\`
      - Keep the canonical Phase 1 \`result\` unchanged
+   - For pure deletions, renames, or parameter removals with no meaningful optimization room, use the simple-change fast path and skip the optimization subagent
+${VERIFY_SIMPLE_CHANGE_FAST_PATH}
    - Otherwise run an explicit checkpoint state machine:
      - \`CREATED\`: after \`git stash push -u -m "verify-phase2-checkpoint"\`
      - \`BASELINE_RESTORED_FOR_RETRY\`: after \`git stash apply <checkpointRef>\` restores the canonical Phase 1 baseline while preserving the checkpoint for retries
@@ -124,6 +132,7 @@ function buildPhase2Step(stepNumber: number): string {
    - Treat \`git stash apply <checkpointRef>\` as the retry-only restore path
    - Treat \`git stash pop <checkpointRef>\` as the preferred terminal restore path once no further retries are allowed
    - Any branch that still outputs manual recovery instructions MUST NOT run \`git stash drop <checkpointRef>\` first
+${VERIFY_ERROR_RECOVERY_GUIDE}
 
 ${OPTIMIZATION_PROTOCOL_SUBAGENT}
 
@@ -142,7 +151,9 @@ ${OPTIMIZATION_PROTOCOL_SUBAGENT}
      \`\`\`bash
      openspec verify phase2 "<change-name>" --type=optimization --files "path/to/file.ts" --input '{"status":"OPTIMIZATION_PROPOSED","summary":"..."}' --json
      \`\`\`
-   - The CLI stores \`optimization.status = PENDING_VERIFICATION\`, appends \`optimization.attempts\`, and records \`optimization.affectedFileHashes\``;
+   - The CLI stores \`optimization.status = PENDING_VERIFICATION\`, appends \`optimization.attempts\`, and records \`optimization.affectedFileHashes\`
+${VERIFY_CLI_JSON_SCHEMA_REFERENCE}
+`;
 }
 
 function buildReverifyStep(stepNumber: number, speculativeFenceContract: string): string {
@@ -165,15 +176,12 @@ ${speculativeFenceContract}
      - Increment the behavior retry counter
      - Request a materially different optimization strategy
      - Call \`openspec verify phase2 "<change-name>" --type=verification --input '{"result":"FAIL_NEEDS_REMEDIATION","issues":[...],"behaviorRetryCounter":N}' --json\` before retrying optimization
-   - Retry budgets are fixed:
-     - \`maxFormatRetries = 2\`
-     - \`maxMatchRetries = 2\`
-     - \`maxBehaviorFailures = 3\`
-   - Count format errors separately from behavioral regressions:
-     - malformed Search/Replace blocks consume format retries
-     - zero-match or multi-match SEARCH anchors consume match retries
-     - speculative re-verify failures consume behavior retries
-   - If the format or match budget is exhausted:
+   - \`config.optimization.optRetries\` is the only retry budget for complete proposal + patch + re-verify cycles
+   - Format and match problems stay in the main agent:
+     - malformed Search/Replace blocks must be fixed before any file write
+     - zero-match or multi-match SEARCH anchors must be repaired before speculative verification
+     - these local repairs do not consume \`optRetries\`
+   - If a format or match defect cannot be repaired safely:
      - Restore the exact canonical Phase 1 baseline from the checkpoint if any speculative edits were applied
      - Finish the workflow with a terminal restore: prefer \`git stash pop <checkpointRef>\`, or use an equivalent restore-success-then-drop sequence
      - If terminal restore succeeds:
@@ -184,11 +192,11 @@ ${speculativeFenceContract}
        - Preserve the stash entry for manual recovery
        - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
        - Output cross-platform recovery instructions using \`git reset --hard HEAD\`, \`git clean -fd\`, and \`git stash apply <checkpointRef>\`
-   - If behavior failures reach 3:
+   - If behavior failures reach \`config.optimization.optRetries\`:
      - Discard speculative edits and restore the exact canonical Phase 1 baseline from the checkpoint
      - Consume the checkpoint only after baseline restoration succeeds, preferably with \`git stash pop <checkpointRef>\`
      - Transition the checkpoint state to \`TERMINAL_RESTORED\`
-     - Report: \`Phase 1 PASS. 3 optimization attempts safely reverted.\`
+     - Report: \`Phase 1 PASS. N optimization attempts safely reverted.\`
      - Set \`optimization.status\` to \`DEGRADED\`
      - Set top-level \`result\` to \`PASS_WITH_WARNINGS\`
    - If the optimization subagent times out or internal safety is uncertain:
@@ -201,7 +209,9 @@ ${speculativeFenceContract}
      - If recovery fails:
        - Preserve the stash entry for manual recovery
        - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
-       - Keep the canonical Phase 1 \`result\``;
+       - Keep the canonical Phase 1 \`result\`
+${VERIFY_STATE_MACHINE_DIAGRAM}
+`;
 }
 
 function buildPersistStep(

@@ -63,115 +63,68 @@
 
 ### Requirement: Checkpoint 与回滚
 
-系统 SHALL 在应用 Search/Replace 块之前创建 checkpoint，并使用区分“可继续重试”和“终局退出”的生命周期规则管理该 checkpoint。
+系统 SHALL 在应用 Search/Replace 块之前创建 checkpoint，并使用区分“可继续重试”和“终局退出”的生命周期规则管理该 checkpoint。系统 SHALL 在优化重试次数耗尽后，丢弃当前轮的 speculative edits 并恢复到栈顶 checkpoint（最近一次成功状态），进入 Degraded Pass 终局状态。系统 SHALL NOT 在恢复失败时消费任何 checkpoint。
 
-#### Scenario: git stash 创建 checkpoint
+#### Scenario: 重试耗尽后安全回滚
 
-- **WHEN** 主 agent 准备应用 Search/Replace 块
-- **THEN** 系统 SHALL 执行 `git stash push -u -m "verify-phase2-checkpoint"`
-- **AND** SHALL 记录新建 stash 的显式引用与解析后的 hash 用于后续校验
-- **AND** SHALL 立即使用 `git stash apply <checkpointRef>` 将 Phase 1 canonical baseline 恢复回工作区
-- **AND** SHALL 在整个优化循环期间保留该 stash 作为唯一 checkpoint，直到进入终局结果
-
-#### Scenario: Apply 成功且 re-verify 通过
-
-- **WHEN** Search/Replace 块应用成功
-- **AND** P1_SPECULATIVE_FENCE re-verify 返回 PASS 或 `PASS_WITH_WARNINGS`
-- **THEN** 系统 SHALL 接受优化后的工作区状态作为最终结果
-- **AND** SHALL 仅在确认不再需要恢复 baseline 后执行 `git stash drop <checkpointRef>`
-- **AND** `optimization.status` 记录为 `IMPROVED`
-
-#### Scenario: Apply 成功但 re-verify 失败
-
-- **WHEN** Search/Replace 块应用成功
-- **AND** P1_SPECULATIVE_FENCE re-verify 返回 FAIL
-- **THEN** 系统 SHALL 丢弃 speculative edits
-- **AND** SHALL 使用 `git reset --hard HEAD`、`git clean -fd`、`git stash apply <checkpointRef>` 恢复完整的 Phase 1 canonical baseline
-- **AND** SHALL 保留该 checkpoint 以供后续重试继续使用
-- **AND** `behaviorRetryCounter` 递增
-- **AND** 如果 `behaviorRetryCounter >= 3`：进入 Degraded Pass
-
-#### Scenario: Degraded Pass 终局恢复
-
-- **WHEN** `behaviorRetryCounter >= 3`
-- **THEN** 系统 SHALL 先丢弃 speculative edits 并恢复 Phase 1 canonical baseline
-- **AND** SHALL 在终局恢复路径中消费 checkpoint：优先执行 `git stash pop <checkpointRef>`，或执行与之等价的“恢复成功后再 drop”序列
-- **AND** SHALL 仅在 baseline 已确认恢复完成后删除 stash
-- **AND** SHALL 输出 "Verify: Phase 1 PASS. 3 optimization attempts safely reverted."
-- **AND** 输出简短总结：尝试了什么、为什么失败
-- **AND** `.verify-result.json` 中 `result` 为 `PASS_WITH_WARNINGS`，`optimization.status` 为 `DEGRADED`
-
-#### Scenario: 终局恢复失败
-
-- **WHEN** 任一需要恢复 Phase 1 canonical baseline 的终局路径中，`git stash apply <checkpointRef>` 或 `git stash pop <checkpointRef>` 失败
-- **THEN** 系统 SHALL 保留原始 stash entry，不得提前执行 `git stash drop`
-- **AND** SHALL 将 `optimization.status` 记录为 `ABORTED_UNSAFE`
-- **AND** SHALL 输出需要用户执行的恢复步骤
-- **AND** SHALL 明确提示当前 `.verify-result.json` 的 canonical Phase 1 judgment 仍可用于诊断，但当前工作区不应被视为已安全恢复
+- **WHEN** `behaviorRetryCounter >= config.optimization.optRetries`
+- **THEN** 系统 SHALL 先丢弃当前轮 speculative edits：`git reset --hard HEAD` + `git clean -fd`
+- **AND** SHALL 恢复到栈顶 checkpoint：`git stash apply stash@{0}`（最近一次成功状态，可能是 Phase 1 baseline 或某一轮优化后的状态）
+- **AND** SHALL 在确认恢复成功后，按栈顺序 pop 所有 `apply-opt-checkpoint-*` 条目，消费全部 checkpoint
+- **AND** SHALL 仅在 baseline 已确认恢复完成后才消费 stash 条目
+- **AND** SHALL 输出 "Verify: Phase 1 PASS. N optimization attempts safely reverted."
+- **AND** SHALL 输出简短总结：尝试了什么、为什么失败
 
 ### Requirement: 重试预算控制
 
-系统 SHALL 使用三类独立预算控制重试次数，防止无限循环。
-
-#### Scenario: 格式错误重试
-
-- **WHEN** Search/Replace 块因格式/语法错误无法应用
-- **THEN** `formatRetryCounter` 递增
-- **AND** 如果 `formatRetryCounter < 2`：subagent 重新生成 Search/Replace 块（修正格式）
-- **AND** 如果 `formatRetryCounter >= 2`：停止 Phase 2 并输出建议
-
-#### Scenario: 匹配错误重试
-
-- **WHEN** Search/Replace 块匹配不唯一或找不到锚点
-- **THEN** `matchRetryCounter` 递增
-- **AND** 如果 `matchRetryCounter < 2`：subagent 重新生成 Search/Replace 块（增加上下文锚点）
-- **AND** 如果 `matchRetryCounter >= 2`：停止 Phase 2 并输出建议
+系统 SHALL 使用单一的 `config.optimization.optRetries`（默认 2）控制 Phase 2 优化循环次数，不再使用独立的三类预算（formatRetries、matchRetries、behaviorRetries）。格式和匹配问题由 apply 主 agent 在补丁应用阶段直接处理。每次完整的提案+补丁+验证循环（无论成功或失败）消耗一次 optRetries 配额，达到上限后强制终止并进入 Phase 3。subagent 返回 NO_OPTIMIZATION_NEEDED 不构成一次循环，不消耗配额。
 
 #### Scenario: 行为错误重试
 
 - **WHEN** 优化导致 P1_SPECULATIVE_FENCE re-verify 失败
 - **THEN** `behaviorRetryCounter` 递增
-- **AND** 如果 `behaviorRetryCounter < 3`：subagent 生成全新策略的 Search/Replace 块
-- **AND** 如果 `behaviorRetryCounter >= 3`：进入 Degraded Pass
+- **AND** 循环计数器递增（消耗一次 optRetries 配额）
+- **AND** 如果循环计数器 < `config.optimization.optRetries`：生成全新策略的 Search/Replace 块
+- **AND** 如果循环计数器 >= `config.optimization.optRetries`：进入 Degraded Pass
+
+#### Scenario: 成功优化消耗配额
+
+- **WHEN** 优化提案应用后 re-verify 返回 PASS
+- **THEN** 循环计数器递增（消耗一次 optRetries 配额）
+- **AND** 如果循环计数器 < `config.optimization.optRetries`：继续循环（可能发现新的优化机会）
+- **AND** 如果循环计数器 >= `config.optimization.optRetries`：强制终止，以 IMPROVED 状态进入 Phase 3
+
+#### Scenario: 格式和匹配问题不消耗重试预算
+
+- **WHEN** Search/Replace 块因格式或语法问题无法应用
+- **OR** Search/Replace 块匹配不唯一或找不到锚点
+- **THEN** 主 agent SHALL 直接修复格式或匹配问题
+- **AND** SHALL NOT 消耗 optRetries 预算
+- **AND** SHALL NOT 要求 subagent optimizer 重新生成 Search/Replace 块
 
 ### Requirement: 优化结果持久化
 
-系统 SHALL 将 Phase 2 结果写入 `.verify-result.json` 的 `optimization` 对象，并使终局状态与 checkpoint 生命周期一致。Phase 2 通过 CLI 双调用机制强制执行。
+系统 SHALL 将 Phase 2 结果写入 `.verify-result.json` 的 `optimization` 对象，并使终局状态与 checkpoint 生命周期一致。Phase 2 通过 CLI 双调用机制强制执行。系统 SHALL 在 `optimization` 对象中按需写入 `failedDirections: string[]`，记录已尝试但导致验证失败的优化策略。optRetries 消耗后，系统 SHALL NOT 在 `.verify-result.json` 中保留已超过 optRetries 的未完成重试状态。
 
-#### Scenario: optimization 字段写入
+#### Scenario: 优化失败时记录方向
 
-- **WHEN** Phase 2 完成（无论成功或失败）
-- **THEN** 系统 SHALL 在 `.verify-result.json` 写入 `optimization` 对象
-- **AND** `optimization` 包含：`status`、`score`、`attempts` 数组、`baseline` 引用、`final` 结果
-- **AND** 顶层 `result` 保持 `PASS` / `PASS_WITH_WARNINGS` / `FAIL_NEEDS_REMEDIATION` 不变
+- **WHEN** Phase 2 优化提案应用后 re-verify 返回 FAIL_NEEDS_REMEDIATION
+- **THEN** 系统 SHALL 将优化策略的自然语言摘要追加到 `optimization.failedDirections[]`
+- **AND** 摘要格式为自由文本，描述尝试的优化方向（如 "extract shared validation logic from auth.ts and user.ts"）
 
-#### Scenario: optimization.status 取值
+#### Scenario: 新优化提案避免重复方向
 
-- **WHEN** Phase 2 正常完成
-- **THEN** `optimization.status` SHALL 为以下值之一：`SKIPPED`、`NOT_NEEDED`、`IMPROVED`、`DEGRADED`、`ABORTED_UNSAFE`、`PENDING_VERIFICATION`
-- **AND** `PENDING_VERIFICATION` SHALL 表示优化已提交但 speculative fence 尚未执行，此状态不得用于 archive 门禁
+- **WHEN** subagent optimizer 在 Phase 2 后续循环或新会话中启动
+- **THEN** SHALL 读取 `optimization.failedDirections[]`
+- **AND** SHALL 避免提出与已记录方向相同或相似的优化策略
+- **AND** 若所有可想到的策略均已失败，SHALL 返回 NO_OPTIMIZATION_NEEDED
 
-#### Scenario: Phase 2 双调用强制
+#### Scenario: Degraded Pass 结果持久化
 
-- **WHEN** agent 完成 Phase 1 且结果为 PASS/PASS_WITH_WARNINGS
-- **AND** `optimization.enabled` 不为 false
-- **THEN** agent SHALL 调用 `openspec verify phase2 --type=optimization` 提交优化结果
-- **AND** 若返回状态为 `PENDING_VERIFICATION`，agent SHALL 继续调用 `openspec verify phase2 --type=verification` 提交 speculative fence 结果
-- **AND** agent SHALL NOT 在 `PENDING_VERIFICATION` 状态下直接进入 sync/archive
-- **AND** CLI 工具 SHALL 拒绝 `--type=verification` 调用如果当前状态不是 `PENDING_VERIFICATION`
-
-#### Scenario: ABORTED_UNSAFE 表示恢复未闭环
-
-- **WHEN** `optimization.status` 为 `ABORTED_UNSAFE`
-- **THEN** 系统 SHALL 将其解释为"优化循环未能完成安全闭环"
-- **AND** SHALL NOT 声称 checkpoint 已清理完成，除非系统已经验证工作区恢复成功
-- **AND** SHALL 输出与实际 stash 生命周期一致的恢复说明
-
-#### Scenario: 跨平台路径处理
-
-- **WHEN** 写入 `optimization` 对象中的文件路径
-- **THEN** 系统 SHALL 使用 `path.join()` 构建所有路径
-- **AND** SHALL NOT 硬编码路径分隔符
+- **WHEN** Degraded Pass 终局恢复完成
+- **THEN** `.verify-result.json` 中 `result` SHALL 为 `PASS_WITH_WARNINGS`
+- **AND** `optimization.status` SHALL 为 `DEGRADED`
+- **AND** `optimization.failedDirections[]` SHALL 保留所有已尝试的策略记录
 
 ### Requirement: Speculative re-verify respects verify execution model
 

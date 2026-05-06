@@ -266,10 +266,12 @@ async function handleOptimization(
   const affectedFileHashes = await hashFiles(files, projectRoot);
   const normalizedFiles = Object.keys(affectedFileHashes).sort();
   attempts[attempts.length - 1].files = normalizedFiles;
+  const failedDirections = current.optimization?.failedDirections;
   current.optimization = {
     status: 'PENDING_VERIFICATION',
     attempts,
     affectedFileHashes,
+    ...(failedDirections ? { failedDirections } : {}),
     baseline: phase1Baseline(current),
   };
   await writeVerifyResult(changeDir, current);
@@ -317,18 +319,30 @@ async function handleVerification(
     return 0;
   }
 
-  if (behaviorRetryCounter >= 3) {
+  const optRetries = readProjectConfig(projectRoot)?.optimization?.optRetries ?? 2;
+
+  // 记录失败方向，避免跨会话重复尝试
+  const lastOptAttempt = current.optimization.attempts
+    .filter((a) => a.type === 'optimization')
+    .at(-1);
+  const failedDirection = input.summary ?? lastOptAttempt?.summary ?? '未记录优化方向';
+  current.optimization.failedDirections = [
+    ...(current.optimization.failedDirections ?? []),
+    failedDirection,
+  ];
+
+  if (behaviorRetryCounter >= optRetries) {
     current.optimization.status = 'DEGRADED';
     current.optimization.final = input;
     current.result = 'PASS_WITH_WARNINGS';
     await writeVerifyResult(changeDir, current);
-    writeOutput(options, { ok: true, result: current }, 'Phase 2: 3次优化尝试已安全回滚。可进入 sync/archive');
+    writeOutput(options, { ok: true, result: current }, `Phase 2: ${optRetries}次优化尝试已安全回滚。可进入 sync/archive`);
     return 0;
   }
 
   delete current.optimization.affectedFileHashes;
   await writeVerifyResult(changeDir, current);
-  writeOutput(options, { ok: true, result: current }, `推测性验证失败 (尝试 ${behaviorRetryCounter}/3)。请用不同策略重试优化`);
+  writeOutput(options, { ok: true, result: current }, `推测性验证失败 (尝试 ${behaviorRetryCounter}/${optRetries})。请用不同策略重试优化`);
   return 0;
 }
 

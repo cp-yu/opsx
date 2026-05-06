@@ -1,0 +1,92 @@
+{
+  "timestamp": "2026-05-06T07:59:54.370Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "59d813880fa79ed4ff3dc6120b0d99c604cd11a31a4b853d60dba44e82be2b12",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "evidenceFiles": [
+      "openspec/config.yaml",
+      "openspec/project.opsx.code-map.yaml",
+      "openspec/project.opsx.relations.yaml",
+      "openspec/project.opsx.yaml",
+      "openspec/specs/verify-cli-gate/spec.md",
+      "openspec/specs/verify-optimization/spec.md",
+      "src/commands/verify.ts",
+      "src/core/config-projection.ts",
+      "src/core/config-prompts.ts",
+      "src/core/config-schema.ts",
+      "src/core/project-config.ts",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "src/core/templates/workflows/apply-change.ts",
+      "src/core/templates/workflows/archive-change.ts",
+      "src/core/templates/workflows/verify-change.ts",
+      "src/core/verify/result-validator.ts",
+      "src/core/verify/types.ts",
+      "test/commands/config.test.ts",
+      "test/commands/verify.test.ts",
+      "test/core/config-schema.test.ts",
+      "test/core/project-config.test.ts",
+      "test/core/templates/apply-change.test.ts",
+      "test/core/templates/fragments/opsx-fragments.test.ts",
+      "test/core/templates/opsx-fragments.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts",
+      "test/core/templates/verify-writeback-templates.test.ts",
+      "test/core/verify/result-validator.test.ts"
+    ],
+    "evidenceFingerprint": "663c6309de65d156ee0798c731f14ea4b3177e1076af16c896354d3106eb5ff3",
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "e8e946e17ccb6ae38a7ec88a90112f2dd10b6c24"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-06T07:59:54.542Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-06T07:59:54.370Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "59d813880fa79ed4ff3dc6120b0d99c604cd11a31a4b853d60dba44e82be2b12",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "evidenceFiles": [
+          "openspec/config.yaml",
+          "openspec/project.opsx.code-map.yaml",
+          "openspec/project.opsx.relations.yaml",
+          "openspec/project.opsx.yaml",
+          "openspec/specs/verify-cli-gate/spec.md",
+          "openspec/specs/verify-optimization/spec.md",
+          "src/commands/verify.ts",
+          "src/core/config-projection.ts",
+          "src/core/config-prompts.ts",
+          "src/core/config-schema.ts",
+          "src/core/project-config.ts",
+          "src/core/templates/fragments/opsx-fragments.ts",
+          "src/core/templates/workflows/apply-change.ts",
+          "src/core/templates/workflows/archive-change.ts",
+          "src/core/templates/workflows/verify-change.ts",
+          "src/core/verify/result-validator.ts",
+          "src/core/verify/types.ts",
+          "test/commands/config.test.ts",
+          "test/commands/verify.test.ts",
+          "test/core/config-schema.test.ts",
+          "test/core/project-config.test.ts",
+          "test/core/templates/apply-change.test.ts",
+          "test/core/templates/fragments/opsx-fragments.test.ts",
+          "test/core/templates/opsx-fragments.test.ts",
+          "test/core/templates/skill-templates-parity.test.ts",
+          "test/core/templates/verify-writeback-templates.test.ts",
+          "test/core/verify/result-validator.test.ts"
+        ],
+        "evidenceFingerprint": "663c6309de65d156ee0798c731f14ea4b3177e1076af16c896354d3106eb5ff3",
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "e8e946e17ccb6ae38a7ec88a90112f2dd10b6c24"
+      }
+    }
+  }
+}

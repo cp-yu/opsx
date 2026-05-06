@@ -43,6 +43,9 @@ domains:
     intent: 两阶段质量门禁——在一致性检验通过后，对代码进行最优性检验，将代码从"可用"提升到"精良"
     status: active
     type: domain
+  - id: dom.apply
+    intent: apply 命令作为编译步骤，集成实现、验证、优化的完整生命周期。确保 apply 输出即验证过的制品
+    type: domain
 capabilities:
   - id: cap.ai.agent-docs
     intent: 生成面向 Agent 的指令文档，并让所有会生成或回写 artifact 的 workflow surface 共享同一套配置投影合同
@@ -64,8 +67,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 提供面向 Agent 的工作流模板。verify 模板中 Step 8-11 替换为 openspec verify CLI 调用指令；archive 模板中 Step 2 freshness 检查替换为 CLI 调用，Step 5 改为调用 openspec sync CLI 工具
-    status: active
+    intent: 面向 Agent 的工作流模板。apply 模板重构为 Phase 0-3 四阶段编译步骤（实现→验证→优化→Seal），verify 模板保留为 expanded 模式独立 workflow surface
     type: capability
   - id: cap.artifact-graph.instruction-loader
     intent: 加载 Schema 模板，并按 workflow surface 与 artifact 编译项目配置投影，向 AI 暴露统一的 prompt projection 而非原始字段拼接结果
@@ -259,8 +261,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.verify.optimize
-    intent: 在一致性检验通过后，对代码进行最优性检验——诊断代码质量、设计模式、效率维度，生成 Search/Replace 块供主 agent 在 checkpoint 保护下应用。Phase 2 通过 CLI 双调用机制强制执行：agent 必须分别调用 --type=optimization 和 --type=verification 完成优化提交和 speculative fence 验证。新增 PENDING_VERIFICATION 中间状态追踪双调用间的状态转换
-    status: active
+    intent: 在一致性检验通过后，对代码进行最优性检验。Phase 2 优化循环由 apply 模板主控，每次提案+补丁+验证循环（无论成功或失败）消耗一次 config.optimization.optRetries（默认 2）配额，达到上限后强制终止。新增 failedDirections 字段避免跨会话重复尝试。格式和匹配问题由 apply 主 agent 直接处理
     type: capability
   - id: cap.ai.tool-invocation-references
     intent: 基于共享 workflow surface 元数据渲染不同 AI 工具的用户可调用 workflow 引用，其中 Codex 使用精确的 `$openspec-*` skill 名称
@@ -274,9 +275,17 @@ capabilities:
     status: active
     type: capability
   - id: cap.verify.cli-gate
-    intent: 程序化 verify 门禁 CLI 工具，为 Phase 1/Phase 2/sync/archive 提供入口条件校验、JSON 输入接受、结果写回和下一步指令输出
-    status: active
+    intent: 程序化 verify 门禁 CLI 工具。Phase 2 双调用模型保留，但重试上限从硬编码 3 改为读取 config.optimization.optRetries，新增 failedDirections 记录支持
     type: capability
   - id: cap.verify.freshness-engine
     intent: 确定性 freshness 判定引擎，用 TypeScript 代码实现 tasksFileHash、evidenceFingerprint 计算和 FRESH/STALE/MISSING 判定。evidenceFingerprint 计算中排除 .verify-result.json 文件以消除自指循环
+    type: capability
+  - id: cap.apply.verify-integration
+    intent: apply 命令内置 Phase 1 一致性验证和 Phase 2 优化循环，由 subagent 执行验证判断和优化提案，主 agent 仅负责编码
+    type: capability
+  - id: cap.apply.subagent-orchestration
+    intent: apply 工作流中严格区分编码角色（主 agent）和判断角色（subagent reviewer/optimizer），保持关注点分离
+    type: capability
+  - id: cap.ai.agent-prompt-guidance
+    intent: 面向 Agent 的 verify gate 提示词指引系统。在 opsx-fragments.ts 中提供共享的 ASCII 状态机流程图、JSON schema 速查表、CLI 错误恢复决策树和简单变更快速路径指引，供 archive/verify/apply 三个 skill 模板复用，替代各自内联的 CLI 调用格式
     type: capability

@@ -29,20 +29,20 @@
 #### Scenario: Phase 2 优化循环
 
 - **WHEN** Phase 2 启动
-- **THEN** 系统 SHALL 创建 git stash checkpoint（`git stash push -u -m "apply-opt-checkpoint"`）
+- **THEN** 系统 SHALL 创建初始 git stash checkpoint（`git stash push -u -m "apply-opt-checkpoint-r0"`），保存 Phase 1 baseline
 - **AND** SHALL 按以下循环执行：
   1. **优化提案（subagent optimizer）**: 读取代码 + specs + design + `failedDirections`，输出 Search/Replace 块。若无优化机会，返回 NO_OPTIMIZATION_NEEDED
   2. **应用补丁（主 agent）**: 解析并原子应用 Search/Replace 块到工作区
   3. **再验证 Phase 1（subagent reviewer）**: 在补丁后的代码上重新执行 Phase 1 一致性验证
-- **AND** 若再验证 PASS — 接受补丁，继续循环（可能发现新的优化机会）
-- **AND** 若再验证 FAIL — 执行 `git reset --hard HEAD` + `git clean -fd` + `git stash apply <checkpoint>` 回滚，递增 retryCounter
-- **AND** 若 retryCounter >= `config.optimization.optRetries` → 回滚到最近 PASS 点，`optimization.status = DEGRADED`
-- **AND** 若 retryCounter < `config.optimization.optRetries` → 记录失败方向，回到步骤 1 使用全新策略
+- **AND** 若再验证 PASS — 接受补丁，递增 cycleCounter。若 cycleCounter < `config.optimization.optRetries`：执行 `git stash push -u -m "apply-opt-checkpoint-r<N>"` 将当前优化后状态推入栈顶作为新 checkpoint，旧 checkpoint 保留在栈中，然后继续循环（可能发现新的优化机会）。若 cycleCounter >= `config.optimization.optRetries`：强制终止并以 `optimization.status = IMPROVED` 进入 Phase 3
+- **AND** 若再验证 FAIL — 执行 `git reset --hard HEAD` + `git clean -fd` + `git stash apply stash@{0}` 回滚到栈顶 checkpoint（最近成功状态），递增 cycleCounter，记录 `failedDirections`。checkpoint 不消费
+- **AND** 若 cycleCounter >= `config.optimization.optRetries` → `optimization.status = DEGRADED`，进入 Phase 3
+- **AND** 若 cycleCounter < `config.optimization.optRetries` → 回到步骤 1 使用全新策略
 
 #### Scenario: 优化循环终局状态
 
 - **WHEN** 优化循环终止
-- **THEN** 系统 SHALL 消费 git stash checkpoint（`git stash pop <checkpoint>` 或等价操作）
+- **THEN** 系统 SHALL 按栈顺序 pop 所有 `apply-opt-checkpoint-*` 条目，消费全部 checkpoint
 - **AND** `optimization.status` SHALL 为以下终局值之一：IMPROVED | DEGRADED | NOT_NEEDED | SKIPPED
 
 #### Scenario: Phase 3 Seal 校验
@@ -103,9 +103,9 @@
 
 - **WHEN** `optimization.enabled` 为 true
 - **AND** `optimization.optRetries` 设置为 N（默认 2）
-- **THEN** Phase 2 优化失败时最多重试 N 次
+- **THEN** Phase 2 每次提案+补丁+验证循环（无论成功或失败）消耗一次 optRetries 配额
 - **AND** optRetries 同时充当优化循环的有效上限
-- **AND** 成功的优化循环（PASS 后再发现新优化点）不消耗 optRetries
+- **AND** subagent 返回 NO_OPTIMIZATION_NEEDED 不计入循环，不消耗配额
 
 #### Scenario: --skip-optimization 跳过 Phase 2
 

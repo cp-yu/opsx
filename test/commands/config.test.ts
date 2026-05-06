@@ -193,6 +193,11 @@ describe('config key validation', () => {
     expect(validateConfigKeyPath('optimization.enabled').valid).toBe(true);
   });
 
+  it('allows optimization.optRetries key', async () => {
+    const { validateConfigKeyPath } = await import('../../src/core/config-schema.js');
+    expect(validateConfigKeyPath('optimization.optRetries').valid).toBe(true);
+  });
+
   it('rejects unsupported optimization nesting', async () => {
     const { validateConfigKeyPath } = await import('../../src/core/config-schema.js');
     expect(validateConfigKeyPath('optimization.enabled.extra').valid).toBe(false);

@@ -10,8 +10,12 @@ import {
   OPSX_READ_CONTEXT,
   OPSX_SHARED_CONTEXT,
   OPSX_VERIFY_ALIGNMENT,
+  VERIFY_CLI_JSON_SCHEMA_REFERENCE,
   VERIFY_REVIEWER_SUBAGENT_CONTRACT,
+  VERIFY_ERROR_RECOVERY_GUIDE,
   VERIFY_FRESHNESS_RULES,
+  VERIFY_SIMPLE_CHANGE_FAST_PATH,
+  VERIFY_STATE_MACHINE_DIAGRAM,
   VERIFY_WRITEBACK_RULES,
 } from '../../../src/core/templates/fragments/opsx-fragments.js';
 import {
@@ -99,6 +103,43 @@ describe('OPSX shared context fragments', () => {
     expect(OPTIMIZATION_PROTOCOL_SUBAGENT).toContain('whitespace-normalized matching');
     expect(OPTIMIZATION_PROTOCOL_SUBAGENT).toContain('matches zero or multiple locations is invalid');
     expect(OPTIMIZATION_PROTOCOL_SUBAGENT).toContain('No optimization opportunities found');
+  });
+
+  it('exports shared verify gate guidance fragments', () => {
+    for (const fragment of [
+      VERIFY_STATE_MACHINE_DIAGRAM,
+      VERIFY_CLI_JSON_SCHEMA_REFERENCE,
+      VERIFY_ERROR_RECOVERY_GUIDE,
+      VERIFY_SIMPLE_CHANGE_FAST_PATH,
+    ]) {
+      expect(fragment).toBeTypeOf('string');
+      expect(fragment.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('documents all verify CLI JSON input shapes', () => {
+    expect(VERIFY_CLI_JSON_SCHEMA_REFERENCE).toContain('phase1');
+    expect(VERIFY_CLI_JSON_SCHEMA_REFERENCE).toContain('NO_OPTIMIZATION_NEEDED');
+    expect(VERIFY_CLI_JSON_SCHEMA_REFERENCE).toContain('OPTIMIZATION_PROPOSED');
+    expect(VERIFY_CLI_JSON_SCHEMA_REFERENCE).toContain('SKIPPED');
+    expect(VERIFY_CLI_JSON_SCHEMA_REFERENCE).toContain('"result":"PASS"');
+    expect(VERIFY_CLI_JSON_SCHEMA_REFERENCE).toContain('FAIL_NEEDS_REMEDIATION');
+    expect(VERIFY_CLI_JSON_SCHEMA_REFERENCE).toContain('behaviorRetryCounter');
+  });
+
+  it('documents verify terminal and archive gate states', () => {
+    for (const status of [
+      'SKIPPED',
+      'NOT_NEEDED',
+      'IMPROVED',
+      'DEGRADED',
+      'PENDING_VERIFICATION',
+      'ABORTED_UNSAFE',
+    ]) {
+      expect(VERIFY_STATE_MACHINE_DIAGRAM).toContain(status);
+    }
+    expect(VERIFY_STATE_MACHINE_DIAGRAM).toContain('Archive gate accepts');
+    expect(VERIFY_STATE_MACHINE_DIAGRAM).toContain('Archive gate rejects');
   });
 
   it('keeps projection contract wording aligned across explore, sync, archive, verify, and onboard surfaces', () => {

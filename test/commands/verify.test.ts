@@ -164,4 +164,88 @@ describe('openspec verify command', () => {
     expect(status.exitCode).toBe(0);
     expect(JSON.parse(status.stdout).ok).toBe(true);
   });
+
+  it('uses optRetries and preserves failedDirections across optimization retries', async () => {
+    await fs.writeFile(
+      path.join(tempDir, 'openspec', 'config.yaml'),
+      'schema: spec-driven\noptimization:\n  enabled: true\n  optRetries: 2\n',
+      'utf-8'
+    );
+
+    await runCLI([
+      'verify',
+      'phase1',
+      'c1',
+      '--input',
+      JSON.stringify({ result: 'PASS', issues: [], evidenceFiles: ['src/a.ts'] }),
+    ], { cwd: tempDir });
+
+    await runCLI([
+      'verify',
+      'phase2',
+      'c1',
+      '--type=optimization',
+      '--files',
+      'src/a.ts',
+      '--input',
+      JSON.stringify({ status: 'OPTIMIZATION_PROPOSED', summary: 'extract branch handling' }),
+    ], { cwd: tempDir });
+    await fs.writeFile(path.join(tempDir, 'src', 'a.ts'), 'const a = 2;\n', 'utf-8');
+
+    const firstFailure = await runCLI([
+      'verify',
+      'phase2',
+      'c1',
+      '--type=verification',
+      '--json',
+      '--input',
+      JSON.stringify({
+        result: 'FAIL_NEEDS_REMEDIATION',
+        issues: [],
+        summary: 'extract branch handling',
+        behaviorRetryCounter: 1,
+      }),
+    ], { cwd: tempDir });
+
+    expect(firstFailure.exitCode).toBe(0);
+    expect(JSON.parse(firstFailure.stdout).result.optimization.failedDirections).toEqual([
+      'extract branch handling',
+    ]);
+
+    await runCLI([
+      'verify',
+      'phase2',
+      'c1',
+      '--type=optimization',
+      '--files',
+      'src/a.ts',
+      '--input',
+      JSON.stringify({ status: 'OPTIMIZATION_PROPOSED', summary: 'inline helper extraction' }),
+    ], { cwd: tempDir });
+    await fs.writeFile(path.join(tempDir, 'src', 'a.ts'), 'const a = 3;\n', 'utf-8');
+
+    const degraded = await runCLI([
+      'verify',
+      'phase2',
+      'c1',
+      '--type=verification',
+      '--json',
+      '--input',
+      JSON.stringify({
+        result: 'FAIL_NEEDS_REMEDIATION',
+        issues: [],
+        summary: 'inline helper extraction',
+        behaviorRetryCounter: 2,
+      }),
+    ], { cwd: tempDir });
+
+    const parsed = JSON.parse(degraded.stdout);
+    expect(degraded.exitCode).toBe(0);
+    expect(parsed.result.result).toBe('PASS_WITH_WARNINGS');
+    expect(parsed.result.optimization.status).toBe('DEGRADED');
+    expect(parsed.result.optimization.failedDirections).toEqual([
+      'extract branch handling',
+      'inline helper extraction',
+    ]);
+  });
 });

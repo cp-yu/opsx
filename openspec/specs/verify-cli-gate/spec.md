@@ -44,7 +44,7 @@
 
 ### Requirement: Phase 2 双调用门禁
 
-系统 SHALL 提供 `openspec verify phase2 <change-name> --type=<optimization|verification>` 命令，要求 agent 至少调用 2 次完成 Phase 2。
+系统 SHALL 提供 `openspec verify phase2 <change-name> --type=<optimization|verification>` 命令。Phase 2 的优化循环主控逻辑上移到 apply 模板，verify CLI 保留为底层状态持久化工具。
 
 #### Scenario: 第一次调用 — 优化被配置禁用
 
@@ -77,7 +77,7 @@
 - **THEN** 系统 SHALL 追加 `optimization.attempts` 条目（记录文件列表、时间戳、重试计数）
 - **AND** SHALL 计算 `--files` 中每个文件的 SHA-256 存入 `optimization.affectedFileHashes`
 - **AND** SHALL 设置 `optimization.status = PENDING_VERIFICATION`
-- **AND** SHALL 输出 "优化建议已记录。下一步: 应用 Search/Replace 块 + P1_SPECULATIVE_FENCE subagent 验证，然后调用 phase2 --type=verification"
+- **AND** SHALL 记录输入 `summary` 中的优化方向到 `optimization.attempts`
 - **AND** 以 exit 0 退出
 
 #### Scenario: 第二次调用 — 提交 speculative fence 结果 (通过)
@@ -93,25 +93,19 @@
 
 - **WHEN** agent 执行 `openspec verify phase2 <change-name> --type=verification --input '<json>'`
 - **AND** 输入 `result` 为 FAIL_NEEDS_REMEDIATION
-- **AND** `behaviorRetryCounter < 3`
-- **THEN** 系统 SHALL 输出 "推测性验证失败 (尝试 N/3)。请用不同策略重试优化"
+- **AND** `behaviorRetryCounter < config.optimization.optRetries`（默认 2）
+- **THEN** 系统 SHALL 追加失败方向到 `optimization.failedDirections[]`
+- **AND** 输出 "推测性验证失败 (尝试 N/<optRetries>)。请用不同策略重试优化"
 - **AND** 以 exit 0 退出（中间态，agent 应回到 --type=optimization）
 
 #### Scenario: 第二次调用 — speculative fence 失败 (重试耗尽)
 
 - **WHEN** agent 执行 `openspec verify phase2 <change-name> --type=verification --input '<json>'`
-- **AND** `behaviorRetryCounter >= 3`
+- **AND** `behaviorRetryCounter >= config.optimization.optRetries`
 - **THEN** 系统 SHALL 设置 `optimization.status = DEGRADED`
 - **AND** SHALL 设置顶层 `result = PASS_WITH_WARNINGS`
-- **AND** SHALL 输出 "Phase 2: 3次优化尝试已安全回滚。可进入 sync/archive"
+- **AND** SHALL 输出 "Phase 2: N次优化尝试已安全回滚。可进入 sync/archive"
 - **AND** 以 exit 0 退出
-
-#### Scenario: Phase 2 入口条件不满足
-
-- **WHEN** agent 执行 `openspec verify phase2 <change-name> --type=optimization`
-- **AND** Phase 1 result 不是 PASS/PASS_WITH_WARNINGS，或 `optimization.enabled` 为 false 且输入 `status` 不是 `SKIPPED`
-- **THEN** 系统 SHALL 输出跳过原因
-- **AND** 以 exit 1 退出
 
 #### Scenario: Phase 2 调用顺序错误
 
@@ -119,24 +113,6 @@
 - **AND** `optimization.status` 不是 `PENDING_VERIFICATION`
 - **THEN** 系统 SHALL 输出 "尚未提交优化结果，请先调用 phase2 --type=optimization"
 - **AND** 以 exit 1 退出
-
-#### Scenario: PENDING_VERIFICATION 残留恢复
-
-- **WHEN** agent 执行 `openspec verify phase2 <change-name> --type=optimization`
-- **AND** `optimization.status` 为 `PENDING_VERIFICATION`（上次崩溃残留）
-- **THEN** 系统 SHALL 输出 warning "检测到未完成的 Phase 2 验证。请先完成验证或重置"
-- **AND** 以 exit 1 退出
-
-#### Scenario: 文件哈希校验 — 确保优化 patch 已应用
-
-- **WHEN** agent 执行 `openspec verify phase2 <change-name> --type=verification --input '<json>'`
-- **AND** 之前的 `--type=optimization` 调用指定了 `--files` 参数（受影响的文件路径列表，逗号分隔）
-- **AND** CLI 在 `--type=optimization` 时已计算并存储了 `--files` 中每个文件的 SHA-256 哈希于 `optimization.affectedFileHashes`
-- **THEN** CLI SHALL 在 `--type=verification` 调用时重新计算 `--files` 中每个文件的哈希
-- **AND** 若任一文件哈希与存储值一致（即文件未变更），SHALL 输出 "检测到优化 patch 未应用，请先应用 Search/Replace 块再重试"
-- **AND** SHALL 以 exit 1 退出
-- **AND** agent SHALL NOT 在文件未变更的情况下进入 speculative fence
-- **AND** 若所有文件哈希均已变更（patch 已应用），SHALL 继续正常处理 `--type=verification` 调用
 
 ### Requirement: Seal 校验
 

@@ -290,6 +290,70 @@ export const VERIFY_WRITEBACK_RULES = `
 `.trim();
 
 /**
+ * Fragment: Verify state machine diagram
+ * Used in: apply-change, archive-change, verify-change
+ */
+export const VERIFY_STATE_MACHINE_DIAGRAM = `
+**Verify State Machine**:
+\`\`\`
+Phase 1 PASS / PASS_WITH_WARNINGS
+  |
+  v
+PENDING_VERIFICATION
+  |-- no affectedFileHashes --> Phase 2 optimization analysis
+  |                              |-- NO_OPTIMIZATION_NEEDED --> NOT_NEEDED
+  |                              |-- SKIPPED / optimization.enabled=false --> SKIPPED
+  |-- affectedFileHashes ------> PENDING_VERIFICATION (optimization proposed)
+                                 |-- verification PASS --> IMPROVED
+                                 |-- verification FAIL_NEEDS_REMEDIATION --> retry or DEGRADED
+                                 |-- retries exhausted --> DEGRADED
+
+Archive gate accepts: SKIPPED | NOT_NEEDED | IMPROVED | DEGRADED
+Archive gate rejects: PENDING_VERIFICATION | ABORTED_UNSAFE
+\`\`\`
+`.trim();
+
+/**
+ * Fragment: Verify CLI JSON schema reference
+ * Used in: apply-change, archive-change, verify-change
+ */
+export const VERIFY_CLI_JSON_SCHEMA_REFERENCE = `
+**Verify CLI JSON Schema Reference**:
+
+| CLI call | \`--input\` JSON |
+| --- | --- |
+| \`openspec verify phase1 "<change-name>" --input '<json>' --json\` | \`{"result":"PASS","issues":[],"evidenceFiles":["..."],"executionMode":"..."}\` |
+| \`openspec verify phase2 "<change-name>" --type=optimization --input '<json>' --json\` | \`{"status":"NO_OPTIMIZATION_NEEDED"}\` |
+| \`openspec verify phase2 "<change-name>" --type=optimization --input '<json>' --json\` | \`{"status":"OPTIMIZATION_PROPOSED","summary":"..."}\` |
+| \`openspec verify phase2 "<change-name>" --type=optimization --input '<json>' --json\` | \`{"status":"SKIPPED"}\` |
+| \`openspec verify phase2 "<change-name>" --type=verification --input '<json>' --json\` | \`{"result":"PASS","issues":[]}\` |
+| \`openspec verify phase2 "<change-name>" --type=verification --input '<json>' --json\` | \`{"result":"FAIL_NEEDS_REMEDIATION","issues":[...],"behaviorRetryCounter":N}\` |
+`.trim();
+
+/**
+ * Fragment: Verify error recovery guide
+ * Used in: apply-change, verify-change
+ */
+export const VERIFY_ERROR_RECOVERY_GUIDE = `
+**Verify CLI Error Recovery Guide**:
+- If the CLI says \`Invalid JSON input\`: re-check that \`--input\` is a JSON string, not a file path; \`issues\` must be an array and \`evidenceFiles\` must be an array of strings
+- If the CLI says \`status must be NO_OPTIMIZATION_NEEDED, OPTIMIZATION_PROPOSED, ABORTED_UNSAFE, or SKIPPED\`: fix the \`--input.status\` value and confirm whether \`optimization.status\` already has \`affectedFileHashes\`
+- If the CLI says \`result must be PASS, PASS_WITH_WARNINGS, or FAIL_NEEDS_REMEDIATION\`: fix the \`--input.result\` value and keep \`issues\` as an array when provided
+- If the CLI says \`尚未提交优化结果，请先调用 phase2 --type=optimization\`: call \`phase2 --type=optimization\` before retrying verification
+`.trim();
+
+/**
+ * Fragment: Fast path for simple changes
+ * Used in: apply-change, archive-change, verify-change
+ */
+export const VERIFY_SIMPLE_CHANGE_FAST_PATH = `
+**Simple Change Fast Path**:
+- For pure deletions, renames, or parameter removals with no meaningful optimization room, skip the optimization subagent
+- Call \`openspec verify phase2 "<change-name>" --type=optimization --input '{"status":"NO_OPTIMIZATION_NEEDED"}' --json\`
+- Use this path only when the change does not benefit from a proposal + patch + re-verify loop
+`.trim();
+
+/**
  * Fragment: Sync opsx-delta to project.opsx.yaml
  * Used in: sync-specs, archive-change, bulk-archive-change
  */

@@ -46,6 +46,22 @@ describe('verify result validator', () => {
 
   it('validates .verify-result.json shape and generates stable seal hashes', () => {
     expect(validateVerifyResult(validResult).valid).toBe(true);
+    expect(validateVerifyResult({
+      ...validResult,
+      optimization: {
+        status: 'DEGRADED',
+        attempts: [],
+        failedDirections: ['simplify src/a.ts branch handling'],
+      },
+    }).valid).toBe(true);
+    expect(validateVerifyResult({
+      ...validResult,
+      optimization: {
+        status: 'DEGRADED',
+        attempts: [],
+        failedDirections: [123],
+      },
+    }).valid).toBe(false);
     expect(validateVerifyResult({ ...validResult, tasksFileHash: 'bad' }).valid).toBe(false);
 
     const hash1 = generateSealHash(validResult);

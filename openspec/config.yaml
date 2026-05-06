@@ -16,6 +16,7 @@ context: |
 # Set enabled: false to keep verify in Phase 1 conformance-only mode.
 optimization:
   enabled: true
+  optRetries: 2
 
 rules:
   specs:

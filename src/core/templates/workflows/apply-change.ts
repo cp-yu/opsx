@@ -8,7 +8,54 @@ import type { SkillTemplate, CommandTemplate } from '../types.js';
 import {
   ARTIFACT_DOC_LANGUAGE_CONTRACT,
   OPSX_SHARED_CONTEXT,
+  VERIFY_CLI_JSON_SCHEMA_REFERENCE,
+  VERIFY_ERROR_RECOVERY_GUIDE,
+  VERIFY_SIMPLE_CHANGE_FAST_PATH,
+  VERIFY_STATE_MACHINE_DIAGRAM,
 } from '../fragments/opsx-fragments.js';
+
+const APPLY_VERIFY_PHASES = `
+7. **Phase 1: Run canonical verification**
+
+   After all implementation tasks and remediation items are complete:
+   - Spawn a clean-context reviewer subagent with change artifacts, git evidence, final file contents, and prior \`.verify-result.json\` when present
+   - Keep completeness, correctness, and coherence judgment inside the reviewer subagent
+   - If the reviewer returns \`FAIL_NEEDS_REMEDIATION\`, write back only CRITICAL issues to \`tasks.md\`, add typed \`## Remediation\` entries, and return to Phase 0
+   - If the reviewer returns \`PASS\` or \`PASS_WITH_WARNINGS\`, persist Phase 1:
+     \`\`\`bash
+     openspec verify phase1 "<change-name>" --input '<json>' --json
+     \`\`\`
+
+${VERIFY_CLI_JSON_SCHEMA_REFERENCE}
+
+8. **Phase 2: Optimize under checkpoint protection**
+
+   - Skip Phase 2 only when the user requested \`--skip-optimization\` or \`optimization.enabled: false\`; record \`SKIPPED\` through \`openspec verify phase2\`
+   - Read \`optimization.optRetries\` from \`openspec/config.yaml\`; default to \`2\`
+   - Before the first optimization attempt, create a checkpoint: \`git stash push -u -m "apply-opt-checkpoint-r0"\`
+   - Each complete proposal + patch + reviewer re-verify loop consumes one \`optRetries\` budget, whether it passes or fails
+   - Format or Search/Replace matching problems are handled by the main agent and do not consume retry budget
+   - Optimizer subagent proposes Search/Replace blocks only; it MUST NOT edit files
+   - Main agent applies Search/Replace blocks atomically, then spawns the reviewer subagent for speculative Phase 1 re-verification
+   - On speculative PASS, accept the patch, record \`OPTIMIZATION_PROPOSED\` then \`verification PASS\`, and continue until no opportunities remain or \`optRetries\` is exhausted
+   - On speculative FAIL, restore the latest checkpoint with \`git reset --hard HEAD\`, \`git clean -fd\`, then \`git stash apply stash@{0}\`; record the failed direction in \`.verify-result.json\`
+   - When all attempts finish, consume all \`apply-opt-checkpoint-*\` stash entries only after the final safe workspace state is confirmed
+
+${VERIFY_SIMPLE_CHANGE_FAST_PATH}
+
+${VERIFY_ERROR_RECOVERY_GUIDE}
+
+${VERIFY_STATE_MACHINE_DIAGRAM}
+
+9. **Phase 3: Seal final result**
+
+   Run:
+   \`\`\`bash
+   openspec verify seal "<change-name>" --json
+   \`\`\`
+
+   If seal passes, report apply as complete with verified and optimized status. If seal fails, preserve diagnostics and pause for remediation.
+`.trim();
 
 export function getApplyChangeSkillTemplate(): SkillTemplate {
   return {
@@ -85,7 +132,7 @@ ${ARTIFACT_DOC_LANGUAGE_CONTRACT}
    - Summary of open remediation items grouped by \`[code_fix]\` and \`[artifact_fix]\`
    - Dynamic instruction from CLI
 
-6. **Implement tasks (loop until done or blocked)**
+6. **Phase 0: Implement tasks (loop until done or blocked)**
 
    For each pending task:
    - Show which task is being worked on
@@ -105,12 +152,14 @@ ${ARTIFACT_DOC_LANGUAGE_CONTRACT}
    - Error or blocker encountered → report and wait for guidance
    - User interrupts
 
-7. **On completion or pause, show status**
+${APPLY_VERIFY_PHASES}
+
+10. **On completion or pause, show status**
 
    Display:
    - Tasks completed this session
    - Overall progress: "N/M tasks complete"
-   - If remediation items were resolved, recommend re-running \`/opsx:verify\` to confirm the feedback loop has closed
+   - If remediation items were resolved, report that Phase 1 must pass before archive
    - If all done: suggest archive
    - If paused: explain why and wait for guidance
 
@@ -142,8 +191,7 @@ Working on task 4/7: <task description>
 - [x] Task 2
 ...
 
-All tasks complete! Ready to archive this change.
-If this session resolved remediation items, run \`/opsx:verify <change-name>\` before archiving.
+All tasks complete and sealed. Ready to archive this change.
 \`\`\`
 
 **Output On Pause (Issue Encountered)**
@@ -265,7 +313,7 @@ ${ARTIFACT_DOC_LANGUAGE_CONTRACT}
    - Summary of open remediation items grouped by \`[code_fix]\` and \`[artifact_fix]\`
    - Dynamic instruction from CLI
 
-6. **Implement tasks (loop until done or blocked)**
+6. **Phase 0: Implement tasks (loop until done or blocked)**
 
    For each pending task:
    - Show which task is being worked on
@@ -285,12 +333,14 @@ ${ARTIFACT_DOC_LANGUAGE_CONTRACT}
    - Error or blocker encountered → report and wait for guidance
    - User interrupts
 
-7. **On completion or pause, show status**
+${APPLY_VERIFY_PHASES}
+
+10. **On completion or pause, show status**
 
    Display:
    - Tasks completed this session
    - Overall progress: "N/M tasks complete"
-   - If remediation items were resolved, recommend re-running \`/opsx:verify\` to confirm the feedback loop has closed
+   - If remediation items were resolved, report that Phase 1 must pass before archive
    - If all done: suggest archive
    - If paused: explain why and wait for guidance
 
@@ -322,8 +372,7 @@ Working on task 4/7: <task description>
 - [x] Task 2
 ...
 
-All tasks complete! You can archive this change with \`/opsx:archive\`.
-If this session resolved remediation items, run \`/opsx:verify <change-name>\` before archiving.
+All tasks complete and sealed. You can archive this change with \`/opsx:archive\`.
 \`\`\`
 
 **Output On Pause (Issue Encountered)**
