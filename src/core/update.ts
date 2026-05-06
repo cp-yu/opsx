@@ -12,17 +12,11 @@ import * as fs from 'fs';
 import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
 import {
-  getWorkflowReferenceTransformer,
   renderWorkflowInvocation,
 } from '../utils/command-references.js';
 import { AI_TOOLS, OPENSPEC_DIR_NAME, toolSupportsCommandGeneration } from './config.js';
 import {
-  generateCommands,
-  CommandAdapterRegistry,
-} from './command-generation/index.js';
-import {
   getToolVersionStatus,
-  generateSkillContent,
   getToolsWithSkillsDir,
   type ToolVersionStatus,
 } from './shared/index.js';
@@ -44,14 +38,13 @@ import {
   getToolsNeedingProfileSync,
 } from './profile-sync-drift.js';
 import {
-  createToolWorkflowArtifactPlan,
   createWorkflowArtifactPlan,
-  getManagedCommandFiles,
 } from './workflow-installation.js';
 import {
   scanInstalledWorkflows as scanInstalledWorkflowsShared,
   migrateIfNeeded as migrateIfNeededShared,
 } from './migration.js';
+import { ArtifactSyncEngine } from './templates/sync-engine.js';
 
 const require = createRequire(import.meta.url);
 const { version: OPENSPEC_VERSION } = require('../../package.json');
@@ -171,83 +164,26 @@ export class UpdateCommand {
     // 9. Determine what to generate based on delivery
     // 10. Update tools (all if force, otherwise only those needing update)
     const toolsToUpdate = this.force ? configuredTools : [...toolsToUpdateSet];
+
+    const syncRequests = toolsToUpdate.map((toolId) => ({
+      toolId,
+      projectPath: resolvedProjectPath,
+      workflows: desiredWorkflows,
+      delivery,
+      version: OPENSPEC_VERSION,
+    }));
+
+    const summary = await ArtifactSyncEngine.syncAll(syncRequests);
+
     const updatedTools: string[] = [];
     const failedTools: Array<{ name: string; error: string }> = [];
-    let removedCommandCount = 0;
-    let removedSkillCount = 0;
-    let removedDeselectedCommandCount = 0;
-    let removedDeselectedSkillCount = 0;
 
-    for (const toolId of toolsToUpdate) {
-      const tool = AI_TOOLS.find((t) => t.value === toolId);
-      if (!tool?.skillsDir) continue;
-
-      const spinner = ora(`Updating ${tool.name}...`).start();
-      const toolPlan = createToolWorkflowArtifactPlan(toolId, desiredWorkflows, delivery, resolvedProjectPath);
-
-      try {
-        const skillsDir = path.join(resolvedProjectPath, tool.skillsDir, 'skills');
-
-        // Generate skill files if delivery includes skills
-        if (toolPlan.shouldGenerateSkills) {
-          for (const { template, dirName } of toolPlan.skillTemplates) {
-            const skillDir = path.join(skillsDir, dirName);
-            const skillFile = path.join(skillDir, 'SKILL.md');
-
-            const transformer = getWorkflowReferenceTransformer(tool.value);
-            const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
-            await FileSystemUtils.writeFile(skillFile, skillContent);
-          }
-
-          removedDeselectedSkillCount += await this.removeUnselectedSkillDirs(
-            skillsDir,
-            toolPlan.expectedSkillDirNames,
-            toolPlan.managedSkillDirNames
-          );
-        }
-
-        // Delete skill directories if delivery is commands-only
-        if (!toolPlan.shouldGenerateSkills) {
-          removedSkillCount += await this.removeSkillDirs(skillsDir, toolPlan.managedSkillDirNames);
-        }
-
-        // Generate commands if delivery includes commands
-        if (toolPlan.shouldGenerateCommands) {
-          const adapter = CommandAdapterRegistry.get(tool.value);
-          if (adapter) {
-            const generatedCommands = generateCommands(toolPlan.commandContents, adapter);
-
-            for (const cmd of generatedCommands) {
-              const commandFile = path.isAbsolute(cmd.path) ? cmd.path : path.join(resolvedProjectPath, cmd.path);
-              await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
-            }
-
-            removedDeselectedCommandCount += await this.removeUnselectedCommandFiles(
-              resolvedProjectPath,
-              toolId,
-              toolPlan.expectedCommandSlugs,
-              toolPlan.managedCommandSlugs
-            );
-          }
-        }
-
-        // Delete command files if delivery is skills-only
-        if (!toolPlan.shouldGenerateCommands) {
-          removedCommandCount += await this.removeCommandFiles(
-            resolvedProjectPath,
-            toolId,
-            toolPlan.managedCommandSlugs
-          );
-        }
-
-        spinner.succeed(`Updated ${tool.name}`);
-        updatedTools.push(tool.name);
-      } catch (error) {
-        spinner.fail(`Failed to update ${tool.name}`);
-        failedTools.push({
-          name: tool.name,
-          error: error instanceof Error ? error.message : String(error)
-        });
+    for (const result of summary.results) {
+      const tool = AI_TOOLS.find((t) => t.value === result.toolId);
+      if (result.error) {
+        failedTools.push({ name: tool?.name || result.toolId, error: result.error.message });
+      } else {
+        updatedTools.push(tool?.name || result.toolId);
       }
     }
 
@@ -259,17 +195,11 @@ export class UpdateCommand {
     if (failedTools.length > 0) {
       console.log(chalk.red(`✗ Failed: ${failedTools.map(f => `${f.name} (${f.error})`).join(', ')}`));
     }
-    if (removedCommandCount > 0) {
-      console.log(chalk.dim(`Removed: ${removedCommandCount} command files (delivery: skills)`));
+    if (summary.totalCommandsRemoved > 0) {
+      console.log(chalk.dim(`Removed: ${summary.totalCommandsRemoved} command files`));
     }
-    if (removedSkillCount > 0) {
-      console.log(chalk.dim(`Removed: ${removedSkillCount} skill directories (delivery: commands)`));
-    }
-    if (removedDeselectedCommandCount > 0) {
-      console.log(chalk.dim(`Removed: ${removedDeselectedCommandCount} command files (deselected workflows)`));
-    }
-    if (removedDeselectedSkillCount > 0) {
-      console.log(chalk.dim(`Removed: ${removedDeselectedSkillCount} skill directories (deselected workflows)`));
+    if (summary.totalSkillsRemoved > 0) {
+      console.log(chalk.dim(`Removed: ${summary.totalSkillsRemoved} skill directories`));
     }
 
     // 12. Show onboarding message for newly configured tools from legacy upgrade
@@ -385,122 +315,6 @@ export class UpdateCommand {
     if (extraWorkflows.length > 0) {
       console.log(chalk.dim(`Note: ${extraWorkflows.length} extra workflows not in profile (use \`openspec config profile\` to manage)`));
     }
-  }
-
-  /**
-   * Removes skill directories for workflows when delivery changed to commands-only.
-   * Returns the number of directories removed.
-   */
-  private async removeSkillDirs(
-    skillsDir: string,
-    managedSkillDirNames: readonly string[]
-  ): Promise<number> {
-    let removed = 0;
-
-    for (const dirName of managedSkillDirNames) {
-      const skillDir = path.join(skillsDir, dirName);
-      try {
-        if (fs.existsSync(skillDir)) {
-          await fs.promises.rm(skillDir, { recursive: true, force: true });
-          removed++;
-        }
-      } catch {
-        // Ignore errors
-      }
-    }
-
-    return removed;
-  }
-
-  /**
-   * Removes skill directories for workflows that are no longer selected in the active profile.
-   * Returns the number of directories removed.
-   */
-  private async removeUnselectedSkillDirs(
-    skillsDir: string,
-    expectedSkillDirNames: readonly string[],
-    managedSkillDirNames: readonly string[]
-  ): Promise<number> {
-    const expected = new Set(expectedSkillDirNames);
-    let removed = 0;
-
-    for (const dirName of managedSkillDirNames) {
-      if (expected.has(dirName)) continue;
-
-      const skillDir = path.join(skillsDir, dirName);
-      try {
-        if (fs.existsSync(skillDir)) {
-          await fs.promises.rm(skillDir, { recursive: true, force: true });
-          removed++;
-        }
-      } catch {
-        // Ignore errors
-      }
-    }
-
-    return removed;
-  }
-
-  /**
-   * Removes command files for workflows when delivery changed to skills-only.
-   * Returns the number of files removed.
-   */
-  private async removeCommandFiles(
-    projectPath: string,
-    toolId: string,
-    managedCommandSlugs: readonly string[]
-  ): Promise<number> {
-    let removed = 0;
-    for (const fullPath of getManagedCommandFiles(projectPath, toolId, managedCommandSlugs, { includeLegacyFiles: true })) {
-      try {
-        if (fs.existsSync(fullPath)) {
-          await fs.promises.unlink(fullPath);
-          removed++;
-        }
-      } catch {
-        // Ignore errors
-      }
-    }
-
-    return removed;
-  }
-
-  /**
-   * Removes command files for workflows that are no longer selected in the active profile.
-   * Returns the number of files removed.
-   */
-  private async removeUnselectedCommandFiles(
-    projectPath: string,
-    toolId: string,
-    expectedCommandSlugs: readonly string[],
-    managedCommandSlugs: readonly string[]
-  ): Promise<number> {
-    let removed = 0;
-
-    const expected = new Set(expectedCommandSlugs);
-
-    for (const commandSlug of managedCommandSlugs) {
-      if (expected.has(commandSlug)) continue;
-      const commandFiles = getManagedCommandFiles(
-        projectPath,
-        toolId,
-        [commandSlug],
-        { includeLegacyFiles: true }
-      );
-
-      for (const fullPath of commandFiles) {
-        try {
-          if (fs.existsSync(fullPath)) {
-            await fs.promises.unlink(fullPath);
-            removed++;
-          }
-        } catch {
-          // Ignore errors
-        }
-      }
-    }
-
-    return removed;
   }
 
   /**
@@ -659,49 +473,26 @@ export class UpdateCommand {
     }
 
     // Create skills/commands for selected tools using effective profile+delivery.
-    const newlyConfigured: string[] = [];
     const plan = createWorkflowArtifactPlan(desiredWorkflows, delivery, projectPath);
 
-    for (const toolId of selectedTools) {
-      const tool = AI_TOOLS.find((t) => t.value === toolId);
-      if (!tool?.skillsDir) continue;
+    const syncRequests = selectedTools.map((toolId) => ({
+      toolId,
+      projectPath,
+      workflows: [...plan.workflows],
+      delivery,
+      version: OPENSPEC_VERSION,
+    }));
 
-      const spinner = ora(`Setting up ${tool.name}...`).start();
-      const toolPlan = createToolWorkflowArtifactPlan(toolId, plan.workflows, delivery, projectPath);
+    const summary = await ArtifactSyncEngine.syncAll(syncRequests);
+    const newlyConfigured: string[] = [];
 
-      try {
-        const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
-
-        // Create skill files when delivery includes skills
-        if (toolPlan.shouldGenerateSkills) {
-          for (const { template, dirName } of toolPlan.skillTemplates) {
-            const skillDir = path.join(skillsDir, dirName);
-            const skillFile = path.join(skillDir, 'SKILL.md');
-
-            const transformer = getWorkflowReferenceTransformer(tool.value);
-            const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
-            await FileSystemUtils.writeFile(skillFile, skillContent);
-          }
-        }
-
-        // Create commands when delivery includes commands
-        if (toolPlan.shouldGenerateCommands) {
-          const adapter = CommandAdapterRegistry.get(tool.value);
-          if (adapter) {
-            const generatedCommands = generateCommands(toolPlan.commandContents, adapter);
-
-            for (const cmd of generatedCommands) {
-              const commandFile = path.isAbsolute(cmd.path) ? cmd.path : path.join(projectPath, cmd.path);
-              await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
-            }
-          }
-        }
-
-        spinner.succeed(`Setup complete for ${tool.name}`);
-        newlyConfigured.push(toolId);
-      } catch (error) {
-        spinner.fail(`Failed to set up ${tool.name}`);
-        console.log(chalk.red(`  ${error instanceof Error ? error.message : String(error)}`));
+    for (const result of summary.results) {
+      const tool = AI_TOOLS.find((t) => t.value === result.toolId);
+      if (result.error) {
+        console.log(chalk.red(`  ${result.error.message}`));
+      } else {
+        newlyConfigured.push(result.toolId);
+        console.log(chalk.green(`Setup complete for ${tool?.name || result.toolId}`));
       }
     }
 

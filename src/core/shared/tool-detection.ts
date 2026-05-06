@@ -6,7 +6,7 @@
 
 import path from 'path';
 import * as fs from 'fs';
-import { AI_TOOLS } from '../config.js';
+import { ToolProfileRegistry } from '../templates/tool-profile/index.js';
 import { SKILL_NAMES, COMMAND_IDS, getCommandSlug } from '../workflow-surface.js';
 
 export {
@@ -47,21 +47,22 @@ export interface ToolVersionStatus {
 
 /**
  * Gets the list of tools with skillsDir configured.
+ * Derives from ToolProfileRegistry.
  */
 export function getToolsWithSkillsDir(): string[] {
-  return AI_TOOLS.filter((t) => t.skillsDir).map((t) => t.value);
+  return ToolProfileRegistry.getToolsWithSkills();
 }
 
 /**
  * Checks which skill files exist for a tool.
  */
 export function getToolSkillStatus(projectRoot: string, toolId: string): ToolSkillStatus {
-  const tool = AI_TOOLS.find((t) => t.value === toolId);
-  if (!tool?.skillsDir) {
+  const profile = ToolProfileRegistry.get(toolId);
+  if (!profile?.skillsDir) {
     return { configured: false, fullyConfigured: false, skillCount: 0 };
   }
 
-  const skillsDir = path.join(projectRoot, tool.skillsDir, 'skills');
+  const skillsDir = path.join(projectRoot, profile.skillsDir, 'skills');
   let skillCount = 0;
 
   for (const skillName of SKILL_NAMES) {
@@ -83,7 +84,7 @@ export function getToolSkillStatus(projectRoot: string, toolId: string): ToolSki
  */
 export function getToolStates(projectRoot: string): Map<string, ToolSkillStatus> {
   const states = new Map<string, ToolSkillStatus>();
-  const toolIds = AI_TOOLS.filter((t) => t.skillsDir).map((t) => t.value);
+  const toolIds = ToolProfileRegistry.getToolsWithSkills();
 
   for (const toolId of toolIds) {
     states.set(toolId, getToolSkillStatus(projectRoot, toolId));
@@ -105,14 +106,6 @@ export function extractGeneratedByVersion(skillFilePath: string): string | null 
     const content = fs.readFileSync(skillFilePath, 'utf-8');
 
     // Look for generatedBy in the YAML frontmatter
-    // The file format is:
-    // ---
-    // ...
-    // metadata:
-    //   author: openspec
-    //   version: "1.0"
-    //   generatedBy: "0.23.0"
-    // ---
     const generatedByMatch = content.match(/^\s*generatedBy:\s*["']?([^"'\n]+)["']?\s*$/m);
 
     if (generatedByMatch && generatedByMatch[1]) {
@@ -133,8 +126,8 @@ export function getToolVersionStatus(
   toolId: string,
   currentVersion: string
 ): ToolVersionStatus {
-  const tool = AI_TOOLS.find((t) => t.value === toolId);
-  if (!tool?.skillsDir) {
+  const profile = ToolProfileRegistry.get(toolId);
+  if (!profile?.skillsDir) {
     return {
       toolId,
       toolName: toolId,
@@ -144,7 +137,7 @@ export function getToolVersionStatus(
     };
   }
 
-  const skillsDir = path.join(projectRoot, tool.skillsDir, 'skills');
+  const skillsDir = path.join(projectRoot, profile.skillsDir, 'skills');
   let generatedByVersion: string | null = null;
 
   // Find the first skill file that exists and read its version
@@ -161,7 +154,7 @@ export function getToolVersionStatus(
 
   return {
     toolId,
-    toolName: tool.name,
+    toolName: profile.name,
     configured,
     generatedByVersion,
     needsUpdate,
@@ -172,9 +165,9 @@ export function getToolVersionStatus(
  * Gets all configured tools in the project.
  */
 export function getConfiguredTools(projectRoot: string): string[] {
-  return AI_TOOLS
-    .filter((t) => t.skillsDir && getToolSkillStatus(projectRoot, t.value).configured)
-    .map((t) => t.value);
+  return ToolProfileRegistry.getToolsWithSkills().filter(
+    (toolId) => getToolSkillStatus(projectRoot, toolId).configured
+  );
 }
 
 /**

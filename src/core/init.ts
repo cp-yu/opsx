@@ -12,7 +12,6 @@ import * as fs from 'fs';
 import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
 import {
-  getWorkflowReferenceTransformer,
   renderWorkflowInvocation,
 } from '../utils/command-references.js';
 import {
@@ -26,7 +25,6 @@ import { isInteractive } from '../utils/interactive.js';
 import { serializeConfig } from './config-prompts.js';
 import { readProjectConfig } from './project-config.js';
 import {
-  generateCommands,
   CommandAdapterRegistry,
 } from './command-generation/index.js';
 import {
@@ -39,7 +37,6 @@ import {
 import {
   getToolsWithSkillsDir,
   getToolStates,
-  generateSkillContent,
   type ToolSkillStatus,
 } from './shared/index.js';
 import { getGlobalConfig, type Delivery, type Profile } from './global-config.js';
@@ -49,9 +46,9 @@ import { migrateIfNeeded } from './migration.js';
 import {
   createToolWorkflowArtifactPlan,
   createWorkflowArtifactPlan,
-  getManagedCommandFiles,
 } from './workflow-installation.js';
 import { isMap, parseDocument } from 'yaml';
+import { ArtifactSyncEngine } from './templates/sync-engine.js';
 
 const require = createRequire(import.meta.url);
 const { version: OPENSPEC_VERSION } = require('../../package.json');
@@ -509,10 +506,6 @@ export class InitCommand {
     const refreshedTools: typeof tools = [];
     const failedTools: Array<{ name: string; error: Error }> = [];
     const commandsSkipped: string[] = [];
-    let generatedSkillCount = 0;
-    let generatedCommandCount = 0;
-    let removedCommandCount = 0;
-    let removedSkillCount = 0;
 
     // Read global config for profile and delivery settings (use --profile override if set)
     const globalConfig = getGlobalConfig();
@@ -524,82 +517,42 @@ export class InitCommand {
       projectPath
     ).workflows;
 
-    // Process each tool
+    // Build sync requests for all tools
+    const requests = tools.map((tool) => ({
+      toolId: tool.value,
+      projectPath,
+      workflows,
+      delivery,
+      version: OPENSPEC_VERSION,
+    }));
+
+    const summary = await ArtifactSyncEngine.syncAll(requests);
+
+    // Map results back to init-style output
     for (const tool of tools) {
-      const spinner = ora(`Setting up ${tool.name}...`).start();
-      const toolPlan = createToolWorkflowArtifactPlan(tool.value, workflows, delivery, projectPath);
+      const result = summary.results.find((r) => r.toolId === tool.value);
+      if (!result) continue;
 
-      try {
-        // Generate skill files if delivery includes skills
-        if (toolPlan.shouldGenerateSkills) {
-          // Use tool-specific skillsDir
-          const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
-
-          // Create skill directories and SKILL.md files
-          for (const { template, dirName } of toolPlan.skillTemplates) {
-            const skillDir = path.join(skillsDir, dirName);
-            const skillFile = path.join(skillDir, 'SKILL.md');
-
-            // Generate SKILL.md content with tool-specific workflow references.
-            const transformer = getWorkflowReferenceTransformer(tool.value);
-            const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
-
-            // Write the skill file
-            await FileSystemUtils.writeFile(skillFile, skillContent);
-          }
-          generatedSkillCount += toolPlan.skillTemplates.length;
-
-          removedSkillCount += await this.removeUnselectedSkillDirs(
-            skillsDir,
-            toolPlan.expectedSkillDirNames,
-            toolPlan.managedSkillDirNames
-          );
-        }
-        if (!toolPlan.shouldGenerateSkills) {
-          const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
-          removedSkillCount += await this.removeSkillDirs(skillsDir, toolPlan.managedSkillDirNames);
-        }
-
-        // Generate commands if delivery includes commands
-        if (toolPlan.shouldGenerateCommands) {
-          const adapter = CommandAdapterRegistry.get(tool.value);
-          if (adapter) {
-            const generatedCommands = generateCommands(toolPlan.commandContents, adapter);
-
-            for (const cmd of generatedCommands) {
-              const commandFile = path.isAbsolute(cmd.path) ? cmd.path : path.join(projectPath, cmd.path);
-              await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
-            }
-            generatedCommandCount += generatedCommands.length;
-
-            removedCommandCount += await this.removeUnselectedCommandFiles(
-              projectPath,
-              tool.value,
-              toolPlan.expectedCommandSlugs,
-              toolPlan.managedCommandSlugs
-            );
-          } else {
-            commandsSkipped.push(tool.value);
-          }
-        }
-        if (!toolPlan.shouldGenerateCommands) {
-          removedCommandCount += await this.removeCommandFiles(
-            projectPath,
-            tool.value,
-            toolPlan.managedCommandSlugs
-          );
-        }
-
-        spinner.succeed(`Setup complete for ${tool.name}`);
-
+      if (result.error) {
+        failedTools.push({ name: tool.name, error: result.error });
+      } else {
         if (tool.wasConfigured) {
           refreshedTools.push(tool);
         } else {
           createdTools.push(tool);
         }
-      } catch (error) {
-        spinner.fail(`Failed for ${tool.name}`);
-        failedTools.push({ name: tool.name, error: error as Error });
+      }
+    }
+
+    // Detect tools with no adapter (commands skipped)
+    const commandsSkippedSet = new Set<string>();
+    for (const tool of tools) {
+      const result = summary.results.find((r) => r.toolId === tool.value);
+      if (result && !result.error && !CommandAdapterRegistry.get(tool.value)) {
+        const plan = createToolWorkflowArtifactPlan(tool.value, workflows, delivery, projectPath);
+        if (plan.shouldGenerateCommands) {
+          commandsSkippedSet.add(tool.value);
+        }
       }
     }
 
@@ -607,11 +560,11 @@ export class InitCommand {
       createdTools,
       refreshedTools,
       failedTools,
-      commandsSkipped,
-      generatedSkillCount,
-      generatedCommandCount,
-      removedCommandCount,
-      removedSkillCount,
+      commandsSkipped: [...commandsSkippedSet],
+      generatedSkillCount: summary.totalSkillsWritten,
+      generatedCommandCount: summary.totalCommandsWritten,
+      removedCommandCount: summary.totalCommandsRemoved,
+      removedSkillCount: summary.totalSkillsRemoved,
     };
   }
 
@@ -816,104 +769,5 @@ export class InitCommand {
       color: 'gray',
       spinner: PROGRESS_SPINNER,
     }).start();
-  }
-
-  private async removeSkillDirs(
-    skillsDir: string,
-    managedSkillDirNames: readonly string[]
-  ): Promise<number> {
-    let removed = 0;
-
-    for (const dirName of managedSkillDirNames) {
-      const skillDir = path.join(skillsDir, dirName);
-      try {
-        if (fs.existsSync(skillDir)) {
-          await fs.promises.rm(skillDir, { recursive: true, force: true });
-          removed++;
-        }
-      } catch {
-        // Ignore errors
-      }
-    }
-
-    return removed;
-  }
-
-  private async removeUnselectedSkillDirs(
-    skillsDir: string,
-    expectedSkillDirNames: readonly string[],
-    managedSkillDirNames: readonly string[]
-  ): Promise<number> {
-    const expected = new Set(expectedSkillDirNames);
-    let removed = 0;
-
-    for (const dirName of managedSkillDirNames) {
-      if (expected.has(dirName)) continue;
-
-      const skillDir = path.join(skillsDir, dirName);
-      try {
-        if (fs.existsSync(skillDir)) {
-          await fs.promises.rm(skillDir, { recursive: true, force: true });
-          removed++;
-        }
-      } catch {
-        // Ignore errors
-      }
-    }
-
-    return removed;
-  }
-
-  private async removeCommandFiles(
-    projectPath: string,
-    toolId: string,
-    managedCommandSlugs: readonly string[]
-  ): Promise<number> {
-    let removed = 0;
-    for (const fullPath of getManagedCommandFiles(projectPath, toolId, managedCommandSlugs, { includeLegacyFiles: true })) {
-      try {
-        if (fs.existsSync(fullPath)) {
-          await fs.promises.unlink(fullPath);
-          removed++;
-        }
-      } catch {
-        // Ignore errors
-      }
-    }
-
-    return removed;
-  }
-
-  private async removeUnselectedCommandFiles(
-    projectPath: string,
-    toolId: string,
-    expectedCommandSlugs: readonly string[],
-    managedCommandSlugs: readonly string[]
-  ): Promise<number> {
-    let removed = 0;
-    const expected = new Set(expectedCommandSlugs);
-
-    for (const commandSlug of managedCommandSlugs) {
-      if (expected.has(commandSlug)) continue;
-      const commandFiles = getManagedCommandFiles(
-        projectPath,
-        toolId,
-        [commandSlug],
-        { includeLegacyFiles: true }
-      );
-
-      for (const fullPath of commandFiles) {
-        try {
-          if (fs.existsSync(fullPath)) {
-            await fs.promises.unlink(fullPath);
-            removed++;
-          }
-        } catch {
-          // Ignore errors
-        }
-      }
-    }
-
-    return removed;
   }
 }

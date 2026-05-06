@@ -47,7 +47,7 @@ export const AI_TOOLS: AIToolOption[] = [
   { name: 'AGENTS.md (works with Amp, VS Code, …)', value: 'agents', available: false, successLabel: 'your AGENTS.md-compatible assistant' }
 ];
 
-const COMMAND_BACKED_TOOL_IDS = new Set<string>([
+export const COMMAND_BACKED_TOOL_IDS = new Set<string>([
   'amazon-q',
   'antigravity',
   'auggie',

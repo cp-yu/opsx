@@ -1687,12 +1687,12 @@ content
       )).toBe(false);
       expect(await FileSystemUtils.fileExists(extraCommandFile)).toBe(false);
 
-      // Should report deselected workflow cleanup.
+      // Should report cleaned up artifacts.
       const calls = consoleSpy.mock.calls.map(call =>
         call.map(arg => String(arg)).join(' ')
       );
       const hasDeselectedRemovalNote = calls.some(call =>
-        call.includes('deselected workflows')
+        call.includes('Removed:') && call.includes('skill director')
       );
       expect(hasDeselectedRemovalNote).toBe(true);
 

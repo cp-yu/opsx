@@ -1,0 +1,69 @@
+{
+  "timestamp": "2026-05-06T10:30:00.000Z",
+  "result": "PASS_WITH_WARNINGS",
+  "issues": [
+    {
+      "severity": "warning",
+      "category": "coherence",
+      "message": "Command transforms still applied via adapter-embedded transformToHyphenCommands (opencode.ts:25, pi.ts:58), not through the new transform pipeline. writeCommands() in sync-engine.ts does not call runTransforms despite builtin transforms declaring scope:'both'. Output is functionally correct but architectural unification is incomplete for the command path."
+    }
+  ],
+  "tasksFileHash": "24c030d705a3fdd365f3cca3b9c9cfe9f16ef99a8c8755d42bebbca3cf108be5",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent_review",
+    "evidenceFiles": [
+      "test/core/templates/manifest.test.ts",
+      "test/core/templates/tool-profile.test.ts",
+      "test/core/templates/transforms.test.ts"
+    ],
+    "evidenceFingerprint": "058ec03ffb6cfe14e74134e6e141f8ff6e2e4e1660a7084d91d7f79c016acff1",
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "9c2e4232c5b9e911249e56706a26583f339327e0"
+  },
+  "optimization": {
+    "status": "IMPROVED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-06T10:11:43.948Z",
+        "type": "optimization",
+        "status": "OPTIMIZATION_PROPOSED",
+        "summary": "Fixed unsafe error as Error type assertion in sync-engine.ts:424, replacing with instanceof check to prevent silent undefined propagation for non-Error throws",
+        "files": [
+          "src/core/templates/sync-engine.ts"
+        ]
+      },
+      {
+        "timestamp": "2026-05-06T10:14:02.299Z",
+        "type": "verification",
+        "result": "PASS",
+        "behaviorRetryCounter": 1
+      }
+    ],
+    "affectedFileHashes": {
+      "src/core/templates/sync-engine.ts": "c1c4d0dee734f9a4ba9075c651b4b6aa32fe593951640a347cdcfed217b9b1eb"
+    },
+    "baseline": {
+      "timestamp": "2026-05-06T09:42:14.084Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "24c030d705a3fdd365f3cca3b9c9cfe9f16ef99a8c8755d42bebbca3cf108be5",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent_review",
+        "evidenceFiles": [
+          "test/core/templates/manifest.test.ts",
+          "test/core/templates/tool-profile.test.ts",
+          "test/core/templates/transforms.test.ts"
+        ],
+        "evidenceFingerprint": "24e71c7f3c48f6796c41f631da0f4a1b4165f048ec8e50dda340413a0d2193ac",
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "9c2e4232c5b9e911249e56706a26583f339327e0"
+      }
+    },
+    "final": {
+      "result": "PASS",
+      "issues": []
+    }
+  }
+}
