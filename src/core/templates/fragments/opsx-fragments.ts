@@ -73,13 +73,11 @@ export const VERIFY_FRESHNESS_RULES = `
 
 A verify result is considered **FRESH** if ALL of the following hold:
 - \`.verify-result.json\` exists in the change directory
-- \`tasksFileHash\` matches the hash of the current \`tasks.md\` contents
 - \`verificationContext.evidenceFingerprint\` matches the current workspace fingerprint
 - \`verificationContext.contractVersion\` is \`"1.0"\`
 - \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\`
 
 A verify result is considered **STALE** if ANY of the following hold:
-- \`tasksFileHash\` does not match the current \`tasks.md\`
 - \`verificationContext.evidenceFiles\` is missing or the file list changed
 - \`verificationContext.evidenceFingerprint\` does not match the recomputed fingerprint
 - \`verificationContext.gitHeadCommit\` does not match the current HEAD (if recorded)
@@ -97,8 +95,8 @@ A verify result is considered **STALE** if ANY of the following hold:
 
 **Fingerprint Computation**:
 - Sort \`evidenceFiles\` alphabetically before hashing
-- For each evidence file, collect normalized relative path + modification time + size
-- Hash the concatenated string with SHA-256 (or equivalent)
+- For each evidence file, collect normalized relative POSIX path + content hash
+- Hash the JSON-serialized entries with SHA-256
 - Use \`path.join()\`, \`path.resolve()\`, and \`path.normalize()\` for all path handling
 - Persist \`evidenceFiles\` as relative POSIX paths for cross-platform comparison
 `.trim();

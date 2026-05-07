@@ -1,0 +1,128 @@
+{
+  "timestamp": "2026-05-07T09:31:43.408Z",
+  "result": "PASS_WITH_WARNINGS",
+  "issues": [
+    {
+      "severity": "WARNING",
+      "message": "opsx-delta.yaml lists only cap.verify.freshness-engine as MODIFIED, but the proposal also designates verify-cli-gate as modified (spec description update). The delta specs directory contains both spec deltas. The omission does not affect functional correctness.",
+      "requirement": "opsx-delta accuracy",
+      "recommendation": "Add cap.verify.cli-gate to MODIFIED section of opsx-delta.yaml or accept the omission as intentional documentation scoping.",
+      "evidence": [
+        "openspec/changes/fix-evidence-fingerprint-content-hash/opsx-delta.yaml",
+        "openspec/changes/fix-evidence-fingerprint-content-hash/proposal.md"
+      ]
+    },
+    {
+      "severity": "WARNING",
+      "message": "Pre-existing: src/commands/verify.ts Phase 1 persistence does not normalize evidenceFiles to relative POSIX paths before writing to .verify-result.json. computeEvidenceFingerprint normalizes internally, so freshness remains correct.",
+      "file": "src/commands/verify.ts",
+      "requirement": "verify-writeback cross-platform paths",
+      "recommendation": "Normalize evidenceFiles to relative POSIX paths before persisting in Phase 1 CLI handler."
+    },
+    {
+      "severity": "SUGGESTION",
+      "message": "checkFreshness line 105 inline comment mixes English and Chinese ('tasksFileHash检查已移除'). Minor style inconsistency.",
+      "file": "src/core/verify/freshness.ts",
+      "line": 105
+    }
+  ],
+  "tasksFileHash": "e916e8043aa3d552ba7148707416ec9aa62713d13406f81544d537f7530af532",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "clean-context-reviewer",
+    "evidenceFiles": [
+      "CLAUDE.md",
+      "openspec/changes/fix-evidence-fingerprint-content-hash/design.md",
+      "openspec/changes/fix-evidence-fingerprint-content-hash/opsx-delta.yaml",
+      "openspec/changes/fix-evidence-fingerprint-content-hash/proposal.md",
+      "openspec/changes/fix-evidence-fingerprint-content-hash/specs/verify-cli-gate/spec.md",
+      "openspec/changes/fix-evidence-fingerprint-content-hash/specs/verify-freshness-engine/spec.md",
+      "openspec/changes/fix-evidence-fingerprint-content-hash/tasks.md",
+      "openspec/project.opsx.yaml",
+      "openspec/specs/archive-verify-gate/spec.md",
+      "openspec/specs/verify-cli-gate/spec.md",
+      "openspec/specs/verify-freshness-engine/spec.md",
+      "openspec/specs/verify-writeback/spec.md",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "src/core/templates/workflows/verify-change.ts",
+      "src/core/verify/freshness.ts",
+      "src/core/verify/types.ts",
+      "test/core/templates/skill-templates-parity.test.ts",
+      "test/core/verify/freshness.test.ts",
+      "test/utils/command-references.test.ts"
+    ],
+    "evidenceFingerprint": "89897e764ab3a9b7f9dd3feb4f5237e98b9fe713134168773edd90df07ad7650",
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "e5ca31cd92e9233d9c4ea6b04b59ff386acbacf1",
+    "gitDiffSummary": "13 files changed, 84 insertions(+), 50 deletions(-)"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-07T09:31:55.784Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-07T09:31:43.408Z",
+      "result": "PASS_WITH_WARNINGS",
+      "issues": [
+        {
+          "severity": "WARNING",
+          "message": "opsx-delta.yaml lists only cap.verify.freshness-engine as MODIFIED, but the proposal also designates verify-cli-gate as modified (spec description update). The delta specs directory contains both spec deltas. The omission does not affect functional correctness.",
+          "requirement": "opsx-delta accuracy",
+          "recommendation": "Add cap.verify.cli-gate to MODIFIED section of opsx-delta.yaml or accept the omission as intentional documentation scoping.",
+          "evidence": [
+            "openspec/changes/fix-evidence-fingerprint-content-hash/opsx-delta.yaml",
+            "openspec/changes/fix-evidence-fingerprint-content-hash/proposal.md"
+          ]
+        },
+        {
+          "severity": "WARNING",
+          "message": "Pre-existing: src/commands/verify.ts Phase 1 persistence does not normalize evidenceFiles to relative POSIX paths before writing to .verify-result.json. computeEvidenceFingerprint normalizes internally, so freshness remains correct.",
+          "file": "src/commands/verify.ts",
+          "requirement": "verify-writeback cross-platform paths",
+          "recommendation": "Normalize evidenceFiles to relative POSIX paths before persisting in Phase 1 CLI handler."
+        },
+        {
+          "severity": "SUGGESTION",
+          "message": "checkFreshness line 105 inline comment mixes English and Chinese ('tasksFileHash检查已移除'). Minor style inconsistency.",
+          "file": "src/core/verify/freshness.ts",
+          "line": 105
+        }
+      ],
+      "tasksFileHash": "e916e8043aa3d552ba7148707416ec9aa62713d13406f81544d537f7530af532",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "clean-context-reviewer",
+        "evidenceFiles": [
+          "CLAUDE.md",
+          "openspec/changes/fix-evidence-fingerprint-content-hash/design.md",
+          "openspec/changes/fix-evidence-fingerprint-content-hash/opsx-delta.yaml",
+          "openspec/changes/fix-evidence-fingerprint-content-hash/proposal.md",
+          "openspec/changes/fix-evidence-fingerprint-content-hash/specs/verify-cli-gate/spec.md",
+          "openspec/changes/fix-evidence-fingerprint-content-hash/specs/verify-freshness-engine/spec.md",
+          "openspec/changes/fix-evidence-fingerprint-content-hash/tasks.md",
+          "openspec/project.opsx.yaml",
+          "openspec/specs/archive-verify-gate/spec.md",
+          "openspec/specs/verify-cli-gate/spec.md",
+          "openspec/specs/verify-freshness-engine/spec.md",
+          "openspec/specs/verify-writeback/spec.md",
+          "src/core/templates/fragments/opsx-fragments.ts",
+          "src/core/templates/workflows/verify-change.ts",
+          "src/core/verify/freshness.ts",
+          "src/core/verify/types.ts",
+          "test/core/templates/skill-templates-parity.test.ts",
+          "test/core/verify/freshness.test.ts",
+          "test/utils/command-references.test.ts"
+        ],
+        "evidenceFingerprint": "89897e764ab3a9b7f9dd3feb4f5237e98b9fe713134168773edd90df07ad7650",
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "e5ca31cd92e9233d9c4ea6b04b59ff386acbacf1",
+        "gitDiffSummary": "13 files changed, 84 insertions(+), 50 deletions(-)"
+      }
+    }
+  }
+}

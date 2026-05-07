@@ -63,7 +63,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.template-artifact-pipeline
-    intent: 统一的 artifact 生成管线，包含 WorkflowManifest、ToolProfileRegistry、transform 管线和 ArtifactSyncEngine。transform 管线的 scope: 'both' 语义现在对 skill 和 command 两种产出均实际生效——writeSkills 和 writeCommands 均在适配器格式化前调用 runTransforms 执行 preAdapter 阶段变换
+    intent: "统一的 artifact 生成管线，包含 WorkflowManifest、ToolProfileRegistry、transform 管线和 ArtifactSyncEngine。transform 管线的 scope: 'both' 语义现在对 skill 和 command 两种产出均实际生效——writeSkills 和 writeCommands 均在适配器格式化前调用 runTransforms 执行 preAdapter 阶段变换"
     type: capability
   - id: cap.ai.tool-adapters
     intent: 为支持的 AI 工具提供工具元数据与适配器注册；其中 Codex 通过显式工具元数据声明为 skills-only，不再注册 command adapter
@@ -281,7 +281,7 @@ capabilities:
     intent: 程序化 verify 门禁 CLI 工具。Phase 2 双调用模型保留，但重试上限从硬编码 3 改为读取 config.optimization.optRetries，新增 failedDirections 记录支持
     type: capability
   - id: cap.verify.freshness-engine
-    intent: 确定性 freshness 判定引擎，用 TypeScript 代码实现 tasksFileHash、evidenceFingerprint 计算和 FRESH/STALE/MISSING 判定。evidenceFingerprint 计算中排除 .verify-result.json 文件以消除自指循环
+    intent: 确定性 freshness 判定引擎，用 TypeScript 代码实现 tasksFileHash、evidenceFingerprint 计算和 FRESH/STALE/MISSING 判定。evidenceFingerprint 基于文件内容哈希（而非元数据）计算，消除文件系统触碰导致的误报 STALE
     type: capability
   - id: cap.apply.verify-integration
     intent: apply 命令内置 Phase 1 一致性验证和 Phase 2 优化循环，由 subagent 执行验证判断和优化提案，主 agent 仅负责编码

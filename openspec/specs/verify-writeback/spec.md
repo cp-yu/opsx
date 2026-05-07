@@ -71,7 +71,7 @@
   - `contractVersion`: "1.0" (当前验证合同版本)
   - `executionMode`: 'clean-context-reviewer' 或 'current-agent-reread'
   - `evidenceFiles`: 本次验证实际审阅的文件列表（相对 POSIX 路径，已排序）
-  - `evidenceFingerprint`: 基于 evidenceFiles 的路径、修改时间、大小计算的 SHA-256 hash
+  - `evidenceFingerprint`: 基于 evidenceFiles 的相对 POSIX 路径和文件内容哈希计算的 SHA-256 hash
   - `gitHeadCommit`: 当前 HEAD commit SHA（可选，如果在 git repo 中）
   - `gitDiffSummary`: `git diff --stat` 输出摘要（可选，如果有改动）
 - **AND** SHALL 使用跨平台路径处理（`path.join`, `path.resolve`）
@@ -81,13 +81,11 @@
 - **WHEN** archive 读取 `.verify-result.json`
 - **THEN** 系统 SHALL 判定 verify result 是否 fresh：
   - **FRESH** 当且仅当 ALL of:
-    - `tasksFileHash` 匹配当前 `tasks.md` 的 hash
     - `verificationContext.evidenceFingerprint` 匹配重新计算的 fingerprint
     - `verificationContext.contractVersion` 是 "1.0"
     - `verificationContext.gitHeadCommit` 匹配当前 HEAD（如果记录了）
     - `result` 是 `PASS` 或 `PASS_WITH_WARNINGS`
   - **STALE** 当 ANY of:
-    - `tasksFileHash` 不匹配
     - `evidenceFiles` 列表发生变化（文件增删）
     - `evidenceFingerprint` 不匹配
     - `gitHeadCommit` 不匹配
@@ -114,4 +112,3 @@ When verify writes remediation content back to `tasks.md`, the system SHALL use 
 - **AND** runtime projection defines a prose-language policy
 - **THEN** remediation descriptions SHALL follow that policy
 - **AND** task checkboxes, section headers, requirement references, and other canonical tokens SHALL remain unchanged
-

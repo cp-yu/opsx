@@ -1,24 +1,4 @@
-# verify-freshness-engine Specification
-
-## Purpose
-此规约记录变更 add-verify-cli-gate 引入的行为，请在后续同步或归档前补全正式 Purpose。
-## Requirements
-### Requirement: tasksFileHash 计算
-
-系统 SHALL 提供 `computeTasksFileHash(tasksPath)` 函数，计算 `tasks.md` 文件内容的 SHA-256 哈希。
-
-#### Scenario: 正常计算
-
-- **WHEN** 调用 `computeTasksFileHash('/path/to/tasks.md')`
-- **AND** 文件存在且可读
-- **THEN** 系统 SHALL 返回文件内容的 SHA-256 十六进制字符串
-- **AND** 使用 `crypto.createHash('sha256')`
-
-#### Scenario: 文件不存在
-
-- **WHEN** 调用 `computeTasksFileHash('/path/to/missing.md')`
-- **AND** 文件不存在
-- **THEN** 系统 SHALL 返回 `null`
+## MODIFIED Requirements
 
 ### Requirement: evidenceFingerprint 计算
 
@@ -76,28 +56,3 @@
 - **THEN** 返回 `{ status: 'FRESH', checks: { ... } }`
 
 `tasksFileHash` SHALL NOT 参与 FRESH 判定 — tasks.md 已在 evidenceFiles 中被 evidenceFingerprint 覆盖，且 verify 后标记完成导致其内容必然变化。
-
-### Requirement: Archive Compatibility 判定
-
-系统 SHALL 提供 `checkArchiveCompatibility(verifyResult)` 函数，判定验证结果是否可用于归档。
-
-#### Scenario: Compatible
-
-- **WHEN** `optimization.status` 为 SKIPPED、NOT_NEEDED、IMPROVED 或 DEGRADED
-- **THEN** 返回 `{ compatible: true }`
-
-#### Scenario: ABORTED_UNSAFE 阻塞
-
-- **WHEN** `optimization.status` 为 ABORTED_UNSAFE
-- **THEN** 返回 `{ compatible: false, blockReason: 'ABORTED_UNSAFE' }`
-
-#### Scenario: Legacy 无 optimization 字段
-
-- **WHEN** `.verify-result.json` 不包含 `optimization` 字段
-- **THEN** 返回 `{ compatible: true }`（向后兼容）
-
-#### Scenario: PENDING_VERIFICATION 阻塞
-
-- **WHEN** `optimization.status` 为 PENDING_VERIFICATION
-- **THEN** 返回 `{ compatible: false, blockReason: 'PENDING_VERIFICATION' }`
-

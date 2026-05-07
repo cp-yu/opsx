@@ -14,33 +14,11 @@
 - **AND** change 目录存在
 - **THEN** 系统 SHALL 校验 JSON 输入结构（`result`、`issues`、`evidenceFiles` 字段）
 - **AND** SHALL 计算 `tasksFileHash`（当前 `tasks.md` 的 SHA-256）
-- **AND** SHALL 计算 `evidenceFingerprint`（`evidenceFiles` 路径+mtime+size 的 SHA-256）
+- **AND** SHALL 计算 `evidenceFingerprint`（`evidenceFiles` 文件内容哈希的 SHA-256）
 - **AND** SHALL 将 canonical Phase 1 payload 写入 `.verify-result.json`
 - **AND** 当 result 为 PASS/PASS_WITH_WARNINGS 时 SHALL 初始化 `optimization.status = PENDING_VERIFICATION`，防止 Phase 1-only 结果通过 sync/archive 门禁
 - **AND** 输出下一步指令：PASS/PASS_WITH_WARNINGS 时输出 "进入 Phase 2"，FAIL_NEEDS_REMEDIATION 时输出 "修复 CRITICAL issues"
 - **AND** 以 exit 0 退出
-
-#### Scenario: 入口条件不满足
-
-- **WHEN** agent 执行 `openspec verify phase1 <change-name>`
-- **AND** `tasks.md` 缺失或无 checkbox 任务
-- **THEN** 系统 SHALL 输出 warning 描述不满足的条件
-- **AND** 以 exit 1 退出
-- **AND** SHALL NOT 写入 `.verify-result.json`
-
-#### Scenario: JSON 输入不合法
-
-- **WHEN** agent 传入的 `--input` JSON 缺少必需字段或 `result` 值非法
-- **THEN** 系统 SHALL 输出具体的校验错误
-- **AND** 以 exit 2 退出
-
-#### Scenario: Phase 1 失败后的 remediation 读取
-
-- **WHEN** Phase 1 result 为 FAIL_NEEDS_REMEDIATION
-- **AND** `.verify-result.json` 已写入
-- **THEN** agent SHALL 读取 `.verify-result.json` 中的 `issues[]` 定位需修复的问题
-- **AND** SHALL 参考 `evidenceFiles[]` 确定需重新检查的文件范围
-- **AND** 修复完成后 SHALL 重新调用 `openspec verify phase1` 覆写结果
 
 ### Requirement: Phase 2 双调用门禁
 

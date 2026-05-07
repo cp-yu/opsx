@@ -57,8 +57,7 @@ export interface EvidenceFingerprint {
   skippedFiles: string[];
   entries: Array<{
     path: string;
-    mtimeMs: number;
-    size: number;
+    hash: string;
   }>;
 }
 

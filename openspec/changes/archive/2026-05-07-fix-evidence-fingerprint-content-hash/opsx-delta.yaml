@@ -1,0 +1,5 @@
+MODIFIED:
+  capabilities:
+    - id: cap.verify.freshness-engine
+      type: capability
+      intent: 确定性 freshness 判定引擎，用 TypeScript 代码实现 tasksFileHash、evidenceFingerprint 计算和 FRESH/STALE/MISSING 判定。evidenceFingerprint 基于文件内容哈希（而非元数据）计算，消除文件系统触碰导致的误报 STALE

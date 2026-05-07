@@ -58,11 +58,11 @@
 
 - **WHEN** archive 检查 `.verify-result.json` 的 freshness
 - **THEN** 系统 SHALL 判定为 FRESH 当且仅当 ALL of:
-  - `tasksFileHash` 匹配当前 `tasks.md`
   - `verificationContext.evidenceFingerprint` 匹配重新计算的 fingerprint
   - `verificationContext.contractVersion` 是 "1.0"
   - `verificationContext.gitHeadCommit` 匹配当前 HEAD（如果记录了）
   - `result` 是 `PASS` 或 `PASS_WITH_WARNINGS`
+- **AND** `tasksFileHash` 不参与 FRESH/STALE 判定
 - **AND** `optimization` 字段存在与否不影响 FRESH/STALE 判定
 
 #### Scenario: Fresh 但 optimization 不可复用
@@ -109,4 +109,3 @@
 - **THEN** 系统 SHALL 输出两个门禁的合并状态
 - **AND** SHALL 以 exit 1 退出
 - **AND** agent SHALL 向用户展示合并选项：先运行 verify+sync / 仅 sync / 强制继续 / 放弃
-

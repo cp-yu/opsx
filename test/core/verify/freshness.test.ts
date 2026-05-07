@@ -37,9 +37,23 @@ describe('verify freshness engine', () => {
 
     expect(fingerprint.hash).toMatch(/^[a-f0-9]{64}$/);
     expect(fingerprint.entries).toEqual([
-      expect.objectContaining({ path: 'src/a.ts', size: 1 }),
+      expect.objectContaining({ path: 'src/a.ts', hash: expect.stringMatching(/^[a-f0-9]{64}$/) }),
     ]);
     expect(fingerprint.skippedFiles).toEqual(['missing.ts']);
+  });
+
+  it('keeps evidence fingerprint stable when only file mtime changes', async () => {
+    await fs.mkdir(path.join(tempDir, 'src'), { recursive: true });
+    const evidencePath = path.join(tempDir, 'src', 'a.ts');
+    await fs.writeFile(evidencePath, 'a', 'utf-8');
+
+    const before = await computeEvidenceFingerprint(['src/a.ts'], tempDir);
+    const future = new Date(Date.now() + 60_000);
+    await fs.utimes(evidencePath, future, future);
+    const after = await computeEvidenceFingerprint(['src/a.ts'], tempDir);
+
+    expect(after.hash).toBe(before.hash);
+    expect(after.entries).toEqual(before.entries);
   });
 
   it('excludes .verify-result.json from evidence fingerprint entries', async () => {
@@ -95,9 +109,12 @@ describe('verify freshness engine', () => {
     expect((await checkFreshness(changeDir, changeDir)).status).toBe('FRESH');
 
     await fs.writeFile(tasksPath, '- [ ] task\n', 'utf-8');
+    expect((await checkFreshness(changeDir, changeDir)).status).toBe('FRESH');
+
+    await fs.writeFile(evidencePath, 'changed', 'utf-8');
     const stale = await checkFreshness(changeDir, changeDir);
     expect(stale.status).toBe('STALE');
-    expect(stale.details).toContain('tasksFileHash does not match current tasks.md');
+    expect(stale.details).toContain('evidenceFingerprint does not match current evidence files');
   });
 
   it('checks archive compatibility for optimization terminal states', () => {

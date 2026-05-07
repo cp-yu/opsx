@@ -97,7 +97,7 @@ function buildCanonicalPhase1Step(stepNumber: number): string {
        - \`contractVersion\`: \`"1.0"\`
        - \`executionMode\`: derived from Step 1.5
        - \`evidenceFiles\`: sorted list of examined files using relative POSIX paths
-       - \`evidenceFingerprint\`: SHA-256 of sorted evidence file path + modification time + size tuples
+       - \`evidenceFingerprint\`: SHA-256 of sorted relative POSIX path + content hash entries
        - \`gitHeadCommit\`: current HEAD commit SHA if available
        - \`gitDiffSummary\`: output of \`git diff --stat\` if useful
 ${VERIFY_CLI_JSON_SCHEMA_REFERENCE}
