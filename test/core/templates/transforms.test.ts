@@ -26,6 +26,63 @@ describe('Transform Pipeline', () => {
         { toolId: 'opencode', workflowId: 'apply', artifactType: 'skill' });
       expect(result).toBe('Run /opsx-apply to implement');
     });
+
+    it('should transform colon-based references for pi', () => {
+      const result = runTransforms('Run /opsx:apply to implement',
+        { toolId: 'pi', workflowId: 'apply', artifactType: 'skill' });
+      expect(result).toBe('Run /opsx-apply to implement');
+    });
+  });
+
+  describe('command path transforms (scope: both verified for command artifactType)', () => {
+    it('should transform opencode command body with preAdapter phase', () => {
+      const result = runTransforms(
+        'Use /opsx:new to start and /opsx:apply to implement.',
+        { toolId: 'opencode', workflowId: 'new', artifactType: 'command' },
+        'preAdapter'
+      );
+      expect(result).toBe('Use /opsx-new to start and /opsx-apply to implement.');
+    });
+
+    it('should transform pi command body with preAdapter phase', () => {
+      const result = runTransforms(
+        'Use /opsx:new to start and /opsx:apply to implement.',
+        { toolId: 'pi', workflowId: 'new', artifactType: 'command' },
+        'preAdapter'
+      );
+      expect(result).toBe('Use /opsx-new to start and /opsx-apply to implement.');
+    });
+
+    it('should transform codex command body to dollar-sign format', () => {
+      const result = runTransforms(
+        'Use /opsx:new, /opsx:continue, and /opsx:apply.',
+        { toolId: 'codex', workflowId: 'new', artifactType: 'command' },
+        'preAdapter'
+      );
+      expect(result).toContain('$openspec-new-change');
+      expect(result).toContain('$openspec-continue-change');
+      expect(result).toContain('$openspec-apply-change');
+    });
+
+    it('should NOT apply postAdapter transforms when phase is preAdapter', () => {
+      const result = runTransforms(
+        'Run /opsx:apply',
+        { toolId: 'opencode', workflowId: 'apply', artifactType: 'command' },
+        'preAdapter'
+      );
+      expect(result).toBe('Run /opsx-apply');
+    });
+
+    it('should NOT transform tool-inapplicable command body', () => {
+      const input = 'Run /opsx:apply';
+      // claude has no builtin transform registered
+      const result = runTransforms(
+        input,
+        { toolId: 'claude', workflowId: 'apply', artifactType: 'command' },
+        'preAdapter'
+      );
+      expect(result).toBe(input);
+    });
   });
 
   describe('ordering', () => {

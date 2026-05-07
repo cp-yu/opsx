@@ -196,7 +196,17 @@ async function writeCommands(
   const adapter = CommandAdapterRegistry.get(toolId);
   if (!adapter || entries.length === 0) return 0;
 
-  const contents = entries.map((e) => e.content);
+  // Apply preAdapter transforms to each command body.
+  // `entry.content.id` is the WorkflowId (see getCommandContents mapping).
+  const contents: CommandContent[] = entries.map((entry) => ({
+    ...entry.content,
+    body: runTransforms(entry.content.body, {
+      toolId,
+      workflowId: entry.content.id,
+      artifactType: 'command',
+    }, 'preAdapter'),
+  }));
+
   const generated = generateCommands(contents, adapter);
   let written = 0;
 

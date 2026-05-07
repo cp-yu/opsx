@@ -80,7 +80,9 @@ Finally /opsx-apply to implement`;
 
     for (const cmd of commands) {
       it(`should transform /opsx:${cmd}`, () => {
-        expect(transformToHyphenCommands(`/opsx:${cmd}`)).toBe(`/opsx-${cmd}`);
+        // `archive` has commandSlug 'archive-change', others match 1:1
+        const expectedSuffix = cmd === 'archive' ? 'archive-change' : cmd;
+        expect(transformToHyphenCommands(`/opsx:${cmd}`)).toBe(`/opsx-${expectedSuffix}`);
       });
     }
   });

@@ -52,7 +52,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.command-generation
-    intent: 为仍支持 adapter-backed command 文件的 AI 工具生成 slash command 定义；Codex 不再生成 commands，而是仅通过 skills 暴露 OpenSpec 工作流
+    intent: 为仍支持 adapter-backed command 文件的 AI 工具生成 slash command 定义。opencode 和 pi 适配器不再内嵌 command reference 变换逻辑（transformToHyphenCommands），该职责由共享 transform 管线统一处理。适配器仅负责工具特定的 frontmatter 格式化和文件路径
     status: active
     type: capability
   - id: cap.ai.command-slugs
@@ -61,6 +61,9 @@ capabilities:
   - id: cap.ai.skill-generation
     intent: 为配置的 AI 工具生成特定工具的技能文件，并在写入 skill 指令时按工具渲染用户可见 workflow 引用；其中 Codex 使用精确的 `$openspec-*` skill 名称
     status: active
+    type: capability
+  - id: cap.ai.template-artifact-pipeline
+    intent: 统一的 artifact 生成管线，包含 WorkflowManifest、ToolProfileRegistry、transform 管线和 ArtifactSyncEngine。transform 管线的 scope: 'both' 语义现在对 skill 和 command 两种产出均实际生效——writeSkills 和 writeCommands 均在适配器格式化前调用 runTransforms 执行 preAdapter 阶段变换
     type: capability
   - id: cap.ai.tool-adapters
     intent: 为支持的 AI 工具提供工具元数据与适配器注册；其中 Codex 通过显式工具元数据声明为 skills-only，不再注册 command adapter

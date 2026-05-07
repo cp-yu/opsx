@@ -21,7 +21,7 @@ Define tool-agnostic command content and adapter contracts for generating tool-s
 
 ### Requirement: ToolCommandAdapter interface
 
-系统 SHALL 定义一个 `ToolCommandAdapter` 接口用于支持 adapter-backed command generation 的工具格式化逻辑。
+系统 SHALL 定义一个 `ToolCommandAdapter` 接口用于支持 adapter-backed command generation 的工具格式化逻辑。适配器 SHALL NOT 在内部执行 command reference 变换——该职责由共享 transform 管线统一处理。
 
 #### Scenario: Adapter 接口结构
 
@@ -30,6 +30,20 @@ Define tool-agnostic command content and adapter contracts for generating tool-s
   - `toolId`: 与 `AIToolOption.value` 匹配的字符串标识符
   - `getFilePath(commandSlug: string)`: 返回外部 command slug 对应的 command artifact 文件路径
   - `formatFile(content: CommandContent)`: 返回带 frontmatter 的完整文件内容
+
+#### Scenario: OpenCode adapter 不执行 command reference 变换
+
+- **WHEN** 为 OpenCode 格式化 command
+- **THEN** adapter SHALL NOT 调用 `transformToHyphenCommands` 或任何 command reference 变换函数
+- **AND** adapter SHALL 直接使用 `content.body` 的值进行 frontmatter 包装
+- **AND** command reference 变换（`/opsx:slug` → `/opsx-slug`）SHALL 由 `builtin-transforms.ts` 中注册的 `opencode-command-refs` transform 在管线中执行
+
+#### Scenario: Pi adapter 不执行 command reference 变换
+
+- **WHEN** 为 Pi 格式化 command
+- **THEN** adapter SHALL NOT 调用 `transformToHyphenCommands` 或任何 command reference 变换函数
+- **AND** adapter SHALL 直接使用 `content.body` 的值进行 frontmatter 包装和 `$@` 注入
+- **AND** command reference 变换（`/opsx:slug` → `/opsx-slug`）SHALL 由 `builtin-transforms.ts` 中注册的 `pi-command-refs` transform 在管线中执行
 
 #### Scenario: Claude adapter 格式化
 
@@ -109,4 +123,3 @@ The body content of commands SHALL be shared across all tools.
 - **WHEN** generating the 'explore' command for Claude and Cursor
 - **THEN** both SHALL use the same `body` content
 - **AND** only the frontmatter and file path SHALL differ
-

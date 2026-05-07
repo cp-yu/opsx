@@ -46,19 +46,6 @@ export function transformWorkflowReferences(text: string, toolId: string): strin
   return transformed;
 }
 
-export function getWorkflowReferenceTransformer(toolId: string): ((text: string) => string) | undefined {
-  if (toolId === 'codex' || toolId === 'opencode') {
-    return (text: string) => transformWorkflowReferences(text, toolId);
-  }
-
-  // pi uses hyphen-based command names, same transformation as opencode
-  if (toolId === 'pi') {
-    return transformToHyphenCommands;
-  }
-
-  return undefined;
-}
-
 /**
  * Transforms colon-based command references to hyphen-based format.
  * Converts `/opsx:` patterns to `/opsx-` for tools that use hyphen syntax.

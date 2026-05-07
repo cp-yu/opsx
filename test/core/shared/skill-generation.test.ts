@@ -5,7 +5,7 @@ import {
   getCommandContents,
   generateSkillContent,
 } from '../../../src/core/shared/skill-generation.js';
-import { getWorkflowReferenceTransformer } from '../../../src/utils/command-references.js';
+import { transformWorkflowReferences } from '../../../src/utils/command-references.js';
 
 describe('skill-generation', () => {
   describe('getSkillTemplates', () => {
@@ -364,7 +364,7 @@ describe('skill-generation', () => {
       const content = generateSkillContent(
         template,
         '0.23.0',
-        getWorkflowReferenceTransformer('codex')
+        (text: string) => transformWorkflowReferences(text, 'codex')
       );
 
       expect(content).toContain('$openspec-new-change');

@@ -1,0 +1,8 @@
+schema_version: 1
+
+MODIFIED:
+  capabilities:
+    - id: cap.ai.template-artifact-pipeline
+      intent: 统一的 artifact 生成管线，包含 WorkflowManifest、ToolProfileRegistry、transform 管线和 ArtifactSyncEngine。transform 管线的 scope: 'both' 语义现在对 skill 和 command 两种产出均实际生效——writeSkills 和 writeCommands 均在适配器格式化前调用 runTransforms 执行 preAdapter 阶段变换
+    - id: cap.ai.command-generation
+      intent: 为仍支持 adapter-backed command 文件的 AI 工具生成 slash command 定义。opencode 和 pi 适配器不再内嵌 command reference 变换逻辑（transformToHyphenCommands），该职责由共享 transform 管线统一处理。适配器仅负责工具特定的 frontmatter 格式化和文件路径
