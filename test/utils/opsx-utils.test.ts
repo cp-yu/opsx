@@ -8,6 +8,7 @@ import {
   OPSX_PATHS,
   OPSX_SCHEMA_VERSION,
   ProjectOpsxFileSchema,
+  OpsxDeltaSchema,
   validateReferentialIntegrity,
   validateCodeMapIntegrity,
   normalizeFromLegacy,
@@ -17,6 +18,7 @@ import {
   readProjectOpsxRelations,
   readProjectOpsxCodeMap,
   writeProjectOpsx,
+  readOpsxDelta,
   type ProjectOpsxBundle,
 } from '../../src/utils/opsx-utils.js';
 
@@ -325,6 +327,154 @@ domains:
 
       expect(result.changed).toBe(false);
       expect(result.counts.modified).toEqual({ domains: 0, capabilities: 0, relations: 0 });
+    });
+
+    it('should shallow merge MODIFIED capability (only intent)', () => {
+      const bundle = mkBundle({
+        capabilities: [{ id: 'cap.cli.init', type: 'capability', intent: '原始描述', status: 'active' as const, domain: 'dom.cli' }],
+      });
+
+      const result = applyOpsxDelta(bundle, {
+        MODIFIED: { capabilities: [{ id: 'cap.cli.init', intent: '修改后的描述' }] },
+      });
+
+      expect(result.changed).toBe(true);
+      expect(result.counts.modified.capabilities).toBe(1);
+      expect(result.bundle.capabilities[0].intent).toBe('修改后的描述');
+      expect(result.bundle.capabilities[0].type).toBe('capability');
+      expect(result.bundle.capabilities[0].status).toBe('active');
+      expect(result.bundle.capabilities[0].domain).toBe('dom.cli');
+    });
+
+    it('should shallow merge MODIFIED domain (only boundary)', () => {
+      const bundle = mkBundle({
+        domains: [{ id: 'dom.cli', type: 'domain', intent: 'CLI domain', boundary: 'old boundary' }],
+      });
+
+      const result = applyOpsxDelta(bundle, {
+        MODIFIED: { domains: [{ id: 'dom.cli', boundary: 'new boundary' }] },
+      });
+
+      expect(result.changed).toBe(true);
+      expect(result.bundle.domains[0].boundary).toBe('new boundary');
+      expect(result.bundle.domains[0].type).toBe('domain');
+      expect(result.bundle.domains[0].intent).toBe('CLI domain');
+    });
+
+    it('should shallow merge MODIFIED capability (multiple fields)', () => {
+      const bundle = mkBundle({
+        capabilities: [{ id: 'cap.x', type: 'capability', intent: 'old', status: 'draft' as const }],
+      });
+
+      const result = applyOpsxDelta(bundle, {
+        MODIFIED: { capabilities: [{ id: 'cap.x', intent: 'new', status: 'active' as const }] },
+      });
+
+      expect(result.changed).toBe(true);
+      expect(result.bundle.capabilities[0].intent).toBe('new');
+      expect(result.bundle.capabilities[0].status).toBe('active');
+      expect(result.bundle.capabilities[0].type).toBe('capability');
+    });
+
+    it('should throw on MODIFIED non-existent node', () => {
+      const bundle = mkBundle({ capabilities: [] });
+
+      expect(() => applyOpsxDelta(bundle, {
+        MODIFIED: { capabilities: [{ id: 'cap.nonexistent', intent: 'x' }] },
+      })).toThrow("OPSX MODIFIED failed for capability 'cap.nonexistent' - not found");
+    });
+
+    it('should shallow merge MODIFIED relation (preserve from/to/type)', () => {
+      const bundle = mkBundle({
+        domains: [{ id: 'dom.x', type: 'domain' }],
+        capabilities: [{ id: 'cap.y', type: 'capability' }],
+        relations: [{ from: 'cap.y', to: 'dom.x', type: 'contains', metadata: { key: 'old' } }],
+      });
+
+      const result = applyOpsxDelta(bundle, {
+        MODIFIED: { relations: [{ from: 'cap.y', to: 'dom.x', type: 'contains', metadata: { key: 'new' } }] },
+      });
+
+      expect(result.changed).toBe(true);
+      expect(result.bundle.relations[0].metadata).toEqual({ key: 'new' });
+    });
+  });
+
+  describe('OpsxDeltaSchema validation', () => {
+    it('should pass MODIFIED without type field', () => {
+      const data = parseYaml(`
+        MODIFIED:
+          capabilities:
+            - id: cap.xxx
+              intent: some intent
+      `);
+      const result = OpsxDeltaSchema.safeParse(data);
+      expect(result.success).toBe(true);
+    });
+
+    it('should fail MODIFIED without id field', () => {
+      const data = parseYaml(`
+        MODIFIED:
+          capabilities:
+            - intent: missing id
+      `);
+      const result = OpsxDeltaSchema.safeParse(data);
+      expect(result.success).toBe(false);
+    });
+
+    it('should pass REMOVED with only id field', () => {
+      const data = parseYaml(`
+        REMOVED:
+          capabilities:
+            - id: cap.xxx
+      `);
+      const result = OpsxDeltaSchema.safeParse(data);
+      expect(result.success).toBe(true);
+    });
+
+    it('should fail ADDED without type field', () => {
+      const data = parseYaml(`
+        ADDED:
+          capabilities:
+            - id: cap.xxx
+              intent: missing type
+      `);
+      const result = OpsxDeltaSchema.safeParse(data);
+      expect(result.success).toBe(false);
+    });
+
+    it('should pass ADDED with complete fields', () => {
+      const data = parseYaml(`
+        ADDED:
+          capabilities:
+            - id: cap.xxx
+              type: capability
+              intent: complete node
+      `);
+      const result = OpsxDeltaSchema.safeParse(data);
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('readOpsxDelta error messages', () => {
+    it('should produce diagnostic message when ADDED capability has no type', async () => {
+      const changeDir = path.join(testDir, 'openspec', 'changes', 'test-change');
+      await fs.mkdir(changeDir, { recursive: true });
+      await fs.writeFile(path.join(changeDir, 'opsx-delta.yaml'), stringifyYaml({
+        ADDED: { capabilities: [{ id: 'cap.xxx', intent: 'no type' }] },
+      }));
+
+      await expect(readOpsxDelta(testDir, 'test-change')).rejects.toThrow('field is missing');
+    });
+
+    it('should include section/index/path info in error output', async () => {
+      const changeDir = path.join(testDir, 'openspec', 'changes', 'test-change2');
+      await fs.mkdir(changeDir, { recursive: true });
+      await fs.writeFile(path.join(changeDir, 'opsx-delta.yaml'), stringifyYaml({
+        ADDED: { capabilities: [{ id: 'cap.xxx', intent: 'no type' }] },
+      }));
+
+      await expect(readOpsxDelta(testDir, 'test-change2')).rejects.toThrow('ADDED');
     });
   });
 

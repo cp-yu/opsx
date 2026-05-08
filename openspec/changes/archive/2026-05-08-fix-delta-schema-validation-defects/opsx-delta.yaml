@@ -1,0 +1,8 @@
+schema_version: 1
+
+MODIFIED:
+  capabilities:
+    - id: cap.opsx.delta-merge
+      intent: 将 opsx-delta.yaml 合并到主 OPSX 文件，支持 ADDED/MODIFIED/REMOVED。MODIFIED section 执行 shallow merge，仅更新 delta 中显式声明的字段
+      status: active
+      type: capability

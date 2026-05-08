@@ -149,11 +149,37 @@ const DeltaCollectionSchema = z.object({
   relations: z.array(OpsxRelationSchema).optional(),
 });
 
+// MODIFIED: only id is required; intent/status are the mutable fields.
+// .passthrough() preserves extra fields (domain, boundary, etc.) so they
+// reach applyOpsxDelta for shallow merge.
+const ModifiedNodeSchema = z.object({
+  id: NodeIdSchema,
+  intent: z.string().optional(),
+  status: z.enum(['draft', 'active']).optional(),
+}).passthrough();
+
+// REMOVED: only id is needed to identify the node to delete
+const RemovedNodeSchema = z.object({
+  id: NodeIdSchema,
+});
+
+const ModifiedDeltaCollectionSchema = z.object({
+  domains: z.array(ModifiedNodeSchema).optional(),
+  capabilities: z.array(ModifiedNodeSchema).optional(),
+  relations: z.array(OpsxRelationSchema).optional(),
+});
+
+const RemovedDeltaCollectionSchema = z.object({
+  domains: z.array(RemovedNodeSchema).optional(),
+  capabilities: z.array(RemovedNodeSchema).optional(),
+  relations: z.array(OpsxRelationSchema).optional(),
+});
+
 export const OpsxDeltaSchema = z.object({
   schema_version: z.number().optional(),
   ADDED: DeltaCollectionSchema.optional(),
-  MODIFIED: DeltaCollectionSchema.optional(),
-  REMOVED: DeltaCollectionSchema.optional(),
+  MODIFIED: ModifiedDeltaCollectionSchema.optional(),
+  REMOVED: RemovedDeltaCollectionSchema.optional(),
 });
 
 // TypeScript types
@@ -252,7 +278,7 @@ export async function readProjectOpsxFile(
 
   const result = ProjectOpsxFileSchema.safeParse(data);
   if (!result.success) {
-    console.warn(`Invalid project.opsx.yaml: ${result.error.message}`);
+    console.warn(`Invalid project.opsx.yaml:\n${formatZodIssues(result.error.issues, data)}`);
     return null;
   }
   return result.data;
@@ -414,6 +440,49 @@ export async function writeProjectOpsx(
   }
 }
 
+/**
+ * Format Zod issues into human-readable, diagnostic strings.
+ * For z.literal() discriminator fields that are missing (value undefined),
+ * replace the misleading "expected 'capability'" message with "field is missing".
+ */
+function formatZodIssues(issues: z.ZodIssue[], rawData: unknown): string {
+  return issues
+    .map((issue) => {
+      const path = issue.path.length > 0 ? issue.path.join('.') : '<root>';
+      let message = issue.message;
+
+      // Detect: z.literal() on a missing field produces misleading messages.
+      // When code is 'invalid_type' (not 'invalid_value') and the field is missing,
+      // the Zod literal errors can say "Required" already. But for YAML where keys
+      // exist with null/undefined values, we get invalid_value. Handle both cases.
+      if (issue.code === 'invalid_value') {
+        const actual = getValueAtPath(rawData, issue.path as (string | number)[]);
+        if (actual === undefined || actual === null) {
+          message = `field is missing (required)`;
+        }
+      }
+      if (issue.code === 'invalid_type') {
+        const actual = getValueAtPath(rawData, issue.path as (string | number)[]);
+        if (actual === undefined) {
+          message = `field is missing (required)`;
+        }
+      }
+
+      return `  ${path}: ${message}`;
+    })
+    .join('\n');
+}
+
+/** Navigate a nested object/array by Zod path segments. */
+function getValueAtPath(data: unknown, path: (string | number)[]): unknown {
+  let current: any = data;
+  for (const segment of path) {
+    if (current === undefined || current === null) return undefined;
+    current = current[segment];
+  }
+  return current;
+}
+
 export async function readOpsxDelta(projectRoot: string, changeName: string): Promise<OpsxDelta | null> {
   const deltaPath = FileSystemUtils.joinPath(projectRoot, OPSX_PATHS.deltaPath(changeName));
   if (!await FileSystemUtils.fileExists(deltaPath)) return null;
@@ -422,7 +491,7 @@ export async function readOpsxDelta(projectRoot: string, changeName: string): Pr
   const data = parseYaml(content);
   const result = OpsxDeltaSchema.safeParse(data);
   if (!result.success) {
-    throw new Error(`Invalid opsx-delta.yaml for change '${changeName}': ${result.error.message}`);
+    throw new Error(`Invalid opsx-delta.yaml for change '${changeName}':\n${formatZodIssues(result.error.issues, data)}`);
   }
   return result.data;
 }
@@ -471,7 +540,7 @@ export function applyOpsxDelta(bundle: ProjectOpsxBundle, delta: OpsxDelta): Ops
       throw new Error(`OPSX MODIFIED failed for domain '${domain.id}' - not found`);
     }
     if (stableStringify(next.domains[index]) === stableStringify(domain)) continue;
-    next.domains[index] = domain;
+    next.domains[index] = { ...next.domains[index], ...domain };
     counts.modified.domains += 1;
   }
   for (const capability of delta.MODIFIED?.capabilities || []) {
@@ -480,7 +549,7 @@ export function applyOpsxDelta(bundle: ProjectOpsxBundle, delta: OpsxDelta): Ops
       throw new Error(`OPSX MODIFIED failed for capability '${capability.id}' - not found`);
     }
     if (stableStringify(next.capabilities[index]) === stableStringify(capability)) continue;
-    next.capabilities[index] = capability;
+    next.capabilities[index] = { ...next.capabilities[index], ...capability };
     counts.modified.capabilities += 1;
   }
   for (const relation of delta.MODIFIED?.relations || []) {
@@ -490,7 +559,7 @@ export function applyOpsxDelta(bundle: ProjectOpsxBundle, delta: OpsxDelta): Ops
       throw new Error(`OPSX MODIFIED failed for relation '${relation.from}' -> '${relation.to}' - not found`);
     }
     if (stableStringify(next.relations[index]) === stableStringify(relation)) continue;
-    next.relations[index] = relation;
+    next.relations[index] = { ...next.relations[index], ...relation };
     counts.modified.relations += 1;
   }
 
