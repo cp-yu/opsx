@@ -20,9 +20,9 @@ function buildArchiveFullVerifyContract(executionModel: VerifyExecutionModel): s
   if (executionModel === SUBAGENT_VERIFY_EXECUTION_MODEL) {
     return `   When the verify result is missing or stale, execute the same verify contract as \`/opsx:verify\` using the \`${SUBAGENT_VERIFY_EXECUTION_MODEL}\` skeleton:
    - Build the explicit evidence bundle from change artifacts, git evidence, final file contents, and prior \`.verify-result.json\` when present
-   - Spawn the reviewer subagent for canonical Phase 1 and keep completeness / correctness / coherence judgment inside the reviewer contract
+   - Spawn the reviewer subagent and instruct it to invoke the \`openspec-reviewer\` skill for canonical Phase 1; keep completeness / correctness / coherence judgment inside the reviewer contract
    - Validate the reviewer payload, apply only deterministic \`tasks.md\` write-back in the main workspace, and persist the canonical Phase 1 payload
-   - Execute the verify workflow end-to-end, including Phase 2 whenever the \`/opsx:verify\` contract would make it eligible
+   - Execute the verify workflow end-to-end, including Phase 2 (spawn optimizer subagent with \`openspec-optimizer\` skill invoke) whenever the \`/opsx:verify\` contract would make it eligible
    - In \`P1_SPECULATIVE_FENCE\`, rebuild the speculative evidence bundle and invoke the reviewer subagent again for the speculative verdict
    - The top-level archive flow MUST NOT inline a current-agent review skeleton or silently downgrade to reread mode`;
   }

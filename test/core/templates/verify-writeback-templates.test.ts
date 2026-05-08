@@ -117,7 +117,7 @@ describe('verify write-back workflow templates', () => {
 
     for (const template of [skill, command]) {
       expect(template).toContain('subagent-orchestrated');
-      expect(template).toContain('Spawn the reviewer subagent for canonical Phase 1');
+      expect(template).toContain('invoke the `openspec-reviewer` skill');
       expect(template).toContain('P1_SPECULATIVE_FENCE');
       expect(template).toContain('MUST NOT inline a current-agent review skeleton');
       expect(template).toContain('silently downgrade to reread mode');

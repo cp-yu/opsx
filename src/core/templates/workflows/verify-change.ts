@@ -10,13 +10,11 @@ import {
   CLEAN_CONTEXT_VERIFY_PROTOCOL_REREAD,
   CONFORMANCE_CHECK_RULES,
   GIT_EVIDENCE_PROTOCOL,
-  OPTIMIZATION_PROTOCOL_SUBAGENT,
   OPSX_VERIFY_ALIGNMENT,
   VERIFY_CLI_JSON_SCHEMA_REFERENCE,
   VERIFY_ERROR_RECOVERY_GUIDE,
   VERIFY_SIMPLE_CHANGE_FAST_PATH,
   VERIFY_STATE_MACHINE_DIAGRAM,
-  VERIFY_REVIEWER_SUBAGENT_CONTRACT,
   VERIFY_WRITEBACK_RULES,
 } from '../fragments/opsx-fragments.js';
 import {
@@ -134,7 +132,25 @@ ${VERIFY_SIMPLE_CHANGE_FAST_PATH}
    - Any branch that still outputs manual recovery instructions MUST NOT run \`git stash drop <checkpointRef>\` first
 ${VERIFY_ERROR_RECOVERY_GUIDE}
 
-${OPTIMIZATION_PROTOCOL_SUBAGENT}
+**Phase 2 Optimization Protocol**:
+
+   Spawn a clean-context optimizer subagent. Instruct it to invoke the \`openspec-optimizer\` skill
+   with the canonical Phase 1 results, change artifacts, final file contents, and config.
+
+   The \`openspec-optimizer\` skill defines: role and hard constraints, input contract,
+   prioritized optimization principles (5 categories + prohibition list), Search/Replace block
+   output format, and failed directions avoidance protocol.
+
+   **Inputs to pass to the optimizer subagent**:
+   - Canonical Phase 1 summary, issues, and evidence file list
+   - Change artifacts: proposal.md, specs/, design.md, tasks.md
+   - Final file contents for the candidate implementation files
+   - Project policy context from openspec/config.yaml, including optimization.enabled
+   - failedDirections from prior optimization attempts (if any)
+
+   If the subagent returns \`No optimization opportunities found\`, record NO_OPTIMIZATION_NEEDED.
+   Otherwise, apply the returned Search/Replace blocks atomically, then spawn the reviewer subagent
+   for speculative re-verification.
 
    **Main-agent application contract**:
    - Parse every Search/Replace block before touching the filesystem
@@ -416,8 +432,14 @@ function buildSubagentVerifyInstructions(text: VerifyTemplateText): string {
 5. **Run the Reviewer Subagent for Canonical Phase 1**
 
    Spawn a clean-context reviewer subagent with the explicit evidence bundle from Step 4.
+   Instruct the subagent to invoke the \`openspec-reviewer\` skill.
 
-${VERIFY_REVIEWER_SUBAGENT_CONTRACT}
+   The \`openspec-reviewer\` skill loads the full reviewer contract: role definition, hard constraints,
+   input validation, 6-step verification protocol, severity thresholds and evidence standards,
+   three-dimension coverage (completeness, correctness, coherence), OPSX alignment rules,
+   structured JSON output schema with writeBackPlan semantics, and graceful degradation rules.
+
+   Pass the explicit evidence bundle alongside the skill invoke as the subagent's input context.
 
 ${GIT_EVIDENCE_PROTOCOL}
 

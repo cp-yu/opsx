@@ -1,0 +1,40 @@
+ADDED:
+  capabilities:
+    - id: cap.ai.reviewer-skill
+      type: capability
+      intent: Phase 1 验证审查 subagent skill。定义 reviewer 的角色、输入合约、6步验证循环、严重性阈值、证据标准、三个验证维度（completeness/correctness/coherence）、OPSX 对齐检查、结构化输出 schema 和边界降级策略
+    - id: cap.ai.optimizer-skill
+      type: capability
+      intent: Phase 2 优化提案 subagent skill。定义 optimizer 的角色、输入合约、5类优化原则与禁止项、Search/Replace 块输出格式、failedDirections 避重协议和边界处理
+    - id: cap.ai.internal-skill-installation
+      type: capability
+      intent: 内部 skill 安装管线。将 openspec-reviewer 和 openspec-optimizer 作为 core preset 的一部分，init/update 时安装到各 AI 工具的 skills 目录，不生成对应的 slash command
+  relations:
+    - from: cap.ai.reviewer-skill
+      to: dom.ai-integration
+      type: contains
+    - from: cap.ai.optimizer-skill
+      to: dom.ai-integration
+      type: contains
+    - from: cap.ai.internal-skill-installation
+      to: dom.ai-integration
+      type: contains
+    - from: cap.ai.reviewer-skill
+      to: cap.ai.skill-generation
+      type: depends_on
+    - from: cap.ai.optimizer-skill
+      to: cap.ai.skill-generation
+      type: depends_on
+    - from: cap.ai.internal-skill-installation
+      to: cap.ai.skill-generation
+      type: depends_on
+    - from: cap.ai.internal-skill-installation
+      to: cap.ai.tool-adapters
+      type: depends_on
+
+MODIFIED:
+  capabilities:
+    - id: cap.ai.workflow-templates
+      intent: verify/apply/archive 模板中 subagent spawn 步骤，从传内联 fragment 改为 invoke 对应的内部 skill（openspec-reviewer / openspec-optimizer），利用 tool-invocation-references 的变换管线实现跨工具 skill 名称适配
+    - id: cap.ai.command-generation
+      intent: WorkflowManifestEntry.getCommandTemplate 改为 optional，命令生成管线跳过 skill-only 条目；内部 skill 不暴露为可用命令或出现在补全列表中

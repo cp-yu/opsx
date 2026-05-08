@@ -20,7 +20,7 @@ export interface WorkflowManifestEntry {
   commandSlug: string;
   promptMeta: WorkflowPromptMeta;
   getSkillTemplate: () => SkillTemplate;
-  getCommandTemplate: () => CommandTemplate;
+  getCommandTemplate?: () => CommandTemplate;
 }
 
 export type WorkflowId = string;

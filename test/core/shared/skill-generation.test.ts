@@ -9,9 +9,9 @@ import { transformWorkflowReferences } from '../../../src/utils/command-referenc
 
 describe('skill-generation', () => {
   describe('getSkillTemplates', () => {
-    it('should return all 12 skill templates', () => {
+    it('should return all 14 skill templates', () => {
       const templates = getSkillTemplates();
-      expect(templates).toHaveLength(12);
+      expect(templates).toHaveLength(14);
     });
 
     it('should have unique directory names', () => {
@@ -37,6 +37,8 @@ describe('skill-generation', () => {
       expect(dirNames).toContain('openspec-onboard');
       expect(dirNames).toContain('openspec-propose');
       expect(dirNames).toContain('openspec-bootstrap-opsx');
+      expect(dirNames).toContain('openspec-reviewer');
+      expect(dirNames).toContain('openspec-optimizer');
     });
 
     it('should have valid template structure', () => {
@@ -58,9 +60,9 @@ describe('skill-generation', () => {
       expect(uniqueIds.size).toBe(templates.length);
     });
 
-    it('should filter by workflow IDs when provided', () => {
+    it('should filter by workflow IDs when provided — internal skills always included', () => {
       const filtered = getSkillTemplates(['propose', 'explore', 'apply', 'archive']);
-      expect(filtered).toHaveLength(4);
+      expect(filtered).toHaveLength(6);
       const ids = filtered.map(t => t.workflowId);
       expect(ids).toContain('propose');
       expect(ids).toContain('explore');
@@ -76,14 +78,16 @@ describe('skill-generation', () => {
       expect(noFilter).toHaveLength(all.length);
     });
 
-    it('should return empty array when filter matches nothing', () => {
+    it('should return internal skills when filter matches nothing', () => {
       const filtered = getSkillTemplates(['nonexistent']);
-      expect(filtered).toHaveLength(0);
+      expect(filtered).toHaveLength(2);
+      // Only internal skills, no workflow surfaces
+      expect(filtered.every(e => e.workflowId.startsWith('openspec-'))).toBe(true);
     });
 
-    it('should return single template when filter has one workflow', () => {
+    it('should return single workflow template plus internal skills when filter has one workflow', () => {
       const filtered = getSkillTemplates(['propose']);
-      expect(filtered).toHaveLength(1);
+      expect(filtered).toHaveLength(3);
       expect(filtered[0].workflowId).toBe('propose');
       expect(filtered[0].dirName).toBe('openspec-propose');
     });

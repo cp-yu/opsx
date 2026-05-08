@@ -297,3 +297,24 @@ relations:
   - from: dom.cli
     type: contains
     to: cap.cli.init-opsx-skeleton
+  - from: cap.ai.reviewer-skill
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.optimizer-skill
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.internal-skill-installation
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.reviewer-skill
+    type: depends_on
+    to: cap.ai.skill-generation
+  - from: cap.ai.optimizer-skill
+    type: depends_on
+    to: cap.ai.skill-generation
+  - from: cap.ai.internal-skill-installation
+    type: depends_on
+    to: cap.ai.skill-generation
+  - from: cap.ai.internal-skill-installation
+    type: depends_on
+    to: cap.ai.tool-adapters

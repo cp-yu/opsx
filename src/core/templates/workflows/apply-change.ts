@@ -19,6 +19,7 @@ const APPLY_VERIFY_PHASES = `
 
    After all implementation tasks and remediation items are complete:
    - Spawn a clean-context reviewer subagent with change artifacts, git evidence, final file contents, and prior \`.verify-result.json\` when present
+   - Instruct the subagent to invoke the \`openspec-reviewer\` skill, which loads the full reviewer contract (role, constraints, 6-step verification protocol, severity thresholds, three-dimension coverage, structured output schema)
    - Keep completeness, correctness, and coherence judgment inside the reviewer subagent
    - If the reviewer returns \`FAIL_NEEDS_REMEDIATION\`, write back only CRITICAL issues to \`tasks.md\`, add typed \`## Remediation\` entries, and return to Phase 0
    - If the reviewer returns \`PASS\` or \`PASS_WITH_WARNINGS\`, persist Phase 1:
@@ -35,7 +36,7 @@ ${VERIFY_CLI_JSON_SCHEMA_REFERENCE}
    - Before the first optimization attempt, create a checkpoint: \`git stash push -u -m "apply-opt-checkpoint-r0"\`
    - Each complete proposal + patch + reviewer re-verify loop consumes one \`optRetries\` budget, whether it passes or fails
    - Format or Search/Replace matching problems are handled by the main agent and do not consume retry budget
-   - Optimizer subagent proposes Search/Replace blocks only; it MUST NOT edit files
+   - Optimizer subagent: spawn and instruct to invoke the \`openspec-optimizer\` skill (loads full optimizer contract: role, constraints, optimization principles, Search/Replace format, failed directions protocol). Proposes Search/Replace blocks only; it MUST NOT edit files
    - Main agent applies Search/Replace blocks atomically, then spawns the reviewer subagent for speculative Phase 1 re-verification
    - On speculative PASS, accept the patch, record \`OPTIMIZATION_PROPOSED\` then \`verification PASS\`, and continue until no opportunities remain or \`optRetries\` is exhausted
    - On speculative FAIL, restore the latest checkpoint with \`git reset --hard HEAD\`, \`git clean -fd\`, then \`git stash apply stash@{0}\`; record the failed direction in \`.verify-result.json\`

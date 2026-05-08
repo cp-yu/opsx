@@ -63,7 +63,7 @@ describe('OPSX shared context fragments', () => {
     expect(getVerifyChangeSkillTemplate().instructions).toContain(OPSX_VERIFY_ALIGNMENT);
     expect(getVerifyChangeSkillTemplate().instructions).toContain(CLEAN_CONTEXT_VERIFY_PROTOCOL_REREAD);
     expect(getVerifyChangeSkillTemplate().instructions).toContain(GIT_EVIDENCE_PROTOCOL);
-    expect(getVerifyChangeSkillTemplate().instructions).toContain(OPTIMIZATION_PROTOCOL_SUBAGENT);
+    expect(getVerifyChangeSkillTemplate().instructions).toContain('openspec-optimizer');
 
     expect(getArchiveChangeSkillTemplate().instructions).toContain(VERIFY_FRESHNESS_RULES);
   });
@@ -79,7 +79,7 @@ describe('OPSX shared context fragments', () => {
       CLEAN_CONTEXT_VERIFY_PROTOCOL_SUBAGENT
     );
     expect(getClaudeVerifyChangeSkillTemplate().instructions).toContain(
-      VERIFY_REVIEWER_SUBAGENT_CONTRACT
+      'openspec-reviewer'
     );
   });
 
@@ -93,7 +93,7 @@ describe('OPSX shared context fragments', () => {
 
     for (const template of [skill, command]) {
       expect(template).toContain('subagent-orchestrated');
-      expect(template).toContain('Spawn the reviewer subagent for canonical Phase 1');
+      expect(template).toContain('invoke the `openspec-reviewer` skill');
       expect(template).toContain('MUST NOT inline a current-agent review skeleton');
     }
   });

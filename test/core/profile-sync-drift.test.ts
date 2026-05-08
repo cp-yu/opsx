@@ -17,6 +17,14 @@ function writeSkill(projectDir: string, workflowId: string): void {
   fs.writeFileSync(skillPath, `name: ${skillDirName}\n`);
 }
 
+function writeInternalSkills(toolDir: string, projectDir: string): void {
+  for (const skillDirName of ['openspec-reviewer', 'openspec-optimizer']) {
+    const skillPath = path.join(projectDir, toolDir, 'skills', skillDirName, 'SKILL.md');
+    fs.mkdirSync(path.dirname(skillPath), { recursive: true });
+    fs.writeFileSync(skillPath, `name: ${skillDirName}\n`);
+  }
+}
+
 function writeCommand(projectDir: string, workflowId: string): void {
   const adapter = CommandAdapterRegistry.get('claude');
   if (!adapter) throw new Error('Claude adapter unavailable in test environment');
@@ -45,6 +53,7 @@ function setupCoreSkills(projectDir: string): void {
   for (const workflow of CORE_WORKFLOWS) {
     writeSkill(projectDir, workflow);
   }
+  writeInternalSkills('.claude', projectDir);
 }
 
 function setupCoreCommands(projectDir: string): void {
@@ -126,6 +135,7 @@ describe('profile sync drift detection', () => {
       fs.mkdirSync(path.dirname(skillPath), { recursive: true });
       fs.writeFileSync(skillPath, `name: ${skillDirName}\n`);
     }
+    writeInternalSkills('.codex', tempDir);
 
     const hasDrift = hasProjectConfigDrift(tempDir, CORE_WORKFLOWS, 'commands');
     expect(hasDrift).toBe(false);

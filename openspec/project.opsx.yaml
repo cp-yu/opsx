@@ -52,7 +52,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.command-generation
-    intent: 为仍支持 adapter-backed command 文件的 AI 工具生成 slash command 定义。opencode 和 pi 适配器不再内嵌 command reference 变换逻辑（transformToHyphenCommands），该职责由共享 transform 管线统一处理。适配器仅负责工具特定的 frontmatter 格式化和文件路径
+    intent: WorkflowManifestEntry.getCommandTemplate 改为 optional，命令生成管线跳过 skill-only 条目；内部 skill 不暴露为可用命令或出现在补全列表中
     status: active
     type: capability
   - id: cap.ai.command-slugs
@@ -70,7 +70,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 面向 Agent 的工作流模板。apply 模板重构为 Phase 0-3 四阶段编译步骤（实现→验证→优化→Seal），verify 模板保留为 expanded 模式独立 workflow surface
+    intent: verify/apply/archive 模板中 subagent spawn 步骤，从传内联 fragment 改为 invoke 对应的内部 skill（openspec-reviewer / openspec-optimizer），利用 tool-invocation-references 的变换管线实现跨工具 skill 名称适配
     type: capability
   - id: cap.artifact-graph.instruction-loader
     intent: 加载 Schema 模板，并按 workflow surface 与 artifact 编译项目配置投影，向 AI 暴露统一的 prompt projection 而非原始字段拼接结果
@@ -295,4 +295,13 @@ capabilities:
   - id: cap.cli.init-opsx-skeleton
     intent: init 命令首次运行时自动生成三个最小化 OPSX 骨架文件（project.opsx.yaml、project.opsx.relations.yaml、project.opsx.code-map.yaml），并在成功提示中显式引导用户运行 /opsx:bootstrap 完成架构映射
     status: active
+    type: capability
+  - id: cap.ai.reviewer-skill
+    intent: Phase 1 验证审查 subagent skill。定义 reviewer 的角色、输入合约、6步验证循环、严重性阈值、证据标准、三个验证维度（completeness/correctness/coherence）、OPSX 对齐检查、结构化输出 schema 和边界降级策略
+    type: capability
+  - id: cap.ai.optimizer-skill
+    intent: Phase 2 优化提案 subagent skill。定义 optimizer 的角色、输入合约、5类优化原则与禁止项、Search/Replace 块输出格式、failedDirections 避重协议和边界处理
+    type: capability
+  - id: cap.ai.internal-skill-installation
+    intent: 内部 skill 安装管线。将 openspec-reviewer 和 openspec-optimizer 作为 core preset 的一部分，init/update 时安装到各 AI 工具的 skills 目录，不生成对应的 slash command
     type: capability
