@@ -18,4 +18,6 @@ export { getVerifyChangeSkillTemplate, getOpsxVerifyCommandTemplate } from './wo
 export { getOnboardSkillTemplate, getOpsxOnboardCommandTemplate } from './workflows/onboard.js';
 export { getOpsxProposeSkillTemplate, getOpsxProposeCommandTemplate } from './workflows/propose.js';
 export { getBootstrapOpsxSkillTemplate, getOpsxBootstrapCommandTemplate } from './workflows/bootstrap-opsx.js';
+export { getReviewerSkillTemplate } from './workflows/reviewer.js';
+export { getOptimizerSkillTemplate } from './workflows/optimizer.js';
 export { getFeedbackSkillTemplate } from './workflows/feedback.js';
