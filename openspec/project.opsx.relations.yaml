@@ -294,3 +294,6 @@ relations:
   - from: cap.ai.agent-prompt-guidance
     type: depends_on
     to: cap.ai.workflow-templates
+  - from: dom.cli
+    type: contains
+    to: cap.cli.init-opsx-skeleton

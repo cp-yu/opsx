@@ -40,7 +40,7 @@ import {
   type ToolSkillStatus,
 } from './shared/index.js';
 import { getGlobalConfig, type Delivery, type Profile } from './global-config.js';
-import { getProfileWorkflows } from './profiles.js';
+import { getProfileWorkflows, type WorkflowId } from './profiles.js';
 import { getAvailableTools } from './available-tools.js';
 import { migrateIfNeeded } from './migration.js';
 import {
@@ -136,6 +136,11 @@ export class InitCommand {
     // Create directory structure and config
     await this.createDirectoryStructure(openspecPath, extendMode);
 
+    // Generate OPSX skeleton files on first-time init (non-extend mode)
+    if (!extendMode) {
+      await this.writeOpsxSkeleton(projectPath, openspecPath);
+    }
+
     // Generate skills and commands for each tool
     const results = await this.generateSkillsAndCommands(projectPath, validatedTools);
 
@@ -143,7 +148,7 @@ export class InitCommand {
     const configStatus = await this.createConfig(openspecPath, docLanguage);
 
     // Display success message
-    this.displaySuccessMessage(projectPath, validatedTools, results, configStatus, docLanguage);
+    this.displaySuccessMessage(projectPath, validatedTools, results, configStatus, extendMode, docLanguage);
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -486,6 +491,68 @@ export class InitCommand {
   }
 
   // ═══════════════════════════════════════════════════════════
+  // OPSX SKELETON GENERATION
+  // ═══════════════════════════════════════════════════════════
+
+  private async writeOpsxSkeleton(projectPath: string, openspecPath: string): Promise<void> {
+    const projectName = this.inferProjectName(projectPath);
+    const projectId = this.toProjectId(projectName);
+    const timestamp = new Date().toISOString();
+
+    const opsxYaml = `schema_version: 1
+project:
+  id: ${projectId}
+  name: ${projectName}
+domains: []
+capabilities: []
+`;
+
+    const relationsYaml = `schema_version: 1
+relations: []
+`;
+
+    const codeMapYaml = `schema_version: 1
+generated_at: "${timestamp}"
+nodes: []
+`;
+
+    const files: Array<{ name: string; content: string }> = [
+      { name: 'project.opsx.yaml', content: opsxYaml },
+      { name: 'project.opsx.relations.yaml', content: relationsYaml },
+      { name: 'project.opsx.code-map.yaml', content: codeMapYaml },
+    ];
+
+    for (const file of files) {
+      const filePath = path.join(openspecPath, file.name);
+      if (!fs.existsSync(filePath)) {
+        await FileSystemUtils.writeFile(filePath, file.content);
+      }
+    }
+  }
+
+  private inferProjectName(projectPath: string): string {
+    try {
+      const pkgPath = path.join(projectPath, 'package.json');
+      if (fs.existsSync(pkgPath)) {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+        if (pkg.name && typeof pkg.name === 'string' && pkg.name.trim().length > 0) {
+          return pkg.name.trim();
+        }
+      }
+    } catch {
+      // Fall through to basename fallback
+    }
+    return path.basename(projectPath);
+  }
+
+  private toProjectId(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  // ═══════════════════════════════════════════════════════════
   // SKILL & COMMAND GENERATION
   // ═══════════════════════════════════════════════════════════
 
@@ -663,6 +730,7 @@ export class InitCommand {
       removedSkillCount: number;
     },
     configStatus: 'created' | 'updated' | 'exists' | 'skipped',
+    extendMode: boolean,
     docLanguage?: string
   ): void {
     console.log();
@@ -738,6 +806,14 @@ export class InitCommand {
       console.log(`  Start your first change: ${renderWorkflowInvocation(guidanceToolId, 'new')} "your idea"`);
     } else {
       console.log("Done. Run 'openspec config profile' to configure your workflows.");
+    }
+
+    // Bootstrap guidance: only when bootstrap-opsx is in active profile and first-time init
+    if (!extendMode && activeWorkflows.includes('bootstrap-opsx')) {
+      const bootstrapRef = guidanceToolId
+        ? renderWorkflowInvocation(guidanceToolId, 'bootstrap-opsx' as WorkflowId)
+        : '/opsx:bootstrap-opsx';
+      console.log(`  Next: run ${bootstrapRef} to map your architecture`);
     }
 
     // Links

@@ -80,6 +80,8 @@ The command SHALL perform safety checks to prevent overwriting existing structur
 
 该命令 SHALL 在初始化成功后提供清晰、可执行的下一步提示，并使用与实际生成 workflow surface 一致的调用语法。
 
+当 `bootstrap-opsx` workflow 在 active profile 中且非 extend 模式时，成功输出 SHALL 在 getting started 区块之后包含显式的 bootstrap 引导行。
+
 #### Scenario: 为 command-backed surface 显示成功提示
 
 - **WHEN** 初始化成功完成，且至少有一个被创建或刷新的工具暴露了 command-backed workflow surface
@@ -112,6 +114,13 @@ The command SHALL perform safety checks to prevent overwriting existing structur
 - **WHEN** 初始化成功完成，且只有 skills-only workflow surface 被创建或刷新
 - **THEN** 显示提示，要求用户重启 IDE 或当前会话以使刷新的 skills 生效
 - **AND** SHALL NOT say slash commands are required
+
+#### Scenario: 显示 bootstrap 引导
+
+- **WHEN** 初始化成功完成
+- **AND** `bootstrap-opsx` workflow 在 active profile 中
+- **AND** 当前为非 extend 模式（首次 init）
+- **THEN** SHALL 在 getting started 区块之后显示："Next: run /opsx:bootstrap to map your architecture"
 
 ### Requirement: Exit Codes
 

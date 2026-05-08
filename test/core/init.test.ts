@@ -587,6 +587,182 @@ context: |
   });
 });
 
+describe('OPSX skeleton generation', () => {
+  let testDir: string;
+  let configTempDir: string;
+  let originalEnv: NodeJS.ProcessEnv;
+
+  beforeEach(async () => {
+    testDir = path.join(os.tmpdir(), `openspec-opsx-test-${Date.now()}`);
+    await fs.mkdir(testDir, { recursive: true });
+    originalEnv = { ...process.env };
+    configTempDir = path.join(os.tmpdir(), `openspec-config-opsx-${Date.now()}`);
+    await fs.mkdir(configTempDir, { recursive: true });
+    process.env.XDG_CONFIG_HOME = configTempDir;
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    confirmMock.mockReset();
+    confirmMock.mockResolvedValue(true);
+    inputMock.mockReset();
+    inputMock.mockResolvedValue('');
+    showWelcomeScreenMock.mockClear();
+    searchableMultiSelectMock.mockReset();
+  });
+
+  afterEach(async () => {
+    process.env = originalEnv;
+    await fs.rm(testDir, { recursive: true, force: true });
+    await fs.rm(configTempDir, { recursive: true, force: true });
+    vi.restoreAllMocks();
+  });
+
+  it('should generate three OPSX skeleton files on first-time init', async () => {
+    const initCommand = new InitCommand({ tools: 'claude', force: true });
+    await initCommand.execute(testDir);
+
+    const opsxYaml = path.join(testDir, 'openspec', 'project.opsx.yaml');
+    const relationsYaml = path.join(testDir, 'openspec', 'project.opsx.relations.yaml');
+    const codeMapYaml = path.join(testDir, 'openspec', 'project.opsx.code-map.yaml');
+
+    expect(await fileExists(opsxYaml)).toBe(true);
+    expect(await fileExists(relationsYaml)).toBe(true);
+    expect(await fileExists(codeMapYaml)).toBe(true);
+
+    // Verify opsx.yaml content
+    const opsxContent = await fs.readFile(opsxYaml, 'utf-8');
+    expect(opsxContent).toContain('schema_version: 1');
+    expect(opsxContent).toContain('project:');
+    expect(opsxContent).toContain('domains: []');
+    expect(opsxContent).toContain('capabilities: []');
+
+    // Verify relations.yaml content
+    const relationsContent = await fs.readFile(relationsYaml, 'utf-8');
+    expect(relationsContent).toContain('schema_version: 1');
+    expect(relationsContent).toContain('relations: []');
+
+    // Verify code-map.yaml content
+    const codeMapContent = await fs.readFile(codeMapYaml, 'utf-8');
+    expect(codeMapContent).toContain('schema_version: 1');
+    expect(codeMapContent).toContain('generated_at:');
+    expect(codeMapContent).toContain('nodes: []');
+  });
+
+  it('should infer project name from package.json', async () => {
+    const pkgPath = path.join(testDir, 'package.json');
+    await fs.writeFile(pkgPath, JSON.stringify({ name: '@scope/my-awesome-project' }));
+
+    const initCommand = new InitCommand({ tools: 'claude', force: true });
+    await initCommand.execute(testDir);
+
+    const opsxContent = await fs.readFile(
+      path.join(testDir, 'openspec', 'project.opsx.yaml'),
+      'utf-8',
+    );
+    expect(opsxContent).toContain("id: scope-my-awesome-project");
+    expect(opsxContent).toContain("name: @scope/my-awesome-project");
+  });
+
+  it('should fall back to directory basename when no package.json', async () => {
+    const initCommand = new InitCommand({ tools: 'claude', force: true });
+    await initCommand.execute(testDir);
+
+    const opsxContent = await fs.readFile(
+      path.join(testDir, 'openspec', 'project.opsx.yaml'),
+      'utf-8',
+    );
+    const dirBasename = path.basename(testDir);
+    const expectedId = dirBasename.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    expect(opsxContent).toContain(`id: ${expectedId}`);
+    expect(opsxContent).toContain(`name: ${dirBasename}`);
+  });
+
+  it('should not overwrite existing OPSX files in extend mode', async () => {
+    // Pre-create openspec directory with an existing project.opsx.yaml
+    const openspecDir = path.join(testDir, 'openspec');
+    await fs.mkdir(openspecDir, { recursive: true });
+    const existingContent = `schema_version: 1
+project:
+  id: my-project
+  name: my-project
+domains:
+  - id: dom.auth
+    type: domain
+    intent: Custom domain
+capabilities: []
+`;
+    await fs.writeFile(path.join(openspecDir, 'project.opsx.yaml'), existingContent);
+
+    const initCommand = new InitCommand({ tools: 'claude', force: true });
+    await initCommand.execute(testDir);
+
+    const opsxContent = await fs.readFile(
+      path.join(testDir, 'openspec', 'project.opsx.yaml'),
+      'utf-8',
+    );
+    expect(opsxContent).toBe(existingContent);
+  });
+
+  it('should show bootstrap guidance when bootstrap-opsx in profile and non-extend mode', async () => {
+    saveGlobalConfig({
+      featureFlags: {},
+      profile: 'custom',
+      delivery: 'both',
+      workflows: ['propose', 'bootstrap-opsx'],
+    });
+
+    const consoleSpy = vi.spyOn(console, 'log');
+    const initCommand = new InitCommand({ tools: 'claude', force: true });
+    await initCommand.execute(testDir);
+
+    const logCalls = consoleSpy.mock.calls.flat().map(String);
+    const bootstrapLine = logCalls.find((line) =>
+      line.includes('Next: run') && line.includes('bootstrap')
+    );
+    expect(bootstrapLine).toBeDefined();
+    expect(bootstrapLine).toContain('/opsx:bootstrap');
+    expect(bootstrapLine).toContain('map your architecture');
+  });
+
+  it('should not show bootstrap guidance when bootstrap-opsx is not in profile', async () => {
+    saveGlobalConfig({
+      featureFlags: {},
+      profile: 'core',
+      delivery: 'both',
+    });
+
+    const consoleSpy = vi.spyOn(console, 'log');
+    const initCommand = new InitCommand({ tools: 'claude', force: true });
+    await initCommand.execute(testDir);
+
+    const logCalls = consoleSpy.mock.calls.flat().map(String);
+    const bootstrapLine = logCalls.find((line) =>
+      line.includes('Next: run') && line.includes('bootstrap')
+    );
+    expect(bootstrapLine).toBeUndefined();
+  });
+
+  it('should not show bootstrap guidance in extend mode even when profile includes bootstrap-opsx', async () => {
+    saveGlobalConfig({
+      featureFlags: {},
+      profile: 'custom',
+      delivery: 'both',
+      workflows: ['propose', 'bootstrap-opsx'],
+    });
+
+    // Pre-create openspec to make it extend mode
+    await fs.mkdir(path.join(testDir, 'openspec'), { recursive: true });
+
+    const consoleSpy = vi.spyOn(console, 'log');
+    const initCommand = new InitCommand({ tools: 'claude', force: true });
+    await initCommand.execute(testDir);
+
+    const logCalls = consoleSpy.mock.calls.flat().map(String);
+    const bootstrapLine = logCalls.find((line) =>
+      line.includes('Next: run') && line.includes('bootstrap')
+    );
+    expect(bootstrapLine).toBeUndefined();
+  });
+});
+
 describe('InitCommand - profile and detection features', () => {
   let testDir: string;
   let configTempDir: string;

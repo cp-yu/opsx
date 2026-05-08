@@ -1,0 +1,18 @@
+ADDED:
+  capabilities:
+    - id: cap.cli.init-opsx-skeleton
+      type: capability
+      intent: init 命令首次运行时自动生成三个最小化 OPSX 骨架文件（project.opsx.yaml、project.opsx.relations.yaml、project.opsx.code-map.yaml），并在成功提示中显式引导用户运行 /opsx:bootstrap 完成架构映射
+      status: active
+
+  relations:
+    - from: dom.cli
+      to: cap.cli.init-opsx-skeleton
+      type: contains
+
+MODIFIED:
+  capabilities:
+    - id: cap.cli.init
+      type: capability
+      intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品；首次 init 自动生成 OPSX 骨架文件并引导用户运行 bootstrap；成功输出与入门提示按工具表面渲染用户可见调用语法，Codex 使用 skills 引导而非 slash commands
+      status: active
