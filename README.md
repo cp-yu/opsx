@@ -84,10 +84,10 @@ AI:  Running full verify gate...
 Install the packaged release tarball from GitHub Releases:
 
 ```bash
-npm install -g https://github.com/cp-yu/opsx/releases/download/v1.2.0-cpyu.8/fission-ai-openspec-1.2.0-cpyu.8.tgz
+npm install -g https://github.com/cp-yu/opsx/releases/download/v1.2.0-cpyu.9/fission-ai-openspec-1.2.0-cpyu.9.tgz
 ```
 
-For future versions, replace both occurrences of `1.2.0-cpyu.8` with the release tag you want to pin.
+For future versions, replace both occurrences of `1.2.0-cpyu.9` with the release tag you want to pin.
 
 Then navigate to your project directory and initialize:
 
@@ -140,7 +140,7 @@ AI coding assistants are powerful but unpredictable when requirements live only 
 **Reinstall from GitHub Releases**
 
 ```bash
-npm install -g https://github.com/cp-yu/opsx/releases/download/v1.2.0-cpyu.8/fission-ai-openspec-1.2.0-cpyu.8.tgz
+npm install -g https://github.com/cp-yu/opsx/releases/download/v1.2.0-cpyu.9/fission-ai-openspec-1.2.0-cpyu.9.tgz
 ```
 
 **Refresh agent instructions**
