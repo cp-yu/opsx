@@ -1,0 +1,24 @@
+ADDED:
+  capabilities:
+    - id: cap.cli.command-reference-consistency
+      type: capability
+      intent: Ensure active documentation, generated Agent instructions, skills, prompts, and workflow templates reference only supported OpenSpec CLI command forms and report historical archive-only stale references separately.
+  relations:
+    - from: cap.cli.command-reference-consistency
+      to: dom.cli
+      type: contains
+    - from: cap.cli.command-reference-consistency
+      to: cap.ai.agent-docs
+      type: depends_on
+    - from: cap.cli.command-reference-consistency
+      to: cap.ai.workflow-templates
+      type: depends_on
+    - from: cap.cli.command-reference-consistency
+      to: cap.cli.validate
+      type: depends_on
+    - from: cap.cli.command-reference-consistency
+      to: cap.verify.cli-gate
+      type: depends_on
+    - from: cap.cli.command-reference-consistency
+      to: cap.opsx.bootstrap
+      type: depends_on

@@ -1,0 +1,60 @@
+{
+  "timestamp": "2026-05-14T08:15:46.328Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "9c8f17cb589927e98c252bb9e992749479a42b58504b017696eae8a85e6f6285",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      "CLAUDE.md",
+      "docs/opsx-bootstrap.md",
+      "docs/opsx-migration.md",
+      "openspec/changes/clean-stale-cli-command-references/design.md",
+      "openspec/changes/clean-stale-cli-command-references/opsx-delta.yaml",
+      "openspec/changes/clean-stale-cli-command-references/proposal.md",
+      "openspec/changes/clean-stale-cli-command-references/specs/cli-command-reference-consistency/spec.md",
+      "openspec/changes/clean-stale-cli-command-references/tasks.md",
+      "openspec/project.opsx.relations.yaml",
+      "openspec/project.opsx.yaml"
+    ],
+    "evidenceFingerprint": "a59dafbcfabde4e9b157a03bcbb5147b4c9feccf637de3b4672ca2cb1bb3a148",
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "da5725c6e8eb1c0e785ab67e64d268eaba46c09f"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-14T08:15:59.763Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-14T08:15:46.328Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "9c8f17cb589927e98c252bb9e992749479a42b58504b017696eae8a85e6f6285",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          "CLAUDE.md",
+          "docs/opsx-bootstrap.md",
+          "docs/opsx-migration.md",
+          "openspec/changes/clean-stale-cli-command-references/design.md",
+          "openspec/changes/clean-stale-cli-command-references/opsx-delta.yaml",
+          "openspec/changes/clean-stale-cli-command-references/proposal.md",
+          "openspec/changes/clean-stale-cli-command-references/specs/cli-command-reference-consistency/spec.md",
+          "openspec/changes/clean-stale-cli-command-references/tasks.md",
+          "openspec/project.opsx.relations.yaml",
+          "openspec/project.opsx.yaml"
+        ],
+        "evidenceFingerprint": "a59dafbcfabde4e9b157a03bcbb5147b4c9feccf637de3b4672ca2cb1bb3a148",
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "da5725c6e8eb1c0e785ab67e64d268eaba46c09f"
+      }
+    }
+  }
+}

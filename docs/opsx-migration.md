@@ -75,7 +75,7 @@ ls -la openspec/project.opsx.dom.*.yaml
 
 ```bash
 # Ensure nothing broke
-openspec verify --opsx
+openspec validate --all
 ```
 
 #### Step 4: Update Git
@@ -102,7 +102,7 @@ If you have active changes with `opsx-delta.yaml`:
 openspec migrate opsx-path
 
 # 2. Archive active changes (they'll use new path)
-openspec archive --change "your-change"
+openspec archive "your-change"
 ```
 
 ### Option 2: Archive First, Then Migrate
@@ -159,7 +159,7 @@ git checkout HEAD -- project.opsx.yaml
 mv project.opsx.yaml openspec/
 
 # Re-validate
-openspec verify --opsx
+openspec validate --all
 ```
 
 ### Issue: Git shows file as deleted and added
@@ -252,7 +252,7 @@ After migration, verify:
 - [ ] `openspec/project.opsx.yaml` exists
 - [ ] Old `project.opsx.yaml` removed from root
 - [ ] All shards moved (if applicable)
-- [ ] `openspec verify --opsx` passes
+- [ ] `openspec validate --all` passes
 - [ ] Active changes still work
 - [ ] Git history preserved (if using `git mv`)
 - [ ] Team members notified

@@ -330,7 +330,7 @@ For undocumented areas, create specs:
 Check that specs match the structure:
 
 ```bash
-openspec verify --change document-orders-domain
+openspec validate document-orders-domain --type change
 ```
 
 ## After Bootstrap
@@ -353,7 +353,7 @@ Once you've reviewed and refined:
 **Periodic review:**
 ```bash
 # Check for drift
-openspec verify --all
+openspec validate --all
 
 # Rebuild bootstrap review artifacts from current workspace data when needed
 openspec bootstrap validate
@@ -369,7 +369,7 @@ When you refactor code:
 
 ```bash
 # After refactor
-openspec verify --check-refs
+openspec bootstrap validate
 ```
 
 ## Troubleshooting
@@ -446,7 +446,7 @@ code_refs:
 1. **Start small** — bootstrap core domains first, expand later
 2. **Review immediately** — don't let [DRAFT] structure sit unreviewed
 3. **Link existing docs** — add `spec_refs` to leverage current documentation
-4. **Validate often** — run `openspec verify` after changes
+4. **Validate often** — run `openspec validate --all` after changes
 5. **Iterate** — refine structure as you learn more about the codebase
 
 ## Examples
