@@ -1,0 +1,86 @@
+{
+  "timestamp": "2026-05-14T05:38:12.554Z",
+  "result": "PASS_WITH_WARNINGS",
+  "issues": [
+    {
+      "severity": "WARNING",
+      "message": "Proposal wording says openspec-reviewer-skill and openspec-optimizer-skill prompt capabilities gain timeout/input-contract expectations, but design explicitly declares modifying reviewer/optimizer skill prompt content as a non-goal. The implemented requirements and tasks consistently target verify template orchestration, so this is artifact wording drift rather than missing required behavior.",
+      "evidence": [
+        "openspec/changes/optimize-verify-prompts/proposal.md",
+        "openspec/changes/optimize-verify-prompts/design.md",
+        "openspec/changes/optimize-verify-prompts/tasks.md"
+      ]
+    }
+  ],
+  "tasksFileHash": "546fa8190c5a8d162ae5126dc66c7944ed707c4924cce7a9f3774205e49c6929",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      "CLAUDE.md",
+      "openspec/changes/optimize-verify-prompts/design.md",
+      "openspec/changes/optimize-verify-prompts/proposal.md",
+      "openspec/changes/optimize-verify-prompts/specs/ai-workflow-templates/spec.md",
+      "openspec/changes/optimize-verify-prompts/specs/verify-prompt-orchestration/spec.md",
+      "openspec/changes/optimize-verify-prompts/tasks.md",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "src/core/templates/workflows/verify-change.ts",
+      "test/core/templates/fragments/opsx-fragments.test.ts",
+      "test/core/templates/opsx-fragments.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts",
+      "test/core/templates/verify-writeback-templates.test.ts"
+    ],
+    "evidenceFingerprint": "e81a5c358caea265bd442dfb210ed0d5fb4e9a0530ec25ea4f6015f966c7d120",
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "91b0ea6a7ca9cf22f10ab0e258e6b9ae90c1119d",
+    "gitDiffSummary": "Implementation/test/task diff covers seven files: tasks checkboxes marked complete; opsx-fragments.ts adds VERIFY_COORDINATOR_ROLE and VERIFY_SUBAGENT_TIMEOUT_RULES; verify-change.ts injects coordinator role, 10-label mode table, mode-labeled steps, explicit reviewer/optimizer delegation, timeout rules, and checkpoint table before hard rules; tests add fragment, generated-template, parity, delegation/API-negative, and checkpoint-order assertions. Diff stat for those seven files: 258 insertions, 75 deletions. Change artifact files are present as added files."
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-14T05:38:27.284Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-14T05:38:12.554Z",
+      "result": "PASS_WITH_WARNINGS",
+      "issues": [
+        {
+          "severity": "WARNING",
+          "message": "Proposal wording says openspec-reviewer-skill and openspec-optimizer-skill prompt capabilities gain timeout/input-contract expectations, but design explicitly declares modifying reviewer/optimizer skill prompt content as a non-goal. The implemented requirements and tasks consistently target verify template orchestration, so this is artifact wording drift rather than missing required behavior.",
+          "evidence": [
+            "openspec/changes/optimize-verify-prompts/proposal.md",
+            "openspec/changes/optimize-verify-prompts/design.md",
+            "openspec/changes/optimize-verify-prompts/tasks.md"
+          ]
+        }
+      ],
+      "tasksFileHash": "546fa8190c5a8d162ae5126dc66c7944ed707c4924cce7a9f3774205e49c6929",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          "CLAUDE.md",
+          "openspec/changes/optimize-verify-prompts/design.md",
+          "openspec/changes/optimize-verify-prompts/proposal.md",
+          "openspec/changes/optimize-verify-prompts/specs/ai-workflow-templates/spec.md",
+          "openspec/changes/optimize-verify-prompts/specs/verify-prompt-orchestration/spec.md",
+          "openspec/changes/optimize-verify-prompts/tasks.md",
+          "src/core/templates/fragments/opsx-fragments.ts",
+          "src/core/templates/workflows/verify-change.ts",
+          "test/core/templates/fragments/opsx-fragments.test.ts",
+          "test/core/templates/opsx-fragments.test.ts",
+          "test/core/templates/skill-templates-parity.test.ts",
+          "test/core/templates/verify-writeback-templates.test.ts"
+        ],
+        "evidenceFingerprint": "e81a5c358caea265bd442dfb210ed0d5fb4e9a0530ec25ea4f6015f966c7d120",
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "91b0ea6a7ca9cf22f10ab0e258e6b9ae90c1119d",
+        "gitDiffSummary": "Implementation/test/task diff covers seven files: tasks checkboxes marked complete; opsx-fragments.ts adds VERIFY_COORDINATOR_ROLE and VERIFY_SUBAGENT_TIMEOUT_RULES; verify-change.ts injects coordinator role, 10-label mode table, mode-labeled steps, explicit reviewer/optimizer delegation, timeout rules, and checkpoint table before hard rules; tests add fragment, generated-template, parity, delegation/API-negative, and checkpoint-order assertions. Diff stat for those seven files: 258 insertions, 75 deletions. Change artifact files are present as added files."
+      }
+    }
+  }
+}

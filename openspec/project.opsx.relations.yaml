@@ -318,3 +318,15 @@ relations:
   - from: cap.ai.internal-skill-installation
     type: depends_on
     to: cap.ai.tool-adapters
+  - from: cap.verify.prompt-orchestration
+    type: contains
+    to: dom.verify
+  - from: cap.verify.prompt-orchestration
+    type: relates_to
+    to: cap.ai.workflow-templates
+  - from: cap.verify.prompt-orchestration
+    type: relates_to
+    to: cap.ai.reviewer-skill
+  - from: cap.verify.prompt-orchestration
+    type: relates_to
+    to: cap.ai.optimizer-skill

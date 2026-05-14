@@ -70,7 +70,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: verify/apply/archive 模板中 subagent spawn 步骤，从传内联 fragment 改为 invoke 对应的内部 skill（openspec-reviewer / openspec-optimizer），利用 tool-invocation-references 的变换管线实现跨工具 skill 名称适配
+    intent: verify/apply/archive 模板中 subagent spawn 步骤，从传内联 fragment 改为 invoke 对应的内部 skill（openspec-reviewer / openspec-optimizer）；verify 模板新增 coordinator 角色声明、阶段模式标签、明确 subagent delegation instructions 和超时等待规则
     type: capability
   - id: cap.artifact-graph.instruction-loader
     intent: 加载 Schema 模板，并按 workflow surface 与 artifact 编译项目配置投影，向 AI 暴露统一的 prompt projection 而非原始字段拼接结果
@@ -304,4 +304,7 @@ capabilities:
     type: capability
   - id: cap.ai.internal-skill-installation
     intent: 内部 skill 安装管线。将 openspec-reviewer 和 openspec-optimizer 作为 core preset 的一部分，init/update 时安装到各 AI 工具的 skills 目录，不生成对应的 slash command
+    type: capability
+  - id: cap.verify.prompt-orchestration
+    intent: Verification prompt orchestration patterns that enforce coordinator role discipline, phased mode labels, explicit subagent delegation instructions, and timeout/waiting rules across the verify workflow
     type: capability

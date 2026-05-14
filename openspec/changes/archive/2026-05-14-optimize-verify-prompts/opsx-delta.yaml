@@ -1,0 +1,31 @@
+schema_version: 1
+generated_at: "2026-05-13T00:00:00Z"
+
+ADDED:
+  domains: []
+
+  capabilities:
+    - id: cap.verify.prompt-orchestration
+      type: capability
+      intent: Verification prompt orchestration patterns that enforce coordinator role discipline, phased mode labels, explicit subagent delegation instructions, and timeout/waiting rules across the verify workflow
+
+  relations:
+    - from: cap.verify.prompt-orchestration
+      to: dom.verify
+      type: contains
+    - from: cap.verify.prompt-orchestration
+      to: cap.ai.workflow-templates
+      type: relates_to
+    - from: cap.verify.prompt-orchestration
+      to: cap.ai.reviewer-skill
+      type: relates_to
+    - from: cap.verify.prompt-orchestration
+      to: cap.ai.optimizer-skill
+      type: relates_to
+
+MODIFIED:
+  capabilities:
+    - id: cap.ai.workflow-templates
+      intent: verify/apply/archive 模板中 subagent spawn 步骤，从传内联 fragment 改为 invoke 对应的内部 skill（openspec-reviewer / openspec-optimizer）；verify 模板新增 coordinator 角色声明、阶段模式标签、明确 subagent delegation instructions 和超时等待规则
+
+REMOVED: {}

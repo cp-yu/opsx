@@ -25,16 +25,16 @@ describe('verify write-back workflow templates', () => {
     const command = getOpsxVerifyCommandTemplate().content;
 
     for (const template of [skill, command]) {
-      expect(template).toContain('3.5. **Stop early if no verifyable tasks exist**');
+      expect(template).toContain('3.5. [Mode: Setup] **Stop early if no verifyable tasks exist**');
       expect(template).toContain('没有可供 verify 的任务');
       expect(template).toContain('Recommend running `/opsx:continue` to create tasks');
       expect(template).toContain('If omitted, you MUST prompt for available changes.');
       expect(template).not.toContain('check if it can be inferred from conversation context');
-      expect(template).toContain('9. **Write Back CRITICAL Issues**');
-      expect(template).toContain('10. **Persist the Canonical Phase 1 Result Through CLI**');
-      expect(template).toContain('11. **Submit Phase 2 Optimization Through CLI**');
-      expect(template).toContain('12. **Re-verify Candidate Changes and Enforce Retry Budgets**');
-      expect(template).toContain('13. **Seal Final Verification Result**');
+      expect(template).toContain('9. [Mode: Writeback] **Write Back CRITICAL Issues**');
+      expect(template).toContain('10. [Mode: Record] **Persist the Canonical Phase 1 Result Through CLI**');
+      expect(template).toContain('11. [Mode: Checkpoint] **Submit Phase 2 Optimization Through CLI**');
+      expect(template).toContain('12. [Mode: Speculative Verify] **Re-verify Candidate Changes and Enforce Retry Budgets**');
+      expect(template).toContain('13. [Mode: Seal] **Seal Final Verification Result**');
       expect(template).toContain('openspec verify phase1 "<change-name>"');
       expect(template).toContain('openspec verify phase2 "<change-name>" --type=optimization');
       expect(template).toContain('openspec verify seal "<change-name>"');
@@ -45,8 +45,8 @@ describe('verify write-back workflow templates', () => {
       expect(template).toContain('[code_fix]');
       expect(template).toContain('[artifact_fix]');
       expect(template).toContain('`[x]` to `[ ]`');
-      expect(template).toContain('1.5. **Clean-Context Verification Setup**');
-      expect(template).toContain('5.5. **Git Evidence Investigation**');
+      expect(template).toContain('1.5. [Mode: Setup] **Clean-Context Verification Setup**');
+      expect(template).toContain('5.5. [Mode: Evidence] **Git Evidence Investigation**');
       expect(template).toContain('verificationContext');
       expect(template).toContain('contractVersion');
       expect(template).toContain('evidenceFingerprint');
@@ -148,19 +148,86 @@ describe('verify write-back workflow templates', () => {
       getClaudeOpsxVerifyCommandTemplate().content,
       getCodexVerifyChangeSkillTemplate().instructions,
     ]) {
-      expect(template).toContain('4. **Assemble the Explicit Evidence Bundle**');
-      expect(template).toContain('5. **Run the Reviewer Subagent for Canonical Phase 1**');
-      expect(template).toContain('6. **Validate the Reviewer Payload**');
-      expect(template).toContain('7. **Write Back CRITICAL Issues**');
-      expect(template).toContain('8. **Persist the Canonical Phase 1 Result Through CLI**');
-      expect(template).toContain('9. **Submit Phase 2 Optimization Through CLI**');
-      expect(template).toContain('10. **Re-verify Candidate Changes and Enforce Retry Budgets**');
-      expect(template).toContain('11. **Seal Final Verification Result**');
+      expect(template).toContain('4. [Mode: Evidence] **Assemble the Explicit Evidence Bundle**');
+      expect(template).toContain('5. [Mode: Delegate Review] **Run the Reviewer Subagent for Canonical Phase 1**');
+      expect(template).toContain('6. [Mode: Validate Payload] **Validate the Reviewer Payload**');
+      expect(template).toContain('7. [Mode: Writeback] **Write Back CRITICAL Issues**');
+      expect(template).toContain('8. [Mode: Record] **Persist the Canonical Phase 1 Result Through CLI**');
+      expect(template).toContain('9. [Mode: Checkpoint] **Submit Phase 2 Optimization Through CLI**');
+      expect(template).toContain('10. [Mode: Speculative Verify] **Re-verify Candidate Changes and Enforce Retry Budgets**');
+      expect(template).toContain('11. [Mode: Seal] **Seal Final Verification Result**');
       expect(template).toContain('subagent-orchestrated');
-      expect(template).not.toContain('5. **Verify Completeness**');
-      expect(template).not.toContain('6. **Verify Correctness**');
-      expect(template).not.toContain('7. **Verify Coherence**');
-      expect(template).not.toContain('8. **Generate Verification Report**');
+      expect(template).not.toContain('5. [Mode: Evidence] **Verify Completeness**');
+      expect(template).not.toContain('6. [Mode: Evidence] **Verify Correctness**');
+      expect(template).not.toContain('7. [Mode: Evidence] **Verify Coherence**');
+      expect(template).not.toContain('8. [Mode: Evidence] **Generate Verification Report**');
+    }
+  });
+
+  it('documents coordinator role, mode labels, and explicit subagent delegation', () => {
+    const reread = getVerifyChangeSkillTemplate().instructions;
+    const subagentTemplates = [
+      getClaudeVerifyChangeSkillTemplate().instructions,
+      getClaudeOpsxVerifyCommandTemplate().content,
+      getCodexVerifyChangeSkillTemplate().instructions,
+    ];
+
+    for (const template of [reread, ...subagentTemplates]) {
+      expect(template.startsWith('**Verification Coordinator Role**')).toBe(true);
+      for (const label of [
+        '[Mode: Setup]',
+        '[Mode: Evidence]',
+        '[Mode: Delegate Review]',
+        '[Mode: Validate Payload]',
+        '[Mode: Writeback]',
+        '[Mode: Record]',
+        '[Mode: Checkpoint]',
+        '[Mode: Optimize]',
+        '[Mode: Speculative Verify]',
+        '[Mode: Seal]',
+      ]) {
+        expect(template).toContain(label);
+      }
+      expect(template).not.toContain('Agent({');
+      expect(template).not.toContain('TaskOutput({');
+      expect(template).not.toContain('AskUserQuestion');
+    }
+
+    for (const template of subagentTemplates) {
+      expect(template).toContain('Delegate to a clean-context reviewer subagent');
+      expect(template).toContain('invoke the `openspec-reviewer` skill');
+      expect(template).toContain('`changeArtifacts`');
+      expect(template).toContain('`gitEvidence`');
+      expect(template).toContain('`finalFileContents`');
+      expect(template).toContain('`priorVerifyResult`');
+      expect(template).toContain('`opsxContext`');
+      expect(template).toContain('Wait for the complete reviewer payload');
+      expect(template).toContain('Delegate to a clean-context optimizer subagent');
+      expect(template).toContain('invoke the `openspec-optimizer` skill');
+      expect(template).toContain('failedDirections');
+      expect(template).toContain('MUST NOT edit files directly');
+      expect(template).toContain('Subagent Timeout and Waiting Rules');
+      expect(template).not.toContain('Spawn a clean-context reviewer subagent');
+    }
+  });
+
+  it('formats phase 2 checkpoint state machine as a table before hard rules', () => {
+    const template = getVerifyChangeSkillTemplate().instructions;
+    const diagramIndex = template.indexOf('**Verify State Machine**');
+    const tableIndex = template.indexOf('| State | Trigger condition | Git operation |');
+    const hardRulesIndex = template.indexOf('Hard rules:');
+
+    expect(diagramIndex).toBeGreaterThan(-1);
+    expect(tableIndex).toBeGreaterThan(diagramIndex);
+    expect(hardRulesIndex).toBeGreaterThan(tableIndex);
+
+    for (const state of [
+      '`CREATED`',
+      '`BASELINE_RESTORED_FOR_RETRY`',
+      '`TERMINAL_ACCEPTED`',
+      '`TERMINAL_RESTORED`',
+    ]) {
+      expect(template).toContain(state);
     }
   });
 

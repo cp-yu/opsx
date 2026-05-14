@@ -102,6 +102,25 @@ A verify result is considered **STALE** if ANY of the following hold:
 `.trim();
 
 /**
+ * Fragment: Verify coordinator role declaration
+ * Used in: verify-change
+ */
+export const VERIFY_COORDINATOR_ROLE = `
+**Verification Coordinator Role**:
+
+You are the verification coordinator, not the verification judge.
+
+| Role | Responsibility |
+| --- | --- |
+| Coordinator (top-level agent) | Gather evidence, delegate to subagents, validate payload shape, perform deterministic write-back, manage git checkpoints, and persist results through CLI |
+| Reviewer Subagent | Own all completeness, correctness, and coherence judgments using only the provided evidence bundle |
+| Optimizer Subagent | Propose behavior-preserving Search/Replace blocks; never edit files directly |
+| CLI | Persist results deterministically, compute hashes, and validate seal state |
+
+Core constraint: You MUST NOT substitute your own completeness/correctness/coherence judgments for the reviewer's.
+`.trim();
+
+/**
  * Fragment: Git evidence usage rules
  * Used in: verify-change
  */
@@ -226,6 +245,20 @@ replacement new text
 - The main agent applies blocks by trying exact match first, then whitespace-normalized matching
 - All blocks must pre-validate before any file write occurs
 - A block that matches zero or multiple locations is invalid and must be regenerated
+`.trim();
+
+/**
+ * Fragment: Subagent timeout and waiting rules
+ * Used in: verify-change
+ */
+export const VERIFY_SUBAGENT_TIMEOUT_RULES = `
+**Subagent Timeout and Waiting Rules**:
+- Use a 10 minute waiting budget for each subagent delegation before asking the user whether to continue waiting or terminate
+- Wait for the complete subagent payload before moving to payload validation, Search/Replace application, speculative verification, or CLI persistence
+- If a subagent does not return within a short default timeout, keep polling or waiting; do NOT treat that as failure
+- If the wait exceeds the 10 minute budget, ask the user whether to continue waiting or terminate the subagent
+- Never terminate a subagent without explicit user confirmation
+- The top-level agent MUST receive the complete subagent payload before entering the next mode
 `.trim();
 
 /**

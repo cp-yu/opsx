@@ -11,10 +11,12 @@ import {
   CONFORMANCE_CHECK_RULES,
   GIT_EVIDENCE_PROTOCOL,
   OPSX_VERIFY_ALIGNMENT,
+  VERIFY_COORDINATOR_ROLE,
   VERIFY_CLI_JSON_SCHEMA_REFERENCE,
   VERIFY_ERROR_RECOVERY_GUIDE,
   VERIFY_SIMPLE_CHANGE_FAST_PATH,
   VERIFY_STATE_MACHINE_DIAGRAM,
+  VERIFY_SUBAGENT_TIMEOUT_RULES,
   VERIFY_WRITEBACK_RULES,
 } from '../fragments/opsx-fragments.js';
 import {
@@ -31,7 +33,24 @@ interface VerifyTemplateText {
 function buildVerifyIntro(text: VerifyTemplateText, cleanContextProtocol: string): string {
   const continueInvocation = `${text.commandPrefix ?? '/opsx:'}continue`;
 
-  return `Verify that an implementation matches the change artifacts (specs, tasks, design).
+  return `${VERIFY_COORDINATOR_ROLE}
+
+**Mode Label Reference**:
+
+| Mode Label | Phase | Trigger |
+| --- | --- | --- |
+| \`[Mode: Setup]\` | Select change, load artifacts, and run early-stop checks | Steps 1-3.5 |
+| \`[Mode: Evidence]\` | Gather git evidence and final file contents | Step 4 |
+| \`[Mode: Delegate Review]\` | Start reviewer subagent and wait for structured payload | Step 5 |
+| \`[Mode: Validate Payload]\` | Validate reviewer payload structure and evidence references | Step 6 |
+| \`[Mode: Writeback]\` | Apply writeBackPlan to \`tasks.md\` | Step 7/9 |
+| \`[Mode: Record]\` | Persist canonical Phase 1 result through CLI | Step 8/10 |
+| \`[Mode: Checkpoint]\` | Manage Phase 2 git checkpoint lifecycle | Phase 2 entry |
+| \`[Mode: Optimize]\` | Start optimizer subagent and apply Search/Replace blocks | Phase 2 optimization |
+| \`[Mode: Speculative Verify]\` | Re-verify candidate changes without touching canonical result | Step 10/12 |
+| \`[Mode: Seal]\` | Run final seal validation | Step 11/13 |
+
+Verify that an implementation matches the change artifacts (specs, tasks, design).
 
 **Input**: ${text.input}
 
@@ -39,9 +58,9 @@ When verification writes remediation guidance or instructs artifact updates, tre
 
 **Steps**
 
-1. **If no change name provided, prompt for selection**
+1. [Mode: Setup] **If no change name provided, prompt for selection**
 
-   Run \`openspec list --json\` to get available changes. Use the **AskUserQuestion tool** to let the user select.
+   Run \`openspec list --json\` to get available changes. Ask the user to select a change.
 
    Show changes that have implementation tasks (tasks artifact exists).
    Include the schema used for each change if available.
@@ -49,11 +68,11 @@ When verification writes remediation guidance or instructs artifact updates, tre
 
    **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
 
-1.5. **Clean-Context Verification Setup**
+1.5. [Mode: Setup] **Clean-Context Verification Setup**
 
 ${cleanContextProtocol}
 
-2. **Check status to understand the schema**
+2. [Mode: Setup] **Check status to understand the schema**
    \`\`\`bash
    openspec status --change "<name>" --json
    \`\`\`
@@ -61,7 +80,7 @@ ${cleanContextProtocol}
    - \`schemaName\`: The workflow being used (e.g., "spec-driven")
    - Which artifacts exist for this change
 
-3. **Get the change directory and load artifacts**
+3. [Mode: Setup] **Get the change directory and load artifacts**
 
    \`\`\`bash
    openspec instructions apply --change "<name>" --json
@@ -69,7 +88,7 @@ ${cleanContextProtocol}
 
    This returns the change directory and context files. Read all available artifacts from \`contextFiles\`.
 
-3.5. **Stop early if no verifyable tasks exist**
+3.5. [Mode: Setup] **Stop early if no verifyable tasks exist**
 
    - If \`tasks.md\` is missing from \`contextFiles\`, unreadable, or contains no checkbox tasks:
      - Report exactly: "没有可供 verify 的任务"
@@ -80,7 +99,7 @@ ${cleanContextProtocol}
 }
 
 function buildCanonicalPhase1Step(stepNumber: number): string {
-  return `${stepNumber}. **Persist the Canonical Phase 1 Result Through CLI**
+  return `${stepNumber}. [Mode: Record] **Persist the Canonical Phase 1 Result Through CLI**
 
    - Assemble the canonical Phase 1 payload before any optimization attempt, then submit it through:
      \`\`\`bash
@@ -104,7 +123,7 @@ ${VERIFY_CLI_JSON_SCHEMA_REFERENCE}
 }
 
 function buildPhase2Step(stepNumber: number): string {
-  return `${stepNumber}. **Submit Phase 2 Optimization Through CLI**
+  return `${stepNumber}. [Mode: Checkpoint] **Submit Phase 2 Optimization Through CLI**
 
    - Phase 2 is only eligible when the canonical Phase 1 \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\`
    - Read \`optimization.enabled\` from \`openspec/config.yaml\`; default it to \`true\` when the field is absent
@@ -115,11 +134,18 @@ function buildPhase2Step(stepNumber: number): string {
      - Keep the canonical Phase 1 \`result\` unchanged
    - For pure deletions, renames, or parameter removals with no meaningful optimization room, use the simple-change fast path and skip the optimization subagent
 ${VERIFY_SIMPLE_CHANGE_FAST_PATH}
+${VERIFY_STATE_MACHINE_DIAGRAM}
+
    - Otherwise run an explicit checkpoint state machine:
-     - \`CREATED\`: after \`git stash push -u -m "verify-phase2-checkpoint"\`
-     - \`BASELINE_RESTORED_FOR_RETRY\`: after \`git stash apply <checkpointRef>\` restores the canonical Phase 1 baseline while preserving the checkpoint for retries
-     - \`TERMINAL_ACCEPTED\`: after a successful optimized result is accepted and \`git stash drop <checkpointRef>\` consumes the checkpoint
-     - \`TERMINAL_RESTORED\`: after a final rollback succeeds and \`git stash pop <checkpointRef>\` (or an equivalent restore-then-drop sequence) consumes the checkpoint
+
+     | State | Trigger condition | Git operation |
+     | --- | --- | --- |
+     | \`CREATED\` | Before applying any optimization edits | \`git stash push -u -m "verify-phase2-checkpoint"\`; record the exact stash entry or hash |
+     | \`BASELINE_RESTORED_FOR_RETRY\` | Retry after speculative reverify failure | \`git stash apply <checkpointRef>\`; restore the canonical Phase 1 baseline while preserving the checkpoint |
+     | \`TERMINAL_ACCEPTED\` | Optimized result is accepted | \`git stash drop <checkpointRef>\`; consume the checkpoint after acceptance |
+     | \`TERMINAL_RESTORED\` | Final rollback succeeds | \`git stash pop <checkpointRef>\` or equivalent restore-then-drop sequence; restore baseline and consume the checkpoint |
+
+   Hard rules:
    - Record the exact stash entry or hash before applying any optimization edits
    - Immediately restore the canonical Phase 1 baseline into the worktree while keeping the checkpoint available, for example with \`git stash apply <checkpointRef>\`
    - If checkpoint creation or baseline restoration fails:
@@ -132,10 +158,10 @@ ${VERIFY_SIMPLE_CHANGE_FAST_PATH}
    - Any branch that still outputs manual recovery instructions MUST NOT run \`git stash drop <checkpointRef>\` first
 ${VERIFY_ERROR_RECOVERY_GUIDE}
 
-**Phase 2 Optimization Protocol**:
+**[Mode: Optimize] Phase 2 Optimization Protocol**:
 
-   Spawn a clean-context optimizer subagent. Instruct it to invoke the \`openspec-optimizer\` skill
-   with the canonical Phase 1 results, change artifacts, final file contents, and config.
+   Delegate to a clean-context optimizer subagent. The coordinator MUST pass the optimization
+   input contract below and instruct the subagent to invoke the \`openspec-optimizer\` skill.
 
    The \`openspec-optimizer\` skill defines: role and hard constraints, input contract,
    prioritized optimization principles (5 categories + prohibition list), Search/Replace block
@@ -148,8 +174,15 @@ ${VERIFY_ERROR_RECOVERY_GUIDE}
    - Project policy context from openspec/config.yaml, including optimization.enabled
    - failedDirections from prior optimization attempts (if any)
 
+   The optimizer subagent MUST return only Search/Replace blocks or exactly
+   \`No optimization opportunities found\`; it MUST NOT edit files directly.
+   The coordinator MUST wait for the complete optimizer payload before applying blocks
+   or recording NO_OPTIMIZATION_NEEDED.
+
+${VERIFY_SUBAGENT_TIMEOUT_RULES}
+
    If the subagent returns \`No optimization opportunities found\`, record NO_OPTIMIZATION_NEEDED.
-   Otherwise, apply the returned Search/Replace blocks atomically, then spawn the reviewer subagent
+   Otherwise, apply the returned Search/Replace blocks atomically, then delegate to the reviewer subagent
    for speculative re-verification.
 
    **Main-agent application contract**:
@@ -173,10 +206,18 @@ ${VERIFY_CLI_JSON_SCHEMA_REFERENCE}
 }
 
 function buildReverifyStep(stepNumber: number, speculativeFenceContract: string): string {
-  return `${stepNumber}. **Re-verify Candidate Changes and Enforce Retry Budgets**
+  return `${stepNumber}. [Mode: Speculative Verify] **Re-verify Candidate Changes and Enforce Retry Budgets**
 
    - Re-run the same verification contract in \`P1_SPECULATIVE_FENCE\` mode after applying candidate Search/Replace blocks
 ${speculativeFenceContract}
+   - For subagent-orchestrated speculative verification, delegate to a clean-context reviewer subagent, instruct it to invoke the \`openspec-reviewer\` skill, and pass:
+     - Change artifacts from the speculative worktree
+     - Git evidence for the speculative worktree
+     - Final file contents for every changed candidate file
+     - Canonical Phase 1 result and optimization attempt summary
+     - Prior \`.verify-result.json\` when present
+   - Wait for the complete reviewer payload before deciding whether the optimization passed or failed
+${VERIFY_SUBAGENT_TIMEOUT_RULES}
    - \`P1_SPECULATIVE_FENCE\` MUST reuse the same completeness/correctness/coherence checks but MUST NOT:
      - write back to \`tasks.md\`
      - rewrite the canonical \`.verify-result.json\`
@@ -226,7 +267,6 @@ ${speculativeFenceContract}
        - Preserve the stash entry for manual recovery
        - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
        - Keep the canonical Phase 1 \`result\`
-${VERIFY_STATE_MACHINE_DIAGRAM}
 `;
 }
 
@@ -235,7 +275,7 @@ function buildPersistStep(
   verifyInvocation: string,
   continueInvocation: string
 ): string {
-  return `${stepNumber}. **Seal Final Verification Result**
+  return `${stepNumber}. [Mode: Seal] **Seal Final Verification Result**
 
    - Do not hand-write the final \`.verify-result.json\`; Phase 1 and Phase 2 CLI calls already persisted it
    - Run:
@@ -278,7 +318,7 @@ function buildRereadVerifyInstructions(text: VerifyTemplateText): string {
 
   return `${buildVerifyIntro(text, CLEAN_CONTEXT_VERIFY_PROTOCOL_REREAD)}
 
-4. **Initialize verification report structure**
+4. [Mode: Evidence] **Initialize verification report structure**
 
    Create a report structure with three dimensions:
    - **Completeness**: Track tasks and spec coverage
@@ -287,7 +327,7 @@ function buildRereadVerifyInstructions(text: VerifyTemplateText): string {
 
    Each dimension can have CRITICAL, WARNING, or SUGGESTION issues.
 
-5. **Verify Completeness**
+5. [Mode: Evidence] **Verify Completeness**
 
    **Task Completion**:
    - If \`tasks.md\` exists in \`contextFiles\`, read it
@@ -308,7 +348,7 @@ function buildRereadVerifyInstructions(text: VerifyTemplateText): string {
        - Add CRITICAL issue: "Requirement not found: <requirement name>"
        - Recommendation: "Implement requirement X: <description>"
 
-5.5. **Git Evidence Investigation**
+5.5. [Mode: Evidence] **Git Evidence Investigation**
 
 ${GIT_EVIDENCE_PROTOCOL}
 
@@ -317,7 +357,7 @@ ${GIT_EVIDENCE_PROTOCOL}
    - Run \`git diff\` to identify candidate implementation areas and suspicious omissions
    - Run \`git log -5 --oneline\` to understand recent context if needed
 
-6. **Verify Correctness**
+6. [Mode: Evidence] **Verify Correctness**
 
    **Requirement Implementation Mapping**:
    - For each requirement from delta specs:
@@ -340,7 +380,7 @@ ${CONFORMANCE_CHECK_RULES}
 
 ${OPSX_VERIFY_ALIGNMENT}
 
-7. **Verify Coherence**
+7. [Mode: Evidence] **Verify Coherence**
 
    **Design Adherence**:
    - If \`design.md\` exists in \`contextFiles\`:
@@ -358,7 +398,7 @@ ${OPSX_VERIFY_ALIGNMENT}
      - Add SUGGESTION: "Code pattern deviation: <details>"
      - Recommendation: "Consider following project pattern: <example>"
 
-8. **Generate Verification Report**
+8. [Mode: Evidence] **Generate Verification Report**
 
    **Summary Scorecard**:
    \`\`\`
@@ -389,7 +429,7 @@ ${OPSX_VERIFY_ALIGNMENT}
    - \`PASS_WITH_WARNINGS\`: no CRITICAL issues, but warnings or suggestions remain
    - \`FAIL_NEEDS_REMEDIATION\`: one or more CRITICAL issues require write-back and rework
 
-9. **Write Back CRITICAL Issues**
+9. [Mode: Writeback] **Write Back CRITICAL Issues**
 
 ${VERIFY_WRITEBACK_RULES}
 
@@ -419,7 +459,7 @@ function buildSubagentVerifyInstructions(text: VerifyTemplateText): string {
 
   return `${buildVerifyIntro(text, CLEAN_CONTEXT_VERIFY_PROTOCOL_SUBAGENT)}
 
-4. **Assemble the Explicit Evidence Bundle**
+4. [Mode: Evidence] **Assemble the Explicit Evidence Bundle**
 
    - Read every available artifact from \`contextFiles\`
    - Run \`git status\`, \`git diff\`, and \`git log -5 --oneline\`
@@ -429,17 +469,27 @@ function buildSubagentVerifyInstructions(text: VerifyTemplateText): string {
    - Normalize evidence file paths as relative POSIX paths for the reviewer payload
    - The top-level agent MAY gather evidence, but MUST NOT assign completeness, correctness, or coherence verdicts here
 
-5. **Run the Reviewer Subagent for Canonical Phase 1**
+5. [Mode: Delegate Review] **Run the Reviewer Subagent for Canonical Phase 1**
 
-   Spawn a clean-context reviewer subagent with the explicit evidence bundle from Step 4.
-   Instruct the subagent to invoke the \`openspec-reviewer\` skill.
+   Delegate to a clean-context reviewer subagent with the explicit evidence bundle from Step 4.
+   The coordinator MUST instruct the subagent to invoke the \`openspec-reviewer\` skill.
 
    The \`openspec-reviewer\` skill loads the full reviewer contract: role definition, hard constraints,
    input validation, 6-step verification protocol, severity thresholds and evidence standards,
    three-dimension coverage (completeness, correctness, coherence), OPSX alignment rules,
    structured JSON output schema with writeBackPlan semantics, and graceful degradation rules.
 
-   Pass the explicit evidence bundle alongside the skill invoke as the subagent's input context.
+   Pass the explicit evidence bundle alongside the skill invoke as the subagent's input context:
+   - \`changeArtifacts\`: proposal, specs, design, tasks, and OPSX delta when available
+   - \`gitEvidence\`: \`git status\`, \`git diff\`, and \`git log -5 --oneline\`
+   - \`finalFileContents\`: final contents for every candidate implementation file
+   - \`priorVerifyResult\`: prior \`.verify-result.json\` when present
+   - \`opsxContext\`: \`project.opsx.yaml\`, code map references, and relevant existing specs when available
+
+   Wait for the complete reviewer payload before entering payload validation.
+   The coordinator MUST NOT substitute its own completeness/correctness/coherence verdict.
+
+${VERIFY_SUBAGENT_TIMEOUT_RULES}
 
 ${GIT_EVIDENCE_PROTOCOL}
 
@@ -447,7 +497,7 @@ ${CONFORMANCE_CHECK_RULES}
 
 ${OPSX_VERIFY_ALIGNMENT}
 
-6. **Validate the Reviewer Payload**
+6. [Mode: Validate Payload] **Validate the Reviewer Payload**
 
    - Fail closed if the reviewer payload is missing, malformed, or unsupported
    - Validate:
@@ -460,7 +510,7 @@ ${OPSX_VERIFY_ALIGNMENT}
      - Report the payload defect explicitly
      - Do NOT silently downgrade to the reread skeleton
 
-7. **Write Back CRITICAL Issues**
+7. [Mode: Writeback] **Write Back CRITICAL Issues**
 
 ${VERIFY_WRITEBACK_RULES}
 

@@ -10,12 +10,14 @@ import {
   OPSX_READ_CONTEXT,
   OPSX_SHARED_CONTEXT,
   OPSX_VERIFY_ALIGNMENT,
+  VERIFY_COORDINATOR_ROLE,
   VERIFY_CLI_JSON_SCHEMA_REFERENCE,
   VERIFY_REVIEWER_SUBAGENT_CONTRACT,
   VERIFY_ERROR_RECOVERY_GUIDE,
   VERIFY_FRESHNESS_RULES,
   VERIFY_SIMPLE_CHANGE_FAST_PATH,
   VERIFY_STATE_MACHINE_DIAGRAM,
+  VERIFY_SUBAGENT_TIMEOUT_RULES,
   VERIFY_WRITEBACK_RULES,
 } from '../../../src/core/templates/fragments/opsx-fragments.js';
 import {
@@ -60,6 +62,7 @@ describe('OPSX shared context fragments', () => {
   it('reuses conformance and write-back fragments across verify/archive templates', () => {
     expect(getVerifyChangeSkillTemplate().instructions).toContain(CONFORMANCE_CHECK_RULES);
     expect(getVerifyChangeSkillTemplate().instructions).toContain(VERIFY_WRITEBACK_RULES);
+    expect(getVerifyChangeSkillTemplate().instructions).toContain(VERIFY_COORDINATOR_ROLE);
     expect(getVerifyChangeSkillTemplate().instructions).toContain(OPSX_VERIFY_ALIGNMENT);
     expect(getVerifyChangeSkillTemplate().instructions).toContain(CLEAN_CONTEXT_VERIFY_PROTOCOL_REREAD);
     expect(getVerifyChangeSkillTemplate().instructions).toContain(GIT_EVIDENCE_PROTOCOL);
@@ -71,6 +74,9 @@ describe('OPSX shared context fragments', () => {
   it('uses subagent clean-context protocol for claude and codex verify variants', () => {
     expect(getClaudeVerifyChangeSkillTemplate().instructions).toContain(
       CLEAN_CONTEXT_VERIFY_PROTOCOL_SUBAGENT
+    );
+    expect(getClaudeVerifyChangeSkillTemplate().instructions).toContain(
+      VERIFY_SUBAGENT_TIMEOUT_RULES
     );
     expect(getClaudeOpsxVerifyCommandTemplate().content).toContain(
       CLEAN_CONTEXT_VERIFY_PROTOCOL_SUBAGENT
@@ -111,6 +117,8 @@ describe('OPSX shared context fragments', () => {
       VERIFY_CLI_JSON_SCHEMA_REFERENCE,
       VERIFY_ERROR_RECOVERY_GUIDE,
       VERIFY_SIMPLE_CHANGE_FAST_PATH,
+      VERIFY_COORDINATOR_ROLE,
+      VERIFY_SUBAGENT_TIMEOUT_RULES,
     ]) {
       expect(fragment).toBeTypeOf('string');
       expect(fragment.length).toBeGreaterThan(0);
