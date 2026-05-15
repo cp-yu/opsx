@@ -1,0 +1,6 @@
+MODIFIED:
+  capabilities:
+    - id: cap.cli.instructions
+      intent: 输出用于创建制品或应用任务的丰富指令；spec-driven tasks 指令要求生成分离的 Actions/Checks sections，使用 A/C checkbox ID 和 Covers 关联表达 goal-driven 验证计划。
+    - id: cap.ai.workflow-templates
+      intent: verify/apply/archive/propose 等模板共享面向 Agent 的 workflow guidance；propose 的 post-propose warning validation 包含程序化 Actions/Checks 结构校验，并避免大语言模型语义判断。

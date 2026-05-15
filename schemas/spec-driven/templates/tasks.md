@@ -1,9 +1,16 @@
-## 1. <!-- Task Group Name -->
+## 1. Actions
 
-- [ ] 1.1 <!-- Task description -->
-- [ ] 1.2 <!-- Task description -->
+- [ ] A1 <!-- Implementation action -->
+- [ ] A2 <!-- Implementation action -->
 
-## 2. <!-- Task Group Name -->
+## 2. Checks
 
-- [ ] 2.1 <!-- Task description -->
-- [ ] 2.2 <!-- Task description -->
+- [ ] C1 <!-- Verification check -->
+  - Covers: A1
+  - Command: `<!-- command or test -->`
+  - Expect: <!-- observable result -->
+
+- [ ] C2 <!-- Verification check -->
+  - Covers: A2
+  - Evidence: <!-- file, diff, log, or inspection source -->
+  - Expect: <!-- observable result -->

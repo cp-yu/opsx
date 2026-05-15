@@ -1,0 +1,88 @@
+{
+  "timestamp": "2026-05-15T07:32:32.125Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "cddaadc6f90b2474d1cfaf4ca9d22891d6a7a5e8947ac3995928ed563dbe452f",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent",
+    "evidenceFiles": [
+      ".claude/skills/openspec-propose/SKILL.md",
+      ".codex/skills/openspec-propose/SKILL.md",
+      ".github/prompts/opsx-propose.prompt.md",
+      ".github/skills/openspec-propose/SKILL.md",
+      "openspec/changes/add-goal-driven-task-checkpoints/.verify-result.json",
+      "openspec/changes/add-goal-driven-task-checkpoints/design.md",
+      "openspec/changes/add-goal-driven-task-checkpoints/opsx-delta.yaml",
+      "openspec/changes/add-goal-driven-task-checkpoints/proposal.md",
+      "openspec/changes/add-goal-driven-task-checkpoints/specs/cli-artifact-workflow/spec.md",
+      "openspec/changes/add-goal-driven-task-checkpoints/specs/opsx-propose-skill/spec.md",
+      "openspec/changes/add-goal-driven-task-checkpoints/tasks.md",
+      "openspec/project.opsx.code-map.yaml",
+      "openspec/project.opsx.yaml",
+      "openspec/specs/cli-artifact-workflow/spec.md",
+      "openspec/specs/opsx-propose-skill/spec.md",
+      "schemas/spec-driven/schema.yaml",
+      "schemas/spec-driven/templates/tasks.md",
+      "src/core/parsers/task-structure.ts",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "test/core/artifact-graph/instruction-loader.test.ts",
+      "test/core/parsers/task-structure.test.ts",
+      "test/core/templates/propose-template.test.ts"
+    ],
+    "evidenceFingerprint": "2216db14fc52a779afa12ddedda42c1ff583a3d77fbc89353b03165fb5cbcf92",
+    "skippedEvidenceFiles": [
+      "openspec/changes/add-goal-driven-task-checkpoints/.verify-result.json"
+    ],
+    "gitHeadCommit": "80da56e2a2ec53c52bb5ed08f1c500d89a0dbe61"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-15T07:34:25.404Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-15T07:32:32.125Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "cddaadc6f90b2474d1cfaf4ca9d22891d6a7a5e8947ac3995928ed563dbe452f",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent",
+        "evidenceFiles": [
+          ".claude/skills/openspec-propose/SKILL.md",
+          ".codex/skills/openspec-propose/SKILL.md",
+          ".github/prompts/opsx-propose.prompt.md",
+          ".github/skills/openspec-propose/SKILL.md",
+          "openspec/changes/add-goal-driven-task-checkpoints/.verify-result.json",
+          "openspec/changes/add-goal-driven-task-checkpoints/design.md",
+          "openspec/changes/add-goal-driven-task-checkpoints/opsx-delta.yaml",
+          "openspec/changes/add-goal-driven-task-checkpoints/proposal.md",
+          "openspec/changes/add-goal-driven-task-checkpoints/specs/cli-artifact-workflow/spec.md",
+          "openspec/changes/add-goal-driven-task-checkpoints/specs/opsx-propose-skill/spec.md",
+          "openspec/changes/add-goal-driven-task-checkpoints/tasks.md",
+          "openspec/project.opsx.code-map.yaml",
+          "openspec/project.opsx.yaml",
+          "openspec/specs/cli-artifact-workflow/spec.md",
+          "openspec/specs/opsx-propose-skill/spec.md",
+          "schemas/spec-driven/schema.yaml",
+          "schemas/spec-driven/templates/tasks.md",
+          "src/core/parsers/task-structure.ts",
+          "src/core/templates/fragments/opsx-fragments.ts",
+          "test/core/artifact-graph/instruction-loader.test.ts",
+          "test/core/parsers/task-structure.test.ts",
+          "test/core/templates/propose-template.test.ts"
+        ],
+        "evidenceFingerprint": "2216db14fc52a779afa12ddedda42c1ff583a3d77fbc89353b03165fb5cbcf92",
+        "skippedEvidenceFiles": [
+          "openspec/changes/add-goal-driven-task-checkpoints/.verify-result.json"
+        ],
+        "gitHeadCommit": "80da56e2a2ec53c52bb5ed08f1c500d89a0dbe61"
+      }
+    }
+  }
+}

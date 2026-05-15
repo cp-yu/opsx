@@ -152,6 +152,23 @@ describe('instruction-loader', () => {
       expect(instructions.template).toContain('## Why');
     });
 
+    it('should expose goal-driven Actions and Checks guidance for tasks', () => {
+      const context = loadChangeContext(tempDir, 'my-change');
+      const instructions = generateInstructions(context, 'tasks');
+
+      expect(instructions.template).toContain('## 1. Actions');
+      expect(instructions.template).toContain('## 2. Checks');
+      expect(instructions.template).toContain('- [ ] A1');
+      expect(instructions.template).toContain('- [ ] C1');
+      expect(instructions.instruction).toContain('Actions');
+      expect(instructions.instruction).toContain('Checks');
+      expect(instructions.instruction).toContain('Covers:');
+      expect(instructions.instruction).toContain('invalid-input behavior');
+      expect(instructions.instruction).toContain('regression fix');
+      expect(instructions.instruction).toContain('before/after behavior-equivalence');
+      expect(instructions.instruction).toContain('Trivial edits');
+    });
+
     it('should show dependencies with completion status', () => {
       const context = loadChangeContext(tempDir, 'my-change');
       const instructions = generateInstructions(context, 'specs');

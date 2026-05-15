@@ -2,7 +2,6 @@
 
 ## Purpose
 Define artifact workflow CLI behavior (`status`, `instructions`, `templates`, and setup flows) for scaffolded and active changes.
-
 ## Requirements
 ### Requirement: Status Command
 
@@ -66,7 +65,7 @@ The workflow SHALL use `openspec status` output to determine what can be created
 
 ### Requirement: Instructions Command
 
-The system SHALL output enriched instructions for creating an artifact, including for scaffolded changes.
+The system SHALL output enriched instructions for creating an artifact, including for scaffolded changes. For the spec-driven `tasks` artifact, the generated instructions SHALL require `tasks.md` to separate implementation actions from goal-driven verification checks.
 
 #### Scenario: Show enriched instructions
 
@@ -97,6 +96,35 @@ The system SHALL output enriched instructions for creating an artifact, includin
 - **WHEN** user runs `openspec instructions proposal --change <id>` on a scaffolded change
 - **THEN** system outputs template and metadata for creating the proposal
 - **AND** does not require any artifacts to already exist
+
+#### Scenario: Tasks instructions require Actions and Checks sections
+
+- **WHEN** user runs `openspec instructions tasks --change <id> --json`
+- **THEN** the returned `instruction` SHALL tell the agent to write `tasks.md` with separate `Actions` and `Checks` sections
+- **AND** `Actions` SHALL contain checkbox items for implementation work using an `A` prefix
+- **AND** `Checks` SHALL contain checkbox items for executable verification work using a `C` prefix
+- **AND** the instruction SHALL keep the existing `- [ ]` checkbox prefix contract intact for both sections
+
+#### Scenario: Tasks instructions convert vague work into testable goals
+
+- **WHEN** user runs `openspec instructions tasks --change <id> --json`
+- **THEN** the returned `instruction` SHALL tell the agent to convert validation work into a check for invalid-input behavior
+- **AND** SHALL tell the agent to convert bug fixes into a check that reproduces and proves the regression fix
+- **AND** SHALL tell the agent to convert refactors into a before-and-after behavior verification check
+- **AND** each check SHALL state which action IDs it covers
+- **AND** every action ID SHALL be covered by at least one check
+
+#### Scenario: Checks are executable verification items
+
+- **WHEN** user runs `openspec instructions tasks --change <id> --json`
+- **THEN** the returned `instruction` SHALL tell the agent that each check is executable verification work, not explanatory prose
+- **AND** each check SHALL include a command, evidence source, or observable expectation sufficient for an agent to run or inspect it
+
+#### Scenario: Tasks instructions allow trivial fast path
+
+- **WHEN** user runs `openspec instructions tasks --change <id> --json`
+- **THEN** the returned `instruction` SHALL state that trivial edits such as typo or wording-only fixes do not require the full test-first decomposition
+- **AND** SHALL still require at least one lightweight check that explains how completion will be verified
 
 ### Requirement: Templates Command
 The system SHALL show resolved template paths for all artifacts in a schema.
@@ -275,3 +303,4 @@ The setup command SHALL display clear output about what was generated.
 
 - **WHEN** command generation is skipped due to missing adapter
 - **THEN** output includes message: "Command generation skipped - no adapter for <tool>"
+

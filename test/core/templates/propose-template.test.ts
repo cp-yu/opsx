@@ -47,7 +47,15 @@ describe('propose template post-validation flow', () => {
       expect(body).toContain('openspec instructions proposal --change "<name>" --json');
       expect(body).toContain('openspec instructions design --change "<name>" --json');
       expect(body).toContain('openspec instructions tasks --change "<name>" --json');
+      expect(body).toContain('validateTaskStructure');
+      expect(body).toContain('Actions');
+      expect(body).toContain('Checks');
+      expect(body).toContain('Covers:');
+      expect(body).toContain('Command:');
+      expect(body).toContain('Evidence:');
+      expect(body).toContain('Expect:');
       expect(body).toContain('Do NOT invent semantic lint rules beyond the current templates');
+      expect(body).toContain('Do NOT judge whether a check is semantically sufficient');
     }
   });
 });
