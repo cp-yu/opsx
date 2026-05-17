@@ -1,0 +1,21 @@
+ADDED:
+  capabilities:
+    - id: cap.validation.spec-section-type-cross-check
+      type: capability
+      intent: 在 change delta spec 验证中增加 section-type 与主 spec header 存在性的交叉验证，确保 MODIFIED/REMOVED/RENAMED 引用的 header 存在于主 spec，ADDED 的 header 不存在于主 spec
+
+  relations:
+    - from: cap.validation.spec-section-type-cross-check
+      to: dom.validation
+      type: contains
+    - from: cap.validation.spec-section-type-cross-check
+      to: cap.validation.change
+      type: depends_on
+    - from: cap.validation.spec-section-type-cross-check
+      to: cap.cli.validate
+      type: relates_to
+
+MODIFIED:
+  capabilities:
+    - id: cap.validation.change
+      intent: 验证变更的完整性和结构，包括 delta spec section-type 与主 spec header 存在性的交叉验证

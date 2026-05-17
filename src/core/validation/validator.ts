@@ -10,7 +10,7 @@ import {
   MAX_REQUIREMENT_TEXT_LENGTH,
   VALIDATION_MESSAGES
 } from './constants.js';
-import { parseDeltaSpec, normalizeRequirementName } from '../parsers/requirement-blocks.js';
+import { parseDeltaSpec, normalizeRequirementName, extractRequirementsSection } from '../parsers/requirement-blocks.js';
 import { findMainSpecStructureIssues } from '../parsers/spec-structure.js';
 import { FileSystemUtils } from '../../utils/file-system.js';
 
@@ -244,6 +244,59 @@ export class Validator {
           }
           if (addedNames.has(toKey)) {
             issues.push({ level: 'ERROR', path: entryPath, message: `RENAMED TO collides with ADDED for "${to}"` });
+          }
+        }
+
+        // Cross-validate against main spec
+        const mainSpecsDir = path.resolve(changeDir, '../../specs');
+        const mainSpecFile = path.join(mainSpecsDir, specName, 'spec.md');
+        let mainSpecContent: string | undefined;
+        try {
+          mainSpecContent = await fs.readFile(mainSpecFile, 'utf-8');
+        } catch {
+          // Main spec does not exist
+        }
+
+        if (mainSpecContent !== undefined) {
+          const mainParts = extractRequirementsSection(mainSpecContent);
+          const mainHeaders = new Set(
+            mainParts.bodyBlocks.map(b => normalizeRequirementName(b.name).toLowerCase())
+          );
+
+          for (const block of plan.modified) {
+            const key = normalizeRequirementName(block.name).toLowerCase();
+            if (!mainHeaders.has(key)) {
+              issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED "${block.name}" not found in main spec. Consider using "## ADDED Requirements" instead.` });
+            }
+          }
+          for (const block of plan.added) {
+            const key = normalizeRequirementName(block.name).toLowerCase();
+            if (mainHeaders.has(key)) {
+              issues.push({ level: 'ERROR', path: entryPath, message: `ADDED "${block.name}" already exists in main spec. Consider using "## MODIFIED Requirements" instead.` });
+            }
+          }
+          for (const name of plan.removed) {
+            const key = normalizeRequirementName(name).toLowerCase();
+            if (!mainHeaders.has(key)) {
+              issues.push({ level: 'ERROR', path: entryPath, message: `REMOVED "${name}" not found in main spec.` });
+            }
+          }
+          for (const { from } of plan.renamed) {
+            const fromKey = normalizeRequirementName(from).toLowerCase();
+            if (!mainHeaders.has(fromKey)) {
+              issues.push({ level: 'ERROR', path: entryPath, message: `RENAMED FROM "${from}" not found in main spec.` });
+            }
+          }
+        } else {
+          // Main spec does not exist: only ADDED is valid
+          for (const block of plan.modified) {
+            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED "${block.name}" references non-existent main spec. Main spec "specs/${specName}/spec.md" does not exist.` });
+          }
+          for (const name of plan.removed) {
+            issues.push({ level: 'ERROR', path: entryPath, message: `REMOVED "${name}" references non-existent main spec. Main spec "specs/${specName}/spec.md" does not exist.` });
+          }
+          for (const { from } of plan.renamed) {
+            issues.push({ level: 'ERROR', path: entryPath, message: `RENAMED FROM "${from}" references non-existent main spec. Main spec "specs/${specName}/spec.md" does not exist.` });
           }
         }
       }

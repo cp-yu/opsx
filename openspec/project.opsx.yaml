@@ -244,7 +244,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.validation.change
-    intent: 验证变更的完整性和结构
+    intent: 验证变更的完整性和结构，包括 delta spec section-type 与主 spec header 存在性的交叉验证
     status: active
     type: capability
   - id: cap.validation.opsx
@@ -310,4 +310,7 @@ capabilities:
     type: capability
   - id: cap.verify.enforce-optimizer-invocation
     intent: 强制 optimizer subagent 调用约束——CLI 层 runtime enforcement（summary 非空校验）+ prompt 层协议约束（VERIFY_SIMPLE_CHANGE_FAST_PATH 重写为强制委托语义），确保 Phase 2 判断权始终归属 optimizer subagent
+    type: capability
+  - id: cap.validation.spec-section-type-cross-check
+    intent: 在 change delta spec 验证中增加 section-type 与主 spec header 存在性的交叉验证，确保 MODIFIED/REMOVED/RENAMED 引用的 header 存在于主 spec，ADDED 的 header 不存在于主 spec
     type: capability

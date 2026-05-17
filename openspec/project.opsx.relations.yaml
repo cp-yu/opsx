@@ -339,3 +339,12 @@ relations:
   - from: cap.verify.enforce-optimizer-invocation
     type: relates_to
     to: cap.ai.agent-prompt-guidance
+  - from: cap.validation.spec-section-type-cross-check
+    type: contains
+    to: dom.validation
+  - from: cap.validation.spec-section-type-cross-check
+    type: depends_on
+    to: cap.validation.change
+  - from: cap.validation.spec-section-type-cross-check
+    type: relates_to
+    to: cap.cli.validate
