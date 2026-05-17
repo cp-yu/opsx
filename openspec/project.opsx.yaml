@@ -284,7 +284,7 @@ capabilities:
     intent: 确定性 freshness 判定引擎，用 TypeScript 代码实现 tasksFileHash、evidenceFingerprint 计算和 FRESH/STALE/MISSING 判定。evidenceFingerprint 基于文件内容哈希（而非元数据）计算，消除文件系统触碰导致的误报 STALE。Phase 2 verification PASS 时重算 evidenceFingerprint，使其覆盖优化后的文件状态
     type: capability
   - id: cap.apply.verify-integration
-    intent: apply 命令内置 Phase 1 一致性验证和 Phase 2 优化循环，由 subagent 执行验证判断和优化提案，主 agent 仅负责编码
+    intent: apply 命令内置 Phase 1 一致性验证和 Phase 2 优化循环，由 subagent 执行验证判断和优化提案，主 agent 仅负责编码。Phase 2 optimization CLI 调用 MUST 在 patch 应用之前执行，确保 affectedFileHashes 采样 pre-patch 磁盘状态
     type: capability
   - id: cap.apply.subagent-orchestration
     intent: apply 工作流中严格区分编码角色（主 agent）和判断角色（subagent reviewer/optimizer），保持关注点分离

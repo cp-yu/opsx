@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-05-17T09:08:33.474Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "5b06b932fd979e49a4c56f109e35f013cf6f1d03fbdc23f0571ed27e9d877bd5",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent",
+    "evidenceFiles": [
+      "src/core/templates/workflows/apply-change.ts"
+    ],
+    "evidenceFingerprint": "da88401820d4a08aa160546f3639e089dbaa6153e8dbcc8230154307b98b6ab3",
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "c39280b60a7f5667ce52761981bdf6b84cdd73b8"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-17T09:10:41.524Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "Pure template text reorder with added timing constraint comment. No code logic, no abstractions, no performance paths. Each instruction line is already minimal and precise for LLM agent consumption."
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-17T09:08:33.474Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "5b06b932fd979e49a4c56f109e35f013cf6f1d03fbdc23f0571ed27e9d877bd5",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent",
+        "evidenceFiles": [
+          "src/core/templates/workflows/apply-change.ts"
+        ],
+        "evidenceFingerprint": "da88401820d4a08aa160546f3639e089dbaa6153e8dbcc8230154307b98b6ab3",
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "c39280b60a7f5667ce52761981bdf6b84cdd73b8"
+      }
+    }
+  }
+}
