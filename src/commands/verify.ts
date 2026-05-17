@@ -318,6 +318,11 @@ async function handleVerification(
   if (input.result === 'PASS' || input.result === 'PASS_WITH_WARNINGS') {
     current.optimization.status = 'IMPROVED';
     current.optimization.final = input;
+    const evidence = await computeEvidenceFingerprint(
+      current.verificationContext.evidenceFiles,
+      projectRoot
+    );
+    current.verificationContext.evidenceFingerprint = evidence.hash;
     await writeVerifyResult(changeDir, current);
     writeOutput(options, { ok: true, result: current }, 'Phase 2 完成 (优化+验证通过)。可进入 sync/archive');
     return 0;

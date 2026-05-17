@@ -248,4 +248,106 @@ describe('openspec verify command', () => {
       'inline helper extraction',
     ]);
   });
+
+  it('recalculates evidenceFingerprint on Phase 2 verification PASS', async () => {
+    await runCLI([
+      'verify',
+      'phase1',
+      'c1',
+      '--input',
+      JSON.stringify({ result: 'PASS', issues: [], evidenceFiles: ['src/a.ts'] }),
+    ], { cwd: tempDir });
+
+    const phase1Result = JSON.parse(
+      await fs.readFile(path.join(tempDir, 'openspec', 'changes', 'c1', '.verify-result.json'), 'utf-8')
+    );
+    const phase1Fingerprint = phase1Result.verificationContext.evidenceFingerprint;
+
+    await runCLI([
+      'verify',
+      'phase2',
+      'c1',
+      '--type=optimization',
+      '--files',
+      'src/a.ts',
+      '--input',
+      JSON.stringify({ status: 'OPTIMIZATION_PROPOSED', summary: 'simplify' }),
+    ], { cwd: tempDir });
+
+    await fs.writeFile(path.join(tempDir, 'src', 'a.ts'), 'const optimized = true;\n', 'utf-8');
+
+    await runCLI([
+      'verify',
+      'phase2',
+      'c1',
+      '--type=verification',
+      '--json',
+      '--input',
+      JSON.stringify({ result: 'PASS', issues: [] }),
+    ], { cwd: tempDir });
+
+    const finalResult = JSON.parse(
+      await fs.readFile(path.join(tempDir, 'openspec', 'changes', 'c1', '.verify-result.json'), 'utf-8')
+    );
+    expect(finalResult.verificationContext.evidenceFingerprint).not.toBe(phase1Fingerprint);
+    expect(finalResult.optimization.status).toBe('IMPROVED');
+
+    const status = await runCLI(['verify', 'status', 'c1', '--json'], { cwd: tempDir });
+    expect(status.exitCode).toBe(0);
+    expect(JSON.parse(status.stdout).freshness.status).toBe('FRESH');
+  });
+
+  it('does NOT recalculate evidenceFingerprint on DEGRADED path', async () => {
+    await fs.writeFile(
+      path.join(tempDir, 'openspec', 'config.yaml'),
+      'schema: spec-driven\noptimization:\n  enabled: true\n  optRetries: 1\n',
+      'utf-8'
+    );
+
+    await runCLI([
+      'verify',
+      'phase1',
+      'c1',
+      '--input',
+      JSON.stringify({ result: 'PASS', issues: [], evidenceFiles: ['src/a.ts'] }),
+    ], { cwd: tempDir });
+
+    const phase1Result = JSON.parse(
+      await fs.readFile(path.join(tempDir, 'openspec', 'changes', 'c1', '.verify-result.json'), 'utf-8')
+    );
+    const phase1Fingerprint = phase1Result.verificationContext.evidenceFingerprint;
+
+    await runCLI([
+      'verify',
+      'phase2',
+      'c1',
+      '--type=optimization',
+      '--files',
+      'src/a.ts',
+      '--input',
+      JSON.stringify({ status: 'OPTIMIZATION_PROPOSED', summary: 'attempt' }),
+    ], { cwd: tempDir });
+    await fs.writeFile(path.join(tempDir, 'src', 'a.ts'), 'const changed = true;\n', 'utf-8');
+
+    await runCLI([
+      'verify',
+      'phase2',
+      'c1',
+      '--type=verification',
+      '--json',
+      '--input',
+      JSON.stringify({
+        result: 'FAIL_NEEDS_REMEDIATION',
+        issues: [],
+        summary: 'attempt',
+        behaviorRetryCounter: 1,
+      }),
+    ], { cwd: tempDir });
+
+    const finalResult = JSON.parse(
+      await fs.readFile(path.join(tempDir, 'openspec', 'changes', 'c1', '.verify-result.json'), 'utf-8')
+    );
+    expect(finalResult.optimization.status).toBe('DEGRADED');
+    expect(finalResult.verificationContext.evidenceFingerprint).toBe(phase1Fingerprint);
+  });
 });
