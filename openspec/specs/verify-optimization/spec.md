@@ -5,15 +5,16 @@
 ## Requirements
 ### Requirement: 最优性检验执行
 
-系统 SHALL 在 Phase 1 一致性检验通过后，自动进入 Phase 2 最优性检验，除非通过配置或 CLI flag 显式跳过。
+系统 SHALL 在 Phase 1 一致性检验通过后，自动进入 Phase 2 最优性检验，除非通过配置或 CLI flag 显式跳过。Phase 2 MUST 始终 spawn optimizer subagent 至少一次，master agent MUST NOT 替代 optimizer subagent 做出 "不需要优化" 的判断。
 
-#### Scenario: Phase 1 PASS 后自动进入 Phase 2
+#### Scenario: Phase 1 PASS 后强制 spawn optimizer subagent
 
 - **WHEN** Phase 1 返回 `PASS` 或 `PASS_WITH_WARNINGS`
 - **AND** `config.yaml` 中 `optimization.enabled` 为 `true`（默认）
 - **AND** CLI 未传入 `--skip-optimization` flag
-- **THEN** 系统 SHALL 启动 Phase 2 最优性检验
-- **AND** 将当前工作区状态保存为 checkpoint
+- **THEN** 系统 SHALL spawn optimizer subagent（至少一次）
+- **AND** 将 Phase 1 issues 列表和 change artifacts 传入 optimizer subagent
+- **AND** master agent SHALL NOT 自行判断是否需要优化
 
 #### Scenario: --skip-optimization 跳过 Phase 2
 
@@ -146,4 +147,22 @@
 - **THEN** 系统 MAY 在当前 agent 中执行 explicit reread-based speculative verification
 - **AND** SHALL 保持现有 format / match / behavior retry budget 语义
 - **AND** agent SHALL 调用 `openspec verify phase2 --type=verification --input '<结果JSON>'` 记录结果
+
+### Requirement: NO_OPTIMIZATION_NEEDED 的 CLI 校验
+
+系统 SHALL 在 `handleOptimization()` 中对 `NO_OPTIMIZATION_NEEDED` status 执行 `summary` 字段非空校验，作为 optimizer subagent 实际被调用的 runtime enforcement。
+
+#### Scenario: summary 非空时接受
+
+- **WHEN** CLI 收到 `{"status":"NO_OPTIMIZATION_NEEDED","summary":"No optimization opportunities found"}`
+- **AND** `summary` trim 后长度 > 0
+- **THEN** CLI SHALL 接受并记录 `optimization.status` 为 `NOT_NEEDED`
+
+#### Scenario: summary 缺失或为空时拒绝
+
+- **WHEN** CLI 收到 `{"status":"NO_OPTIMIZATION_NEEDED"}` 且 `summary` 缺失或 trim 后为空
+- **THEN** CLI SHALL 拒绝该请求
+- **AND** 返回 `{ ok: false, reason: "OPTIMIZER_REQUIRED" }`
+- **AND** 输出诊断: "NO_OPTIMIZATION_NEEDED requires a non-empty summary from the optimizer subagent"
+- **AND** 返回 exit code 1
 

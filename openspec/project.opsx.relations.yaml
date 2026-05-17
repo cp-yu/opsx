@@ -330,3 +330,12 @@ relations:
   - from: cap.verify.prompt-orchestration
     type: relates_to
     to: cap.ai.optimizer-skill
+  - from: cap.verify.enforce-optimizer-invocation
+    type: contains
+    to: dom.verify
+  - from: cap.verify.enforce-optimizer-invocation
+    type: relates_to
+    to: cap.verify.optimize
+  - from: cap.verify.enforce-optimizer-invocation
+    type: relates_to
+    to: cap.ai.agent-prompt-guidance

@@ -31,6 +31,8 @@ ${VERIFY_CLI_JSON_SCHEMA_REFERENCE}
 
 8. **Phase 2: Optimize under checkpoint protection**
 
+   **Role constraint**: The master agent is an evidence collector and patch applicator in Phase 2. It MUST NOT substitute its own judgment for the optimizer subagent's decision on whether optimization is needed. Always spawn the optimizer subagent as the first action in Phase 2.
+
    - Skip Phase 2 only when the user requested \`--skip-optimization\` or \`optimization.enabled: false\`; record \`SKIPPED\` through \`openspec verify phase2\`
    - Read \`optimization.optRetries\` from \`openspec/config.yaml\`; default to \`2\`
    - Before the first optimization attempt, create a checkpoint: \`git stash push -u -m "apply-opt-checkpoint-r0"\`

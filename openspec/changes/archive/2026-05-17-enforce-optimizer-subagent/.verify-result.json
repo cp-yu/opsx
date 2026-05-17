@@ -1,0 +1,85 @@
+{
+  "timestamp": "2026-05-17T06:02:07.544Z",
+  "result": "PASS_WITH_WARNINGS",
+  "issues": [
+    {
+      "severity": "WARNING",
+      "message": "No dedicated test exercises the OPTIMIZER_REQUIRED rejection path when optimization.enabled is true",
+      "requirement": "enforce-optimizer-invocation/spec.md Scenario: summary 缺失时拒绝",
+      "taskLinkage": "C1",
+      "recommendation": "Add a test case that sends NO_OPTIMIZATION_NEEDED without summary when optimization.enabled is not false, asserting exitCode 1 with reason OPTIMIZER_REQUIRED",
+      "evidence": "test/commands/verify.test.ts line 138-148 runs with optimization.enabled=false so it hits the config guard before reaching summary validation at verify.ts:242-246"
+    }
+  ],
+  "tasksFileHash": "5d99ca75e03ca171960c97de392d4f024fe4b9baa345b603507dba395e41feb3",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      "openspec/changes/enforce-optimizer-subagent/design.md",
+      "openspec/changes/enforce-optimizer-subagent/proposal.md",
+      "openspec/changes/enforce-optimizer-subagent/specs/agent-prompt-guidance/spec.md",
+      "openspec/changes/enforce-optimizer-subagent/specs/enforce-optimizer-invocation/spec.md",
+      "openspec/changes/enforce-optimizer-subagent/specs/verify-optimization/spec.md",
+      "openspec/changes/enforce-optimizer-subagent/tasks.md",
+      "src/commands/verify.ts",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "src/core/templates/workflows/apply-change.ts",
+      "src/core/templates/workflows/verify-change.ts",
+      "test/commands/verify.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts"
+    ],
+    "evidenceFingerprint": "10196dac25d230fdbce95c16024837be7e99268e9b7b9a1b0edb37f0f4ee937d",
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "065eeb4c931c8793cdb5170e159449c35a98e821",
+    "gitDiffSummary": "1 file changed (cosmetic spec section type fix in verify-optimization/spec.md, 2 insertions). All implementation committed at HEAD 065eeb4."
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-17T06:03:17.200Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "No optimization opportunities found. The implementation follows existing patterns: guard-clause early returns in handleOptimization, fragment constants for shared prompt text, and template-literal interpolation in workflow builders. No dead code, no redundant logic, no simplification targets."
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-17T06:02:07.544Z",
+      "result": "PASS_WITH_WARNINGS",
+      "issues": [
+        {
+          "severity": "WARNING",
+          "message": "No dedicated test exercises the OPTIMIZER_REQUIRED rejection path when optimization.enabled is true",
+          "requirement": "enforce-optimizer-invocation/spec.md Scenario: summary 缺失时拒绝",
+          "taskLinkage": "C1",
+          "recommendation": "Add a test case that sends NO_OPTIMIZATION_NEEDED without summary when optimization.enabled is not false, asserting exitCode 1 with reason OPTIMIZER_REQUIRED",
+          "evidence": "test/commands/verify.test.ts line 138-148 runs with optimization.enabled=false so it hits the config guard before reaching summary validation at verify.ts:242-246"
+        }
+      ],
+      "tasksFileHash": "5d99ca75e03ca171960c97de392d4f024fe4b9baa345b603507dba395e41feb3",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          "openspec/changes/enforce-optimizer-subagent/design.md",
+          "openspec/changes/enforce-optimizer-subagent/proposal.md",
+          "openspec/changes/enforce-optimizer-subagent/specs/agent-prompt-guidance/spec.md",
+          "openspec/changes/enforce-optimizer-subagent/specs/enforce-optimizer-invocation/spec.md",
+          "openspec/changes/enforce-optimizer-subagent/specs/verify-optimization/spec.md",
+          "openspec/changes/enforce-optimizer-subagent/tasks.md",
+          "src/commands/verify.ts",
+          "src/core/templates/fragments/opsx-fragments.ts",
+          "src/core/templates/workflows/apply-change.ts",
+          "src/core/templates/workflows/verify-change.ts",
+          "test/commands/verify.test.ts",
+          "test/core/templates/skill-templates-parity.test.ts"
+        ],
+        "evidenceFingerprint": "10196dac25d230fdbce95c16024837be7e99268e9b7b9a1b0edb37f0f4ee937d",
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "065eeb4c931c8793cdb5170e159449c35a98e821",
+        "gitDiffSummary": "1 file changed (cosmetic spec section type fix in verify-optimization/spec.md, 2 insertions). All implementation committed at HEAD 065eeb4."
+      }
+    }
+  }
+}

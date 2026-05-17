@@ -240,6 +240,10 @@ async function handleOptimization(
   }];
 
   if (input.status === 'NO_OPTIMIZATION_NEEDED') {
+    if (!input.summary?.trim()) {
+      writeOutput(options, { ok: false, reason: 'OPTIMIZER_REQUIRED' }, 'NO_OPTIMIZATION_NEEDED requires a non-empty summary from the optimizer subagent');
+      return 1;
+    }
     current.optimization = { status: 'NOT_NEEDED', attempts, baseline: phase1Baseline(current) };
     await writeVerifyResult(changeDir, current);
     writeOutput(options, { ok: true, result: current }, 'Phase 2 完成 (无需优化)。可进入 sync/archive');

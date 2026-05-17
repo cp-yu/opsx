@@ -357,7 +357,7 @@ export const VERIFY_CLI_JSON_SCHEMA_REFERENCE = `
 | CLI call | \`--input\` JSON |
 | --- | --- |
 | \`openspec verify phase1 "<change-name>" --input '<json>' --json\` | \`{"result":"PASS","issues":[],"evidenceFiles":["..."],"executionMode":"..."}\` |
-| \`openspec verify phase2 "<change-name>" --type=optimization --input '<json>' --json\` | \`{"status":"NO_OPTIMIZATION_NEEDED"}\` |
+| \`openspec verify phase2 "<change-name>" --type=optimization --input '<json>' --json\` | \`{"status":"NO_OPTIMIZATION_NEEDED","summary":"..."}\` (summary is required, must be non-empty) |
 | \`openspec verify phase2 "<change-name>" --type=optimization --input '<json>' --json\` | \`{"status":"OPTIMIZATION_PROPOSED","summary":"..."}\` |
 | \`openspec verify phase2 "<change-name>" --type=optimization --input '<json>' --json\` | \`{"status":"SKIPPED"}\` |
 | \`openspec verify phase2 "<change-name>" --type=verification --input '<json>' --json\` | \`{"result":"PASS","issues":[]}\` |
@@ -382,9 +382,14 @@ export const VERIFY_ERROR_RECOVERY_GUIDE = `
  */
 export const VERIFY_SIMPLE_CHANGE_FAST_PATH = `
 **Simple Change Fast Path**:
-- For pure deletions, renames, or parameter removals with no meaningful optimization room, skip the optimization subagent
-- Call \`openspec verify phase2 "<change-name>" --type=optimization --input '{"status":"NO_OPTIMIZATION_NEEDED"}' --json\`
-- Use this path only when the change does not benefit from a proposal + patch + re-verify loop
+- You MUST spawn the optimizer subagent at least once for every change, including pure deletions, renames, or parameter removals
+- The optimizer subagent (not the master agent) decides whether optimization opportunities exist
+- If the optimizer subagent returns "No optimization opportunities found", record \`NO_OPTIMIZATION_NEEDED\` with the optimizer's conclusion as the \`summary\` field:
+  \`\`\`bash
+  openspec verify phase2 "<change-name>" --type=optimization --input '{"status":"NO_OPTIMIZATION_NEEDED","summary":"<optimizer conclusion>"}' --json
+  \`\`\`
+- The master agent MUST NOT self-determine that no optimization is needed without spawning the optimizer subagent
+- The only conditions that bypass the optimizer subagent are: \`--skip-optimization\` flag or \`optimization.enabled: false\` in config
 `.trim();
 
 /**

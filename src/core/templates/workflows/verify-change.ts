@@ -132,7 +132,7 @@ function buildPhase2Step(stepNumber: number): string {
    - If the user passed \`--skip-optimization\` or config disables optimization:
      - Call \`openspec verify phase2 "<change-name>" --type=optimization --input '{"status":"SKIPPED"}' --json\`
      - Keep the canonical Phase 1 \`result\` unchanged
-   - For pure deletions, renames, or parameter removals with no meaningful optimization room, use the simple-change fast path and skip the optimization subagent
+   - For all changes including pure deletions, renames, or parameter removals, the optimizer subagent MUST be spawned; the master agent MUST NOT self-determine that no optimization is needed
 ${VERIFY_SIMPLE_CHANGE_FAST_PATH}
 ${VERIFY_STATE_MACHINE_DIAGRAM}
 

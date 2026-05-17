@@ -43,7 +43,7 @@ describe('openspec verify command', () => {
       '--type=optimization',
       '--json',
       '--input',
-      JSON.stringify({ status: 'NO_OPTIMIZATION_NEEDED' }),
+      JSON.stringify({ status: 'NO_OPTIMIZATION_NEEDED', summary: 'No optimization opportunities found' }),
     ], { cwd: tempDir });
     expect(phase2.exitCode).toBe(0);
 

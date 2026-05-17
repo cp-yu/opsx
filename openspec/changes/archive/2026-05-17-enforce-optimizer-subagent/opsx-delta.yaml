@@ -1,0 +1,23 @@
+ADDED:
+  capabilities:
+    - id: cap.verify.enforce-optimizer-invocation
+      type: capability
+      intent: 强制 optimizer subagent 调用约束——CLI 层 runtime enforcement（summary 非空校验）+ prompt 层协议约束（VERIFY_SIMPLE_CHANGE_FAST_PATH 重写为强制委托语义），确保 Phase 2 判断权始终归属 optimizer subagent
+
+  relations:
+    - from: cap.verify.enforce-optimizer-invocation
+      to: dom.verify
+      type: contains
+    - from: cap.verify.enforce-optimizer-invocation
+      to: cap.verify.optimize
+      type: relates_to
+    - from: cap.verify.enforce-optimizer-invocation
+      to: cap.ai.agent-prompt-guidance
+      type: relates_to
+
+MODIFIED:
+  capabilities:
+    - id: cap.verify.optimize
+      intent: 在一致性检验通过后，对代码进行最优性检验。Phase 2 MUST 始终 spawn optimizer subagent 至少一次，master agent MUST NOT 替代 optimizer 做判断。优化循环由 apply 模板主控，每次提案+补丁+验证循环消耗一次 config.optimization.optRetries（默认 2）配额。NO_OPTIMIZATION_NEEDED 仅在 optimizer subagent 明确返回 "No optimization opportunities found" 时允许，且 CLI 要求 summary 非空作为 runtime enforcement
+    - id: cap.ai.agent-prompt-guidance
+      intent: 面向 Agent 的 verify gate 提示词指引系统。VERIFY_SIMPLE_CHANGE_FAST_PATH 从"允许 master agent 自主跳过"改为"强制委托 optimizer subagent"语义。其余共享片段（状态机流程图、JSON schema 速查表、CLI 错误恢复决策树）不变

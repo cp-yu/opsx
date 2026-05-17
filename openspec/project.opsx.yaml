@@ -264,7 +264,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.verify.optimize
-    intent: 在一致性检验通过后，对代码进行最优性检验。Phase 2 优化循环由 apply 模板主控，每次提案+补丁+验证循环（无论成功或失败）消耗一次 config.optimization.optRetries（默认 2）配额，达到上限后强制终止。新增 failedDirections 字段避免跨会话重复尝试。格式和匹配问题由 apply 主 agent 直接处理
+    intent: 在一致性检验通过后，对代码进行最优性检验。Phase 2 MUST 始终 spawn optimizer subagent 至少一次，master agent MUST NOT 替代 optimizer 做判断。优化循环由 apply 模板主控，每次提案+补丁+验证循环消耗一次 config.optimization.optRetries（默认 2）配额。NO_OPTIMIZATION_NEEDED 仅在 optimizer subagent 明确返回 "No optimization opportunities found" 时允许，且 CLI 要求 summary 非空作为 runtime enforcement
     type: capability
   - id: cap.ai.tool-invocation-references
     intent: 基于共享 workflow surface 元数据渲染不同 AI 工具的用户可调用 workflow 引用，其中 Codex 使用精确的 `$openspec-*` skill 名称
@@ -290,7 +290,7 @@ capabilities:
     intent: apply 工作流中严格区分编码角色（主 agent）和判断角色（subagent reviewer/optimizer），保持关注点分离
     type: capability
   - id: cap.ai.agent-prompt-guidance
-    intent: 面向 Agent 的 verify gate 提示词指引系统。在 opsx-fragments.ts 中提供共享的 ASCII 状态机流程图、JSON schema 速查表、CLI 错误恢复决策树和简单变更快速路径指引，供 archive/verify/apply 三个 skill 模板复用，替代各自内联的 CLI 调用格式
+    intent: 面向 Agent 的 verify gate 提示词指引系统。VERIFY_SIMPLE_CHANGE_FAST_PATH 从"允许 master agent 自主跳过"改为"强制委托 optimizer subagent"语义。其余共享片段（状态机流程图、JSON schema 速查表、CLI 错误恢复决策树）不变
     type: capability
   - id: cap.cli.init-opsx-skeleton
     intent: init 命令首次运行时自动生成三个最小化 OPSX 骨架文件（project.opsx.yaml、project.opsx.relations.yaml、project.opsx.code-map.yaml），并在成功提示中显式引导用户运行 /opsx:bootstrap 完成架构映射
@@ -307,4 +307,7 @@ capabilities:
     type: capability
   - id: cap.verify.prompt-orchestration
     intent: Verification prompt orchestration patterns that enforce coordinator role discipline, phased mode labels, explicit subagent delegation instructions, and timeout/waiting rules across the verify workflow
+    type: capability
+  - id: cap.verify.enforce-optimizer-invocation
+    intent: 强制 optimizer subagent 调用约束——CLI 层 runtime enforcement（summary 非空校验）+ prompt 层协议约束（VERIFY_SIMPLE_CHANGE_FAST_PATH 重写为强制委托语义），确保 Phase 2 判断权始终归属 optimizer subagent
     type: capability
