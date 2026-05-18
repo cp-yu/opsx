@@ -40,7 +40,7 @@ ${VERIFY_CLI_JSON_SCHEMA_REFERENCE}
    - Format or Search/Replace matching problems are handled by the main agent and do not consume retry budget
    - Optimizer subagent: spawn and instruct to invoke the \`openspec-optimizer\` skill (loads full optimizer contract: role, constraints, optimization principles, Search/Replace format, failed directions protocol). Proposes Search/Replace blocks only; it MUST NOT edit files
    - **TIMING CONSTRAINT — hashFiles() samples disk state; the following order is mandatory:**
-     1. Main agent calls \`openspec verify phase2 "<change-name>" --type=optimization --input '<json>'\` to record \`OPTIMIZATION_PROPOSED\` with pre-patch file hashes (disk MUST still be in pre-patch state at this point)
+     1. Main agent calls \`openspec verify phase2 "<change-name>" --type=optimization --files "<affected-files>" --input '<json>'\` to record \`OPTIMIZATION_PROPOSED\` with pre-patch file hashes (disk MUST still be in pre-patch state at this point)
      2. Main agent applies Search/Replace blocks atomically (disk transitions to post-patch state)
      3. Main agent spawns the reviewer subagent for speculative Phase 1 re-verification
    - On speculative PASS, record \`verification PASS\`, and continue until no opportunities remain or \`optRetries\` is exhausted

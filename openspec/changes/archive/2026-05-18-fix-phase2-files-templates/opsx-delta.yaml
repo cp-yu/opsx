@@ -1,0 +1,4 @@
+MODIFIED:
+  capabilities:
+    - id: cap.ai.agent-prompt-guidance
+      intent: 面向 Agent 的 verify gate 提示词指引系统。VERIFY_SIMPLE_CHANGE_FAST_PATH 从"允许 master agent 自主跳过"改为"强制委托 optimizer subagent"语义。共享片段（状态机流程图、JSON schema 速查表、CLI 错误恢复决策树）中 OPTIMIZATION_PROPOSED 行补全 --files 参数，错误恢复增加 FILES_REQUIRED 条目。apply-change 模板 Phase 2 命令模板同步补全 --files

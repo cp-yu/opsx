@@ -358,7 +358,7 @@ export const VERIFY_CLI_JSON_SCHEMA_REFERENCE = `
 | --- | --- |
 | \`openspec verify phase1 "<change-name>" --input '<json>' --json\` | \`{"result":"PASS","issues":[],"evidenceFiles":["..."],"executionMode":"..."}\` |
 | \`openspec verify phase2 "<change-name>" --type=optimization --input '<json>' --json\` | \`{"status":"NO_OPTIMIZATION_NEEDED","summary":"..."}\` (summary is required, must be non-empty) |
-| \`openspec verify phase2 "<change-name>" --type=optimization --input '<json>' --json\` | \`{"status":"OPTIMIZATION_PROPOSED","summary":"..."}\` |
+| \`openspec verify phase2 "<change-name>" --type=optimization --files "<affected-files>" --input '<json>' --json\` | \`{"status":"OPTIMIZATION_PROPOSED","summary":"..."}\` |
 | \`openspec verify phase2 "<change-name>" --type=optimization --input '<json>' --json\` | \`{"status":"SKIPPED"}\` |
 | \`openspec verify phase2 "<change-name>" --type=verification --input '<json>' --json\` | \`{"result":"PASS","issues":[]}\` |
 | \`openspec verify phase2 "<change-name>" --type=verification --input '<json>' --json\` | \`{"result":"FAIL_NEEDS_REMEDIATION","issues":[...],"behaviorRetryCounter":N}\` |
@@ -374,6 +374,7 @@ export const VERIFY_ERROR_RECOVERY_GUIDE = `
 - If the CLI says \`status must be NO_OPTIMIZATION_NEEDED, OPTIMIZATION_PROPOSED, ABORTED_UNSAFE, or SKIPPED\`: fix the \`--input.status\` value and confirm whether \`optimization.status\` already has \`affectedFileHashes\`
 - If the CLI says \`result must be PASS, PASS_WITH_WARNINGS, or FAIL_NEEDS_REMEDIATION\`: fix the \`--input.result\` value and keep \`issues\` as an array when provided
 - If the CLI says \`尚未提交优化结果，请先调用 phase2 --type=optimization\`: call \`phase2 --type=optimization\` before retrying verification
+- If the CLI says \`FILES_REQUIRED\`: add \`--files "<affected-files>"\` with the space-separated list of files the optimizer subagent declared as affected, then retry the same command
 `.trim();
 
 /**
