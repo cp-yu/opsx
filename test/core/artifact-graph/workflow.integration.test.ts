@@ -42,7 +42,7 @@ describe('artifact-graph workflow integration', () => {
 
       // Verify schema structure
       expect(graph.getName()).toBe('spec-driven');
-      expect(graph.getAllArtifacts()).toHaveLength(4);
+      expect(graph.getAllArtifacts()).toHaveLength(5);
 
       // 2. Initial state - nothing complete, only proposal is ready
       let completed = detectCompleted(graph, tempDir);
@@ -52,6 +52,7 @@ describe('artifact-graph workflow integration', () => {
       expect(normalizeBlocked(graph.getBlocked(completed))).toEqual({
         specs: ['proposal'],
         design: ['proposal'],
+        'opsx-delta': ['specs'],
         tasks: ['design', 'specs'],
       });
 
@@ -61,6 +62,7 @@ describe('artifact-graph workflow integration', () => {
       expect(completed).toEqual(new Set(['proposal']));
       expect(graph.getNextArtifacts(completed).sort()).toEqual(['design', 'specs']);
       expect(normalizeBlocked(graph.getBlocked(completed))).toEqual({
+        'opsx-delta': ['specs'],
         tasks: ['design', 'specs'],
       });
 
@@ -70,6 +72,7 @@ describe('artifact-graph workflow integration', () => {
       expect(completed).toEqual(new Set(['proposal', 'design']));
       expect(graph.getNextArtifacts(completed)).toEqual(['specs']);
       expect(graph.getBlocked(completed)).toEqual({
+        'opsx-delta': ['specs'],
         tasks: ['specs'],
       });
 
@@ -79,13 +82,14 @@ describe('artifact-graph workflow integration', () => {
       fs.writeFileSync(path.join(specsDir, 'feature-auth.md'), '# Auth Spec\n\nAuthentication specification.');
       completed = detectCompleted(graph, tempDir);
       expect(completed).toEqual(new Set(['proposal', 'design', 'specs']));
-      expect(graph.getNextArtifacts(completed)).toEqual(['tasks']);
+      expect(graph.getNextArtifacts(completed).sort()).toEqual(['opsx-delta', 'tasks']);
       expect(graph.getBlocked(completed)).toEqual({});
 
-      // 6. Create tasks.md - workflow complete
+      // 6. Create opsx-delta.yaml and tasks.md - workflow complete
+      fs.writeFileSync(path.join(tempDir, 'opsx-delta.yaml'), 'schema_version: 1\nADDED:\n  capabilities: []\n');
       fs.writeFileSync(path.join(tempDir, 'tasks.md'), '# Tasks\n\n- [ ] Implement feature');
       completed = detectCompleted(graph, tempDir);
-      expect(completed).toEqual(new Set(['proposal', 'design', 'specs', 'tasks']));
+      expect(completed).toEqual(new Set(['proposal', 'design', 'specs', 'opsx-delta', 'tasks']));
       expect(graph.getNextArtifacts(completed)).toEqual([]);
       expect(graph.isComplete(completed)).toBe(true);
       expect(graph.getBlocked(completed)).toEqual({});

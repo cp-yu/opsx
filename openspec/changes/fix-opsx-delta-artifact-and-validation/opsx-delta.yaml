@@ -1,0 +1,35 @@
+schema_version: 1
+ADDED:
+  capabilities:
+    - id: cap.schema.opsx-delta-artifact
+      type: capability
+      intent: 将 opsx-delta 注册为 spec-driven schema 中的正式 artifact，提供 template 和 instruction，支持 `openspec instructions opsx-delta` 获取 YAML 结构指引
+    - id: cap.validation.opsx-dry-run
+      type: capability
+      intent: Validator.validateOpsxDelta() 方法执行 opsx-delta.yaml 的 dry-run merge 校验，检查 Zod schema 解析、引用完整性和 code-map 完整性；validate 命令变更路径 SHALL 并行执行 spec + OPSX 校验
+  relations:
+    - from: cap.schema.opsx-delta-artifact
+      type: contains
+      to: dom.schema
+    - from: cap.validation.opsx-dry-run
+      type: contains
+      to: dom.validation
+    - from: cap.validation.opsx-dry-run
+      type: depends_on
+      to: cap.opsx.delta-merge
+    - from: cap.validation.opsx-dry-run
+      type: depends_on
+      to: cap.opsx.referential-integrity
+    - from: cap.schema.opsx-delta-artifact
+      type: depends_on
+      to: cap.artifact-graph.parse
+    - from: cap.validation.opsx-dry-run
+      type: depends_on
+      to: cap.cli.validate
+
+MODIFIED:
+  capabilities:
+    - id: cap.ai.workflow-templates
+      intent: verify/apply/archive/propose 等模板共享面向 Agent 的 workflow guidance；OPSX_GENERATE_DELTA 片段包含具体 YAML 结构示例（ADDED/MODIFIED/REMOVED 为 YAML object key 而非 Markdown heading）；OPSX_POST_PROPOSE_VALIDATION 片段引用程序化 CLI（Validator.validateOpsxDelta）替代手动 dry-run；propose 的 post-propose warning validation 包含程序化 Actions/Checks 结构校验
+    - id: cap.opsx.delta-merge
+      intent: 将 opsx-delta.yaml 合并到主 OPSX 文件，支持 ADDED/MODIFIED/REMOVED。MODIFIED section 执行 shallow merge，仅更新 delta 中显式声明的字段。Validator.validateOpsxDelta() 复用 applyOpsxDelta() 的 dry-run 语义在 validate 阶段提前检测合并错误

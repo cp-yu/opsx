@@ -92,6 +92,11 @@ export class ArchiveCommand {
       throw new Error(`Change '${changeName}' not found.`);
     }
 
+    const syncState = await assessChangeSyncState(targetPath, changeName);
+    const pendingSync = syncState.requiresSync
+      ? await getPendingChangeSync(targetPath, syncState)
+      : null;
+
     const skipValidation = options.validate === false || options.noValidate === true;
     const skipVerify = options.verify === false || options.noVerify === true;
     if (!skipVerify) {
@@ -99,10 +104,6 @@ export class ArchiveCommand {
       const compatibility = freshness.verifyResult
         ? checkArchiveCompatibility(freshness.verifyResult)
         : undefined;
-      const syncState = await assessChangeSyncState(targetPath, changeName);
-      const pendingSync = syncState.requiresSync
-        ? await getPendingChangeSync(targetPath, syncState)
-        : null;
       const failures: string[] = [];
 
       if (freshness.status !== 'FRESH' || !compatibility?.compatible) {
@@ -157,7 +158,7 @@ export class ArchiveCommand {
           }
         }
       } catch {}
-      if (hasDeltaSpecs) {
+      if (hasDeltaSpecs && (!pendingSync || pendingSync.specs > 0)) {
         const deltaReport = await validator.validateChangeDeltaSpecs(changeDir);
         if (!deltaReport.valid) {
           hasValidationErrors = true;
@@ -220,8 +221,6 @@ export class ArchiveCommand {
         console.log(`Warning: ${incompleteTasks} incomplete task(s) found. Continuing due to --yes flag.`);
       }
     }
-
-    const syncState = await assessChangeSyncState(targetPath, changeName);
 
     // Handle archive-time sync unless skipSpecs flag is set
     if (options.skipSpecs) {

@@ -4,6 +4,7 @@ import { Validator } from '../core/validation/validator.js';
 import { isInteractive, resolveNoInteractive } from '../utils/interactive.js';
 import { getActiveChangeIds, getSpecIds } from '../utils/item-discovery.js';
 import { nearestMatches } from '../utils/match.js';
+import type { ValidationReport } from '../core/validation/types.js';
 
 type ItemType = 'change' | 'spec';
 
@@ -132,7 +133,7 @@ export class ValidateCommand {
     if (type === 'change') {
       const changeDir = path.join(process.cwd(), 'openspec', 'changes', id);
       const start = Date.now();
-      const report = await validator.validateChangeDeltaSpecs(changeDir);
+      const report = await this.validateChangeReports(validator, changeDir);
       const durationMs = Date.now() - start;
       this.printReport('change', id, report, durationMs, opts.json);
       // Non-zero exit if invalid (keeps enriched output test semantics)
@@ -198,7 +199,7 @@ export class ValidateCommand {
       queue.push(async () => {
         const start = Date.now();
         const changeDir = path.join(process.cwd(), 'openspec', 'changes', id);
-        const report = await validator.validateChangeDeltaSpecs(changeDir);
+        const report = await this.validateChangeReports(validator, changeDir);
         const durationMs = Date.now() - start;
         return { id, type: 'change' as const, valid: report.valid, issues: report.issues, durationMs };
       });
@@ -293,6 +294,32 @@ export class ValidateCommand {
 
     process.exitCode = failed > 0 ? 1 : 0;
   }
+
+  private async validateChangeReports(validator: Validator, changeDir: string): Promise<ValidationReport> {
+    const [specReport, opsxReport] = await Promise.all([
+      validator.validateChangeDeltaSpecs(changeDir),
+      validator.validateOpsxDelta(changeDir),
+    ]);
+    return mergeValidationReports(specReport, opsxReport);
+  }
+}
+
+function mergeValidationReports(...reports: ValidationReport[]): ValidationReport {
+  const issues = reports.flatMap((report) => report.issues);
+  const errors = reports.reduce((sum, report) => sum + report.summary.errors, 0);
+  const warnings = reports.reduce((sum, report) => sum + report.summary.warnings, 0);
+  const info = reports.reduce((sum, report) => sum + report.summary.info, 0);
+  const valid = reports.every((report) => report.valid);
+
+  return {
+    valid,
+    issues,
+    summary: {
+      errors,
+      warnings,
+      info,
+    },
+  };
 }
 
 function summarizeType(results: BulkItemResult[], type: ItemType) {

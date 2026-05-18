@@ -5,7 +5,10 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
-import { ARTIFACT_DOC_LANGUAGE_CONTRACT } from '../fragments/opsx-fragments.js';
+import {
+  ARTIFACT_DOC_LANGUAGE_CONTRACT,
+  OPSX_GENERATE_DELTA,
+} from '../fragments/opsx-fragments.js';
 
 export function getFfChangeSkillTemplate(): SkillTemplate {
   return {
@@ -75,11 +78,7 @@ This flow should also generate \`opsx-delta.yaml\` once the change specs are cle
       - Then continue with creation
 
    d. **After the \`specs\` artifact is complete in a spec-driven change, generate \`opsx-delta.yaml\`**
-      - Read \`proposal.md\` to extract the capability list
-      - Read all delta specs in \`openspec/changes/<name>/specs/*/spec.md\`
-      - Read \`openspec/project.opsx.yaml\` if it exists for current-system context
-      - Generate \`openspec/changes/<name>/opsx-delta.yaml\` using ADDED / MODIFIED / REMOVED sections
-      - Keep this agent-driven: capture merge intent in the YAML, not in programmatic code
+      ${OPSX_GENERATE_DELTA}
 
 5. **Show final status**
    \`\`\`bash
@@ -187,11 +186,7 @@ export function getOpsxFfCommandTemplate(): CommandTemplate {
       - Then continue with creation
 
    d. **After the \`specs\` artifact is complete in a spec-driven change, generate \`opsx-delta.yaml\`**
-      - Read \`proposal.md\` to extract the capability list
-      - Read all delta specs in \`openspec/changes/<name>/specs/*/spec.md\`
-      - Read \`openspec/project.opsx.yaml\` if it exists for current-system context
-      - Generate \`openspec/changes/<name>/opsx-delta.yaml\` using ADDED / MODIFIED / REMOVED sections
-      - Keep this agent-driven: capture merge intent in the YAML, not in programmatic code
+      ${OPSX_GENERATE_DELTA}
 
 5. **Show final status**
    \`\`\`bash

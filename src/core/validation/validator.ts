@@ -6,6 +6,14 @@ import { MarkdownParser } from '../parsers/markdown-parser.js';
 import { ChangeParser } from '../parsers/change-parser.js';
 import { ValidationReport, ValidationIssue, ValidationLevel } from './types.js';
 import {
+  applyOpsxDelta,
+  OPSX_PATHS,
+  readOpsxDelta,
+  readProjectOpsx,
+  validateCodeMapIntegrity,
+  validateReferentialIntegrity,
+} from '../../utils/opsx-utils.js';
+import {
   MIN_PURPOSE_LENGTH,
   MAX_REQUIREMENT_TEXT_LENGTH,
   VALIDATION_MESSAGES
@@ -152,47 +160,21 @@ export class Validator {
         const renamedFrom = new Set<string>();
         const renamedTo = new Set<string>();
 
-        // Validate ADDED
-        for (const block of plan.added) {
-          const key = normalizeRequirementName(block.name);
-          totalDeltas++;
-          if (addedNames.has(key)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `Duplicate requirement in ADDED: "${block.name}"` });
-          } else {
-            addedNames.add(key);
-          }
-          const requirementText = this.extractRequirementText(block.raw);
-          if (!requirementText) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `ADDED "${block.name}" is missing requirement text` });
-          } else if (!this.containsShallOrMust(requirementText)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `ADDED "${block.name}" must contain SHALL or MUST` });
-          }
-          const scenarioCount = this.countScenarios(block.raw);
-          if (scenarioCount < 1) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `ADDED "${block.name}" must include at least one scenario` });
-          }
-        }
+        totalDeltas += this.validateDeltaRequirementBlocks(
+          plan.added,
+          'ADDED',
+          addedNames,
+          entryPath,
+          issues,
+        );
 
-        // Validate MODIFIED
-        for (const block of plan.modified) {
-          const key = normalizeRequirementName(block.name);
-          totalDeltas++;
-          if (modifiedNames.has(key)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `Duplicate requirement in MODIFIED: "${block.name}"` });
-          } else {
-            modifiedNames.add(key);
-          }
-          const requirementText = this.extractRequirementText(block.raw);
-          if (!requirementText) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED "${block.name}" is missing requirement text` });
-          } else if (!this.containsShallOrMust(requirementText)) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED "${block.name}" must contain SHALL or MUST` });
-          }
-          const scenarioCount = this.countScenarios(block.raw);
-          if (scenarioCount < 1) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED "${block.name}" must include at least one scenario` });
-          }
-        }
+        totalDeltas += this.validateDeltaRequirementBlocks(
+          plan.modified,
+          'MODIFIED',
+          modifiedNames,
+          entryPath,
+          issues,
+        );
 
         // Validate REMOVED (names only)
         for (const name of plan.removed) {
@@ -321,6 +303,62 @@ export class Validator {
 
     if (totalDeltas === 0) {
       issues.push({ level: 'ERROR', path: 'file', message: this.enrichTopLevelError('change', VALIDATION_MESSAGES.CHANGE_NO_DELTAS) });
+    }
+
+    return this.createReport(issues);
+  }
+
+  async validateOpsxDelta(changeDir: string): Promise<ValidationReport> {
+    const issues: ValidationIssue[] = [];
+    const projectRoot = path.resolve(changeDir, '..', '..', '..');
+    const changeName = path.basename(changeDir);
+    const projectOpsxPath = FileSystemUtils.joinPath(projectRoot, OPSX_PATHS.PROJECT_FILE);
+
+    if (!await FileSystemUtils.fileExists(projectOpsxPath)) {
+      return this.createReport(issues);
+    }
+
+    try {
+      const projectBundle = await readProjectOpsx(projectRoot);
+      if (!projectBundle) {
+        issues.push({
+          level: 'ERROR',
+          path: 'openspec/project.opsx.yaml',
+          message: 'Unable to read openspec/project.opsx.yaml for OPSX dry-run validation',
+        });
+        return this.createReport(issues);
+      }
+
+      const delta = await readOpsxDelta(projectRoot, changeName);
+      if (!delta) {
+        return this.createReport(issues);
+      }
+
+      const result = applyOpsxDelta(projectBundle, delta);
+      const referentialIntegrity = validateReferentialIntegrity(result.bundle);
+      for (const error of referentialIntegrity.errors) {
+        issues.push({
+          level: 'ERROR',
+          path: 'opsx-delta.yaml',
+          message: `Referential integrity failed: ${error}`,
+        });
+      }
+
+      const codeMapIntegrity = validateCodeMapIntegrity(result.bundle);
+      for (const error of codeMapIntegrity.errors) {
+        issues.push({
+          level: 'ERROR',
+          path: 'opsx-delta.yaml',
+          message: `Code-map integrity failed: ${error}`,
+        });
+      }
+    } catch (error) {
+      const baseMessage = error instanceof Error ? error.message : 'Unknown error';
+      issues.push({
+        level: 'ERROR',
+        path: 'opsx-delta.yaml',
+        message: `OPSX dry-run merge failed: ${baseMessage}`,
+      });
     }
 
     return this.createReport(issues);
@@ -463,6 +501,40 @@ export class Validator {
 
   isValid(report: ValidationReport): boolean {
     return report.valid;
+  }
+
+  private validateDeltaRequirementBlocks(
+    blocks: Array<{ name: string; raw: string }>,
+    section: 'ADDED' | 'MODIFIED',
+    seenNames: Set<string>,
+    entryPath: string,
+    issues: ValidationIssue[],
+  ): number {
+    let validatedCount = 0;
+
+    for (const block of blocks) {
+      const key = normalizeRequirementName(block.name);
+      validatedCount++;
+
+      if (seenNames.has(key)) {
+        issues.push({ level: 'ERROR', path: entryPath, message: `Duplicate requirement in ${section}: "${block.name}"` });
+      } else {
+        seenNames.add(key);
+      }
+
+      const requirementText = this.extractRequirementText(block.raw);
+      if (!requirementText) {
+        issues.push({ level: 'ERROR', path: entryPath, message: `${section} "${block.name}" is missing requirement text` });
+      } else if (!this.containsShallOrMust(requirementText)) {
+        issues.push({ level: 'ERROR', path: entryPath, message: `${section} "${block.name}" must contain SHALL or MUST` });
+      }
+
+      if (this.countScenarios(block.raw) < 1) {
+        issues.push({ level: 'ERROR', path: entryPath, message: `${section} "${block.name}" must include at least one scenario` });
+      }
+    }
+
+    return validatedCount;
   }
 
   private extractRequirementText(blockRaw: string): string | undefined {

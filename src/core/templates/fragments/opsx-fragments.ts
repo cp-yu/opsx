@@ -28,10 +28,32 @@ export const OPSX_READ_CONTEXT = OPSX_SHARED_CONTEXT;
  */
 export const OPSX_GENERATE_DELTA = `
 **Generate opsx-delta.yaml**:
+- Read \`openspec instructions opsx-delta --change "<name>" --json\`
+- Use the returned \`template\`, \`instruction\`, and \`outputPath\` to generate \`opsx-delta.yaml\`
 - Read \`proposal.md\` to extract the capability list
 - Read all delta specs in \`openspec/changes/<name>/specs/*/spec.md\`
 - Read \`openspec/project.opsx.yaml\` if it exists for current-system context
-- Generate \`openspec/changes/<name>/opsx-delta.yaml\` using ADDED / MODIFIED / REMOVED sections
+- Treat \`ADDED\`, \`MODIFIED\`, and \`REMOVED\` as YAML object keys, not Markdown headings
+- Follow a concrete YAML object structure such as:
+  \`\`\`yaml
+  schema_version: 1
+  ADDED:
+    capabilities:
+      - id: cap.example.feature
+        type: capability
+        intent: Describe the new capability
+    relations:
+      - from: cap.example.feature
+        type: contains
+        to: dom.example
+  MODIFIED:
+    capabilities:
+      - id: cap.example.existing
+        intent: Updated intent text
+  REMOVED:
+    capabilities:
+      - id: cap.example.legacy
+  \`\`\`
 - Delta nodes contain only id, type, intent, status — no code_refs or spec_refs
 - Keep this agent-driven: capture merge intent in the YAML, not in programmatic code
 `.trim();
@@ -47,11 +69,11 @@ export const OPSX_POST_PROPOSE_VALIDATION = `
 - Validate generated change specs against the same contract used by downstream change delta validation:
   - Prefer \`openspec validate "<name>" --type change --json\` when available
   - Align with \`Validator.validateChangeDeltaSpecs()\` semantics for delta sections, SHALL/MUST requirement text, and required \`#### Scenario:\` blocks
-- Validate \`opsx-delta.yaml\` against the same dry-run merge contract used by downstream sync/archive prepare:
-  - Reuse the semantics of \`prepareChangeSync()\` in \`src/core/change-sync.ts\`
-  - Read the current OPSX files, dry-run the delta merge, then check referential integrity and code-map integrity
+- Validate \`opsx-delta.yaml\` through the same programmatic CLI path used by downstream change validation:
+  - Prefer \`openspec validate "<name>" --type change --json\` when available
+  - Align with \`Validator.validateOpsxDelta()\` semantics for Zod parsing, dry-run \`applyOpsxDelta()\`, referential integrity, and code-map integrity
   - Do NOT run \`openspec sync\` for this check because it mutates project files
-  - If \`openspec/project.opsx.yaml\` does not exist, skip this OPSX merge-based validation and report the skip in the final summary
+  - If \`openspec/project.opsx.yaml\` does not exist, \`Validator.validateOpsxDelta()\` skips this check and the final summary must report the skip
 - Run lightweight structure checks for \`proposal.md\`, \`design.md\`, and \`tasks.md\` against the current schema templates, not scattered examples:
   - Read \`openspec instructions proposal --change "<name>" --json\`, \`openspec instructions design --change "<name>" --json\`, and \`openspec instructions tasks --change "<name>" --json\`
   - Check only key required headings and checkbox structure

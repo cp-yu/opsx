@@ -607,6 +607,9 @@ rules:
 
       const specs = status.artifacts.find(a => a.id === 'specs');
       expect(specs?.outputPath).toBe('specs/**/*.md');
+
+      const opsxDelta = status.artifacts.find(a => a.id === 'opsx-delta');
+      expect(opsxDelta?.outputPath).toBe('opsx-delta.yaml');
     });
 
     it('should report isComplete true when all done', () => {
@@ -618,6 +621,7 @@ rules:
       fs.writeFileSync(path.join(changeDir, 'proposal.md'), '# Proposal');
       fs.writeFileSync(path.join(changeDir, 'specs', 'test.md'), '# Spec');
       fs.writeFileSync(path.join(changeDir, 'design.md'), '# Design');
+      fs.writeFileSync(path.join(changeDir, 'opsx-delta.yaml'), 'schema_version: 1\nADDED:\n  capabilities: []\n');
       fs.writeFileSync(path.join(changeDir, 'tasks.md'), '# Tasks');
 
       const context = loadChangeContext(tempDir, 'my-change');

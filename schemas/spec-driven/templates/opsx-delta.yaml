@@ -1,0 +1,19 @@
+schema_version: 1
+ADDED:
+  capabilities:
+    - id: cap.example.feature
+      type: capability
+      intent: Describe the new capability
+  relations:
+    - from: cap.example.feature
+      type: contains
+      to: dom.example
+
+MODIFIED:
+  capabilities:
+    - id: cap.example.existing
+      intent: Updated intent text
+
+REMOVED:
+  capabilities:
+    - id: cap.example.legacy

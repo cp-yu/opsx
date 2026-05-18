@@ -1,0 +1,142 @@
+{
+  "timestamp": "2026-05-18T15:34:02.604Z",
+  "result": "PASS_WITH_WARNINGS",
+  "issues": [
+    {
+      "severity": "WARNING",
+      "message": "The bundle proves the validate-stage reuse path, but the evidence bundle did not include the authoritative OPSX merge/schema/sync helper implementations needed to fully verify the broader opsx-delta-merge modified requirements.",
+      "requirement": "opsx-delta-merge modified requirements",
+      "task": null,
+      "recommendation": "For the next canonical verify input, include the final contents/tests for the underlying OPSX merge/schema/sync helpers, or narrow specs/opsx-delta-merge/spec.md so it only states the validate-stage reuse behavior this change actually evidences.",
+      "evidence": [
+        "openspec/changes/fix-opsx-delta-artifact-and-validation/proposal.md:17-20",
+        "openspec/changes/fix-opsx-delta-artifact-and-validation/specs/opsx-delta-merge/spec.md:3-95",
+        "src/core/validation/validator.ts:337-390",
+        "test/core/validation.test.ts:699-757"
+      ]
+    }
+  ],
+  "tasksFileHash": "db78ea50e4375fd9f54ca2fe338d8c6f0231b7a2367c24828fccfc78fe8d8ff8",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      "openspec/changes/fix-opsx-delta-artifact-and-validation/design.md",
+      "openspec/changes/fix-opsx-delta-artifact-and-validation/opsx-delta.yaml",
+      "openspec/changes/fix-opsx-delta-artifact-and-validation/proposal.md",
+      "openspec/changes/fix-opsx-delta-artifact-and-validation/specs/opsx-delta-artifact/spec.md",
+      "openspec/changes/fix-opsx-delta-artifact-and-validation/specs/opsx-delta-merge/spec.md",
+      "openspec/changes/fix-opsx-delta-artifact-and-validation/specs/opsx-propose-skill/spec.md",
+      "openspec/changes/fix-opsx-delta-artifact-and-validation/specs/validate-opsx-dry-run/spec.md",
+      "openspec/changes/fix-opsx-delta-artifact-and-validation/tasks.md",
+      "schemas/spec-driven/schema.yaml",
+      "schemas/spec-driven/templates/opsx-delta.yaml",
+      "src/commands/validate.ts",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "src/core/templates/workflows/ff-change.ts",
+      "src/core/templates/workflows/propose.ts",
+      "src/core/validation/validator.ts",
+      "test/core/artifact-graph/instruction-loader.test.ts",
+      "test/core/artifact-graph/workflow.integration.test.ts",
+      "test/core/templates/propose-template.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts",
+      "test/core/validation.test.ts"
+    ],
+    "evidenceFingerprint": "12bc58b71ebaa10a4fef3dad2f74815bcfb89ff4589a499adcadbc58c4f32532",
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "036b72054a1241f3c1daa55160ecc3869dd8a5dd"
+  },
+  "optimization": {
+    "status": "IMPROVED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-18T15:39:59.184Z",
+        "type": "optimization",
+        "status": "OPTIMIZATION_PROPOSED",
+        "summary": "Refactor duplicate ADDED/MODIFIED delta requirement validation loops in src/core/validation/validator.ts into a shared private helper without changing behavior.",
+        "files": [
+          "src/core/validation/validator.ts"
+        ]
+      },
+      {
+        "timestamp": "2026-05-18T15:47:16.237Z",
+        "type": "verification",
+        "result": "PASS_WITH_WARNINGS",
+        "behaviorRetryCounter": 1
+      }
+    ],
+    "affectedFileHashes": {
+      "src/core/validation/validator.ts": "f969e0df7c4ad9feb5f94eee0d9b55279c6d581e6cfa2d032c8448160004a8d9"
+    },
+    "baseline": {
+      "timestamp": "2026-05-18T15:34:02.604Z",
+      "result": "PASS_WITH_WARNINGS",
+      "issues": [
+        {
+          "severity": "WARNING",
+          "message": "The bundle proves the validate-stage reuse path, but the evidence bundle did not include the authoritative OPSX merge/schema/sync helper implementations needed to fully verify the broader opsx-delta-merge modified requirements.",
+          "requirement": "opsx-delta-merge modified requirements",
+          "task": null,
+          "recommendation": "For the next canonical verify input, include the final contents/tests for the underlying OPSX merge/schema/sync helpers, or narrow specs/opsx-delta-merge/spec.md so it only states the validate-stage reuse behavior this change actually evidences.",
+          "evidence": [
+            "openspec/changes/fix-opsx-delta-artifact-and-validation/proposal.md:17-20",
+            "openspec/changes/fix-opsx-delta-artifact-and-validation/specs/opsx-delta-merge/spec.md:3-95",
+            "src/core/validation/validator.ts:337-390",
+            "test/core/validation.test.ts:699-757"
+          ]
+        }
+      ],
+      "tasksFileHash": "db78ea50e4375fd9f54ca2fe338d8c6f0231b7a2367c24828fccfc78fe8d8ff8",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          "openspec/changes/fix-opsx-delta-artifact-and-validation/design.md",
+          "openspec/changes/fix-opsx-delta-artifact-and-validation/opsx-delta.yaml",
+          "openspec/changes/fix-opsx-delta-artifact-and-validation/proposal.md",
+          "openspec/changes/fix-opsx-delta-artifact-and-validation/specs/opsx-delta-artifact/spec.md",
+          "openspec/changes/fix-opsx-delta-artifact-and-validation/specs/opsx-delta-merge/spec.md",
+          "openspec/changes/fix-opsx-delta-artifact-and-validation/specs/opsx-propose-skill/spec.md",
+          "openspec/changes/fix-opsx-delta-artifact-and-validation/specs/validate-opsx-dry-run/spec.md",
+          "openspec/changes/fix-opsx-delta-artifact-and-validation/tasks.md",
+          "schemas/spec-driven/schema.yaml",
+          "schemas/spec-driven/templates/opsx-delta.yaml",
+          "src/commands/validate.ts",
+          "src/core/templates/fragments/opsx-fragments.ts",
+          "src/core/templates/workflows/ff-change.ts",
+          "src/core/templates/workflows/propose.ts",
+          "src/core/validation/validator.ts",
+          "test/core/artifact-graph/instruction-loader.test.ts",
+          "test/core/artifact-graph/workflow.integration.test.ts",
+          "test/core/templates/propose-template.test.ts",
+          "test/core/templates/skill-templates-parity.test.ts",
+          "test/core/validation.test.ts"
+        ],
+        "evidenceFingerprint": "682fda8bb6100f99f8321e3d851ed0806b29968ff08c7aa2de868447e53e3dcf",
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "036b72054a1241f3c1daa55160ecc3869dd8a5dd"
+      }
+    },
+    "final": {
+      "result": "PASS_WITH_WARNINGS",
+      "issues": [
+        {
+          "severity": "WARNING",
+          "message": "The optimization preserved the validate-stage behavior, but the evidence bundle still did not include the authoritative OPSX merge/schema/sync helper implementations needed to fully verify the broader opsx-delta-merge modified requirements.",
+          "requirement": "opsx-delta-merge modified requirements",
+          "task": null,
+          "recommendation": "For the canonical verify input, include the final contents and tests for the underlying OPSX merge/schema/sync helpers, or narrow openspec/changes/fix-opsx-delta-artifact-and-validation/specs/opsx-delta-merge/spec.md so it only states the validate-stage reuse behavior this change actually evidences.",
+          "evidence": [
+            "openspec/changes/fix-opsx-delta-artifact-and-validation/specs/opsx-delta-merge/spec.md:3-95",
+            "openspec/changes/fix-opsx-delta-artifact-and-validation/proposal.md:17-20",
+            "src/core/validation/validator.ts:311-365",
+            "src/core/validation/validator.ts:163-177",
+            "src/core/validation/validator.ts:506-537",
+            "test/core/validation.test.ts:447-592",
+            "test/core/validation.test.ts:595-757"
+          ]
+        }
+      ]
+    }
+  }
+}

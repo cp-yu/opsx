@@ -32,13 +32,19 @@ describe('propose template post-validation flow', () => {
     }
   });
 
-  it('aligns OPSX validation with downstream dry-run merge semantics and graceful skip behavior', () => {
+  it('aligns OPSX validation with downstream programmatic validation and graceful skip behavior', () => {
     for (const body of getProposeBodies()) {
-      expect(body).toContain('prepareChangeSync()');
+      expect(body).toContain('openspec instructions opsx-delta --change "<name>" --json');
+      expect(body).toContain('schema_version: 1');
+      expect(body).toContain('ADDED:');
+      expect(body).toContain('MODIFIED:');
+      expect(body).toContain('REMOVED:');
+      expect(body).toContain('Validator.validateOpsxDelta()');
+      expect(body).toContain('applyOpsxDelta()');
       expect(body).toContain('Do NOT run `openspec sync`');
       expect(body).toContain('referential integrity');
       expect(body).toContain('code-map integrity');
-      expect(body).toContain('skip this OPSX merge-based validation');
+      expect(body).toContain('skips this check');
     }
   });
 

@@ -82,6 +82,49 @@ artifacts:
     requires:
       - proposal
 
+  - id: opsx-delta
+    generates: opsx-delta.yaml
+    description: Project OPSX delta describing architecture graph changes for this change
+    template: opsx-delta.yaml
+    instruction: |
+      Create the OPSX delta document that captures project architecture graph changes for this change.
+
+      Use `openspec/project.opsx.yaml` as current-system context when it exists.
+
+      Output requirements:
+      - The file MUST be valid YAML
+      - Use `ADDED`, `MODIFIED`, and `REMOVED` as YAML object keys, not Markdown headings
+      - Delta nodes contain only `id`, `type`, `intent`, and optional `status`
+      - Do NOT include `code_refs` or `spec_refs` in delta nodes
+      - Use OPSX node IDs and relation types that already exist in the project conventions
+
+      Minimal shape:
+      ```yaml
+      schema_version: 1
+      ADDED:
+        capabilities:
+          - id: cap.example.feature
+            type: capability
+            intent: Describe the new capability
+        relations:
+          - from: cap.example.feature
+            type: contains
+            to: dom.example
+
+      MODIFIED:
+        capabilities:
+          - id: cap.example.existing
+            intent: Updated intent text
+
+      REMOVED:
+        capabilities:
+          - id: cap.example.legacy
+      ```
+
+      Keep the delta focused on architecture intent, not implementation details.
+    requires:
+      - specs
+
   - id: design
     generates: design.md
     description: Technical design document with implementation details

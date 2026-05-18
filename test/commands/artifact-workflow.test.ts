@@ -41,7 +41,7 @@ describe('artifact-workflow CLI commands', () => {
    */
   async function createTestChange(
     changeName: string,
-    artifacts: ('proposal' | 'design' | 'specs' | 'tasks')[] = []
+    artifacts: ('proposal' | 'design' | 'specs' | 'opsx-delta' | 'tasks')[] = []
   ): Promise<string> {
     const changeDir = path.join(changesDir, changeName);
     await fs.mkdir(changeDir, { recursive: true });
@@ -68,6 +68,13 @@ describe('artifact-workflow CLI commands', () => {
       await fs.writeFile(path.join(changeDir, 'tasks.md'), '## Tasks\n- [ ] Task 1');
     }
 
+    if (artifacts.includes('opsx-delta')) {
+      await fs.writeFile(
+        path.join(changeDir, 'opsx-delta.yaml'),
+        'schema_version: 1\nADDED:\n  capabilities: []\n'
+      );
+    }
+
     return changeDir;
   }
 
@@ -80,7 +87,7 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['status', '--change', 'scaffolded-change'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('scaffolded-change');
-      expect(result.stdout).toContain('0/4 artifacts complete');
+      expect(result.stdout).toContain('0/5 artifacts complete');
     });
 
     it('shows status for a change with proposal only', async () => {
@@ -91,7 +98,7 @@ describe('artifact-workflow CLI commands', () => {
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('minimal-change');
       expect(result.stdout).toContain('spec-driven');
-      expect(result.stdout).toContain('1/4 artifacts complete');
+      expect(result.stdout).toContain('1/5 artifacts complete');
     });
 
     it('shows status for a change with proposal and design', async () => {
@@ -99,7 +106,7 @@ describe('artifact-workflow CLI commands', () => {
 
       const result = await runCLI(['status', '--change', 'partial-change'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('2/4 artifacts complete');
+      expect(result.stdout).toContain('2/5 artifacts complete');
       expect(result.stdout).toContain('[x]');
     });
 
@@ -117,18 +124,18 @@ describe('artifact-workflow CLI commands', () => {
       expect(json.schemaName).toBe('spec-driven');
       expect(json.isComplete).toBe(false);
       expect(Array.isArray(json.artifacts)).toBe(true);
-      expect(json.artifacts).toHaveLength(4);
+      expect(json.artifacts).toHaveLength(5);
 
       const proposalArtifact = json.artifacts.find((a: any) => a.id === 'proposal');
       expect(proposalArtifact.status).toBe('done');
     });
 
     it('shows complete status when all artifacts are done', async () => {
-      await createTestChange('complete-change', ['proposal', 'design', 'specs', 'tasks']);
+      await createTestChange('complete-change', ['proposal', 'design', 'specs', 'opsx-delta', 'tasks']);
 
       const result = await runCLI(['status', '--change', 'complete-change'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('4/4 artifacts complete');
+      expect(result.stdout).toContain('5/5 artifacts complete');
       expect(result.stdout).toContain('All artifacts complete!');
     });
 
