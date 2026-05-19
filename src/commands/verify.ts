@@ -122,6 +122,7 @@ async function verifyPhase1(changeName: string, options: VerifyCommandOptions): 
       executionMode: validation.value.executionMode,
       evidenceFiles: [...validation.value.evidenceFiles].sort(),
       evidenceFingerprint: evidence.hash,
+      evidenceFingerprintEntries: evidence.entries,
       skippedEvidenceFiles: evidence.skippedFiles,
       gitHeadCommit: await getGitHead(projectRoot),
       gitDiffSummary: validation.value.gitDiffSummary,
@@ -206,7 +207,12 @@ async function verifyStatus(changeName: string, options: VerifyCommandOptions): 
   writeOutput(
     options,
     { ok, freshness, archiveCompatibility },
-    ok ? 'Verify gate passed.' : formatVerifyGateFailure(freshness, archiveCompatibility)
+    ok
+      ? 'Verify gate passed.'
+      : formatVerifyGateFailure(freshness, archiveCompatibility, {
+          changeName,
+          command: 'sync',
+        })
   );
   return ok ? 0 : 1;
 }
@@ -323,6 +329,7 @@ async function handleVerification(
       projectRoot
     );
     current.verificationContext.evidenceFingerprint = evidence.hash;
+    current.verificationContext.evidenceFingerprintEntries = evidence.entries;
     await writeVerifyResult(changeDir, current);
     writeOutput(options, { ok: true, result: current }, 'Phase 2 完成 (优化+验证通过)。可进入 sync/archive');
     return 0;

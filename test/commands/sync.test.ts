@@ -115,7 +115,12 @@ Then the system signs the user in`
     const syncCommand = await loadSyncCommand();
     await createChange('blocked-sync');
 
-    await expect(syncCommand('blocked-sync', { noValidate: true })).rejects.toThrow('Verify gate failed: MISSING');
+    await expect(syncCommand('blocked-sync', { noValidate: true })).rejects.toThrow(
+      'openspec verify phase1 blocked-sync'
+    );
+    await expect(syncCommand('blocked-sync', { noValidate: true })).rejects.toThrow(
+      'openspec sync blocked-sync --no-verify'
+    );
   });
 
   it('allows sync when the verify gate is fresh and archive-compatible', async () => {

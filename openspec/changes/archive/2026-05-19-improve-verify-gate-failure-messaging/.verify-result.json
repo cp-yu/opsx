@@ -1,0 +1,205 @@
+{
+  "timestamp": "2026-05-19T05:46:22.174Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "1b0545ef1dc3d05fdc79feca37599c9cd9f39920aeab803277ae7ff2dcf1282b",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "canonical_phase1_explicit_evidence",
+    "evidenceFiles": [
+      "openspec/changes/improve-verify-gate-failure-messaging/design.md",
+      "openspec/changes/improve-verify-gate-failure-messaging/opsx-delta.yaml",
+      "openspec/changes/improve-verify-gate-failure-messaging/proposal.md",
+      "openspec/changes/improve-verify-gate-failure-messaging/specs/cli-sync/spec.md",
+      "openspec/changes/improve-verify-gate-failure-messaging/specs/verify-freshness-engine/spec.md",
+      "openspec/changes/improve-verify-gate-failure-messaging/tasks.md",
+      "openspec/project.opsx.yaml",
+      "src/commands/sync.ts",
+      "src/commands/verify.ts",
+      "src/core/archive.ts",
+      "src/core/verify/freshness.ts",
+      "src/core/verify/result-validator.ts",
+      "src/core/verify/types.ts",
+      "test/commands/sync.test.ts",
+      "test/commands/verify.test.ts",
+      "test/core/archive.test.ts"
+    ],
+    "evidenceFingerprint": "b473c67f7ed4a137f76909661a232dd08964f025abcf650887491f60e6a1a779",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/improve-verify-gate-failure-messaging/design.md",
+        "hash": "6cb883091c0e379907df72b152e9ce9ff9ce998440e0e88e9d6490ce306de29f"
+      },
+      {
+        "path": "openspec/changes/improve-verify-gate-failure-messaging/opsx-delta.yaml",
+        "hash": "4743eda0287f8940cc7499a539891efb182faac703e81e60c178cbce6987b74e"
+      },
+      {
+        "path": "openspec/changes/improve-verify-gate-failure-messaging/proposal.md",
+        "hash": "610019bd76006b4d3e3880b39a6bb07085ac8b7411ca09b5d7a14f6f0822933d"
+      },
+      {
+        "path": "openspec/changes/improve-verify-gate-failure-messaging/specs/cli-sync/spec.md",
+        "hash": "e239c333934d5c384fa5cc8486059fccdac8dff485a297e255fab252c0fb4edb"
+      },
+      {
+        "path": "openspec/changes/improve-verify-gate-failure-messaging/specs/verify-freshness-engine/spec.md",
+        "hash": "5d7f64f98341838acae737c22c116d0f4d4580fc5af214c6248179dbb6869375"
+      },
+      {
+        "path": "openspec/changes/improve-verify-gate-failure-messaging/tasks.md",
+        "hash": "1b0545ef1dc3d05fdc79feca37599c9cd9f39920aeab803277ae7ff2dcf1282b"
+      },
+      {
+        "path": "openspec/project.opsx.yaml",
+        "hash": "1a50aaafc829bb9a3d84d9aa7952593818ab43a62e08618c3eda85ec90aeb8b8"
+      },
+      {
+        "path": "src/commands/sync.ts",
+        "hash": "1a20973c100b6c8435e44f7b6a1180d9ac209c9c17fda1fd5ebbb931c40b2d2f"
+      },
+      {
+        "path": "src/commands/verify.ts",
+        "hash": "bbb9d3a457bd5041b258e6e2082fa9569d61cc6ddadb7db1a90f7cc9cdabb778"
+      },
+      {
+        "path": "src/core/archive.ts",
+        "hash": "41b26962f1e258de6225dadc29b6c680b857c3963e90338a565081a3e24ca024"
+      },
+      {
+        "path": "src/core/verify/freshness.ts",
+        "hash": "b741eeefa9f5057029162ed0043f7572485b59f9fe611febcf28f629a027c6c4"
+      },
+      {
+        "path": "src/core/verify/result-validator.ts",
+        "hash": "c9510d662a13257a300fb4430f917a67a6dd638bc332fa818e8bb7e07dcd570f"
+      },
+      {
+        "path": "src/core/verify/types.ts",
+        "hash": "f168a87a9fa330eb86276afb039d42df55cca70cef9da7fc72a9eb05e8835def"
+      },
+      {
+        "path": "test/commands/sync.test.ts",
+        "hash": "2b6f74745ec779d7e7f887ca171441a81a7d39cdc3c055e74365160f17119bd0"
+      },
+      {
+        "path": "test/commands/verify.test.ts",
+        "hash": "1ea6ea050cfbe54014854d29ee05864280c0cb7008c4e91a91f3f4c626e109e8"
+      },
+      {
+        "path": "test/core/archive.test.ts",
+        "hash": "f2013db52aaa35a26ac1bb1c2d6e966ecfbada5d712528086e34183b84c09cf9"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "aad218b55656c2c9df147060a9b6dfe39d9ac79f"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-19T05:46:38.980Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "No optimization opportunities found after archive-time sync. The remaining repetition is small and context-specific; extracting it would add indirection without improving the code while preserving behavior exactly."
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-19T05:46:22.174Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "1b0545ef1dc3d05fdc79feca37599c9cd9f39920aeab803277ae7ff2dcf1282b",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "canonical_phase1_explicit_evidence",
+        "evidenceFiles": [
+          "openspec/changes/improve-verify-gate-failure-messaging/design.md",
+          "openspec/changes/improve-verify-gate-failure-messaging/opsx-delta.yaml",
+          "openspec/changes/improve-verify-gate-failure-messaging/proposal.md",
+          "openspec/changes/improve-verify-gate-failure-messaging/specs/cli-sync/spec.md",
+          "openspec/changes/improve-verify-gate-failure-messaging/specs/verify-freshness-engine/spec.md",
+          "openspec/changes/improve-verify-gate-failure-messaging/tasks.md",
+          "openspec/project.opsx.yaml",
+          "src/commands/sync.ts",
+          "src/commands/verify.ts",
+          "src/core/archive.ts",
+          "src/core/verify/freshness.ts",
+          "src/core/verify/result-validator.ts",
+          "src/core/verify/types.ts",
+          "test/commands/sync.test.ts",
+          "test/commands/verify.test.ts",
+          "test/core/archive.test.ts"
+        ],
+        "evidenceFingerprint": "b473c67f7ed4a137f76909661a232dd08964f025abcf650887491f60e6a1a779",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/improve-verify-gate-failure-messaging/design.md",
+            "hash": "6cb883091c0e379907df72b152e9ce9ff9ce998440e0e88e9d6490ce306de29f"
+          },
+          {
+            "path": "openspec/changes/improve-verify-gate-failure-messaging/opsx-delta.yaml",
+            "hash": "4743eda0287f8940cc7499a539891efb182faac703e81e60c178cbce6987b74e"
+          },
+          {
+            "path": "openspec/changes/improve-verify-gate-failure-messaging/proposal.md",
+            "hash": "610019bd76006b4d3e3880b39a6bb07085ac8b7411ca09b5d7a14f6f0822933d"
+          },
+          {
+            "path": "openspec/changes/improve-verify-gate-failure-messaging/specs/cli-sync/spec.md",
+            "hash": "e239c333934d5c384fa5cc8486059fccdac8dff485a297e255fab252c0fb4edb"
+          },
+          {
+            "path": "openspec/changes/improve-verify-gate-failure-messaging/specs/verify-freshness-engine/spec.md",
+            "hash": "5d7f64f98341838acae737c22c116d0f4d4580fc5af214c6248179dbb6869375"
+          },
+          {
+            "path": "openspec/changes/improve-verify-gate-failure-messaging/tasks.md",
+            "hash": "1b0545ef1dc3d05fdc79feca37599c9cd9f39920aeab803277ae7ff2dcf1282b"
+          },
+          {
+            "path": "openspec/project.opsx.yaml",
+            "hash": "1a50aaafc829bb9a3d84d9aa7952593818ab43a62e08618c3eda85ec90aeb8b8"
+          },
+          {
+            "path": "src/commands/sync.ts",
+            "hash": "1a20973c100b6c8435e44f7b6a1180d9ac209c9c17fda1fd5ebbb931c40b2d2f"
+          },
+          {
+            "path": "src/commands/verify.ts",
+            "hash": "bbb9d3a457bd5041b258e6e2082fa9569d61cc6ddadb7db1a90f7cc9cdabb778"
+          },
+          {
+            "path": "src/core/archive.ts",
+            "hash": "41b26962f1e258de6225dadc29b6c680b857c3963e90338a565081a3e24ca024"
+          },
+          {
+            "path": "src/core/verify/freshness.ts",
+            "hash": "b741eeefa9f5057029162ed0043f7572485b59f9fe611febcf28f629a027c6c4"
+          },
+          {
+            "path": "src/core/verify/result-validator.ts",
+            "hash": "c9510d662a13257a300fb4430f917a67a6dd638bc332fa818e8bb7e07dcd570f"
+          },
+          {
+            "path": "src/core/verify/types.ts",
+            "hash": "f168a87a9fa330eb86276afb039d42df55cca70cef9da7fc72a9eb05e8835def"
+          },
+          {
+            "path": "test/commands/sync.test.ts",
+            "hash": "2b6f74745ec779d7e7f887ca171441a81a7d39cdc3c055e74365160f17119bd0"
+          },
+          {
+            "path": "test/commands/verify.test.ts",
+            "hash": "1ea6ea050cfbe54014854d29ee05864280c0cb7008c4e91a91f3f4c626e109e8"
+          },
+          {
+            "path": "test/core/archive.test.ts",
+            "hash": "f2013db52aaa35a26ac1bb1c2d6e966ecfbada5d712528086e34183b84c09cf9"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "aad218b55656c2c9df147060a9b6dfe39d9ac79f"
+      }
+    }
+  }
+}

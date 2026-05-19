@@ -121,7 +121,12 @@ describe('ArchiveCommand', () => {
       const changeName = 'missing-verify';
       await fs.mkdir(path.join(tempDir, 'openspec', 'changes', changeName), { recursive: true });
 
-      await expect(archiveCommand.execute(changeName, { yes: true })).rejects.toThrow('Verify gate failed: MISSING');
+      await expect(archiveCommand.execute(changeName, { yes: true })).rejects.toThrow(
+        'openspec verify phase1 missing-verify'
+      );
+      await expect(archiveCommand.execute(changeName, { yes: true })).rejects.toThrow(
+        'openspec archive missing-verify --no-verify'
+      );
     });
 
     it('should archive when verify is fresh and no sync is required', async () => {

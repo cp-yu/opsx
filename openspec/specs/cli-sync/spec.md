@@ -43,32 +43,33 @@ openspec sync [change-name] [--no-validate]
 
 `openspec sync` SHALL 复用 `change-sync` 契约执行同步。
 
-#### Scenario: 存在 delta specs 和 OPSX delta
-- **GIVEN** change 目录中存在 `specs/` 下的 delta spec 文件
-- **AND** 存在 `opsx-delta.yaml`
-- **WHEN** 执行 sync
-- **THEN** 将 delta specs 合并到 `openspec/specs/` 下对应的主 spec
-- **AND** 将 OPSX delta 合并到三个 OPSX 文件
+在同步执行之前，系统 SHALL 检查 verify gate（通过 `checkFreshness` 和 `checkArchiveCompatibility`），除非用户传入 `--no-verify`。
+
+#### Scenario: verify gate 失败输出可操作指引
+
+- **GIVEN** 用户执行 `openspec sync my-change`
+- **AND** `.verify-result.json` 存在但 freshness 为 STALE
+- **WHEN** verify gate 检查失败
+- **THEN** 错误输出 SHALL 包含变更文件列表
+- **AND** 包含建议重新 verify 的命令
+- **AND** 包含 `--no-verify` 跳过选项
+- **AND** exit code 非 0
+
+#### Scenario: verify gate 通过后执行同步
+
+- **GIVEN** 用户执行 `openspec sync my-change`
+- **AND** freshness 为 FRESH 且 archiveCompatibility 为 compatible
+- **WHEN** verify gate 检查通过
+- **THEN** 继续执行同步流程
 - **AND** 输出同步摘要
 
-#### Scenario: 仅存在 delta specs
-- **GIVEN** change 目录中存在 delta spec 文件
-- **AND** 不存在 `opsx-delta.yaml`
-- **WHEN** 执行 sync
-- **THEN** 仅同步 delta specs
-- **AND** 输出 `opsx: no-delta`
+#### Scenario: --no-verify 跳过 verify gate
 
-#### Scenario: 仅存在 OPSX delta
-- **GIVEN** change 目录中不存在 delta spec 文件
-- **AND** 存在 `opsx-delta.yaml`
-- **WHEN** 执行 sync
-- **THEN** 仅同步 OPSX delta
-- **AND** 输出 `specs: no-delta`
-
-#### Scenario: 无需同步
-- **GIVEN** change 目录中既无 delta specs 也无 `opsx-delta.yaml`
-- **WHEN** 执行 sync
-- **THEN** 输出 `No sync required.` 并成功退出（exit code 0）
+- **GIVEN** 用户执行 `openspec sync my-change --no-verify`
+- **AND** freshness 为 STALE
+- **WHEN** 命令执行
+- **THEN** 跳过 verify gate 直接进入同步
+- **AND** 不输出 `formatVerifyGateFailure` 结果
 
 ### Requirement: 不触发归档
 
@@ -100,4 +101,15 @@ When `openspec sync` creates or rebuilds formal specs, the command SHALL consume
 - **WHEN** sync updates an existing formal spec through delta reconciliation
 - **THEN** the command SHALL limit generated prose to the sync contract
 - **AND** SHALL NOT inject unrelated hardcoded English guidance into unaffected sections
+
+### Requirement: --no-verify 选项
+
+`openspec sync` SHALL 提供 `--no-verify` 选项，跳过 verify gate 检查。
+
+#### Scenario: --no-verify 开关
+
+- **WHEN** 用户执行 `openspec sync my-change --no-verify`
+- **THEN** `skipVerify` 设为 `true`
+- **AND** 不调用 `checkFreshness` 或 `checkArchiveCompatibility`
+- **AND** 同步照常执行
 

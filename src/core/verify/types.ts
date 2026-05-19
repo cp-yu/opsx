@@ -55,10 +55,12 @@ export type Phase2Input = Phase2OptimizationInput | Phase2VerificationInput;
 export interface EvidenceFingerprint {
   hash: string;
   skippedFiles: string[];
-  entries: Array<{
-    path: string;
-    hash: string;
-  }>;
+  entries: EvidenceFingerprintEntry[];
+}
+
+export interface EvidenceFingerprintEntry {
+  path: string;
+  hash: string;
 }
 
 export interface VerificationContext {
@@ -66,6 +68,7 @@ export interface VerificationContext {
   executionMode?: string;
   evidenceFiles: string[];
   evidenceFingerprint: string;
+  evidenceFingerprintEntries?: EvidenceFingerprintEntry[];
   skippedEvidenceFiles?: string[];
   gitHeadCommit?: string;
   gitDiffSummary?: string;

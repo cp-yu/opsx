@@ -107,7 +107,12 @@ export class ArchiveCommand {
       const failures: string[] = [];
 
       if (freshness.status !== 'FRESH' || !compatibility?.compatible) {
-        failures.push(formatVerifyGateFailure(freshness, compatibility));
+        failures.push(
+          formatVerifyGateFailure(freshness, compatibility, {
+            changeName,
+            command: 'archive',
+          })
+        );
       }
       if (pendingSync && (pendingSync.specs > 0 || pendingSync.opsx)) {
         failures.push('Sync gate failed: pending delta specs or OPSX delta. Run openspec sync <change-name> first, or pass --no-verify to bypass.');

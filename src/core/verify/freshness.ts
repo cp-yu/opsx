@@ -14,6 +14,13 @@ import type {
 const execFileAsync = promisify(execFile);
 const ACCEPTABLE_RESULTS = new Set(['PASS', 'PASS_WITH_WARNINGS']);
 const ARCHIVE_COMPATIBLE_STATUSES = new Set(['SKIPPED', 'NOT_NEEDED', 'IMPROVED', 'DEGRADED']);
+const FINGERPRINT_DETAIL_PREFIX = 'evidenceFingerprint mismatch — modified files: ';
+const GIT_HEAD_DETAIL_PREFIX = 'gitHeadCommit changed: ';
+
+interface VerifyGateFailureContext {
+  changeName?: string;
+  command?: 'sync' | 'archive';
+}
 
 export async function computeTasksFileHash(tasksPath: string): Promise<string | null> {
   try {
@@ -111,7 +118,7 @@ export async function checkFreshness(
   baseChecks.evidenceFingerprint =
     fingerprint.hash === result.verificationContext?.evidenceFingerprint;
   if (!baseChecks.evidenceFingerprint) {
-    details.push('evidenceFingerprint does not match current evidence files');
+    details.push(describeFingerprintMismatch(result, fingerprint));
   }
 
   baseChecks.contractVersion = result.verificationContext?.contractVersion === '1.0';
@@ -119,9 +126,12 @@ export async function checkFreshness(
     details.push('verificationContext.contractVersion must be "1.0"');
   }
 
-  baseChecks.gitHeadCommit = await matchesGitHead(projectRoot, result.verificationContext?.gitHeadCommit);
+  const currentGitHead = await getCurrentGitHead(projectRoot);
+  baseChecks.gitHeadCommit = matchesGitHead(result.verificationContext?.gitHeadCommit, currentGitHead);
   if (!baseChecks.gitHeadCommit) {
-    details.push('gitHeadCommit does not match current HEAD');
+    details.push(
+      `${GIT_HEAD_DETAIL_PREFIX}${result.verificationContext?.gitHeadCommit ?? 'unknown'} → ${currentGitHead ?? 'unknown'}`
+    );
   }
 
   baseChecks.resultAcceptable = ACCEPTABLE_RESULTS.has(result.result);
@@ -177,19 +187,48 @@ export function getOptimizationStatus(verifyResult?: VerifyResult | null): strin
 
 export function formatVerifyGateFailure(
   freshness: FreshnessResult,
-  archiveCompatibility?: ArchiveCompatibility
+  archiveCompatibility?: ArchiveCompatibility,
+  context: VerifyGateFailureContext = {}
 ): string {
-  const lines = [
-    `Verify gate failed: ${freshness.status}`,
-    `result: ${freshness.verifyResult?.result ?? 'MISSING'}`,
-    `optimization.status: ${getOptimizationStatus(freshness.verifyResult)}`,
-  ];
+  const changeName = context.changeName ?? '<change-name>';
+  const command = context.command ?? 'sync';
+  const fingerprintFiles = parseFingerprintFiles(freshness.details);
+  const gitHeadChange = parseGitHeadChange(freshness.details);
+  const otherDetails = freshness.details.filter(
+    (detail) =>
+      !detail.startsWith(FINGERPRINT_DETAIL_PREFIX) &&
+      !detail.startsWith(GIT_HEAD_DETAIL_PREFIX)
+  );
+  const lines = [`✗ Verify gate failed — ${summarizeFailure(freshness, archiveCompatibility)}`];
+
+  if (fingerprintFiles.length > 0) {
+    lines.push('', '  证据文件指纹不匹配:');
+    for (const file of fingerprintFiles) {
+      lines.push(`    - ${file}`);
+    }
+  }
+
+  if (gitHeadChange) {
+    lines.push('', '  Git HEAD:', `    ${gitHeadChange}`);
+  }
+
   if (archiveCompatibility && !archiveCompatibility.compatible) {
-    lines.push(`archiveCompatibility: ${archiveCompatibility.blockReason}`);
+    lines.push('', '  Archive compatibility:', `    ${archiveCompatibility.blockReason}`);
   }
-  for (const detail of freshness.details) {
-    lines.push(`- ${detail}`);
+
+  if (otherDetails.length > 0) {
+    lines.push('', '  其他诊断:');
+    for (const detail of otherDetails) {
+      lines.push(`    - ${detail}`);
+    }
   }
+
+  lines.push(
+    '',
+    '  建议操作:',
+    `    openspec verify phase1 ${changeName}`,
+    `    openspec ${command} ${changeName} --no-verify`
+  );
   return lines.join('\n');
 }
 
@@ -197,16 +236,104 @@ export function hasPendingOptimization(optimization?: VerifyOptimization): boole
   return optimization?.status === 'PENDING_VERIFICATION';
 }
 
-async function matchesGitHead(projectRoot: string, recorded?: string): Promise<boolean> {
-  if (!recorded) {
+function matchesGitHead(recorded?: string, current?: string): boolean {
+  if (!recorded || !current) {
     return true;
   }
+  return current === recorded;
+}
+
+async function getCurrentGitHead(projectRoot: string): Promise<string | undefined> {
   try {
     const { stdout } = await execFileAsync('git', ['rev-parse', 'HEAD'], { cwd: projectRoot });
-    return stdout.trim() === recorded;
+    return stdout.trim() || undefined;
   } catch {
-    return true;
+    return undefined;
   }
+}
+
+function describeFingerprintMismatch(
+  result: VerifyResult,
+  fingerprint: EvidenceFingerprint
+): string {
+  const modifiedFiles = collectModifiedEvidenceFiles(result, fingerprint);
+  if (modifiedFiles.length === 0) {
+    return `${FINGERPRINT_DETAIL_PREFIX}unable to determine from legacy verify result`;
+  }
+  return `${FINGERPRINT_DETAIL_PREFIX}${modifiedFiles.join(', ')}`;
+}
+
+function collectModifiedEvidenceFiles(
+  result: VerifyResult,
+  fingerprint: EvidenceFingerprint
+): string[] {
+  const modifiedFiles = new Set<string>();
+  const recordedEntries = result.verificationContext?.evidenceFingerprintEntries ?? [];
+  const currentEntries = new Map(fingerprint.entries.map((entry) => [entry.path, entry.hash]));
+
+  if (recordedEntries.length > 0) {
+    const recordedMap = new Map(recordedEntries.map((entry) => [entry.path, entry.hash]));
+    for (const [filePath, recordedHash] of recordedMap) {
+      if (currentEntries.get(filePath) !== recordedHash) {
+        modifiedFiles.add(filePath);
+      }
+    }
+    for (const filePath of currentEntries.keys()) {
+      if (!recordedMap.has(filePath)) {
+        modifiedFiles.add(filePath);
+      }
+    }
+  }
+
+  for (const skippedFile of fingerprint.skippedFiles) {
+    modifiedFiles.add(skippedFile);
+  }
+
+  if (modifiedFiles.size === 0 && recordedEntries.length === 0) {
+    for (const filePath of result.verificationContext?.evidenceFiles ?? []) {
+      modifiedFiles.add(filePath.split(/[/\\]+/).join('/'));
+    }
+  }
+
+  return [...modifiedFiles].sort();
+}
+
+function summarizeFailure(
+  freshness: FreshnessResult,
+  archiveCompatibility?: ArchiveCompatibility
+): string {
+  if (freshness.status === 'MISSING') {
+    return '.verify-result.json is missing';
+  }
+  if (archiveCompatibility && !archiveCompatibility.compatible) {
+    return 'verification is stale or Phase 2 is not ready for archive';
+  }
+  if (freshness.status === 'STALE') {
+    return 'workspace changed since the last verify';
+  }
+  return freshness.status;
+}
+
+function parseFingerprintFiles(details: string[]): string[] {
+  const files = new Set<string>();
+  for (const detail of details) {
+    if (!detail.startsWith(FINGERPRINT_DETAIL_PREFIX)) {
+      continue;
+    }
+    const raw = detail.slice(FINGERPRINT_DETAIL_PREFIX.length).trim();
+    for (const file of raw.split(',').map((part) => part.trim()).filter(Boolean)) {
+      files.add(file);
+    }
+  }
+  return [...files];
+}
+
+function parseGitHeadChange(details: string[]): string | null {
+  const detail = details.find((item) => item.startsWith(GIT_HEAD_DETAIL_PREFIX));
+  if (!detail) {
+    return null;
+  }
+  return detail.slice(GIT_HEAD_DETAIL_PREFIX.length).trim();
 }
 
 function resolveEvidencePath(projectRoot: string, filePath: string): string {

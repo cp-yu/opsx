@@ -91,6 +91,19 @@ export function validateVerifyResult(result: unknown): ValidationResult<VerifyRe
     if (typeof context.evidenceFingerprint !== 'string' || !/^[a-f0-9]{64}$/.test(context.evidenceFingerprint)) {
       errors.push('verificationContext.evidenceFingerprint must be a sha256 hex string');
     }
+    if (
+      context.evidenceFingerprintEntries !== undefined &&
+      (!Array.isArray(context.evidenceFingerprintEntries) ||
+        !context.evidenceFingerprintEntries.every(
+          (entry) =>
+            isRecord(entry) &&
+            typeof entry.path === 'string' &&
+            typeof entry.hash === 'string' &&
+            /^[a-f0-9]{64}$/.test(entry.hash)
+        ))
+    ) {
+      errors.push('verificationContext.evidenceFingerprintEntries must be an array of { path, hash }');
+    }
   }
 
   if (result.optimization !== undefined) {

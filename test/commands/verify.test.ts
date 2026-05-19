@@ -1,8 +1,12 @@
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { execFile } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
+import { promisify } from 'util';
 import { runCLI } from '../helpers/run-cli.js';
+
+const execFileAsync = promisify(execFile);
 
 describe('openspec verify command', () => {
   let tempDir: string;
@@ -13,6 +17,11 @@ describe('openspec verify command', () => {
     await fs.mkdir(path.join(tempDir, 'src'), { recursive: true });
     await fs.writeFile(path.join(tempDir, 'openspec', 'changes', 'c1', 'tasks.md'), '- [x] task\n', 'utf-8');
     await fs.writeFile(path.join(tempDir, 'src', 'a.ts'), 'const a = 1;\n', 'utf-8');
+    await execFileAsync('git', ['init'], { cwd: tempDir });
+    await execFileAsync('git', ['config', 'user.name', 'OpenSpec Test'], { cwd: tempDir });
+    await execFileAsync('git', ['config', 'user.email', 'test@example.com'], { cwd: tempDir });
+    await execFileAsync('git', ['add', '.'], { cwd: tempDir });
+    await execFileAsync('git', ['commit', '-m', 'init'], { cwd: tempDir });
   });
 
   afterEach(async () => {
@@ -70,6 +79,76 @@ describe('openspec verify command', () => {
     expect(JSON.parse(result.stdout).errors).toContain(
       'result must be PASS, PASS_WITH_WARNINGS, or FAIL_NEEDS_REMEDIATION'
     );
+  });
+
+  it('reports modified evidence files when freshness becomes stale', async () => {
+    await runCLI([
+      'verify',
+      'phase1',
+      'c1',
+      '--input',
+      JSON.stringify({ result: 'PASS', issues: [], evidenceFiles: ['src/a.ts'] }),
+    ], { cwd: tempDir });
+
+    await fs.writeFile(path.join(tempDir, 'src', 'a.ts'), 'const a = 2;\n', 'utf-8');
+
+    const status = await runCLI(['verify', 'status', 'c1'], { cwd: tempDir });
+
+    expect(status.exitCode).toBe(1);
+    expect(status.stdout).toContain('证据文件指纹不匹配:');
+    expect(status.stdout).toContain('- src/a.ts');
+  });
+
+  it('reports git HEAD transitions when freshness becomes stale from new commits', async () => {
+    await runCLI([
+      'verify',
+      'phase1',
+      'c1',
+      '--input',
+      JSON.stringify({ result: 'PASS', issues: [], evidenceFiles: ['src/a.ts'] }),
+    ], { cwd: tempDir });
+
+    const phase1Result = JSON.parse(
+      await fs.readFile(path.join(tempDir, 'openspec', 'changes', 'c1', '.verify-result.json'), 'utf-8')
+    );
+    await fs.writeFile(path.join(tempDir, 'notes.md'), 'head changed\n', 'utf-8');
+    await execFileAsync('git', ['add', 'notes.md'], { cwd: tempDir });
+    await execFileAsync('git', ['commit', '-m', 'head-change'], { cwd: tempDir });
+
+    const status = await runCLI(['verify', 'status', 'c1'], { cwd: tempDir });
+    const currentHead = (
+      await execFileAsync('git', ['rev-parse', 'HEAD'], { cwd: tempDir })
+    ).stdout.trim();
+
+    expect(status.exitCode).toBe(1);
+    expect(status.stdout).toContain('Git HEAD:');
+    expect(status.stdout).toContain(
+      `${phase1Result.verificationContext.gitHeadCommit} → ${currentHead}`
+    );
+  });
+
+  it('formats verify gate failures with remediation guidance', async () => {
+    await runCLI([
+      'verify',
+      'phase1',
+      'c1',
+      '--input',
+      JSON.stringify({ result: 'PASS', issues: [], evidenceFiles: ['src/a.ts'] }),
+    ], { cwd: tempDir });
+
+    await fs.writeFile(path.join(tempDir, 'src', 'a.ts'), 'const a = 3;\n', 'utf-8');
+    await fs.writeFile(path.join(tempDir, 'notes.md'), 'second head change\n', 'utf-8');
+    await execFileAsync('git', ['add', 'notes.md'], { cwd: tempDir });
+    await execFileAsync('git', ['commit', '-m', 'second-head-change'], { cwd: tempDir });
+
+    const status = await runCLI(['verify', 'status', 'c1'], { cwd: tempDir });
+
+    expect(status.exitCode).toBe(1);
+    expect(status.stdout).toContain('Archive compatibility:');
+    expect(status.stdout).toContain('PENDING_VERIFICATION');
+    expect(status.stdout).toContain('建议操作:');
+    expect(status.stdout).toContain('openspec verify phase1 c1');
+    expect(status.stdout).toContain('openspec sync c1 --no-verify');
   });
 
   it('tracks optimization file hashes and rejects unapplied patches', async () => {
@@ -290,6 +369,9 @@ describe('openspec verify command', () => {
       await fs.readFile(path.join(tempDir, 'openspec', 'changes', 'c1', '.verify-result.json'), 'utf-8')
     );
     expect(finalResult.verificationContext.evidenceFingerprint).not.toBe(phase1Fingerprint);
+    expect(finalResult.verificationContext.evidenceFingerprintEntries).toEqual([
+      expect.objectContaining({ path: 'src/a.ts' }),
+    ]);
     expect(finalResult.optimization.status).toBe('IMPROVED');
 
     const status = await runCLI(['verify', 'status', 'c1', '--json'], { cwd: tempDir });

@@ -56,7 +56,12 @@ export async function syncCommand(
       ? checkArchiveCompatibility(freshness.verifyResult)
       : undefined;
     if (freshness.status !== 'FRESH' || !compatibility?.compatible) {
-      throw new Error(formatVerifyGateFailure(freshness, compatibility));
+      throw new Error(
+        formatVerifyGateFailure(freshness, compatibility, {
+          changeName: validatedChangeName,
+          command: 'sync',
+        })
+      );
     }
   }
 
