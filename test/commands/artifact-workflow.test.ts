@@ -3,6 +3,8 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
 import { runCLI } from '../helpers/run-cli.js';
+import { computeEvidenceFingerprint, computeTasksFileHash } from '../../src/core/verify/freshness.js';
+import type { VerifyOptimization, VerifyResultStatus } from '../../src/core/verify/types.js';
 
 describe('artifact-workflow CLI commands', () => {
   let tempDir: string;
@@ -76,6 +78,61 @@ describe('artifact-workflow CLI commands', () => {
     }
 
     return changeDir;
+  }
+
+  async function collectChangeFiles(changeDir: string): Promise<string[]> {
+    const collected: string[] = [];
+
+    async function walk(dir: string): Promise<void> {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          await walk(fullPath);
+          continue;
+        }
+        if (entry.name !== '.verify-result.json') {
+          collected.push(fullPath);
+        }
+      }
+    }
+
+    await walk(changeDir);
+    return collected.sort();
+  }
+
+  async function writeVerifyResult(
+    changeDir: string,
+    options: {
+      result?: VerifyResultStatus;
+      optimization?: VerifyOptimization;
+    } = {}
+  ): Promise<void> {
+    const evidenceFiles = (await collectChangeFiles(changeDir)).map((filePath) =>
+      normalizePaths(path.relative(tempDir, filePath))
+    );
+    const fingerprint = await computeEvidenceFingerprint(evidenceFiles, tempDir);
+    const tasksFileHash = await computeTasksFileHash(path.join(changeDir, 'tasks.md'));
+
+    await fs.writeFile(
+      path.join(changeDir, '.verify-result.json'),
+      JSON.stringify(
+        {
+          timestamp: '2026-05-19T00:00:00.000Z',
+          result: options.result ?? 'PASS',
+          issues: [],
+          tasksFileHash: tasksFileHash ?? '',
+          verificationContext: {
+            contractVersion: '1.0',
+            evidenceFiles,
+            evidenceFingerprint: fingerprint.hash,
+          },
+          optimization: options.optimization,
+        },
+        null,
+        2
+      )
+    );
   }
 
   describe('status command', () => {
@@ -498,7 +555,7 @@ apply:
       expect(result.stdout).toContain('work through pending tasks');
     });
 
-    it('shows all_done state when all tasks are complete', async () => {
+    it('shows needs_verify state when all tasks are complete but verify is missing', async () => {
       const changeDir = await createTestChange('done-apply', [
         'proposal',
         'design',
@@ -515,8 +572,106 @@ apply:
         cwd: tempDir,
       });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('complete ✓');
-      expect(result.stdout).toContain('ready to be archived');
+      expect(result.stdout).toContain('Verification Required');
+      expect(result.stdout).toContain('Phase 1 verification');
+    });
+
+    it('outputs needs_verify state in JSON when all tasks are complete but verify is missing', async () => {
+      const changeDir = await createTestChange('done-apply-json', [
+        'proposal',
+        'design',
+        'specs',
+        'tasks',
+      ]);
+      await fs.writeFile(path.join(changeDir, 'tasks.md'), '## Tasks\n- [x] Task 1\n- [x] Task 2');
+
+      const result = await runCLI(
+        ['instructions', 'apply', '--change', 'done-apply-json', '--json'],
+        { cwd: tempDir }
+      );
+      expect(result.exitCode).toBe(0);
+
+      const json = JSON.parse(result.stdout);
+      expect(json.state).toBe('needs_verify');
+      expect(json.instruction).toContain('Phase 1 verification');
+    });
+
+    it('outputs needs_seal state in JSON when phase 2 is still pending', async () => {
+      const changeDir = await createTestChange('needs-seal-apply', [
+        'proposal',
+        'design',
+        'specs',
+        'tasks',
+      ]);
+      await fs.writeFile(path.join(changeDir, 'tasks.md'), '## Tasks\n- [x] Task 1\n- [x] Task 2');
+      await writeVerifyResult(changeDir, {
+        optimization: {
+          status: 'PENDING_VERIFICATION',
+          attempts: [],
+        },
+      });
+
+      const result = await runCLI(
+        ['instructions', 'apply', '--change', 'needs-seal-apply', '--json'],
+        { cwd: tempDir }
+      );
+      expect(result.exitCode).toBe(0);
+
+      const json = JSON.parse(result.stdout);
+      expect(json.state).toBe('needs_seal');
+      expect(json.instruction).toContain('Phase 2 optimization and Phase 3 seal');
+    });
+
+    it('outputs needs_verify state in JSON when optimization aborted unsafe', async () => {
+      const changeDir = await createTestChange('aborted-unsafe-apply', [
+        'proposal',
+        'design',
+        'specs',
+        'tasks',
+      ]);
+      await fs.writeFile(path.join(changeDir, 'tasks.md'), '## Tasks\n- [x] Task 1\n- [x] Task 2');
+      await writeVerifyResult(changeDir, {
+        optimization: {
+          status: 'ABORTED_UNSAFE',
+          attempts: [],
+        },
+      });
+
+      const result = await runCLI(
+        ['instructions', 'apply', '--change', 'aborted-unsafe-apply', '--json'],
+        { cwd: tempDir }
+      );
+      expect(result.exitCode).toBe(0);
+
+      const json = JSON.parse(result.stdout);
+      expect(json.state).toBe('needs_verify');
+      expect(json.instruction).toContain('Phase 1 verification');
+    });
+
+    it('outputs all_done state in JSON when verify is fresh and archive-compatible', async () => {
+      const changeDir = await createTestChange('all-done-apply', [
+        'proposal',
+        'design',
+        'specs',
+        'tasks',
+      ]);
+      await fs.writeFile(path.join(changeDir, 'tasks.md'), '## Tasks\n- [x] Task 1\n- [x] Task 2');
+      await writeVerifyResult(changeDir, {
+        optimization: {
+          status: 'NOT_NEEDED',
+          attempts: [],
+        },
+      });
+
+      const result = await runCLI(
+        ['instructions', 'apply', '--change', 'all-done-apply', '--json'],
+        { cwd: tempDir }
+      );
+      expect(result.exitCode).toBe(0);
+
+      const json = JSON.parse(result.stdout);
+      expect(json.state).toBe('all_done');
+      expect(json.instruction).toContain('ready to be archived');
     });
 
     it('uses spec-driven schema apply configuration', async () => {

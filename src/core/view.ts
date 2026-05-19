@@ -49,9 +49,9 @@ export class ViewCommand {
       });
     }
 
-    // Display completed changes
+    // Display task-complete changes
     if (changesData.completed.length > 0) {
-      console.log(chalk.bold.green('\nCompleted Changes'));
+      console.log(chalk.bold.green('\nTasks Done'));
       console.log('─'.repeat(60));
       changesData.completed.forEach((change) => {
         console.log(`  ${chalk.green('✓')} ${change.name}`);
@@ -165,8 +165,6 @@ export class ViewCommand {
     changesData: { draft: any[]; active: any[]; completed: any[] },
     specsData: any[]
   ): void {
-    const totalChanges =
-      changesData.draft.length + changesData.active.length + changesData.completed.length;
     const totalSpecs = specsData.length;
     const totalRequirements = specsData.reduce((sum, spec) => sum + spec.requirementCount, 0);
 
@@ -179,11 +177,6 @@ export class ViewCommand {
       completedTasks += change.progress.completed;
     });
 
-    changesData.completed.forEach(() => {
-      // Completed changes count as 100% done (we don't know exact task count)
-      // This is a simplification
-    });
-
     console.log(chalk.bold('Summary:'));
     console.log(
       `  ${chalk.cyan('●')} Specifications: ${chalk.bold(totalSpecs)} specs, ${chalk.bold(totalRequirements)} requirements`
@@ -194,7 +187,7 @@ export class ViewCommand {
     console.log(
       `  ${chalk.yellow('●')} Active Changes: ${chalk.bold(changesData.active.length)} in progress`
     );
-    console.log(`  ${chalk.green('●')} Completed Changes: ${chalk.bold(changesData.completed.length)}`);
+    console.log(`  ${chalk.green('●')} Tasks Done: ${chalk.bold(changesData.completed.length)}`);
 
     if (totalTasks > 0) {
       const overallProgress = Math.round((completedTasks / totalTasks) * 100);

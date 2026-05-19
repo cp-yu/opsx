@@ -57,8 +57,9 @@ describe('ViewCommand', () => {
     expect(output).toContain('no-tasks-change');
 
     // Completed section should only contain changes with all tasks done
-    expect(output).toContain('Completed Changes');
+    expect(output).toContain('Tasks Done');
     expect(output).toContain('completed-change');
+    expect(output).toContain('Tasks Done: 1');
 
     // Verify empty-change and no-tasks-change are in Draft section (marked with ○)
     const draftLines = logOutput
@@ -126,4 +127,3 @@ describe('ViewCommand', () => {
     ]);
   });
 });
-

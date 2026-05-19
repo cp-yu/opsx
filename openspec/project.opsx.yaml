@@ -132,11 +132,11 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.instructions
-    intent: 输出用于创建制品或应用任务的丰富指令；spec-driven tasks 指令要求生成分离的 Actions/Checks sections，使用 A/C checkbox ID 和 Covers 关联表达 goal-driven 验证计划。
+    intent: 输出用于创建制品或应用任务的丰富指令。apply 指令返回的 state 字段新增 needs_verify 和 needs_seal 取值
     status: active
     type: capability
   - id: cap.cli.list
-    intent: 列出变更或规约，支持过滤和 JSON 输出
+    intent: 列出变更或规约，支持过滤、JSON 输出和 verifyStatus 字段
     status: active
     type: capability
   - id: cap.cli.new-change
@@ -176,7 +176,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.view
-    intent: 显示规约和变更的交互式仪表板
+    intent: 显示规约和变更的交互式仪表板，task 全部完成的分类标签改为 "Tasks Done"
     status: active
     type: capability
   - id: cap.config.global
@@ -284,7 +284,7 @@ capabilities:
     intent: 确定性 freshness 判定引擎，用 TypeScript 代码实现 tasksFileHash、evidenceFingerprint 计算和 FRESH/STALE/MISSING 判定。evidenceFingerprint 基于文件内容哈希（而非元数据）计算，消除文件系统触碰导致的误报 STALE。Phase 2 verification PASS 时重算 evidenceFingerprint，使其覆盖优化后的文件状态
     type: capability
   - id: cap.apply.verify-integration
-    intent: apply 命令内置 Phase 1 一致性验证和 Phase 2 优化循环，由 subagent 执行验证判断和优化提案，主 agent 仅负责编码。Phase 2 optimization CLI 调用 MUST 在 patch 应用之前执行，确保 affectedFileHashes 采样 pre-patch 磁盘状态
+    intent: apply 命令内置 Phase 1 一致性验证和 Phase 2 优化循环。模板对 needs_verify 状态直接进入 Phase 1，对 needs_seal 状态直接进入 Phase 2/3，不需用户手动触发
     type: capability
   - id: cap.apply.subagent-orchestration
     intent: apply 工作流中严格区分编码角色（主 agent）和判断角色（subagent reviewer/optimizer），保持关注点分离
@@ -313,4 +313,7 @@ capabilities:
     type: capability
   - id: cap.validation.spec-section-type-cross-check
     intent: 在 change delta spec 验证中增加 section-type 与主 spec header 存在性的交叉验证，确保 MODIFIED/REMOVED/RENAMED 引用的 header 存在于主 spec，ADDED 的 header 不存在于主 spec
+    type: capability
+  - id: cap.cli.verify-aware-instructions
+    intent: instructions apply 命令在判定 change 完成状态时集成 verify freshness 检查，返回 needs_verify/needs_seal/all_done 三态而非仅基于 task checkbox
     type: capability

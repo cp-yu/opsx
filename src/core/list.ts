@@ -4,12 +4,14 @@ import { getTaskProgressForChange, formatTaskStatus } from '../utils/task-progre
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { MarkdownParser } from './parsers/markdown-parser.js';
+import { checkFreshness } from './verify/freshness.js';
 
 interface ChangeInfo {
   name: string;
   completedTasks: number;
   totalTasks: number;
   lastModified: Date;
+  verifyStatus?: 'MISSING' | 'STALE' | 'FRESH';
 }
 
 interface ListOptions {
@@ -110,11 +112,13 @@ export class ListCommand {
         const progress = await getTaskProgressForChange(changesDir, changeDir);
         const changePath = path.join(changesDir, changeDir);
         const lastModified = await getLastModified(changePath);
+        const verifyStatus = json ? (await checkFreshness(changePath, targetPath)).status : undefined;
         changes.push({
           name: changeDir,
           completedTasks: progress.completed,
           totalTasks: progress.total,
-          lastModified
+          lastModified,
+          verifyStatus,
         });
       }
 
@@ -132,7 +136,8 @@ export class ListCommand {
           completedTasks: c.completedTasks,
           totalTasks: c.totalTasks,
           lastModified: c.lastModified.toISOString(),
-          status: c.totalTasks === 0 ? 'no-tasks' : c.completedTasks === c.totalTasks ? 'complete' : 'in-progress'
+          status: c.totalTasks === 0 ? 'no-tasks' : c.completedTasks === c.totalTasks ? 'complete' : 'in-progress',
+          verifyStatus: c.verifyStatus ?? 'MISSING',
         }));
         console.log(JSON.stringify({ changes: jsonOutput }, null, 2));
         return;

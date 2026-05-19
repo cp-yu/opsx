@@ -28,6 +28,10 @@ describe('apply change workflow template', () => {
       expect(template).toContain('optimization.optRetries');
       expect(template).toContain('failed direction');
       expect(template).toContain('--skip-optimization');
+      expect(template).toContain('state: "needs_verify"');
+      expect(template).toContain('state: "needs_seal"');
+      expect(template).toContain('skip back to Phase 1');
+      expect(template).toContain('continue with Phase 2/3');
       expect(template).toContain(VERIFY_CLI_JSON_SCHEMA_REFERENCE);
       expect(template).toContain(VERIFY_ERROR_RECOVERY_GUIDE);
       expect(template).toContain(VERIFY_STATE_MACHINE_DIAGRAM);

@@ -21,6 +21,7 @@ import {
   type TaskItem,
   type ApplyInstructions,
 } from './shared.js';
+import { checkArchiveCompatibility, checkFreshness } from '../../core/verify/freshness.js';
 
 // -----------------------------------------------------------------------------
 // Types
@@ -257,6 +258,44 @@ function parseTasksFile(content: string): TaskItem[] {
   return tasks;
 }
 
+async function resolveCompletedApplyState(
+  changeDir: string,
+  projectRoot: string
+): Promise<Pick<ApplyInstructions, 'state' | 'instruction'>> {
+  const freshness = await checkFreshness(changeDir, projectRoot);
+
+  if (freshness.status !== 'FRESH') {
+    return {
+      state: 'needs_verify',
+      instruction:
+        'All tasks are complete, but verify is missing or stale.\nRun Phase 1 verification before archiving this change.',
+    };
+  }
+
+  const verifyResult = freshness.verifyResult;
+  if (!verifyResult || verifyResult.optimization?.status === 'ABORTED_UNSAFE') {
+    return {
+      state: 'needs_verify',
+      instruction:
+        'All tasks are complete, but verify is missing or stale.\nRun Phase 1 verification before archiving this change.',
+    };
+  }
+
+  if (!checkArchiveCompatibility(verifyResult).compatible) {
+    return {
+      state: 'needs_seal',
+      instruction:
+        'All tasks are complete and Phase 1 passed, but final verify work is still pending.\nRun Phase 2 optimization and Phase 3 seal before archiving this change.',
+    };
+  }
+
+  return {
+    state: 'all_done',
+    instruction:
+      'All tasks are complete and verify is fresh.\nThis change is ready to be archived.',
+  };
+}
+
 /**
  * Generates apply instructions for implementing tasks from a change.
  * Schema-aware: reads apply phase configuration from schema to determine
@@ -334,8 +373,7 @@ export async function generateApplyInstructions(
     state = 'blocked';
     instruction = `The ${tracksFilename} file exists but contains no tasks.\nAdd tasks to ${tracksFilename} or regenerate it with openspec-continue-change.`;
   } else if (tracksFile && remaining === 0 && total > 0) {
-    state = 'all_done';
-    instruction = 'All tasks are complete! This change is ready to be archived.\nConsider running tests and reviewing the changes before archiving.';
+    ({ state, instruction } = await resolveCompletedApplyState(changeDir, projectRoot));
   } else if (!tracksFile) {
     // No tracking file configured in schema - ready to apply
     state = 'ready';
@@ -400,6 +438,16 @@ export function printApplyInstructionsText(instructions: ApplyInstructions): voi
     console.log();
     console.log(`Missing artifacts: ${missingArtifacts.join(', ')}`);
     console.log('Use the openspec-continue-change skill to create these first.');
+    console.log();
+  }
+
+  if (state === 'needs_verify') {
+    console.log('### Verification Required');
+    console.log();
+  }
+
+  if (state === 'needs_seal') {
+    console.log('### Seal Required');
     console.log();
   }
 

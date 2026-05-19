@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
 import { ListCommand } from '../../src/core/list.js';
+import { computeEvidenceFingerprint, computeTasksFileHash } from '../../src/core/verify/freshness.js';
 
 describe('ListCommand', () => {
   let tempDir: string;
@@ -29,6 +30,56 @@ describe('ListCommand', () => {
     // Clean up temp directory
     await fs.rm(tempDir, { recursive: true, force: true });
   });
+
+  async function collectChangeFiles(changeDir: string): Promise<string[]> {
+    const files: string[] = [];
+
+    async function walk(dir: string): Promise<void> {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          await walk(fullPath);
+        } else if (entry.name !== '.verify-result.json') {
+          files.push(fullPath);
+        }
+      }
+    }
+
+    await walk(changeDir);
+    return files.sort();
+  }
+
+  async function writeFreshVerifyResult(changeDir: string): Promise<void> {
+    const evidenceFiles = (await collectChangeFiles(changeDir)).map((filePath) =>
+      path.relative(tempDir, filePath).split(path.sep).join('/')
+    );
+    const fingerprint = await computeEvidenceFingerprint(evidenceFiles, tempDir);
+    const tasksFileHash = await computeTasksFileHash(path.join(changeDir, 'tasks.md'));
+
+    await fs.writeFile(
+      path.join(changeDir, '.verify-result.json'),
+      JSON.stringify(
+        {
+          timestamp: '2026-05-19T00:00:00.000Z',
+          result: 'PASS',
+          issues: [],
+          tasksFileHash: tasksFileHash ?? '',
+          verificationContext: {
+            contractVersion: '1.0',
+            evidenceFiles,
+            evidenceFingerprint: fingerprint.hash,
+          },
+          optimization: {
+            status: 'NOT_NEEDED',
+            attempts: [],
+          },
+        },
+        null,
+        2
+      )
+    );
+  }
 
   describe('execute', () => {
     it('should handle missing openspec/changes directory', async () => {
@@ -160,6 +211,39 @@ Regular text that should be ignored
       expect(logOutput.some(line => line.includes('completed') && line.includes('✓ Complete'))).toBe(true);
       expect(logOutput.some(line => line.includes('partial') && line.includes('1/3 tasks'))).toBe(true);
       expect(logOutput.some(line => line.includes('no-tasks') && line.includes('No tasks'))).toBe(true);
+    });
+
+    it('should include verifyStatus in JSON output', async () => {
+      const changesDir = path.join(tempDir, 'openspec', 'changes');
+
+      const freshDir = path.join(changesDir, 'fresh-change');
+      await fs.mkdir(freshDir, { recursive: true });
+      await fs.writeFile(path.join(freshDir, 'proposal.md'), '## Why\nfresh\n\n## What Changes\n- ok');
+      await fs.writeFile(path.join(freshDir, 'tasks.md'), '- [x] Task 1\n');
+      await writeFreshVerifyResult(freshDir);
+
+      const staleDir = path.join(changesDir, 'stale-change');
+      await fs.mkdir(staleDir, { recursive: true });
+      await fs.writeFile(path.join(staleDir, 'proposal.md'), '## Why\nstale\n\n## What Changes\n- ok');
+      await fs.writeFile(path.join(staleDir, 'tasks.md'), '- [x] Task 1\n');
+      await writeFreshVerifyResult(staleDir);
+      await fs.writeFile(path.join(staleDir, 'proposal.md'), '## Why\nstale modified\n\n## What Changes\n- ok');
+
+      const missingDir = path.join(changesDir, 'missing-change');
+      await fs.mkdir(missingDir, { recursive: true });
+      await fs.writeFile(path.join(missingDir, 'proposal.md'), '## Why\nmissing\n\n## What Changes\n- ok');
+      await fs.writeFile(path.join(missingDir, 'tasks.md'), '- [ ] Task 1\n');
+
+      const listCommand = new ListCommand();
+      await listCommand.execute(tempDir, 'changes', { json: true });
+
+      const output = JSON.parse(logOutput[0]);
+      const changes = Object.fromEntries(output.changes.map((change: any) => [change.name, change]));
+      expect(changes['fresh-change'].verifyStatus).toBe('FRESH');
+      expect(changes['stale-change'].verifyStatus).toBe('STALE');
+      expect(changes['missing-change'].verifyStatus).toBe('MISSING');
+      expect(changes['fresh-change'].status).toBe('complete');
+      expect(changes['missing-change'].status).toBe('in-progress');
     });
   });
 });

@@ -1,0 +1,29 @@
+ADDED:
+  capabilities:
+    - id: cap.cli.verify-aware-instructions
+      type: capability
+      intent: instructions apply 命令在判定 change 完成状态时集成 verify freshness 检查，返回 needs_verify/needs_seal/all_done 三态而非仅基于 task checkbox
+  relations:
+    - from: cap.cli.verify-aware-instructions
+      to: dom.cli
+      type: contains
+    - from: cap.cli.verify-aware-instructions
+      to: dom.verify
+      type: depends_on
+    - from: cap.cli.verify-aware-instructions
+      to: cap.verify.freshness-engine
+      type: depends_on
+    - from: cap.apply.verify-integration
+      to: cap.cli.verify-aware-instructions
+      type: depends_on
+
+MODIFIED:
+  capabilities:
+    - id: cap.cli.list
+      intent: 列出变更或规约，支持过滤、JSON 输出和 verifyStatus 字段
+    - id: cap.cli.view
+      intent: 显示规约和变更的交互式仪表板，task 全部完成的分类标签改为 "Tasks Done"
+    - id: cap.apply.verify-integration
+      intent: apply 命令内置 Phase 1 一致性验证和 Phase 2 优化循环。模板对 needs_verify 状态直接进入 Phase 1，对 needs_seal 状态直接进入 Phase 2/3，不需用户手动触发
+    - id: cap.cli.instructions
+      intent: 输出用于创建制品或应用任务的丰富指令。apply 指令返回的 state 字段新增 needs_verify 和 needs_seal 取值

@@ -1,0 +1,85 @@
+{
+  "timestamp": "2026-05-19T04:42:52.980Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "43a3703fd4764757ded6ace0d6a238b2d4f58f692afa8124227752be35e7d495",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      "openspec/changes/fix-apply-instructions-verify-gate/design.md",
+      "openspec/changes/fix-apply-instructions-verify-gate/opsx-delta.yaml",
+      "openspec/changes/fix-apply-instructions-verify-gate/proposal.md",
+      "openspec/changes/fix-apply-instructions-verify-gate/specs/apply-change-workflow/spec.md",
+      "openspec/changes/fix-apply-instructions-verify-gate/specs/artifact-workflow-status/spec.md",
+      "openspec/changes/fix-apply-instructions-verify-gate/specs/verify-aware-apply-instructions/spec.md",
+      "openspec/changes/fix-apply-instructions-verify-gate/tasks.md",
+      "openspec/project.opsx.yaml",
+      "src/commands/workflow/instructions.ts",
+      "src/commands/workflow/shared.ts",
+      "src/core/list.ts",
+      "src/core/templates/workflows/apply-change.ts",
+      "src/core/templates/workflows/continue-change.ts",
+      "src/core/verify/freshness.ts",
+      "src/core/view.ts",
+      "test/commands/artifact-workflow.test.ts",
+      "test/core/list.test.ts",
+      "test/core/templates/apply-change.test.ts",
+      "test/core/templates/continue-change.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts",
+      "test/core/view.test.ts"
+    ],
+    "evidenceFingerprint": "98dbdd6c11446abf2e4837164acdd9388c942861eec5e19e3e67b6c962e67f17",
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "3fd6cd48cd22cf2f08f0ecb5e5020d15642a7d0d",
+    "gitDiffSummary": "Focused follow-up diff changes resolveCompletedApplyState() so ABORTED_UNSAFE maps to needs_verify and adds a dedicated regression test. Targeted tests and build passed."
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-19T04:45:05.995Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "No optimization opportunities found after the focused ABORTED_UNSAFE follow-up fix; the remaining diff is already minimal and behavior-preserving."
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-19T04:42:52.980Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "43a3703fd4764757ded6ace0d6a238b2d4f58f692afa8124227752be35e7d495",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          "openspec/changes/fix-apply-instructions-verify-gate/design.md",
+          "openspec/changes/fix-apply-instructions-verify-gate/opsx-delta.yaml",
+          "openspec/changes/fix-apply-instructions-verify-gate/proposal.md",
+          "openspec/changes/fix-apply-instructions-verify-gate/specs/apply-change-workflow/spec.md",
+          "openspec/changes/fix-apply-instructions-verify-gate/specs/artifact-workflow-status/spec.md",
+          "openspec/changes/fix-apply-instructions-verify-gate/specs/verify-aware-apply-instructions/spec.md",
+          "openspec/changes/fix-apply-instructions-verify-gate/tasks.md",
+          "openspec/project.opsx.yaml",
+          "src/commands/workflow/instructions.ts",
+          "src/commands/workflow/shared.ts",
+          "src/core/list.ts",
+          "src/core/templates/workflows/apply-change.ts",
+          "src/core/templates/workflows/continue-change.ts",
+          "src/core/verify/freshness.ts",
+          "src/core/view.ts",
+          "test/commands/artifact-workflow.test.ts",
+          "test/core/list.test.ts",
+          "test/core/templates/apply-change.test.ts",
+          "test/core/templates/continue-change.test.ts",
+          "test/core/templates/skill-templates-parity.test.ts",
+          "test/core/view.test.ts"
+        ],
+        "evidenceFingerprint": "98dbdd6c11446abf2e4837164acdd9388c942861eec5e19e3e67b6c962e67f17",
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "3fd6cd48cd22cf2f08f0ecb5e5020d15642a7d0d",
+        "gitDiffSummary": "Focused follow-up diff changes resolveCompletedApplyState() so ABORTED_UNSAFE maps to needs_verify and adds a dedicated regression test. Targeted tests and build passed."
+      }
+    }
+  }
+}

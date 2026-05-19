@@ -32,7 +32,7 @@ export interface ApplyInstructions {
     remaining: number;
   };
   tasks: TaskItem[];
-  state: 'blocked' | 'all_done' | 'ready';
+  state: 'blocked' | 'all_done' | 'ready' | 'needs_verify' | 'needs_seal';
   missingArtifacts?: string[];
   instruction: string;
 }

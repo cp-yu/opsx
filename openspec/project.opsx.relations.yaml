@@ -348,3 +348,15 @@ relations:
   - from: cap.validation.spec-section-type-cross-check
     type: relates_to
     to: cap.cli.validate
+  - from: cap.cli.verify-aware-instructions
+    type: contains
+    to: dom.cli
+  - from: cap.cli.verify-aware-instructions
+    type: depends_on
+    to: dom.verify
+  - from: cap.cli.verify-aware-instructions
+    type: depends_on
+    to: cap.verify.freshness-engine
+  - from: cap.apply.verify-integration
+    type: depends_on
+    to: cap.cli.verify-aware-instructions
