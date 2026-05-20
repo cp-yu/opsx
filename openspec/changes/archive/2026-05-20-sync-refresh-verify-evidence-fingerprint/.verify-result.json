@@ -1,0 +1,97 @@
+{
+  "timestamp": "2026-05-20T08:24:19.145Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "8a92d15f5df6164d4936db930ca2c1946ea71ad0b890293be254a6ac5abe6abf",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "apply-change",
+    "evidenceFiles": [
+      "src/core/change-sync.ts",
+      "src/core/verify/freshness.ts",
+      "test/commands/sync.test.ts",
+      "test/core/archive.test.ts",
+      "test/core/verify/freshness.test.ts"
+    ],
+    "evidenceFingerprint": "ccaabd48581d8b2f52ebed2cdc494df317059ac512eb2bee08e958b073ab5636",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "src/core/change-sync.ts",
+        "hash": "5727b98c3d2d962ab22d15d56e21771de22e4a0af8c8c5d25901e586a526883d"
+      },
+      {
+        "path": "src/core/verify/freshness.ts",
+        "hash": "dac419f9a31c129be2136e90b57f1b7930adba3ad025cbed6ab1cafec04a4c81"
+      },
+      {
+        "path": "test/commands/sync.test.ts",
+        "hash": "88137a8c38360f2e949fd4ed616251741701e05f3947f05223ee5916f7ff3deb"
+      },
+      {
+        "path": "test/core/archive.test.ts",
+        "hash": "607fe21e4a12a2e31831b6a2eedbca2a2220e1248a42cbbcc38414c94c8d7485"
+      },
+      {
+        "path": "test/core/verify/freshness.test.ts",
+        "hash": "bf6e696188fde251ced5af6afa74a1728897f364ba84ed9434fa9fbb16b8f66d"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "f6ff6ac31d7ff8e65baa5386cef494487264dc3f",
+    "gitDiffSummary": "Git evidence and final file contents are coherent: src/core/verify/freshness.ts:88-135 adds refreshVerifyEvidenceAfterSync, src/core/change-sync.ts:225-257 collects synced file paths and invokes the refresh after successful writes, and tests cover refresh behavior, no-match/no-entry/missing-result handling, Windows path normalization, CLI sync freshness preservation, explicit no-delta no-op behavior at test/commands/sync.test.ts:230-241, non-overlap evidence preservation at test/commands/sync.test.ts:447-508, and archive-path freshness at test/core/archive.test.ts:392-449. Targeted verification passed with 56/56 tests."
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-20T08:27:23.507Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "No optimization opportunities found"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-20T08:24:19.145Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "8a92d15f5df6164d4936db930ca2c1946ea71ad0b890293be254a6ac5abe6abf",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "apply-change",
+        "evidenceFiles": [
+          "src/core/change-sync.ts",
+          "src/core/verify/freshness.ts",
+          "test/commands/sync.test.ts",
+          "test/core/archive.test.ts",
+          "test/core/verify/freshness.test.ts"
+        ],
+        "evidenceFingerprint": "ccaabd48581d8b2f52ebed2cdc494df317059ac512eb2bee08e958b073ab5636",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "src/core/change-sync.ts",
+            "hash": "5727b98c3d2d962ab22d15d56e21771de22e4a0af8c8c5d25901e586a526883d"
+          },
+          {
+            "path": "src/core/verify/freshness.ts",
+            "hash": "dac419f9a31c129be2136e90b57f1b7930adba3ad025cbed6ab1cafec04a4c81"
+          },
+          {
+            "path": "test/commands/sync.test.ts",
+            "hash": "88137a8c38360f2e949fd4ed616251741701e05f3947f05223ee5916f7ff3deb"
+          },
+          {
+            "path": "test/core/archive.test.ts",
+            "hash": "607fe21e4a12a2e31831b6a2eedbca2a2220e1248a42cbbcc38414c94c8d7485"
+          },
+          {
+            "path": "test/core/verify/freshness.test.ts",
+            "hash": "bf6e696188fde251ced5af6afa74a1728897f364ba84ed9434fa9fbb16b8f66d"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "f6ff6ac31d7ff8e65baa5386cef494487264dc3f",
+        "gitDiffSummary": "Git evidence and final file contents are coherent: src/core/verify/freshness.ts:88-135 adds refreshVerifyEvidenceAfterSync, src/core/change-sync.ts:225-257 collects synced file paths and invokes the refresh after successful writes, and tests cover refresh behavior, no-match/no-entry/missing-result handling, Windows path normalization, CLI sync freshness preservation, explicit no-delta no-op behavior at test/commands/sync.test.ts:230-241, non-overlap evidence preservation at test/commands/sync.test.ts:447-508, and archive-path freshness at test/core/archive.test.ts:392-449. Targeted verification passed with 56/56 tests."
+      }
+    }
+  }
+}

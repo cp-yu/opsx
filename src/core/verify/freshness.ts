@@ -66,9 +66,8 @@ export async function computeEvidenceFingerprint(
   }
 
   entries.sort((a, b) => a.path.localeCompare(b.path));
-  const hashInput = JSON.stringify(entries);
   return {
-    hash: createHash('sha256').update(hashInput).digest('hex'),
+    hash: computeEntriesFingerprint(entries),
     skippedFiles,
     entries,
   };
@@ -84,6 +83,55 @@ export async function readVerifyResult(changeDir: string): Promise<VerifyResult 
     }
     throw error;
   }
+}
+
+export async function refreshVerifyEvidenceAfterSync(
+  changeDir: string,
+  projectRoot: string,
+  syncedFiles: string[]
+): Promise<void> {
+  if (syncedFiles.length === 0) {
+    return;
+  }
+
+  const result = await readVerifyResult(changeDir);
+  const recordedEntries = result?.verificationContext?.evidenceFingerprintEntries;
+  if (!result || !Array.isArray(recordedEntries) || recordedEntries.length === 0) {
+    return;
+  }
+
+  const root = path.resolve(projectRoot);
+  const syncedPaths = new Set(
+    syncedFiles.map((filePath) => normalizeEvidencePath(root, filePath))
+  );
+
+  let changed = false;
+  const refreshedEntries = await Promise.all(
+    recordedEntries.map(async (entry) => {
+      if (!syncedPaths.has(normalizeEvidencePath(root, entry.path))) {
+        return entry;
+      }
+
+      const nextHash = await hashEvidenceFile(root, entry.path);
+      if (nextHash !== entry.hash) {
+        changed = true;
+      }
+      return { ...entry, hash: nextHash };
+    })
+  );
+
+  if (!changed) {
+    return;
+  }
+
+  refreshedEntries.sort((a, b) => a.path.localeCompare(b.path));
+  result.verificationContext.evidenceFingerprintEntries = refreshedEntries;
+  result.verificationContext.evidenceFingerprint = computeEntriesFingerprint(refreshedEntries);
+  await fs.writeFile(
+    path.join(changeDir, '.verify-result.json'),
+    `${JSON.stringify(result, null, 2)}\n`,
+    'utf-8'
+  );
 }
 
 export async function checkFreshness(
@@ -334,6 +382,19 @@ function parseGitHeadChange(details: string[]): string | null {
     return null;
   }
   return detail.slice(GIT_HEAD_DETAIL_PREFIX.length).trim();
+}
+
+function computeEntriesFingerprint(entries: EvidenceFingerprint['entries']): string {
+  return createHash('sha256').update(JSON.stringify(entries)).digest('hex');
+}
+
+async function hashEvidenceFile(projectRoot: string, filePath: string): Promise<string> {
+  const content = await fs.readFile(resolveEvidencePath(projectRoot, filePath));
+  return createHash('sha256').update(content).digest('hex');
+}
+
+function normalizeEvidencePath(projectRoot: string, filePath: string): string {
+  return toPosixRelative(projectRoot, resolveEvidencePath(projectRoot, filePath));
 }
 
 function resolveEvidencePath(projectRoot: string, filePath: string): string {

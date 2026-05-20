@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import {
   applyOpsxDelta,
+  OPSX_PATHS,
   readOpsxDelta,
   readProjectOpsx,
   validateCodeMapIntegrity,
@@ -16,6 +17,7 @@ import {
   isDeltaSpecAlreadyApplied,
   type SpecUpdate,
 } from './specs-apply.js';
+import { refreshVerifyEvidenceAfterSync } from './verify/freshness.js';
 import { Validator } from './validation/validator.js';
 
 type SpecCounts = { added: number; modified: number; removed: number; renamed: number };
@@ -221,9 +223,11 @@ export async function applyPreparedChangeSync(
   options: { silent?: boolean } = {}
 ): Promise<AppliedChangeSyncSummary> {
   const silent = options.silent ?? false;
+  const syncedFiles: string[] = [];
 
   if (prepared.opsx) {
     await writeProjectOpsx(projectRoot, prepared.opsx.mergedBundle);
+    syncedFiles.push(OPSX_PATHS.PROJECT_FILE, OPSX_PATHS.RELATIONS_FILE, OPSX_PATHS.CODE_MAP_FILE);
     if (!silent) {
       console.log(formatOpsxSummary(prepared.opsx.result));
       console.log('OPSX updated successfully.');
@@ -233,6 +237,9 @@ export async function applyPreparedChangeSync(
   try {
     if (prepared.specs.writes.length > 0) {
       await writePreparedSpecs(prepared.specs.writes, silent);
+      syncedFiles.push(
+        ...prepared.specs.writes.map((write) => toPosixProjectRelative(projectRoot, write.update.target))
+      );
       if (!silent) {
         console.log(
           `Totals: + ${prepared.specs.totals.added}, ~ ${prepared.specs.totals.modified}, - ${prepared.specs.totals.removed}, → ${prepared.specs.totals.renamed}`
@@ -246,6 +253,8 @@ export async function applyPreparedChangeSync(
     }
     throw error;
   }
+
+  await refreshVerifyEvidenceAfterSync(prepared.state.changeDir, projectRoot, syncedFiles);
 
   return {
     specs: prepared.specs.writes.length > 0 ? 'synced' : 'no-delta',
@@ -300,4 +309,8 @@ function formatOpsxSummary(result: OpsxDeltaApplyResult): string {
   const nodeRemoved = result.counts.removed.domains + result.counts.removed.capabilities;
 
   return `OPSX delta applied: + ${nodeAdded} nodes, ~ ${nodeModified} nodes, - ${nodeRemoved} nodes; + ${result.counts.added.relations} relations, ~ ${result.counts.modified.relations} relations, - ${result.counts.removed.relations} relations.`;
+}
+
+function toPosixProjectRelative(projectRoot: string, filePath: string): string {
+  return path.relative(projectRoot, filePath).split(path.sep).join('/');
 }

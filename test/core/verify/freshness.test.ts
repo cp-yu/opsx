@@ -7,6 +7,7 @@ import {
   checkFreshness,
   computeEvidenceFingerprint,
   computeTasksFileHash,
+  refreshVerifyEvidenceAfterSync,
 } from '../../../src/core/verify/freshness.js';
 import type { VerifyResult } from '../../../src/core/verify/types.js';
 
@@ -114,7 +115,160 @@ describe('verify freshness engine', () => {
     await fs.writeFile(evidencePath, 'changed', 'utf-8');
     const stale = await checkFreshness(changeDir, changeDir);
     expect(stale.status).toBe('STALE');
-    expect(stale.details).toContain('evidenceFingerprint does not match current evidence files');
+    expect(stale.details.some((detail) => detail.startsWith('evidenceFingerprint mismatch'))).toBe(true);
+  });
+
+  it('refreshes matching evidence entries after sync and keeps freshness fresh', async () => {
+    const changeDir = path.join(tempDir, 'openspec', 'changes', 'c1');
+    const mainOpsxPath = path.join(tempDir, 'openspec', 'project.opsx.yaml');
+    const changeSpecPath = path.join(changeDir, 'specs', 'auth', 'spec.md');
+    await fs.mkdir(path.dirname(mainOpsxPath), { recursive: true });
+    await fs.mkdir(path.dirname(changeSpecPath), { recursive: true });
+    await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] task\n', 'utf-8');
+    await fs.writeFile(mainOpsxPath, 'version: 1\n', 'utf-8');
+    await fs.writeFile(changeSpecPath, 'change spec\n', 'utf-8');
+
+    const before = await computeEvidenceFingerprint(
+      ['openspec/project.opsx.yaml', 'openspec/changes/c1/specs/auth/spec.md'],
+      tempDir
+    );
+    const result: VerifyResult = {
+      timestamp: new Date().toISOString(),
+      result: 'PASS',
+      issues: [],
+      tasksFileHash: (await computeTasksFileHash(path.join(changeDir, 'tasks.md')))!,
+      verificationContext: {
+        contractVersion: '1.0',
+        evidenceFiles: ['openspec/project.opsx.yaml', 'openspec/changes/c1/specs/auth/spec.md'],
+        evidenceFingerprint: before.hash,
+        evidenceFingerprintEntries: before.entries,
+      },
+      optimization: { status: 'NOT_NEEDED', attempts: [] },
+    };
+    await fs.writeFile(path.join(changeDir, '.verify-result.json'), `${JSON.stringify(result, null, 2)}\n`, 'utf-8');
+
+    await fs.writeFile(mainOpsxPath, 'version: 2\n', 'utf-8');
+    const staleBeforeRefresh = await checkFreshness(changeDir, tempDir);
+    expect(staleBeforeRefresh.status).toBe('STALE');
+
+    await refreshVerifyEvidenceAfterSync(changeDir, tempDir, ['openspec/project.opsx.yaml']);
+
+    const refreshed = JSON.parse(
+      await fs.readFile(path.join(changeDir, '.verify-result.json'), 'utf-8')
+    ) as VerifyResult;
+    expect(refreshed.verificationContext.evidenceFingerprint).not.toBe(before.hash);
+    expect(refreshed.verificationContext.evidenceFingerprintEntries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: 'openspec/project.opsx.yaml' }),
+        expect.objectContaining({ path: 'openspec/changes/c1/specs/auth/spec.md' }),
+      ])
+    );
+    const refreshedOpsxEntry = refreshed.verificationContext.evidenceFingerprintEntries?.find(
+      (entry) => entry.path === 'openspec/project.opsx.yaml'
+    );
+    const unchangedChangeSpecEntry = refreshed.verificationContext.evidenceFingerprintEntries?.find(
+      (entry) => entry.path === 'openspec/changes/c1/specs/auth/spec.md'
+    );
+    expect(refreshedOpsxEntry?.hash).not.toBe(
+      before.entries.find((entry) => entry.path === 'openspec/project.opsx.yaml')?.hash
+    );
+    expect(unchangedChangeSpecEntry?.hash).toBe(
+      before.entries.find((entry) => entry.path === 'openspec/changes/c1/specs/auth/spec.md')?.hash
+    );
+    expect((await checkFreshness(changeDir, tempDir)).status).toBe('FRESH');
+  });
+
+  it('skips refresh when no synced paths match evidence entries', async () => {
+    const changeDir = path.join(tempDir, 'openspec', 'changes', 'c1');
+    const evidencePath = path.join(tempDir, 'openspec', 'project.opsx.yaml');
+    await fs.mkdir(path.dirname(evidencePath), { recursive: true });
+    await fs.mkdir(changeDir, { recursive: true });
+    await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] task\n', 'utf-8');
+    await fs.writeFile(evidencePath, 'version: 1\n', 'utf-8');
+
+    const before = await computeEvidenceFingerprint(['openspec/project.opsx.yaml'], tempDir);
+    const result: VerifyResult = {
+      timestamp: new Date().toISOString(),
+      result: 'PASS',
+      issues: [],
+      tasksFileHash: (await computeTasksFileHash(path.join(changeDir, 'tasks.md')))!,
+      verificationContext: {
+        contractVersion: '1.0',
+        evidenceFiles: ['openspec/project.opsx.yaml'],
+        evidenceFingerprint: before.hash,
+        evidenceFingerprintEntries: before.entries,
+      },
+      optimization: { status: 'NOT_NEEDED', attempts: [] },
+    };
+    const verifyPath = path.join(changeDir, '.verify-result.json');
+    await fs.writeFile(verifyPath, `${JSON.stringify(result, null, 2)}\n`, 'utf-8');
+    const originalContent = await fs.readFile(verifyPath, 'utf-8');
+
+    await refreshVerifyEvidenceAfterSync(changeDir, tempDir, ['openspec/specs/auth/spec.md']);
+
+    expect(await fs.readFile(verifyPath, 'utf-8')).toBe(originalContent);
+  });
+
+  it('skips refresh when verify result is missing or legacy entries are absent', async () => {
+    const changeDir = path.join(tempDir, 'openspec', 'changes', 'c1');
+    const evidencePath = path.join(tempDir, 'openspec', 'project.opsx.yaml');
+    await fs.mkdir(path.dirname(evidencePath), { recursive: true });
+    await fs.mkdir(changeDir, { recursive: true });
+    await fs.writeFile(evidencePath, 'version: 1\n', 'utf-8');
+
+    await expect(
+      refreshVerifyEvidenceAfterSync(changeDir, tempDir, ['openspec/project.opsx.yaml'])
+    ).resolves.toBeUndefined();
+
+    const legacy: VerifyResult = {
+      timestamp: new Date().toISOString(),
+      result: 'PASS',
+      issues: [],
+      tasksFileHash: 'a'.repeat(64),
+      verificationContext: {
+        contractVersion: '1.0',
+        evidenceFiles: ['openspec/project.opsx.yaml'],
+        evidenceFingerprint: 'b'.repeat(64),
+      },
+      optimization: { status: 'NOT_NEEDED', attempts: [] },
+    };
+    const verifyPath = path.join(changeDir, '.verify-result.json');
+    await fs.writeFile(verifyPath, `${JSON.stringify(legacy, null, 2)}\n`, 'utf-8');
+    const originalContent = await fs.readFile(verifyPath, 'utf-8');
+
+    await refreshVerifyEvidenceAfterSync(changeDir, tempDir, ['openspec/project.opsx.yaml']);
+
+    expect(await fs.readFile(verifyPath, 'utf-8')).toBe(originalContent);
+  });
+
+  it('matches synced files using POSIX-normalized paths on Windows-style input', async () => {
+    const changeDir = path.join(tempDir, 'openspec', 'changes', 'c1');
+    const evidencePath = path.join(tempDir, 'openspec', 'project.opsx.yaml');
+    await fs.mkdir(path.dirname(evidencePath), { recursive: true });
+    await fs.mkdir(changeDir, { recursive: true });
+    await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] task\n', 'utf-8');
+    await fs.writeFile(evidencePath, 'version: 1\n', 'utf-8');
+
+    const before = await computeEvidenceFingerprint(['openspec/project.opsx.yaml'], tempDir);
+    const result: VerifyResult = {
+      timestamp: new Date().toISOString(),
+      result: 'PASS',
+      issues: [],
+      tasksFileHash: (await computeTasksFileHash(path.join(changeDir, 'tasks.md')))!,
+      verificationContext: {
+        contractVersion: '1.0',
+        evidenceFiles: ['openspec/project.opsx.yaml'],
+        evidenceFingerprint: before.hash,
+        evidenceFingerprintEntries: before.entries,
+      },
+      optimization: { status: 'NOT_NEEDED', attempts: [] },
+    };
+    await fs.writeFile(path.join(changeDir, '.verify-result.json'), `${JSON.stringify(result, null, 2)}\n`, 'utf-8');
+    await fs.writeFile(evidencePath, 'version: 2\n', 'utf-8');
+
+    await refreshVerifyEvidenceAfterSync(changeDir, tempDir, ['openspec\\project.opsx.yaml']);
+
+    expect((await checkFreshness(changeDir, tempDir)).status).toBe('FRESH');
   });
 
   it('checks archive compatibility for optimization terminal states', () => {

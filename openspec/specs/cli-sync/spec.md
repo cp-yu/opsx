@@ -45,6 +45,8 @@ openspec sync [change-name] [--no-validate]
 
 在同步执行之前，系统 SHALL 检查 verify gate（通过 `checkFreshness` 和 `checkArchiveCompatibility`），除非用户传入 `--no-verify`。
 
+同步完成后，`applyPreparedChangeSync` SHALL 自动刷新 `.verify-result.json` 中与 sync 输出重叠的 evidence 文件哈希，使 verify 结果不因合法的 sync 写入而失效。
+
 #### Scenario: verify gate 失败输出可操作指引
 
 - **GIVEN** 用户执行 `openspec sync my-change`
@@ -70,6 +72,17 @@ openspec sync [change-name] [--no-validate]
 - **WHEN** 命令执行
 - **THEN** 跳过 verify gate 直接进入同步
 - **AND** 不输出 `formatVerifyGateFailure` 结果
+
+#### Scenario: 同步后 evidence fingerprint 自动刷新
+
+- **GIVEN** 用户执行 `openspec sync my-change`
+- **AND** sync 前 `.verify-result.json` 为 FRESH
+- **AND** evidence 中包含 `openspec/project.opsx.yaml`
+- **AND** sync 写入了 OPSX delta
+- **WHEN** sync 完成
+- **THEN** `.verify-result.json` 中 `openspec/project.opsx.yaml` 的 hash SHALL 被更新为当前文件内容的哈希
+- **AND** `evidenceFingerprint` SHALL 基于更新后的 entries 重新计算
+- **AND** 后续 `openspec verify status my-change --json` SHALL 返回 FRESH
 
 ### Requirement: 不触发归档
 

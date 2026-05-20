@@ -12,6 +12,7 @@ import {
   type ProjectOpsxBundle,
 } from '../../src/utils/opsx-utils.js';
 import {
+  checkFreshness,
   computeEvidenceFingerprint,
   computeTasksFileHash,
 } from '../../src/core/verify/freshness.js';
@@ -386,6 +387,66 @@ New feature description.
       const archiveDir = path.join(tempDir, 'openspec', 'changes', 'archive');
       const archives = await fs.readdir(archiveDir);
       expect(archives.some(a => a.includes(changeName))).toBe(false);
+    });
+
+    it('keeps archived verify freshness fresh after embedded sync writes', async () => {
+      const changeName = 'archive-refresh-fresh';
+      const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
+      await fs.mkdir(changeDir, { recursive: true });
+      await fs.mkdir(path.join(changeDir, 'specs', 'auth'), { recursive: true });
+      await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] verified\n', 'utf-8');
+      await fs.writeFile(
+        path.join(changeDir, 'specs', 'auth', 'spec.md'),
+        `# Auth - Changes
+
+## ADDED Requirements
+
+### Requirement: Archive refreshes evidence`
+      );
+
+      await writeProjectOpsx(tempDir, mkBundle({
+        domains: [{ id: 'dom.core', type: 'domain', intent: 'Core domain' }],
+        capabilities: [{ id: 'cap.core.init', type: 'capability', intent: 'Initialize app' }],
+        relations: [{ from: 'cap.core.init', to: 'dom.core', type: 'contains' }],
+      }));
+      await fs.writeFile(path.join(changeDir, 'opsx-delta.yaml'), stringifyYaml({
+        schema_version: OPSX_SCHEMA_VERSION,
+        ADDED: {
+          domains: [{ id: 'dom.archive', type: 'domain', intent: 'Archive domain' }],
+          capabilities: [{ id: 'cap.archive.refresh', type: 'capability', intent: 'Refresh evidence' }],
+          relations: [{ from: 'cap.archive.refresh', to: 'dom.archive', type: 'contains' }],
+        },
+      }), 'utf-8');
+
+      const evidenceFiles = ['openspec/project.opsx.yaml'];
+      const before = await computeEvidenceFingerprint(evidenceFiles, tempDir);
+      const verifyResult: VerifyResult = {
+        timestamp: new Date().toISOString(),
+        result: 'PASS',
+        issues: [],
+        tasksFileHash: (await computeTasksFileHash(path.join(changeDir, 'tasks.md')))!,
+        verificationContext: {
+          contractVersion: '1.0',
+          evidenceFiles,
+          evidenceFingerprint: before.hash,
+          evidenceFingerprintEntries: before.entries,
+        },
+        optimization: { status: 'NOT_NEEDED', attempts: [] },
+      };
+      await fs.writeFile(
+        path.join(changeDir, '.verify-result.json'),
+        `${JSON.stringify(verifyResult, null, 2)}\n`,
+        'utf-8'
+      );
+
+      await archiveCommand.execute(changeName, { yes: true, noVerify: true, noValidate: true });
+
+      const archiveDir = path.join(tempDir, 'openspec', 'changes', 'archive');
+      const [archiveName] = (await fs.readdir(archiveDir)).filter((entry) => entry.includes(changeName));
+      const archivedChangeDir = path.join(archiveDir, archiveName);
+      const freshness = await checkFreshness(archivedChangeDir, tempDir);
+
+      expect(freshness.status).toBe('FRESH');
     });
 
     it('should treat already-synced delta specs as no-op during archive-time sync', async () => {

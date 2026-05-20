@@ -1,0 +1,17 @@
+ADDED:
+  capabilities:
+    - id: cap.sync.evidence-refresh
+      type: capability
+      intent: sync 完成后自动刷新 .verify-result.json 中与 sync 输出重叠的 evidence 文件哈希，使 verify freshness 判决不受合法 sync 写入的影响
+      relations:
+        - { to: dom.change-workflow, type: contains }
+        - { to: dom.verify, type: depends_on }
+        - { to: cap.change.sync, type: depends_on }
+
+MODIFIED:
+  capabilities:
+    - id: cap.cli.sync
+      intent: 顶层 CLI 命令，将 change 中的 delta specs 和 OPSX delta 同步到主文件，不执行归档，并在需要生成正文时消费统一 runtime projection。sync 执行前增加 verify gate 入口校验，失败时输出增强诊断信息和补救操作指引。sync 完成后自动刷新 .verify-result.json evidence fingerprint
+
+    - id: cap.verify.freshness-engine
+      intent: 确定性 freshness 判定引擎，用 TypeScript 代码实现 tasksFileHash、evidenceFingerprint 计算和 FRESH/STALE/MISSING 判定。evidenceFingerprint 基于文件内容哈希（而非元数据）计算，消除文件系统触碰导致的误报 STALE。Phase 2 verification PASS 时重算 evidenceFingerprint，使其覆盖优化后的文件状态。STALE 判定时生成增强诊断细节（文件级指纹差异、git HEAD 对比），formatVerifyGateFailure 输出结构化可操作指引。新增 refreshVerifyEvidenceAfterSync 函数支持 sync 后增量刷新 evidence 哈希

@@ -230,11 +230,14 @@ Then the system signs the user in`
   it('prints No sync required when a change has no delta artifacts', async () => {
     const syncCommand = await loadSyncCommand();
     const changeDir = await createChange('no-delta-change');
-    await fs.writeFile(path.join(changeDir, 'tasks.md'), '## Tasks\n- [ ] Task 1');
+    await writeFreshVerifyResult(changeDir);
+    const verifyPath = path.join(changeDir, '.verify-result.json');
+    const before = await fs.readFile(verifyPath, 'utf-8');
 
     await syncCommand('no-delta-change', { noValidate: true, noVerify: true });
 
     expect(console.log).toHaveBeenCalledWith('No sync required.');
+    expect(await fs.readFile(verifyPath, 'utf-8')).toBe(before);
   });
 
   it('is idempotent across repeated sync runs', async () => {
@@ -296,5 +299,232 @@ Then the system signs the user in`
     expect(specAfterSecond).toBe(specAfterFirst);
     expect(opsxAfterSecond).toEqual(opsxAfterFirst);
     expect(console.log).toHaveBeenCalledWith('No sync required.');
+  });
+
+  it('refreshes evidence fingerprint after OPSX sync writes', async () => {
+    const syncCommand = await loadSyncCommand();
+    const changeName = 'refresh-evidence-sync';
+    const changeDir = await createChange(changeName);
+    await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] verified\n', 'utf-8');
+    await fs.mkdir(path.join(changeDir, 'specs', 'auth'), { recursive: true });
+    await fs.writeFile(
+      path.join(changeDir, 'specs', 'auth', 'spec.md'),
+      `# Auth - Changes
+
+## ADDED Requirements
+
+### Requirement: Sync refreshes evidence`
+    );
+
+    await writeProjectOpsx(
+      tempDir,
+      mkBundle({
+        domains: [{ id: 'dom.core', type: 'domain', intent: 'Core domain' }],
+        capabilities: [{ id: 'cap.core.init', type: 'capability', intent: 'Initialize app' }],
+        relations: [{ from: 'cap.core.init', to: 'dom.core', type: 'contains' }],
+      })
+    );
+    await fs.writeFile(
+      path.join(changeDir, 'opsx-delta.yaml'),
+      stringifyYaml({
+        schema_version: OPSX_SCHEMA_VERSION,
+        ADDED: {
+          domains: [{ id: 'dom.auth', type: 'domain', intent: 'Auth domain' }],
+          capabilities: [{ id: 'cap.auth.login', type: 'capability', intent: 'Login' }],
+          relations: [{ from: 'cap.auth.login', to: 'dom.auth', type: 'contains' }],
+        },
+      }),
+      'utf-8'
+    );
+
+    const evidenceFiles = [
+      'openspec/project.opsx.yaml',
+      `openspec/changes/${changeName}/specs/auth/spec.md`,
+    ];
+    const before = await computeEvidenceFingerprint(evidenceFiles, tempDir);
+    const verifyResult: VerifyResult = {
+      timestamp: new Date().toISOString(),
+      result: 'PASS',
+      issues: [],
+      tasksFileHash: (await computeTasksFileHash(path.join(changeDir, 'tasks.md')))!,
+      verificationContext: {
+        contractVersion: '1.0',
+        evidenceFiles,
+        evidenceFingerprint: before.hash,
+        evidenceFingerprintEntries: before.entries,
+      },
+      optimization: { status: 'NOT_NEEDED', attempts: [] },
+    };
+    await fs.writeFile(
+      path.join(changeDir, '.verify-result.json'),
+      `${JSON.stringify(verifyResult, null, 2)}\n`,
+      'utf-8'
+    );
+
+    await syncCommand(changeName, { noValidate: true, noVerify: true });
+
+    const refreshed = JSON.parse(
+      await fs.readFile(path.join(changeDir, '.verify-result.json'), 'utf-8')
+    ) as VerifyResult;
+    expect(refreshed.verificationContext.evidenceFingerprint).not.toBe(before.hash);
+    expect(
+      refreshed.verificationContext.evidenceFingerprintEntries?.find(
+        (entry) => entry.path === 'openspec/project.opsx.yaml'
+      )?.hash
+    ).not.toBe(before.entries.find((entry) => entry.path === 'openspec/project.opsx.yaml')?.hash);
+    expect(
+      refreshed.verificationContext.evidenceFingerprintEntries?.find(
+        (entry) => entry.path === `openspec/changes/${changeName}/specs/auth/spec.md`
+      )?.hash
+    ).toBe(
+      before.entries.find(
+        (entry) => entry.path === `openspec/changes/${changeName}/specs/auth/spec.md`
+      )?.hash
+    );
+  });
+
+  it('keeps verify freshness fresh after archive-style sync writes', async () => {
+    const syncCommand = await loadSyncCommand();
+    const changeName = 'fresh-after-sync';
+    const changeDir = await createChange(changeName);
+    await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] verified\n', 'utf-8');
+    await fs.mkdir(path.join(changeDir, 'specs', 'auth'), { recursive: true });
+    await fs.writeFile(
+      path.join(changeDir, 'specs', 'auth', 'spec.md'),
+      `# Auth - Changes
+
+## ADDED Requirements
+
+### Requirement: Sync keeps freshness fresh`
+    );
+
+    await writeProjectOpsx(
+      tempDir,
+      mkBundle({
+        domains: [{ id: 'dom.core', type: 'domain', intent: 'Core domain' }],
+        capabilities: [{ id: 'cap.core.init', type: 'capability', intent: 'Initialize app' }],
+        relations: [{ from: 'cap.core.init', to: 'dom.core', type: 'contains' }],
+      })
+    );
+    await fs.writeFile(
+      path.join(changeDir, 'opsx-delta.yaml'),
+      stringifyYaml({
+        schema_version: OPSX_SCHEMA_VERSION,
+        ADDED: {
+          domains: [{ id: 'dom.sync', type: 'domain', intent: 'Sync domain' }],
+          capabilities: [{ id: 'cap.sync.refresh', type: 'capability', intent: 'Refresh evidence' }],
+          relations: [{ from: 'cap.sync.refresh', to: 'dom.sync', type: 'contains' }],
+        },
+      }),
+      'utf-8'
+    );
+
+    const evidenceFiles = ['openspec/project.opsx.yaml'];
+    const before = await computeEvidenceFingerprint(evidenceFiles, tempDir);
+    const verifyResult: VerifyResult = {
+      timestamp: new Date().toISOString(),
+      result: 'PASS',
+      issues: [],
+      tasksFileHash: (await computeTasksFileHash(path.join(changeDir, 'tasks.md')))!,
+      verificationContext: {
+        contractVersion: '1.0',
+        evidenceFiles,
+        evidenceFingerprint: before.hash,
+        evidenceFingerprintEntries: before.entries,
+      },
+      optimization: { status: 'NOT_NEEDED', attempts: [] },
+    };
+    await fs.writeFile(
+      path.join(changeDir, '.verify-result.json'),
+      `${JSON.stringify(verifyResult, null, 2)}\n`,
+      'utf-8'
+    );
+
+    await syncCommand(changeName, { noValidate: true, noVerify: true });
+
+    const { checkFreshness } = await import('../../src/core/verify/freshness.js');
+    const freshness = await checkFreshness(changeDir, tempDir);
+    expect(freshness.status).toBe('FRESH');
+  });
+
+  it('does not rewrite verify result when sync outputs do not overlap evidence entries', async () => {
+    const syncCommand = await loadSyncCommand();
+    const changeName = 'no-overlap-evidence-sync';
+    const changeDir = await createChange(changeName);
+    const changeSpecPath = path.join(changeDir, 'specs', 'auth', 'spec.md');
+    await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] verified\n', 'utf-8');
+    await fs.mkdir(path.dirname(changeSpecPath), { recursive: true });
+    await fs.writeFile(
+      changeSpecPath,
+      `# Auth - Changes
+
+## ADDED Requirements
+
+### Requirement: Sync leaves unrelated evidence untouched`
+    );
+
+    await writeProjectOpsx(
+      tempDir,
+      mkBundle({
+        domains: [{ id: 'dom.core', type: 'domain', intent: 'Core domain' }],
+        capabilities: [{ id: 'cap.core.init', type: 'capability', intent: 'Initialize app' }],
+        relations: [{ from: 'cap.core.init', to: 'dom.core', type: 'contains' }],
+      })
+    );
+    await fs.writeFile(
+      path.join(changeDir, 'opsx-delta.yaml'),
+      stringifyYaml({
+        schema_version: OPSX_SCHEMA_VERSION,
+        ADDED: {
+          domains: [{ id: 'dom.audit', type: 'domain', intent: 'Audit domain' }],
+          capabilities: [{ id: 'cap.audit.log', type: 'capability', intent: 'Audit log' }],
+          relations: [{ from: 'cap.audit.log', to: 'dom.audit', type: 'contains' }],
+        },
+      }),
+      'utf-8'
+    );
+
+    const evidenceFiles = [`openspec/changes/${changeName}/specs/auth/spec.md`];
+    const evidence = await computeEvidenceFingerprint(evidenceFiles, tempDir);
+    const verifyResult: VerifyResult = {
+      timestamp: new Date().toISOString(),
+      result: 'PASS',
+      issues: [],
+      tasksFileHash: (await computeTasksFileHash(path.join(changeDir, 'tasks.md')))!,
+      verificationContext: {
+        contractVersion: '1.0',
+        evidenceFiles,
+        evidenceFingerprint: evidence.hash,
+        evidenceFingerprintEntries: evidence.entries,
+      },
+      optimization: { status: 'NOT_NEEDED', attempts: [] },
+    };
+    const verifyPath = path.join(changeDir, '.verify-result.json');
+    await fs.writeFile(verifyPath, `${JSON.stringify(verifyResult, null, 2)}\n`, 'utf-8');
+    const before = await fs.readFile(verifyPath, 'utf-8');
+
+    await syncCommand(changeName, { noValidate: true, noVerify: true });
+
+    expect(await fs.readFile(verifyPath, 'utf-8')).toBe(before);
+    const { checkFreshness } = await import('../../src/core/verify/freshness.js');
+    expect((await checkFreshness(changeDir, tempDir)).status).toBe('FRESH');
+  });
+
+  it('does not fail when .verify-result.json is absent during sync', async () => {
+    const syncCommand = await loadSyncCommand();
+    const changeName = 'sync-without-verify-result';
+    const changeDir = await createChange(changeName);
+    await fs.mkdir(path.join(changeDir, 'specs', 'auth'), { recursive: true });
+    await fs.writeFile(
+      path.join(changeDir, 'specs', 'auth', 'spec.md'),
+      `# Auth - Changes
+
+## ADDED Requirements
+
+### Requirement: Sync works without verify result`
+    );
+
+    await expect(syncCommand(changeName, { noValidate: true, noVerify: true })).resolves.toBeUndefined();
+    expect(console.log).toHaveBeenCalledWith(`Sync complete for '${changeName}'.`);
   });
 });

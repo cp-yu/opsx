@@ -256,7 +256,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.sync
-    intent: 顶层 CLI 命令，将 change 中的 delta specs 和 OPSX delta 同步到主文件，不执行归档，并在需要生成正文时消费统一 runtime projection。sync 执行前增加 verify gate 入口校验，失败时输出增强诊断信息和补救操作指引
+    intent: 顶层 CLI 命令，将 change 中的 delta specs 和 OPSX delta 同步到主文件，不执行归档，并在需要生成正文时消费统一 runtime projection。sync 执行前增加 verify gate 入口校验，失败时输出增强诊断信息和补救操作指引。sync 完成后自动刷新 .verify-result.json evidence fingerprint
     status: active
     type: capability
   - id: cap.ai.verify-writeback
@@ -281,7 +281,7 @@ capabilities:
     intent: 程序化 verify 门禁 CLI 工具。Phase 2 双调用模型保留，但重试上限从硬编码 3 改为读取 config.optimization.optRetries，新增 failedDirections 记录支持
     type: capability
   - id: cap.verify.freshness-engine
-    intent: 确定性 freshness 判定引擎，用 TypeScript 代码实现 tasksFileHash、evidenceFingerprint 计算和 FRESH/STALE/MISSING 判定。evidenceFingerprint 基于文件内容哈希（而非元数据）计算，消除文件系统触碰导致的误报 STALE。Phase 2 verification PASS 时重算 evidenceFingerprint，使其覆盖优化后的文件状态。STALE 判定时生成增强诊断细节（文件级指纹差异、git HEAD 对比），formatVerifyGateFailure 输出结构化可操作指引
+    intent: 确定性 freshness 判定引擎，用 TypeScript 代码实现 tasksFileHash、evidenceFingerprint 计算和 FRESH/STALE/MISSING 判定。evidenceFingerprint 基于文件内容哈希（而非元数据）计算，消除文件系统触碰导致的误报 STALE。Phase 2 verification PASS 时重算 evidenceFingerprint，使其覆盖优化后的文件状态。STALE 判定时生成增强诊断细节（文件级指纹差异、git HEAD 对比），formatVerifyGateFailure 输出结构化可操作指引。新增 refreshVerifyEvidenceAfterSync 函数支持 sync 后增量刷新 evidence 哈希
     type: capability
   - id: cap.apply.verify-integration
     intent: apply 命令内置 Phase 1 一致性验证和 Phase 2 优化循环。模板对 needs_verify 状态直接进入 Phase 1，对 needs_seal 状态直接进入 Phase 2/3，不需用户手动触发
@@ -316,4 +316,7 @@ capabilities:
     type: capability
   - id: cap.cli.verify-aware-instructions
     intent: instructions apply 命令在判定 change 完成状态时集成 verify freshness 检查，返回 needs_verify/needs_seal/all_done 三态而非仅基于 task checkbox
+    type: capability
+  - id: cap.sync.evidence-refresh
+    intent: sync 完成后自动刷新 .verify-result.json 中与 sync 输出重叠的 evidence 文件哈希，使 verify freshness 判决不受合法 sync 写入的影响
     type: capability
