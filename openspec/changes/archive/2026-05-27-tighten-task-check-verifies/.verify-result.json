@@ -1,0 +1,221 @@
+{
+  "timestamp": "2026-05-27T08:04:55.594Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "472398a4944f089d35a2a11623d0095a2035d9f7e11be2d659a7c5f1b1411f26",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "static-review-plus-targeted-and-full-tests",
+    "evidenceFiles": [
+      "openspec/changes/tighten-task-check-verifies/design.md",
+      "openspec/changes/tighten-task-check-verifies/opsx-delta.yaml",
+      "openspec/changes/tighten-task-check-verifies/proposal.md",
+      "openspec/changes/tighten-task-check-verifies/specs/cli-artifact-workflow/spec.md",
+      "openspec/changes/tighten-task-check-verifies/specs/opsx-propose-skill/spec.md",
+      "openspec/changes/tighten-task-check-verifies/tasks.md",
+      "openspec/project.opsx.code-map.yaml",
+      "openspec/project.opsx.yaml",
+      "schemas/spec-driven/schema.yaml",
+      "schemas/spec-driven/templates/tasks.md",
+      "src/core/parsers/task-structure.ts",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "test/core/artifact-graph/instruction-loader.test.ts",
+      "test/core/parsers/task-structure.test.ts",
+      "test/core/templates/propose-template.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts"
+    ],
+    "evidenceFingerprint": "3c58c921e27c11f449f5901655b115d0190ba3e24bd99562f309f5e3ecf69b9d",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/tighten-task-check-verifies/design.md",
+        "hash": "2091b11c5eb14cbc4e084f3bcbb8b986eec55dab00075b0ed03d357506fc24b7"
+      },
+      {
+        "path": "openspec/changes/tighten-task-check-verifies/opsx-delta.yaml",
+        "hash": "03e26741ee5af80b1eacdb67f362a788a211b4ff066b35a112dc825c695bc304"
+      },
+      {
+        "path": "openspec/changes/tighten-task-check-verifies/proposal.md",
+        "hash": "13bcfde0dc3aac294f889b4807d7727cb7574fc8abbb5eb508168d341f594a23"
+      },
+      {
+        "path": "openspec/changes/tighten-task-check-verifies/specs/cli-artifact-workflow/spec.md",
+        "hash": "81a54eb924690a7817eb3aafcb4dcfe84c5c636403fd30b83f8469b6e5fc5256"
+      },
+      {
+        "path": "openspec/changes/tighten-task-check-verifies/specs/opsx-propose-skill/spec.md",
+        "hash": "ea48a799a517b78cbefe4fe4cdd5fe039d618d8ccebc22faf6fd12a04c430b64"
+      },
+      {
+        "path": "openspec/changes/tighten-task-check-verifies/tasks.md",
+        "hash": "472398a4944f089d35a2a11623d0095a2035d9f7e11be2d659a7c5f1b1411f26"
+      },
+      {
+        "path": "openspec/project.opsx.code-map.yaml",
+        "hash": "5904b2dae7ee1c477199db0528955d9a1522a8ec2c563c5af76dd4889b026e8a"
+      },
+      {
+        "path": "openspec/project.opsx.yaml",
+        "hash": "2dae56551f31c774090aaa78b00f113c5949e98627aaaca748d3c82ea6ee46cf"
+      },
+      {
+        "path": "schemas/spec-driven/schema.yaml",
+        "hash": "66501b76731667020676a528184f8adaef9bc39f293b6aaa6710757f647e5a7f"
+      },
+      {
+        "path": "schemas/spec-driven/templates/tasks.md",
+        "hash": "f9e3d25b7ff1242efc49f19ad836f352edf8c32827ce6242b11609ab63205934"
+      },
+      {
+        "path": "src/core/parsers/task-structure.ts",
+        "hash": "eb54051c2cd06d2573e9161a480441dabe99b24661145bff9741e288a3b52b62"
+      },
+      {
+        "path": "src/core/templates/fragments/opsx-fragments.ts",
+        "hash": "620388a2066fb91691cc989bb9f1da5f6fe9aa51edc364e5fe7f838ddc47f449"
+      },
+      {
+        "path": "test/core/artifact-graph/instruction-loader.test.ts",
+        "hash": "0c1e0cafb6591ab5af353dbbbe80449b2aefc7663926debbe8ddca99f55a7b8f"
+      },
+      {
+        "path": "test/core/parsers/task-structure.test.ts",
+        "hash": "5e877b8af78bef8f15337eb8d9c471816bcb724ba457def583feb3ba5cb7da8a"
+      },
+      {
+        "path": "test/core/templates/propose-template.test.ts",
+        "hash": "6f48f4966df2429f94da81eb0c65d7c5a5bc4bdaa52058bbf36c50b813a31e98"
+      },
+      {
+        "path": "test/core/templates/skill-templates-parity.test.ts",
+        "hash": "1816f6d7f5b273112c3cd48c5e95d231d90b2dfcd79215d50d7d2c264a051c7d"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "a59f613d00ef25fe7f20fcce195b41a033d0e471"
+  },
+  "optimization": {
+    "status": "IMPROVED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-27T08:08:41.434Z",
+        "type": "optimization",
+        "status": "OPTIMIZATION_PROPOSED",
+        "summary": "Optimizer proposed replacing repeated inline error issue object construction in src/core/parsers/task-structure.ts with the existing error() helper. This is behavior-preserving and reduces duplicated severity/code/message/line boilerplate.",
+        "files": [
+          "src/core/parsers/task-structure.ts"
+        ]
+      },
+      {
+        "timestamp": "2026-05-27T08:12:27.050Z",
+        "type": "verification",
+        "result": "PASS",
+        "behaviorRetryCounter": 1
+      }
+    ],
+    "affectedFileHashes": {
+      "src/core/parsers/task-structure.ts": "9c107b0b6079976e6f87cfb0f054ed44245eab59d125848e9b4e23e5168eb8e7"
+    },
+    "baseline": {
+      "timestamp": "2026-05-27T08:04:55.594Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "472398a4944f089d35a2a11623d0095a2035d9f7e11be2d659a7c5f1b1411f26",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "static-review-plus-targeted-and-full-tests",
+        "evidenceFiles": [
+          "openspec/changes/tighten-task-check-verifies/design.md",
+          "openspec/changes/tighten-task-check-verifies/opsx-delta.yaml",
+          "openspec/changes/tighten-task-check-verifies/proposal.md",
+          "openspec/changes/tighten-task-check-verifies/specs/cli-artifact-workflow/spec.md",
+          "openspec/changes/tighten-task-check-verifies/specs/opsx-propose-skill/spec.md",
+          "openspec/changes/tighten-task-check-verifies/tasks.md",
+          "openspec/project.opsx.code-map.yaml",
+          "openspec/project.opsx.yaml",
+          "schemas/spec-driven/schema.yaml",
+          "schemas/spec-driven/templates/tasks.md",
+          "src/core/parsers/task-structure.ts",
+          "src/core/templates/fragments/opsx-fragments.ts",
+          "test/core/artifact-graph/instruction-loader.test.ts",
+          "test/core/parsers/task-structure.test.ts",
+          "test/core/templates/propose-template.test.ts",
+          "test/core/templates/skill-templates-parity.test.ts"
+        ],
+        "evidenceFingerprint": "72bfda4c14a5fa2db056b3d2a377a468328627ea284228bbb57d42d44c2bfbcc",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/tighten-task-check-verifies/design.md",
+            "hash": "2091b11c5eb14cbc4e084f3bcbb8b986eec55dab00075b0ed03d357506fc24b7"
+          },
+          {
+            "path": "openspec/changes/tighten-task-check-verifies/opsx-delta.yaml",
+            "hash": "03e26741ee5af80b1eacdb67f362a788a211b4ff066b35a112dc825c695bc304"
+          },
+          {
+            "path": "openspec/changes/tighten-task-check-verifies/proposal.md",
+            "hash": "13bcfde0dc3aac294f889b4807d7727cb7574fc8abbb5eb508168d341f594a23"
+          },
+          {
+            "path": "openspec/changes/tighten-task-check-verifies/specs/cli-artifact-workflow/spec.md",
+            "hash": "81a54eb924690a7817eb3aafcb4dcfe84c5c636403fd30b83f8469b6e5fc5256"
+          },
+          {
+            "path": "openspec/changes/tighten-task-check-verifies/specs/opsx-propose-skill/spec.md",
+            "hash": "ea48a799a517b78cbefe4fe4cdd5fe039d618d8ccebc22faf6fd12a04c430b64"
+          },
+          {
+            "path": "openspec/changes/tighten-task-check-verifies/tasks.md",
+            "hash": "472398a4944f089d35a2a11623d0095a2035d9f7e11be2d659a7c5f1b1411f26"
+          },
+          {
+            "path": "openspec/project.opsx.code-map.yaml",
+            "hash": "02c7d4d80a3f1ad659225647ec1b34a22789f01dbff850c2bb888e2ae89180bc"
+          },
+          {
+            "path": "openspec/project.opsx.yaml",
+            "hash": "976b303f73826c4d6c78cafc91cfdc78c7506355708dae3dfc77e099b808930b"
+          },
+          {
+            "path": "schemas/spec-driven/schema.yaml",
+            "hash": "66501b76731667020676a528184f8adaef9bc39f293b6aaa6710757f647e5a7f"
+          },
+          {
+            "path": "schemas/spec-driven/templates/tasks.md",
+            "hash": "f9e3d25b7ff1242efc49f19ad836f352edf8c32827ce6242b11609ab63205934"
+          },
+          {
+            "path": "src/core/parsers/task-structure.ts",
+            "hash": "9c107b0b6079976e6f87cfb0f054ed44245eab59d125848e9b4e23e5168eb8e7"
+          },
+          {
+            "path": "src/core/templates/fragments/opsx-fragments.ts",
+            "hash": "620388a2066fb91691cc989bb9f1da5f6fe9aa51edc364e5fe7f838ddc47f449"
+          },
+          {
+            "path": "test/core/artifact-graph/instruction-loader.test.ts",
+            "hash": "0c1e0cafb6591ab5af353dbbbe80449b2aefc7663926debbe8ddca99f55a7b8f"
+          },
+          {
+            "path": "test/core/parsers/task-structure.test.ts",
+            "hash": "5e877b8af78bef8f15337eb8d9c471816bcb724ba457def583feb3ba5cb7da8a"
+          },
+          {
+            "path": "test/core/templates/propose-template.test.ts",
+            "hash": "6f48f4966df2429f94da81eb0c65d7c5a5bc4bdaa52058bbf36c50b813a31e98"
+          },
+          {
+            "path": "test/core/templates/skill-templates-parity.test.ts",
+            "hash": "1816f6d7f5b273112c3cd48c5e95d231d90b2dfcd79215d50d7d2c264a051c7d"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "a59f613d00ef25fe7f20fcce195b41a033d0e471"
+      }
+    },
+    "final": {
+      "result": "PASS",
+      "issues": []
+    }
+  }
+}

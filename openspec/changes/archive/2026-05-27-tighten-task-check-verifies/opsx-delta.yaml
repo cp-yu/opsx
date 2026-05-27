@@ -1,0 +1,9 @@
+schema_version: 1
+MODIFIED:
+  capabilities:
+    - id: cap.artifact-graph.instruction-loader
+      intent: 加载 Schema 模板，并按 workflow surface 与 artifact 编译项目配置投影；spec-driven tasks instruction 将要求 Checks 通过 Verifies 字段锚定 change-local spec requirement/scenario
+    - id: cap.ai.workflow-templates
+      intent: verify/apply/archive/propose 等模板共享面向 Agent 的 workflow guidance；propose 的 post-propose warning validation 包含程序化 Actions/Checks/Verifies 结构校验，并避免大语言模型语义判断
+    - id: cap.validation.change
+      intent: 验证变更的完整性和结构，包括 delta spec section-type 与主 spec header 存在性的交叉验证，以及 tasks.md 中 Verifies 字段的确定性结构和 change-local spec 引用校验

@@ -52,8 +52,8 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getOpsxOnboardCommandTemplate: '27f6cbc05a4463eb7607b339c9f63ff9ae2358ed8e01c860df1ccc14e82cbbbd',
   getOpsxBulkArchiveCommandTemplate: '2ea5419ecbaaf9227d78519aa608b67dacad93fe851d257f7d2a3308ac8bb301',
   getOpsxVerifyCommandTemplate: '05e0c78e57f78c8cd427e7cccb9c07ecad0dc060daa5ff7c3c22bf4100aa7fc8',
-  getOpsxProposeSkillTemplate: '820e1bb67731ca5e696351c8173f05ae9eddb8c19b23d21d63eb52631ea119a9',
-  getOpsxProposeCommandTemplate: 'c37d75b9419f9f85dc7cce230016765215e15410b34ea719a40820bcd070a218',
+  getOpsxProposeSkillTemplate: '8ef067d8f555044995f339c9722134d71027ee86fb532028c03f5629fc378a1f',
+  getOpsxProposeCommandTemplate: '9e77a3ed497bf139d8e806292a54798581d97a34e46ab6129ab29bed868db907',
   getFeedbackSkillTemplate: 'd7d83c5f7fc2b92fe8f4588a5bf2d9cb315e4c73ec19bcd5ef28270906319a0d',
   getBootstrapOpsxSkillTemplate: '692e37c20b4723fbf2a0bfc338c041a0a014089f263237df7e00b0ca696e3460',
   getOpsxBootstrapCommandTemplate: 'd5dff20a1fc1e873db48770d0b4257adb0a692b93d94a477e0a59952473cf0e3',
@@ -70,7 +70,7 @@ const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-bulk-archive-change': 'f0be4d9d342bf96d70ec92cdd2f8f41838eec8f6add6147b06d4cca5995d5a4c',
   'openspec-verify-change': 'ca4aa1d7d637aa65b1753b1f36950361f4998e24ce7137ef45dd992103db4198',
   'openspec-onboard': 'd19c2b2940ea0574c20dee4d18156d2e7e6624b41f835e21c9b064f70247e85d',
-  'openspec-propose': '95706e9058e96a58ca2ad4be618f6d1ede93864b5e7d8f0b211623162de5ed82',
+  'openspec-propose': '84c42ca426fabb6f8ca73a76ac24bc56e501324dc68dad8c8c4f354d6e974fde',
 };
 
 function stableStringify(value: unknown): string {

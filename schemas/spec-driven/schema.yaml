@@ -168,13 +168,17 @@ artifacts:
       - Actions are implementation work items and MUST use checkbox IDs prefixed with `A`: `- [ ] A1 Task description`
       - Checks are executable verification items and MUST use checkbox IDs prefixed with `C`: `- [ ] C1 Verify ...`
       - Each check MUST include `Covers:` with one or more action IDs, and every action ID MUST be covered by at least one check
+      - Each check MUST include `Verifies:` before executable evidence fields, identifying the change-local spec requirement and scenario it verifies
       - Each check MUST include at least one executable evidence field: `Command:`, `Evidence:`, or `Expect:`
+      - When this change has local delta specs, `Verifies:` MUST use a change-local relative POSIX path from the change directory: `specs/<capability>/spec.md`
+      - `Verifies:` MUST name the full Requirement title and one or more full Scenario names
+      - `Verifies:` MUST NOT use `openspec/specs/...`, project-root-relative paths, archived/main spec paths, absolute paths, parent traversal, or backslash-separated paths
 
       Conversion rules:
       - Validation work maps to checks for invalid-input behavior
       - Bug fixes map to a check that reproduces the failure and proves the regression fix
       - Refactors map to a before/after behavior-equivalence check
-      - Trivial edits such as typo, wording-only, or comment-only changes do not require full test-first decomposition, but still need at least one lightweight check explaining how completion will be verified
+      - Trivial edits such as typo, wording-only, or comment-only changes do not require full test-first decomposition, but still need at least one lightweight check with a non-empty `Verifies:` explaining how completion will be verified
 
       Example:
       ```
@@ -187,11 +191,13 @@ artifacts:
 
       - [ ] C1 Verify module structure is loadable
         - Covers: A1
+        - Verifies: `specs/example/spec.md` / Requirement "Module loading" / Scenario "Module imports successfully"
         - Command: `npm test`
         - Expect: module imports succeed
 
       - [ ] C2 Verify dependency installation
         - Covers: A2
+        - Verifies: `specs/example/spec.md` / Requirement "Dependency management" / Scenario "Dependencies are pinned"
         - Evidence: package lock diff
         - Expect: dependency is pinned and installable
       ```

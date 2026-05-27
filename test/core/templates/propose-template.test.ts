@@ -57,6 +57,9 @@ describe('propose template post-validation flow', () => {
       expect(body).toContain('Actions');
       expect(body).toContain('Checks');
       expect(body).toContain('Covers:');
+      expect(body).toContain('Verifies:');
+      expect(body).toContain('change-local `Verifies:` spec paths');
+      expect(body).toContain('Requirement/Scenario references');
       expect(body).toContain('Command:');
       expect(body).toContain('Evidence:');
       expect(body).toContain('Expect:');

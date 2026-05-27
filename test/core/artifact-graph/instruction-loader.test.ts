@@ -163,10 +163,17 @@ describe('instruction-loader', () => {
       expect(instructions.instruction).toContain('Actions');
       expect(instructions.instruction).toContain('Checks');
       expect(instructions.instruction).toContain('Covers:');
+      expect(instructions.instruction).toContain('Verifies:');
+      expect(instructions.instruction).toContain('specs/<capability>/spec.md');
+      expect(instructions.instruction).toContain('Requirement title');
+      expect(instructions.instruction).toContain('Scenario names');
+      expect(instructions.instruction).toContain('absolute paths');
+      expect(instructions.instruction).toContain('backslash-separated paths');
       expect(instructions.instruction).toContain('invalid-input behavior');
       expect(instructions.instruction).toContain('regression fix');
       expect(instructions.instruction).toContain('before/after behavior-equivalence');
       expect(instructions.instruction).toContain('Trivial edits');
+      expect(instructions.template).toContain('Verifies: `specs/<capability>/spec.md`');
     });
 
     it('should show dependencies with completion status', () => {

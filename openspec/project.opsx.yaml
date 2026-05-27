@@ -70,10 +70,10 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: verify/apply/archive/propose 等模板共享面向 Agent 的 workflow guidance；propose 的 post-propose warning validation 包含程序化 Actions/Checks 结构校验，并避免大语言模型语义判断。
+    intent: verify/apply/archive/propose 等模板共享面向 Agent 的 workflow guidance；propose 的 post-propose warning validation 包含程序化 Actions/Checks/Verifies 结构校验，并避免大语言模型语义判断
     type: capability
   - id: cap.artifact-graph.instruction-loader
-    intent: 加载 Schema 模板，并按 workflow surface 与 artifact 编译项目配置投影，向 AI 暴露统一的 prompt projection 而非原始字段拼接结果
+    intent: 加载 Schema 模板，并按 workflow surface 与 artifact 编译项目配置投影；spec-driven tasks instruction 将要求 Checks 通过 Verifies 字段锚定 change-local spec requirement/scenario
     status: active
     type: capability
   - id: cap.artifact-graph.parse
@@ -244,7 +244,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.validation.change
-    intent: 验证变更的完整性和结构，包括 delta spec section-type 与主 spec header 存在性的交叉验证
+    intent: 验证变更的完整性和结构，包括 delta spec section-type 与主 spec header 存在性的交叉验证，以及 tasks.md 中 Verifies 字段的确定性结构和 change-local spec 引用校验
     status: active
     type: capability
   - id: cap.validation.opsx

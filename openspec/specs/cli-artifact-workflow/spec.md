@@ -65,7 +65,7 @@ The workflow SHALL use `openspec status` output to determine what can be created
 
 ### Requirement: Instructions Command
 
-The system SHALL output enriched instructions for creating an artifact, including for scaffolded changes. For the spec-driven `tasks` artifact, the generated instructions SHALL require `tasks.md` to separate implementation actions from goal-driven verification checks.
+The system SHALL output enriched instructions for creating an artifact, including for scaffolded changes. For the spec-driven `tasks` artifact, the generated instructions SHALL require `tasks.md` to separate implementation actions from goal-driven verification checks and SHALL require every check to declare what change-local spec requirement and scenario it verifies.
 
 #### Scenario: Show enriched instructions
 
@@ -105,6 +105,14 @@ The system SHALL output enriched instructions for creating an artifact, includin
 - **AND** `Checks` SHALL contain checkbox items for executable verification work using a `C` prefix
 - **AND** the instruction SHALL keep the existing `- [ ]` checkbox prefix contract intact for both sections
 
+#### Scenario: Tasks instructions require Verifies fields
+
+- **WHEN** user runs `openspec instructions tasks --change <id> --json`
+- **THEN** the returned `instruction` SHALL tell the agent that every check MUST include a `Verifies:` field
+- **AND** when the change has local delta specs, `Verifies:` SHALL use a change-local relative path from the change directory in the form `specs/<capability>/spec.md`
+- **AND** `Verifies:` SHALL identify one full `Requirement` name and one or more full `Scenario` names
+- **AND** `Verifies:` SHALL NOT use `openspec/specs/...`, project-root-relative paths, absolute paths, archived/main spec paths, or backslash-separated paths
+
 #### Scenario: Tasks instructions convert vague work into testable goals
 
 - **WHEN** user runs `openspec instructions tasks --change <id> --json`
@@ -119,12 +127,21 @@ The system SHALL output enriched instructions for creating an artifact, includin
 - **WHEN** user runs `openspec instructions tasks --change <id> --json`
 - **THEN** the returned `instruction` SHALL tell the agent that each check is executable verification work, not explanatory prose
 - **AND** each check SHALL include a command, evidence source, or observable expectation sufficient for an agent to run or inspect it
+- **AND** each check SHALL anchor that verification to a `Verifies:` target before implementation starts
 
 #### Scenario: Tasks instructions allow trivial fast path
 
 - **WHEN** user runs `openspec instructions tasks --change <id> --json`
 - **THEN** the returned `instruction` SHALL state that trivial edits such as typo or wording-only fixes do not require the full test-first decomposition
 - **AND** SHALL still require at least one lightweight check that explains how completion will be verified
+- **AND** that lightweight check SHALL still include a non-empty `Verifies:` field
+
+#### Scenario: Verifies path remains change-local and cross-platform
+
+- **WHEN** a `Verifies:` field names a spec path
+- **THEN** the path SHALL be written as a relative POSIX path from the change directory
+- **AND** the implementation SHALL resolve the path using Node path APIs such as `path.join(changeDir, verifiesPath)`
+- **AND** tests SHALL cover rejection of `openspec/specs/...`, absolute paths, parent traversal, and backslash-separated paths
 
 ### Requirement: Templates Command
 The system SHALL show resolved template paths for all artifacts in a schema.
