@@ -59,7 +59,7 @@ capabilities:
     intent: 建立内部 workflow ID 到外部用户命令 slug 的映射，使生成、检测、迁移和清理命令制品时都遵循同一套命名契约
     type: capability
   - id: cap.ai.skill-generation
-    intent: 为配置的 AI 工具生成特定工具的技能文件，并在写入 skill 指令时按工具渲染用户可见 workflow 引用；其中 Codex 使用精确的 `$openspec-*` skill 名称
+    intent: 为配置的 AI 工具生成特定工具的技能文件，并在写入 skill 指令时按工具渲染用户可见 workflow 引用；其中 Codex 使用精确的 `$openspec-*` skill 名称；生成集合包含可复用的 openspec-impact-sweeper skill 且不为其生成 CLI command。
     status: active
     type: capability
   - id: cap.ai.template-artifact-pipeline
@@ -70,7 +70,11 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: verify/apply/archive/propose 等模板共享面向 Agent 的 workflow guidance；propose 的 post-propose warning validation 包含程序化 Actions/Checks/Verifies 结构校验，并避免大语言模型语义判断
+    intent: verify/apply/archive/propose/explore 等模板共享面向 Agent 的 workflow guidance；explore 在代码变更概念、术语歧义或 proposal readiness 前调用 openspec-impact-sweeper 生成 OPSX-grounded 影响面报告；propose 的 post-propose warning validation 保持程序化结构校验且不检查 Impact Sweep。
+    type: capability
+  - id: cap.ai.impact-sweeper
+    intent: 提供可复用的 openspec-impact-sweeper skill，基于 OPSX、specs 和 tracked source search 为项目概念生成轻量影响面 JSON 报告。
+    status: active
     type: capability
   - id: cap.artifact-graph.instruction-loader
     intent: 加载 Schema 模板，并按 workflow surface 与 artifact 编译项目配置投影；spec-driven tasks instruction 将要求 Checks 通过 Verifies 字段锚定 change-local spec requirement/scenario

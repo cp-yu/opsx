@@ -1,0 +1,301 @@
+{
+  "timestamp": "2026-05-27T16:35:07.022Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "9759ec7b248335d2533d53173f8049c58d3bc187882e32594c64f8cc33d4a9b8",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      "CLAUDE.md",
+      "openspec/changes/add-explore-impact-sweeper/design.md",
+      "openspec/changes/add-explore-impact-sweeper/opsx-delta.yaml",
+      "openspec/changes/add-explore-impact-sweeper/proposal.md",
+      "openspec/changes/add-explore-impact-sweeper/specs/ai-workflow-templates/spec.md",
+      "openspec/changes/add-explore-impact-sweeper/tasks.md",
+      "openspec/project.opsx.code-map.yaml",
+      "openspec/project.opsx.relations.yaml",
+      "openspec/project.opsx.yaml",
+      "openspec/sweeper/.gitignore",
+      "src/core/shared/skill-generation.ts",
+      "src/core/templates/skill-templates.ts",
+      "src/core/templates/workflows/explore.ts",
+      "src/core/templates/workflows/impact-sweeper.ts",
+      "test/commands/config-profile.test.ts",
+      "test/core/command-generation/adapters.test.ts",
+      "test/core/command-generation/generator.test.ts",
+      "test/core/command-generation/types.test.ts",
+      "test/core/profile-sync-drift.test.ts",
+      "test/core/shared/skill-generation.test.ts",
+      "test/core/templates/explore-template.test.ts",
+      "test/core/templates/impact-sweeper-template.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts",
+      "test/core/workflow-installation.test.ts"
+    ],
+    "evidenceFingerprint": "01563feab82424393a816596ec1f143a68067f6d7b7809d63f9e9b5f586174ec",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "CLAUDE.md",
+        "hash": "e0b0cd969c200530afba16da624114b091e0077104f7e806189ee0dc88c62d51"
+      },
+      {
+        "path": "openspec/changes/add-explore-impact-sweeper/design.md",
+        "hash": "b875d0c777ebb62ba0023d58b0937ad6cd12087e6e0d195b9b9d577f0ead689a"
+      },
+      {
+        "path": "openspec/changes/add-explore-impact-sweeper/opsx-delta.yaml",
+        "hash": "e04fe4739105725589444b302642e960382c21d0eb6dcad31108dbb274dee86e"
+      },
+      {
+        "path": "openspec/changes/add-explore-impact-sweeper/proposal.md",
+        "hash": "cf9c9d548461c7f9cea813d93933746a4ceba6612b95c399d1720988917733d4"
+      },
+      {
+        "path": "openspec/changes/add-explore-impact-sweeper/specs/ai-workflow-templates/spec.md",
+        "hash": "7a6f04d8e3a01b5620bbaa53dbdc146a361b5ba781fd50b28c9a0d2055512f71"
+      },
+      {
+        "path": "openspec/changes/add-explore-impact-sweeper/tasks.md",
+        "hash": "9759ec7b248335d2533d53173f8049c58d3bc187882e32594c64f8cc33d4a9b8"
+      },
+      {
+        "path": "openspec/project.opsx.code-map.yaml",
+        "hash": "145b0cbd13b19428312e3f4ac6160ede3513b92ae325d5d2d8b03a9d64ba100c"
+      },
+      {
+        "path": "openspec/project.opsx.relations.yaml",
+        "hash": "dfa531067a08dd1872b42dbca9618acd864fe6ccdd35a9ab21224cbb6623d75f"
+      },
+      {
+        "path": "openspec/project.opsx.yaml",
+        "hash": "574dbeb4c269ebc9e099ca82cee7284858e688ac39e8c805ca074679018180f4"
+      },
+      {
+        "path": "openspec/sweeper/.gitignore",
+        "hash": "240a3e0d37d2e86b614063f5347eb02d4f99ca6c254de6b82871ff8d95532a7d"
+      },
+      {
+        "path": "src/core/shared/skill-generation.ts",
+        "hash": "3a3b7041f101afe5e4e4080bdb8ac574b6870642beff29ca7756b96f88059c86"
+      },
+      {
+        "path": "src/core/templates/skill-templates.ts",
+        "hash": "0270d6c4e6f3e5b06c6fdb91d2d3e4ddcca2816ee4f259ee7743d33d946f1b30"
+      },
+      {
+        "path": "src/core/templates/workflows/explore.ts",
+        "hash": "6eaeefc8d30f34d08d3e0643090f7a6d6923f0c4af3bff768f8cca5fe6c2bedd"
+      },
+      {
+        "path": "src/core/templates/workflows/impact-sweeper.ts",
+        "hash": "8571a34261d6cfb6399b705cd9e717ba624e1b09d6bb032223057830fe66a5a7"
+      },
+      {
+        "path": "test/commands/config-profile.test.ts",
+        "hash": "609a99c36b0fde507cd1a81d1f70bf3c92f33334c75c75329ab8731a0c8b5c0a"
+      },
+      {
+        "path": "test/core/command-generation/adapters.test.ts",
+        "hash": "2430a3c09577b38365a24a3f0bea5b5c67ca75c8f1be197bd609251c54068e78"
+      },
+      {
+        "path": "test/core/command-generation/generator.test.ts",
+        "hash": "dbbd7a9e4d2f87bfa20086c36e8203f69e616d6e9d8c0fd9bbd1f0f7c5417104"
+      },
+      {
+        "path": "test/core/command-generation/types.test.ts",
+        "hash": "5202c7ae10e6842dad70cbfccec056083a0692c6b2f6f5eb915b186716271056"
+      },
+      {
+        "path": "test/core/profile-sync-drift.test.ts",
+        "hash": "e3ecec431dd3ad5a92b40b06637db3766768d3d36b443662cc137bf282238453"
+      },
+      {
+        "path": "test/core/shared/skill-generation.test.ts",
+        "hash": "76f2c98d16d81ad55e4126292173a9995b06a71826bba68c97b512e657ed8b3a"
+      },
+      {
+        "path": "test/core/templates/explore-template.test.ts",
+        "hash": "65133e828eb43b92e908e9bd9471984a76dd54fc355f40428aa6d9b3270fcf7f"
+      },
+      {
+        "path": "test/core/templates/impact-sweeper-template.test.ts",
+        "hash": "b0bbb815ece29b9b50ab61be91cb9c90f7a02528e447dfc9dcaa92bde6cce2bb"
+      },
+      {
+        "path": "test/core/templates/skill-templates-parity.test.ts",
+        "hash": "af531acadeb2187833d9c158146f759bc6d04195875d8a9593a850182d0b12d8"
+      },
+      {
+        "path": "test/core/workflow-installation.test.ts",
+        "hash": "38da720ca917f0d55cac2882ba718ebbee8173c586ec73a1e60d9f9ddb862e03"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "35327d8e451100a5abf84a73fa1883cf979373e8"
+  },
+  "optimization": {
+    "status": "IMPROVED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-27T16:39:46.793Z",
+        "type": "optimization",
+        "status": "OPTIMIZATION_PROPOSED",
+        "summary": "Deduplicate repeated impact sweep guidance in explore template into one shared constant.",
+        "files": [
+          "src/core/templates/workflows/explore.ts"
+        ]
+      },
+      {
+        "timestamp": "2026-05-27T16:45:08.339Z",
+        "type": "verification",
+        "result": "PASS",
+        "behaviorRetryCounter": 1
+      }
+    ],
+    "affectedFileHashes": {
+      "src/core/templates/workflows/explore.ts": "8e9ed5e2c095237d14d34500e421b7eb1a0af4a82324d99a1f1e1e00444108a5"
+    },
+    "baseline": {
+      "timestamp": "2026-05-27T16:35:07.022Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "9759ec7b248335d2533d53173f8049c58d3bc187882e32594c64f8cc33d4a9b8",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          "CLAUDE.md",
+          "openspec/changes/add-explore-impact-sweeper/design.md",
+          "openspec/changes/add-explore-impact-sweeper/opsx-delta.yaml",
+          "openspec/changes/add-explore-impact-sweeper/proposal.md",
+          "openspec/changes/add-explore-impact-sweeper/specs/ai-workflow-templates/spec.md",
+          "openspec/changes/add-explore-impact-sweeper/tasks.md",
+          "openspec/project.opsx.code-map.yaml",
+          "openspec/project.opsx.relations.yaml",
+          "openspec/project.opsx.yaml",
+          "openspec/sweeper/.gitignore",
+          "src/core/shared/skill-generation.ts",
+          "src/core/templates/skill-templates.ts",
+          "src/core/templates/workflows/explore.ts",
+          "src/core/templates/workflows/impact-sweeper.ts",
+          "test/commands/config-profile.test.ts",
+          "test/core/command-generation/adapters.test.ts",
+          "test/core/command-generation/generator.test.ts",
+          "test/core/command-generation/types.test.ts",
+          "test/core/profile-sync-drift.test.ts",
+          "test/core/shared/skill-generation.test.ts",
+          "test/core/templates/explore-template.test.ts",
+          "test/core/templates/impact-sweeper-template.test.ts",
+          "test/core/templates/skill-templates-parity.test.ts",
+          "test/core/workflow-installation.test.ts"
+        ],
+        "evidenceFingerprint": "f69463a3a8facd31c2a73a3dea46c0e22fb99b7fd030982489f0ea06814f2eb8",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "CLAUDE.md",
+            "hash": "e0b0cd969c200530afba16da624114b091e0077104f7e806189ee0dc88c62d51"
+          },
+          {
+            "path": "openspec/changes/add-explore-impact-sweeper/design.md",
+            "hash": "b875d0c777ebb62ba0023d58b0937ad6cd12087e6e0d195b9b9d577f0ead689a"
+          },
+          {
+            "path": "openspec/changes/add-explore-impact-sweeper/opsx-delta.yaml",
+            "hash": "e04fe4739105725589444b302642e960382c21d0eb6dcad31108dbb274dee86e"
+          },
+          {
+            "path": "openspec/changes/add-explore-impact-sweeper/proposal.md",
+            "hash": "cf9c9d548461c7f9cea813d93933746a4ceba6612b95c399d1720988917733d4"
+          },
+          {
+            "path": "openspec/changes/add-explore-impact-sweeper/specs/ai-workflow-templates/spec.md",
+            "hash": "7a6f04d8e3a01b5620bbaa53dbdc146a361b5ba781fd50b28c9a0d2055512f71"
+          },
+          {
+            "path": "openspec/changes/add-explore-impact-sweeper/tasks.md",
+            "hash": "9759ec7b248335d2533d53173f8049c58d3bc187882e32594c64f8cc33d4a9b8"
+          },
+          {
+            "path": "openspec/project.opsx.code-map.yaml",
+            "hash": "ab19b2eeb5446103b99c4e4574f72b4545099dc7c0343b25702f4260eff25bac"
+          },
+          {
+            "path": "openspec/project.opsx.relations.yaml",
+            "hash": "dfa531067a08dd1872b42dbca9618acd864fe6ccdd35a9ab21224cbb6623d75f"
+          },
+          {
+            "path": "openspec/project.opsx.yaml",
+            "hash": "391748fe36a3b82c057503d781a10d107334b9702a7b0cec01a53ad30a7237b4"
+          },
+          {
+            "path": "openspec/sweeper/.gitignore",
+            "hash": "240a3e0d37d2e86b614063f5347eb02d4f99ca6c254de6b82871ff8d95532a7d"
+          },
+          {
+            "path": "src/core/shared/skill-generation.ts",
+            "hash": "3a3b7041f101afe5e4e4080bdb8ac574b6870642beff29ca7756b96f88059c86"
+          },
+          {
+            "path": "src/core/templates/skill-templates.ts",
+            "hash": "0270d6c4e6f3e5b06c6fdb91d2d3e4ddcca2816ee4f259ee7743d33d946f1b30"
+          },
+          {
+            "path": "src/core/templates/workflows/explore.ts",
+            "hash": "8e9ed5e2c095237d14d34500e421b7eb1a0af4a82324d99a1f1e1e00444108a5"
+          },
+          {
+            "path": "src/core/templates/workflows/impact-sweeper.ts",
+            "hash": "8571a34261d6cfb6399b705cd9e717ba624e1b09d6bb032223057830fe66a5a7"
+          },
+          {
+            "path": "test/commands/config-profile.test.ts",
+            "hash": "609a99c36b0fde507cd1a81d1f70bf3c92f33334c75c75329ab8731a0c8b5c0a"
+          },
+          {
+            "path": "test/core/command-generation/adapters.test.ts",
+            "hash": "2430a3c09577b38365a24a3f0bea5b5c67ca75c8f1be197bd609251c54068e78"
+          },
+          {
+            "path": "test/core/command-generation/generator.test.ts",
+            "hash": "dbbd7a9e4d2f87bfa20086c36e8203f69e616d6e9d8c0fd9bbd1f0f7c5417104"
+          },
+          {
+            "path": "test/core/command-generation/types.test.ts",
+            "hash": "5202c7ae10e6842dad70cbfccec056083a0692c6b2f6f5eb915b186716271056"
+          },
+          {
+            "path": "test/core/profile-sync-drift.test.ts",
+            "hash": "e3ecec431dd3ad5a92b40b06637db3766768d3d36b443662cc137bf282238453"
+          },
+          {
+            "path": "test/core/shared/skill-generation.test.ts",
+            "hash": "76f2c98d16d81ad55e4126292173a9995b06a71826bba68c97b512e657ed8b3a"
+          },
+          {
+            "path": "test/core/templates/explore-template.test.ts",
+            "hash": "65133e828eb43b92e908e9bd9471984a76dd54fc355f40428aa6d9b3270fcf7f"
+          },
+          {
+            "path": "test/core/templates/impact-sweeper-template.test.ts",
+            "hash": "b0bbb815ece29b9b50ab61be91cb9c90f7a02528e447dfc9dcaa92bde6cce2bb"
+          },
+          {
+            "path": "test/core/templates/skill-templates-parity.test.ts",
+            "hash": "af531acadeb2187833d9c158146f759bc6d04195875d8a9593a850182d0b12d8"
+          },
+          {
+            "path": "test/core/workflow-installation.test.ts",
+            "hash": "38da720ca917f0d55cac2882ba718ebbee8173c586ec73a1e60d9f9ddb862e03"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "35327d8e451100a5abf84a73fa1883cf979373e8"
+      }
+    },
+    "final": {
+      "result": "PASS",
+      "issues": []
+    }
+  }
+}

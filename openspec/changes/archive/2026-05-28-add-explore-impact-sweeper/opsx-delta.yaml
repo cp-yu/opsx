@@ -1,0 +1,23 @@
+schema_version: 1
+ADDED:
+  capabilities:
+    - id: cap.ai.impact-sweeper
+      type: capability
+      intent: 提供可复用的 openspec-impact-sweeper skill，基于 OPSX、specs 和 tracked source search 为项目概念生成轻量影响面 JSON 报告。
+      status: active
+  relations:
+    - from: dom.ai-integration
+      type: contains
+      to: cap.ai.impact-sweeper
+    - from: cap.ai.impact-sweeper
+      type: depends_on
+      to: cap.ai.workflow-templates
+    - from: cap.ai.impact-sweeper
+      type: depends_on
+      to: cap.ai.skill-generation
+MODIFIED:
+  capabilities:
+    - id: cap.ai.workflow-templates
+      intent: verify/apply/archive/propose/explore 等模板共享面向 Agent 的 workflow guidance；explore 在代码变更概念、术语歧义或 proposal readiness 前调用 openspec-impact-sweeper 生成 OPSX-grounded 影响面报告；propose 的 post-propose warning validation 保持程序化结构校验且不检查 Impact Sweep。
+    - id: cap.ai.skill-generation
+      intent: 为配置的 AI 工具生成特定工具的技能文件，并在写入 skill 指令时按工具渲染用户可见 workflow 引用；其中 Codex 使用精确的 `$openspec-*` skill 名称；生成集合包含可复用的 openspec-impact-sweeper skill 且不为其生成 CLI command。

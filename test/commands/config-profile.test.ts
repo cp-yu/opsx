@@ -117,6 +117,7 @@ describe('config profile interactive flow', () => {
       'openspec-archive-change',
       'openspec-reviewer',
       'openspec-optimizer',
+      'openspec-impact-sweeper',
     ];
     for (const dirName of coreSkillDirs) {
       const skillPath = path.join(projectDir, '.claude', 'skills', dirName, 'SKILL.md');

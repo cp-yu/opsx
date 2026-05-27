@@ -28,18 +28,19 @@ import {
   getVerifyChangeSkillTemplate,
   getBootstrapOpsxSkillTemplate,
   getOpsxBootstrapCommandTemplate,
+  getImpactSweeperSkillTemplate,
 } from '../../../src/core/templates/skill-templates.js';
 import { generateSkillContent } from '../../../src/core/shared/skill-generation.js';
 
 const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
-  getExploreSkillTemplate: '6ef2992890f91a8108a8874a58838370e607d1fbe4735a82ec0ce8590973c789',
+  getExploreSkillTemplate: 'bf35278e695118251f0999074947086bad8360ceea2993bcbafbda5a22159820',
   getNewChangeSkillTemplate: '5989672758eccf54e3bb554ab97f2c129a192b12bbb7688cc1ffcf6bccb1ae9d',
   getContinueChangeSkillTemplate: '3b554121e85a42b98c0f940e58d7b0bf4b99f205e76e65a92b3654000ec873b1',
   getApplyChangeSkillTemplate: '6f843647f2f8534bd371379d20a81740a72faa2c22ce2a307f406f2e6bfc1730',
   getFfChangeSkillTemplate: 'aa45b3f6ec87281c5b839ec4cc02e13a3f1d656b96664e7fb5d2b7ae34a0369e',
   getSyncSpecsSkillTemplate: '6d576f14d850348cb8c86d38197a85bc16bb00b940293eb1aa3c37fc5d56a3ea',
   getOnboardSkillTemplate: 'f23bc6a137a524dfa10a93d1413ebc9048aadc09265a4ceabb1381b95d07dc03',
-  getOpsxExploreCommandTemplate: '96df9ce9b91fc340aa7baa2d0b9cd750f614fc85a48f3993ec5ceaabb9b6b2ad',
+  getOpsxExploreCommandTemplate: '7ea60f4075071aeb7f1f9e3a24ccfd73b8a6bea6374d522cc0862eefdf93fd37',
   getOpsxNewCommandTemplate: '62eee32d6d81a376e7be845d0891e28e6262ad07482f9bfe6af12a9f0366c364',
   getOpsxContinueCommandTemplate: 'c577ccc6ba5e327063f2fe5c158e4b9a9361436c305c239ecf4fefa191a12da5',
   getOpsxApplyCommandTemplate: 'c196d914d3a328df705592b896f61da143ce88419f3a07057018ba233e93d63b',
@@ -57,10 +58,11 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getFeedbackSkillTemplate: 'd7d83c5f7fc2b92fe8f4588a5bf2d9cb315e4c73ec19bcd5ef28270906319a0d',
   getBootstrapOpsxSkillTemplate: '692e37c20b4723fbf2a0bfc338c041a0a014089f263237df7e00b0ca696e3460',
   getOpsxBootstrapCommandTemplate: 'd5dff20a1fc1e873db48770d0b4257adb0a692b93d94a477e0a59952473cf0e3',
+  getImpactSweeperSkillTemplate: '4e465ce3373746e2834454918028f394a28ed9f722a6e9ce82d1db376b36cbc4',
 };
 
 const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
-  'openspec-explore': '69df211e2b53804e2c064074d891203de1e12142f1db6cb15541e9a4e947c174',
+  'openspec-explore': '9e33591f83fe3f914315185dc76e0828c6ca3f69b56142806bf96324337cb5a9',
   'openspec-new-change': 'c324a7ace1f244aa3f534ac8e3370a2c11190d6d1b85a315f26a211398310f0f',
   'openspec-continue-change': '8bb03b4f75ce914fc5e1f60917a15bdc1dc8d4d718eb419be53f6bd27de91eef',
   'openspec-apply-change': '40807ee1f2c8d2bbf5af16813470dfdd5fcdcf84f79dd9b7c9075030805904b2',
@@ -71,6 +73,7 @@ const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-verify-change': 'ca4aa1d7d637aa65b1753b1f36950361f4998e24ce7137ef45dd992103db4198',
   'openspec-onboard': 'd19c2b2940ea0574c20dee4d18156d2e7e6624b41f835e21c9b064f70247e85d',
   'openspec-propose': '84c42ca426fabb6f8ca73a76ac24bc56e501324dc68dad8c8c4f354d6e974fde',
+  'openspec-impact-sweeper': '9ec1d8b3aaf4cb8c13cbe0067bd462d9ba35bb7a55377d124808179ab7193682',
 };
 
 function stableStringify(value: unknown): string {
@@ -121,6 +124,7 @@ describe('skill templates split parity', () => {
       getFeedbackSkillTemplate,
       getBootstrapOpsxSkillTemplate,
       getOpsxBootstrapCommandTemplate,
+      getImpactSweeperSkillTemplate,
     };
 
     const actualHashes = Object.fromEntries(
@@ -145,6 +149,7 @@ describe('skill templates split parity', () => {
       ['openspec-verify-change', getVerifyChangeSkillTemplate],
       ['openspec-onboard', getOnboardSkillTemplate],
       ['openspec-propose', getOpsxProposeSkillTemplate],
+      ['openspec-impact-sweeper', getImpactSweeperSkillTemplate],
     ];
 
     const actualHashes = Object.fromEntries(

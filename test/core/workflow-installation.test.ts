@@ -55,7 +55,13 @@ describe('workflow installation planning', () => {
 
     expect(plan.shouldGenerateSkills).toBe(true);
     expect(plan.shouldGenerateCommands).toBe(false);
-    expect(plan.expectedSkillDirNames).toEqual(['openspec-propose', 'openspec-explore', 'openspec-reviewer', 'openspec-optimizer']);
+    expect(plan.expectedSkillDirNames).toEqual([
+      'openspec-propose',
+      'openspec-explore',
+      'openspec-reviewer',
+      'openspec-optimizer',
+      'openspec-impact-sweeper',
+    ]);
     expect(plan.expectedCommandSlugs).toEqual([]);
   });
 

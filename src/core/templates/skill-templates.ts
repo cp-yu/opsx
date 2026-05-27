@@ -20,4 +20,5 @@ export { getOpsxProposeSkillTemplate, getOpsxProposeCommandTemplate } from './wo
 export { getBootstrapOpsxSkillTemplate, getOpsxBootstrapCommandTemplate } from './workflows/bootstrap-opsx.js';
 export { getReviewerSkillTemplate } from './workflows/reviewer.js';
 export { getOptimizerSkillTemplate } from './workflows/optimizer.js';
+export { getImpactSweeperSkillTemplate } from './workflows/impact-sweeper.js';
 export { getFeedbackSkillTemplate } from './workflows/feedback.js';

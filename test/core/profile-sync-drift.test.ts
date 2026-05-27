@@ -18,7 +18,7 @@ function writeSkill(projectDir: string, workflowId: string): void {
 }
 
 function writeInternalSkills(toolDir: string, projectDir: string): void {
-  for (const skillDirName of ['openspec-reviewer', 'openspec-optimizer']) {
+  for (const skillDirName of ['openspec-reviewer', 'openspec-optimizer', 'openspec-impact-sweeper']) {
     const skillPath = path.join(projectDir, toolDir, 'skills', skillDirName, 'SKILL.md');
     fs.mkdirSync(path.dirname(skillPath), { recursive: true });
     fs.writeFileSync(skillPath, `name: ${skillDirName}\n`);

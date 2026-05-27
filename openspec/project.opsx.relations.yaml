@@ -72,6 +72,15 @@ relations:
   - from: dom.ai-integration
     type: contains
     to: cap.ai.workflow-templates
+  - from: dom.ai-integration
+    type: contains
+    to: cap.ai.impact-sweeper
+  - from: cap.ai.impact-sweeper
+    type: depends_on
+    to: cap.ai.workflow-templates
+  - from: cap.ai.impact-sweeper
+    type: depends_on
+    to: cap.ai.skill-generation
   - from: dom.artifact-graph
     type: contains
     to: cap.artifact-graph.instruction-loader

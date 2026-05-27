@@ -1,5 +1,5 @@
 schema_version: 1
-generated_at: 2026-05-27T08:20:09.411Z
+generated_at: 2026-05-27T16:50:23.772Z
 nodes:
   - id: cap.ai.agent-docs
     refs:
@@ -24,6 +24,14 @@ nodes:
       - path: src/core/templates/workflows/
       - path: src/core/templates/skill-templates.ts
       - path: src/core/templates/fragments/opsx-fragments.ts
+  - id: cap.ai.impact-sweeper
+    refs:
+      - path: src/core/templates/workflows/impact-sweeper.ts
+      - path: src/core/shared/skill-generation.ts
+      - path: src/core/templates/workflows/explore.ts
+      - path: test/core/templates/impact-sweeper-template.test.ts
+      - path: test/core/templates/explore-template.test.ts
+      - path: openspec/sweeper/.gitignore
   - id: cap.verify.optimize
     refs:
       - path: src/core/templates/fragments/opsx-fragments.ts

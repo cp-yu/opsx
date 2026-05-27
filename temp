@@ -2,3 +2,6 @@
 
 
   验证结果： openspec validate 通过，无 warning。结构检查：8A / 8C / 8 Covers / 16 evidence fields，全部合规。 这里的C 感觉需要优化
+
+
+ 增加cli，辅助sweeper 
