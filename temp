@@ -1,5 +1,4 @@
-可以看到，sync 不会检测到是否verify 了，这个需要fix   
-遇到了不符合条件，这个需要硬性停止,询问用户是否需要操作或者跳过。
+现在工具哪里 需要有功能可以创建change/**/specs/ 文件夹，因为每次claude code都要询问用户，这影响体验。
 
 
-另外有一个问题，sync在core模式下，是否会调用openspec sync
+  验证结果： openspec validate 通过，无 warning。结构检查：8A / 8C / 8 Covers / 16 evidence fields，全部合规。 这里的C 感觉需要优化

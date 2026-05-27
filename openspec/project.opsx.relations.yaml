@@ -360,3 +360,12 @@ relations:
   - from: cap.apply.verify-integration
     type: depends_on
     to: cap.cli.verify-aware-instructions
+  - from: cap.ai.subagent-self-read
+    type: contains
+    to: dom.verify
+  - from: cap.ai.reviewer-skill
+    type: depends_on
+    to: cap.ai.subagent-self-read
+  - from: cap.ai.optimizer-skill
+    type: depends_on
+    to: cap.ai.subagent-self-read

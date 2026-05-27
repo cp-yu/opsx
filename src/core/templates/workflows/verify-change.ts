@@ -40,7 +40,7 @@ function buildVerifyIntro(text: VerifyTemplateText, cleanContextProtocol: string
 | Mode Label | Phase | Trigger |
 | --- | --- | --- |
 | \`[Mode: Setup]\` | Select change, load artifacts, and run early-stop checks | Steps 1-3.5 |
-| \`[Mode: Evidence]\` | Gather git evidence and final file contents | Step 4 |
+| \`[Mode: Evidence]\` | Determine changeDir and projectRoot for subagent handoff | Step 4 |
 | \`[Mode: Delegate Review]\` | Start reviewer subagent and wait for structured payload | Step 5 |
 | \`[Mode: Validate Payload]\` | Validate reviewer payload structure and evidence references | Step 6 |
 | \`[Mode: Writeback]\` | Apply writeBackPlan to \`tasks.md\` | Step 7/9 |
@@ -160,22 +160,23 @@ ${VERIFY_ERROR_RECOVERY_GUIDE}
 
 **[Mode: Optimize] Phase 2 Optimization Protocol**:
 
-   Delegate to a clean-context optimizer subagent. The coordinator MUST pass the optimization
-   input contract below and instruct the subagent to invoke the \`openspec-optimizer\` skill.
+   Delegate to a clean-context optimizer subagent with Read and Bash tool capability.
+   The coordinator MUST pass only the location input contract below and instruct the subagent
+   to invoke the \`openspec-optimizer\` skill.
 
    The \`openspec-optimizer\` skill defines: role and hard constraints, input contract,
-   prioritized optimization principles (5 categories + prohibition list), Search/Replace block
-   output format, and failed directions avoidance protocol.
+   self-read protocol for \`.verify-result.json\`, prioritized optimization principles
+   (5 categories + prohibition list), Search/Replace block output format, and failed
+   directions avoidance protocol.
 
    **Inputs to pass to the optimizer subagent**:
-   - Canonical Phase 1 summary, issues, and evidence file list
-   - Change artifacts: proposal.md, specs/, design.md, tasks.md
-   - Final file contents for the candidate implementation files
-   - Project policy context from openspec/config.yaml, including optimization.enabled
-   - failedDirections from prior optimization attempts (if any)
+   - \`changeName\`: the selected change name
+   - \`changeDir\`: absolute path to the change directory
+   - \`projectRoot\`: absolute path to the project root
 
    The optimizer subagent MUST return only Search/Replace blocks or exactly
-   \`No optimization opportunities found\`; it MUST NOT edit files directly.
+   \`No optimization opportunities found\`; it MUST NOT edit files directly or through Bash.
+   It reads Phase 1 result, evidence files, config, and failedDirections itself from disk.
    The coordinator MUST wait for the complete optimizer payload before applying blocks
    or recording NO_OPTIMIZATION_NEEDED.
 
@@ -210,12 +211,7 @@ function buildReverifyStep(stepNumber: number, speculativeFenceContract: string)
 
    - Re-run the same verification contract in \`P1_SPECULATIVE_FENCE\` mode after applying candidate Search/Replace blocks
 ${speculativeFenceContract}
-   - For subagent-orchestrated speculative verification, delegate to a clean-context reviewer subagent, instruct it to invoke the \`openspec-reviewer\` skill, and pass:
-     - Change artifacts from the speculative worktree
-     - Git evidence for the speculative worktree
-     - Final file contents for every changed candidate file
-     - Canonical Phase 1 result and optimization attempt summary
-     - Prior \`.verify-result.json\` when present
+   - For subagent-orchestrated speculative verification, delegate to a clean-context reviewer subagent with Read and Bash tool capability, instruct it to invoke the \`openspec-reviewer\` skill, and pass only \`changeName\`, \`changeDir\`, and \`projectRoot\`
    - Wait for the complete reviewer payload before deciding whether the optimization passed or failed
 ${VERIFY_SUBAGENT_TIMEOUT_RULES}
    - \`P1_SPECULATIVE_FENCE\` MUST reuse the same completeness/correctness/coherence checks but MUST NOT:
@@ -459,39 +455,38 @@ function buildSubagentVerifyInstructions(text: VerifyTemplateText): string {
 
   return `${buildVerifyIntro(text, CLEAN_CONTEXT_VERIFY_PROTOCOL_SUBAGENT)}
 
-4. [Mode: Evidence] **Assemble the Explicit Evidence Bundle**
+4. [Mode: Evidence] **Determine Subagent Location Inputs**
 
-   - Read every available artifact from \`contextFiles\`
-   - Run \`git status\`, \`git diff\`, and \`git log -5 --oneline\`
-   - Identify candidate implementation files from git evidence and requirement keywords
-   - Read the final file contents for every candidate before handing control to a reviewer subagent
-   - Read prior \`.verify-result.json\` if it exists
-   - Normalize evidence file paths as relative POSIX paths for the reviewer payload
-   - The top-level agent MAY gather evidence, but MUST NOT assign completeness, correctness, or coherence verdicts here
+   - Determine \`changeName\` from the selected change
+   - Determine \`changeDir\` from \`openspec instructions apply --change "<name>" --json\`
+   - Determine \`projectRoot\` as the absolute project root for this OpenSpec workspace
+   - Do NOT read candidate implementation file contents in this mode
+   - Do NOT run \`git status\`, \`git diff\`, or \`git log\` in this mode
+   - The top-level agent MUST NOT assign completeness, correctness, or coherence verdicts here
 
 5. [Mode: Delegate Review] **Run the Reviewer Subagent for Canonical Phase 1**
 
-   Delegate to a clean-context reviewer subagent with the explicit evidence bundle from Step 4.
+   Delegate to a clean-context reviewer subagent with Read and Bash tool capability.
    The coordinator MUST instruct the subagent to invoke the \`openspec-reviewer\` skill.
 
    The \`openspec-reviewer\` skill loads the full reviewer contract: role definition, hard constraints,
-   input validation, 6-step verification protocol, severity thresholds and evidence standards,
-   three-dimension coverage (completeness, correctness, coherence), OPSX alignment rules,
-   structured JSON output schema with writeBackPlan semantics, and graceful degradation rules.
+   location input validation, self-read protocol, L1 test strategy, 6-step verification protocol,
+   severity thresholds and evidence standards, three-dimension coverage (completeness,
+   correctness, coherence), OPSX alignment rules, structured JSON output schema with
+   writeBackPlan semantics, and graceful degradation rules.
 
-   Pass the explicit evidence bundle alongside the skill invoke as the subagent's input context:
-   - \`changeArtifacts\`: proposal, specs, design, tasks, and OPSX delta when available
-   - \`gitEvidence\`: \`git status\`, \`git diff\`, and \`git log -5 --oneline\`
-   - \`finalFileContents\`: final contents for every candidate implementation file
-   - \`priorVerifyResult\`: prior \`.verify-result.json\` when present
-   - \`opsxContext\`: \`project.opsx.yaml\`, code map references, and relevant existing specs when available
+   Pass only these location strings alongside the skill invoke:
+   - \`changeName\`: the selected change name
+   - \`changeDir\`: absolute path to the change directory
+   - \`projectRoot\`: absolute path to the project root
+
+   The reviewer subagent reads change artifacts, prior \`.verify-result.json\`,
+   git evidence, implementation files, tests, and OPSX context itself.
 
    Wait for the complete reviewer payload before entering payload validation.
    The coordinator MUST NOT substitute its own completeness/correctness/coherence verdict.
 
 ${VERIFY_SUBAGENT_TIMEOUT_RULES}
-
-${GIT_EVIDENCE_PROTOCOL}
 
 ${CONFORMANCE_CHECK_RULES}
 
@@ -527,7 +522,7 @@ ${buildPhase2Step(9)}
 
 ${buildReverifyStep(
   10,
-  `   - In \`${SUBAGENT_VERIFY_EXECUTION_MODEL}\` mode, rebuild the explicit evidence bundle for the speculative worktree and invoke the reviewer subagent again for the speculative verdict\n   - The top-level agent MUST NOT substitute its own completeness / correctness / coherence judgment during \`P1_SPECULATIVE_FENCE\`\n`
+  `   - In \`${SUBAGENT_VERIFY_EXECUTION_MODEL}\` mode, invoke the reviewer subagent again with \`changeName\`, \`changeDir\`, and \`projectRoot\` for the speculative verdict\n   - The top-level agent MUST NOT substitute its own completeness / correctness / coherence judgment during \`P1_SPECULATIVE_FENCE\`\n`
 )}
 
 ${buildPersistStep(11, verifyInvocation, continueInvocation)}

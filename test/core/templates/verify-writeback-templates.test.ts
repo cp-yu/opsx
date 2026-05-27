@@ -118,7 +118,11 @@ describe('verify write-back workflow templates', () => {
     for (const template of [skill, command]) {
       expect(template).toContain('subagent-orchestrated');
       expect(template).toContain('invoke the `openspec-reviewer` skill');
+      expect(template).toContain('pass only `changeName`, `changeDir`, and `projectRoot`');
+      expect(template).toContain('spawn optimizer subagent with Read and Bash tool capability');
       expect(template).toContain('P1_SPECULATIVE_FENCE');
+      expect(template).not.toContain('Build the explicit evidence bundle');
+      expect(template).not.toContain('rebuild the speculative evidence bundle');
       expect(template).toContain('MUST NOT inline a current-agent review skeleton');
       expect(template).toContain('silently downgrade to reread mode');
     }
@@ -148,7 +152,7 @@ describe('verify write-back workflow templates', () => {
       getClaudeOpsxVerifyCommandTemplate().content,
       getCodexVerifyChangeSkillTemplate().instructions,
     ]) {
-      expect(template).toContain('4. [Mode: Evidence] **Assemble the Explicit Evidence Bundle**');
+      expect(template).toContain('4. [Mode: Evidence] **Determine Subagent Location Inputs**');
       expect(template).toContain('5. [Mode: Delegate Review] **Run the Reviewer Subagent for Canonical Phase 1**');
       expect(template).toContain('6. [Mode: Validate Payload] **Validate the Reviewer Payload**');
       expect(template).toContain('7. [Mode: Writeback] **Write Back CRITICAL Issues**');
@@ -194,18 +198,18 @@ describe('verify write-back workflow templates', () => {
     }
 
     for (const template of subagentTemplates) {
-      expect(template).toContain('Delegate to a clean-context reviewer subagent');
+      expect(template).toContain('Delegate to a clean-context reviewer subagent with Read and Bash tool capability');
       expect(template).toContain('invoke the `openspec-reviewer` skill');
-      expect(template).toContain('`changeArtifacts`');
-      expect(template).toContain('`gitEvidence`');
-      expect(template).toContain('`finalFileContents`');
-      expect(template).toContain('`priorVerifyResult`');
-      expect(template).toContain('`opsxContext`');
+      expect(template).toContain('`changeName`');
+      expect(template).toContain('`changeDir`');
+      expect(template).toContain('`projectRoot`');
+      expect(template).toContain('Pass only these location strings');
+      expect(template).toContain('The reviewer subagent reads change artifacts');
       expect(template).toContain('Wait for the complete reviewer payload');
-      expect(template).toContain('Delegate to a clean-context optimizer subagent');
+      expect(template).toContain('Delegate to a clean-context optimizer subagent with Read and Bash tool capability');
       expect(template).toContain('invoke the `openspec-optimizer` skill');
       expect(template).toContain('failedDirections');
-      expect(template).toContain('MUST NOT edit files directly');
+      expect(template).toContain('MUST NOT edit files directly or through Bash');
       expect(template).toContain('Subagent Timeout and Waiting Rules');
       expect(template).not.toContain('Spawn a clean-context reviewer subagent');
     }

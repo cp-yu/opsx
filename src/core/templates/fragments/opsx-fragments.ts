@@ -137,9 +137,9 @@ You are the verification coordinator, not the verification judge.
 
 | Role | Responsibility |
 | --- | --- |
-| Coordinator (top-level agent) | Gather evidence, delegate to subagents, validate payload shape, perform deterministic write-back, manage git checkpoints, and persist results through CLI |
-| Reviewer Subagent | Own all completeness, correctness, and coherence judgments using only the provided evidence bundle |
-| Optimizer Subagent | Propose behavior-preserving Search/Replace blocks; never edit files directly |
+| Coordinator (top-level agent) | Determine changeDir/projectRoot, pass location inputs to subagents, validate payload shape, perform deterministic write-back, manage git checkpoints, and persist results through CLI |
+| Reviewer Subagent | Read files and run tests/git commands as needed; own all completeness, correctness, and coherence judgments |
+| Optimizer Subagent | Read files and propose behavior-preserving Search/Replace blocks; never edit files directly |
 | CLI | Persist results deterministically, compute hashes, and validate seal state |
 
 Core constraint: You MUST NOT substitute your own completeness/correctness/coherence judgments for the reviewer's.
@@ -174,14 +174,13 @@ export const CLEAN_CONTEXT_VERIFY_PROTOCOL_SUBAGENT = `
 Use the subagent-orchestrated verify skeleton.
 
 **Top-level agent responsibilities before invoking the reviewer subagent**:
-- Change artifacts: \`proposal.md\`, \`specs/\`, \`design.md\`, \`tasks.md\`
-- Git evidence: output of \`git status\`, \`git diff\`, and \`git log -5 --oneline\`
-- Final file contents for candidate implementation files identified from git evidence
-- Prior \`.verify-result.json\` if it exists
+- Determine \`changeName\`, absolute \`changeDir\`, and absolute \`projectRoot\`
+- State that the reviewer subagent has Read and Bash tool capability
+- Instruct the reviewer subagent to invoke \`openspec-reviewer\`
 
 **Top-level agent restrictions**:
-- Collect and validate evidence, but do NOT assign completeness / correctness / coherence judgments directly
-- Pass only the explicit evidence bundle to the reviewer subagent
+- Do NOT collect artifact contents, git evidence, or final file contents for the reviewer
+- Pass only \`changeName\`, \`changeDir\`, and \`projectRoot\` to the reviewer subagent
 - Apply any write-back plan in the main workspace after validating the reviewer payload
 
 **Record in verify result**:

@@ -1,0 +1,299 @@
+{
+  "timestamp": "2026-05-26T17:14:01.729Z",
+  "result": "PASS_WITH_WARNINGS",
+  "issues": [
+    {
+      "severity": "WARNING",
+      "requirement": "OPSX Alignment",
+      "task": null,
+      "message": "OPSX delta introduces cap.ai.subagent-self-read and modifies reviewer/optimizer skill capabilities, but project.opsx.code-map.yaml has no dedicated code-map entries for those subagent capabilities yet.",
+      "recommendation": "Update project.opsx.code-map.yaml during sync/archive, or revise the delta if code-map coverage is intentionally deferred until archive-time sync.",
+      "evidence": [
+        "openspec/changes/self-sufficient-verify-subagents/opsx-delta.yaml:1-25",
+        "openspec/project.opsx.code-map.yaml:1-246"
+      ]
+    }
+  ],
+  "tasksFileHash": "b7cfe9ef7f3d1f66cdaa938e799b2d10a81efe021c81131f7619bd966a46d5f9",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      ".claude/skills/openspec-optimizer/SKILL.md",
+      ".claude/skills/openspec-reviewer/SKILL.md",
+      ".codex/skills/openspec-optimizer/SKILL.md",
+      ".codex/skills/openspec-reviewer/SKILL.md",
+      "CLAUDE.md",
+      "openspec/changes/self-sufficient-verify-subagents/design.md",
+      "openspec/changes/self-sufficient-verify-subagents/opsx-delta.yaml",
+      "openspec/changes/self-sufficient-verify-subagents/proposal.md",
+      "openspec/changes/self-sufficient-verify-subagents/specs/openspec-optimizer-skill/spec.md",
+      "openspec/changes/self-sufficient-verify-subagents/specs/openspec-reviewer-skill/spec.md",
+      "openspec/changes/self-sufficient-verify-subagents/specs/subagent-self-read/spec.md",
+      "openspec/changes/self-sufficient-verify-subagents/specs/verify-prompt-orchestration/spec.md",
+      "openspec/changes/self-sufficient-verify-subagents/tasks.md",
+      "openspec/project.opsx.code-map.yaml",
+      "openspec/project.opsx.yaml",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "src/core/templates/workflows/archive-change.ts",
+      "src/core/templates/workflows/optimizer.ts",
+      "src/core/templates/workflows/reviewer.ts",
+      "src/core/templates/workflows/verify-change.ts",
+      "test/core/templates/opsx-fragments.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts",
+      "test/core/templates/verify-writeback-templates.test.ts"
+    ],
+    "evidenceFingerprint": "0820d673f3212ab5759f5d9eed373ea9a1be24429465acc257296339c8abcd2c",
+    "evidenceFingerprintEntries": [
+      {
+        "path": ".claude/skills/openspec-optimizer/SKILL.md",
+        "hash": "4c9833297aa94f25e21dad24049e91c6b503be729f6080a7fa5b61307ad2ebf6"
+      },
+      {
+        "path": ".claude/skills/openspec-reviewer/SKILL.md",
+        "hash": "914c9e31e09ef05ba965c474aa906d12ccaedfdd0bad832f713ebb0463082f47"
+      },
+      {
+        "path": ".codex/skills/openspec-optimizer/SKILL.md",
+        "hash": "4c9833297aa94f25e21dad24049e91c6b503be729f6080a7fa5b61307ad2ebf6"
+      },
+      {
+        "path": ".codex/skills/openspec-reviewer/SKILL.md",
+        "hash": "914c9e31e09ef05ba965c474aa906d12ccaedfdd0bad832f713ebb0463082f47"
+      },
+      {
+        "path": "CLAUDE.md",
+        "hash": "e0b0cd969c200530afba16da624114b091e0077104f7e806189ee0dc88c62d51"
+      },
+      {
+        "path": "openspec/changes/self-sufficient-verify-subagents/design.md",
+        "hash": "17ebd9060116f411e35bfda08f19f265f00e04ecf3783f0daa23210c122fbb81"
+      },
+      {
+        "path": "openspec/changes/self-sufficient-verify-subagents/opsx-delta.yaml",
+        "hash": "12bef5ebd5ec6a6ce98e8a0e9e9647ec452fd1042a96a5e5c487bc2110c9fde9"
+      },
+      {
+        "path": "openspec/changes/self-sufficient-verify-subagents/proposal.md",
+        "hash": "54bb8adbf78835d2b357aeeb129b4a745b2d5cca7aba5d1667674898921d4292"
+      },
+      {
+        "path": "openspec/changes/self-sufficient-verify-subagents/specs/openspec-optimizer-skill/spec.md",
+        "hash": "0430745285a78417199f4f3308af75de407a2a456e6b5c69bc5d56a80a8a4d5b"
+      },
+      {
+        "path": "openspec/changes/self-sufficient-verify-subagents/specs/openspec-reviewer-skill/spec.md",
+        "hash": "a873621c130385198880372a726c30da4a043b71d553fb3235e78205ddf8e509"
+      },
+      {
+        "path": "openspec/changes/self-sufficient-verify-subagents/specs/subagent-self-read/spec.md",
+        "hash": "83c0662fe9dba5cf4123bcabeb1527ae8bbf675c8ed3c8db122b8700ff897f5c"
+      },
+      {
+        "path": "openspec/changes/self-sufficient-verify-subagents/specs/verify-prompt-orchestration/spec.md",
+        "hash": "4a988777fe267bfb1afc772e72b3651e2276aa8e7a2320d0c3d462717c6ad97d"
+      },
+      {
+        "path": "openspec/changes/self-sufficient-verify-subagents/tasks.md",
+        "hash": "b7cfe9ef7f3d1f66cdaa938e799b2d10a81efe021c81131f7619bd966a46d5f9"
+      },
+      {
+        "path": "openspec/project.opsx.code-map.yaml",
+        "hash": "02c7d4d80a3f1ad659225647ec1b34a22789f01dbff850c2bb888e2ae89180bc"
+      },
+      {
+        "path": "openspec/project.opsx.yaml",
+        "hash": "976b303f73826c4d6c78cafc91cfdc78c7506355708dae3dfc77e099b808930b"
+      },
+      {
+        "path": "src/core/templates/fragments/opsx-fragments.ts",
+        "hash": "b1ed0e0c0548e7d0ab4dcf54c3415f85129a1ca353806f59e843279ee76a66b3"
+      },
+      {
+        "path": "src/core/templates/workflows/archive-change.ts",
+        "hash": "55301860d959e1975da2a0db6204561081951e7942c97981af43044f53a24058"
+      },
+      {
+        "path": "src/core/templates/workflows/optimizer.ts",
+        "hash": "d9f4ade01fe66306eeb480d3f6fdc8e406de518db5bce37947c89beca05d707e"
+      },
+      {
+        "path": "src/core/templates/workflows/reviewer.ts",
+        "hash": "d7c346f9bfbbb092c83b5aeeaf2794ee07452bcee542f169012214032684fe6b"
+      },
+      {
+        "path": "src/core/templates/workflows/verify-change.ts",
+        "hash": "8b2f81d2585ffdffcad6c9cc1a199e2f9af2817f0143e23eb354e0bca3acf973"
+      },
+      {
+        "path": "test/core/templates/opsx-fragments.test.ts",
+        "hash": "340f8bb7929a1044481a0293af33646d1ea16cb28de6db0fc0b60a0d743d6225"
+      },
+      {
+        "path": "test/core/templates/skill-templates-parity.test.ts",
+        "hash": "029d9d6a6610218f7ea3dc52225245b820acafed9a02e124779e8d4305a01169"
+      },
+      {
+        "path": "test/core/templates/verify-writeback-templates.test.ts",
+        "hash": "f2dec81f03fd20e60f53892508fbfff46c2f6ed083c22027dc59fba412ca548d"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "e13e53f27fe677f3f5359f391faeb60b9e128f0d"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-26T17:15:42.017Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "Optimizer returned: No optimization opportunities found"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-26T17:14:01.729Z",
+      "result": "PASS_WITH_WARNINGS",
+      "issues": [
+        {
+          "severity": "WARNING",
+          "requirement": "OPSX Alignment",
+          "task": null,
+          "message": "OPSX delta introduces cap.ai.subagent-self-read and modifies reviewer/optimizer skill capabilities, but project.opsx.code-map.yaml has no dedicated code-map entries for those subagent capabilities yet.",
+          "recommendation": "Update project.opsx.code-map.yaml during sync/archive, or revise the delta if code-map coverage is intentionally deferred until archive-time sync.",
+          "evidence": [
+            "openspec/changes/self-sufficient-verify-subagents/opsx-delta.yaml:1-25",
+            "openspec/project.opsx.code-map.yaml:1-246"
+          ]
+        }
+      ],
+      "tasksFileHash": "b7cfe9ef7f3d1f66cdaa938e799b2d10a81efe021c81131f7619bd966a46d5f9",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          ".claude/skills/openspec-optimizer/SKILL.md",
+          ".claude/skills/openspec-reviewer/SKILL.md",
+          ".codex/skills/openspec-optimizer/SKILL.md",
+          ".codex/skills/openspec-reviewer/SKILL.md",
+          "CLAUDE.md",
+          "openspec/changes/self-sufficient-verify-subagents/design.md",
+          "openspec/changes/self-sufficient-verify-subagents/opsx-delta.yaml",
+          "openspec/changes/self-sufficient-verify-subagents/proposal.md",
+          "openspec/changes/self-sufficient-verify-subagents/specs/openspec-optimizer-skill/spec.md",
+          "openspec/changes/self-sufficient-verify-subagents/specs/openspec-reviewer-skill/spec.md",
+          "openspec/changes/self-sufficient-verify-subagents/specs/subagent-self-read/spec.md",
+          "openspec/changes/self-sufficient-verify-subagents/specs/verify-prompt-orchestration/spec.md",
+          "openspec/changes/self-sufficient-verify-subagents/tasks.md",
+          "openspec/project.opsx.code-map.yaml",
+          "openspec/project.opsx.yaml",
+          "src/core/templates/fragments/opsx-fragments.ts",
+          "src/core/templates/workflows/archive-change.ts",
+          "src/core/templates/workflows/optimizer.ts",
+          "src/core/templates/workflows/reviewer.ts",
+          "src/core/templates/workflows/verify-change.ts",
+          "test/core/templates/opsx-fragments.test.ts",
+          "test/core/templates/skill-templates-parity.test.ts",
+          "test/core/templates/verify-writeback-templates.test.ts"
+        ],
+        "evidenceFingerprint": "80ec28fcf42f0364a3827c3b86037b881dae6b8bbe675608d28fcc5aa9e22185",
+        "evidenceFingerprintEntries": [
+          {
+            "path": ".claude/skills/openspec-optimizer/SKILL.md",
+            "hash": "4c9833297aa94f25e21dad24049e91c6b503be729f6080a7fa5b61307ad2ebf6"
+          },
+          {
+            "path": ".claude/skills/openspec-reviewer/SKILL.md",
+            "hash": "914c9e31e09ef05ba965c474aa906d12ccaedfdd0bad832f713ebb0463082f47"
+          },
+          {
+            "path": ".codex/skills/openspec-optimizer/SKILL.md",
+            "hash": "4c9833297aa94f25e21dad24049e91c6b503be729f6080a7fa5b61307ad2ebf6"
+          },
+          {
+            "path": ".codex/skills/openspec-reviewer/SKILL.md",
+            "hash": "914c9e31e09ef05ba965c474aa906d12ccaedfdd0bad832f713ebb0463082f47"
+          },
+          {
+            "path": "CLAUDE.md",
+            "hash": "e0b0cd969c200530afba16da624114b091e0077104f7e806189ee0dc88c62d51"
+          },
+          {
+            "path": "openspec/changes/self-sufficient-verify-subagents/design.md",
+            "hash": "17ebd9060116f411e35bfda08f19f265f00e04ecf3783f0daa23210c122fbb81"
+          },
+          {
+            "path": "openspec/changes/self-sufficient-verify-subagents/opsx-delta.yaml",
+            "hash": "12bef5ebd5ec6a6ce98e8a0e9e9647ec452fd1042a96a5e5c487bc2110c9fde9"
+          },
+          {
+            "path": "openspec/changes/self-sufficient-verify-subagents/proposal.md",
+            "hash": "54bb8adbf78835d2b357aeeb129b4a745b2d5cca7aba5d1667674898921d4292"
+          },
+          {
+            "path": "openspec/changes/self-sufficient-verify-subagents/specs/openspec-optimizer-skill/spec.md",
+            "hash": "0430745285a78417199f4f3308af75de407a2a456e6b5c69bc5d56a80a8a4d5b"
+          },
+          {
+            "path": "openspec/changes/self-sufficient-verify-subagents/specs/openspec-reviewer-skill/spec.md",
+            "hash": "a873621c130385198880372a726c30da4a043b71d553fb3235e78205ddf8e509"
+          },
+          {
+            "path": "openspec/changes/self-sufficient-verify-subagents/specs/subagent-self-read/spec.md",
+            "hash": "83c0662fe9dba5cf4123bcabeb1527ae8bbf675c8ed3c8db122b8700ff897f5c"
+          },
+          {
+            "path": "openspec/changes/self-sufficient-verify-subagents/specs/verify-prompt-orchestration/spec.md",
+            "hash": "4a988777fe267bfb1afc772e72b3651e2276aa8e7a2320d0c3d462717c6ad97d"
+          },
+          {
+            "path": "openspec/changes/self-sufficient-verify-subagents/tasks.md",
+            "hash": "b7cfe9ef7f3d1f66cdaa938e799b2d10a81efe021c81131f7619bd966a46d5f9"
+          },
+          {
+            "path": "openspec/project.opsx.code-map.yaml",
+            "hash": "df310772356923979e2fbda93e5840d899d42b282e55bc52e13c3b11c4cb846e"
+          },
+          {
+            "path": "openspec/project.opsx.yaml",
+            "hash": "139c2cdb57f8624e5ce88601eae800138896e02d8f7c2aa54cd056e2209e02b5"
+          },
+          {
+            "path": "src/core/templates/fragments/opsx-fragments.ts",
+            "hash": "b1ed0e0c0548e7d0ab4dcf54c3415f85129a1ca353806f59e843279ee76a66b3"
+          },
+          {
+            "path": "src/core/templates/workflows/archive-change.ts",
+            "hash": "55301860d959e1975da2a0db6204561081951e7942c97981af43044f53a24058"
+          },
+          {
+            "path": "src/core/templates/workflows/optimizer.ts",
+            "hash": "d9f4ade01fe66306eeb480d3f6fdc8e406de518db5bce37947c89beca05d707e"
+          },
+          {
+            "path": "src/core/templates/workflows/reviewer.ts",
+            "hash": "d7c346f9bfbbb092c83b5aeeaf2794ee07452bcee542f169012214032684fe6b"
+          },
+          {
+            "path": "src/core/templates/workflows/verify-change.ts",
+            "hash": "8b2f81d2585ffdffcad6c9cc1a199e2f9af2817f0143e23eb354e0bca3acf973"
+          },
+          {
+            "path": "test/core/templates/opsx-fragments.test.ts",
+            "hash": "340f8bb7929a1044481a0293af33646d1ea16cb28de6db0fc0b60a0d743d6225"
+          },
+          {
+            "path": "test/core/templates/skill-templates-parity.test.ts",
+            "hash": "029d9d6a6610218f7ea3dc52225245b820acafed9a02e124779e8d4305a01169"
+          },
+          {
+            "path": "test/core/templates/verify-writeback-templates.test.ts",
+            "hash": "f2dec81f03fd20e60f53892508fbfff46c2f6ed083c22027dc59fba412ca548d"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "e13e53f27fe677f3f5359f391faeb60b9e128f0d"
+      }
+    }
+  }
+}

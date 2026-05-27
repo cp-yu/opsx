@@ -11,19 +11,26 @@ verify 工作流提示词 SHALL 以显式 coordinator 角色声明开头，将 t
 
 | 角色 | 职责 |
 |------|----------------|
-| Coordinator (top-level agent) | 收集证据、委派 subagent、验证 payload 结构、执行确定性写回、管理 git checkpoint、通过 CLI 持久化结果 |
-| Reviewer Subagent | 只基于提供的 evidence bundle，负责全部 completeness、correctness、coherence 裁决 |
-| Optimizer Subagent | 提出保持行为不变的 Search/Replace 块；绝不直接修改文件 |
+| Coordinator (top-level agent) | 确定 change 目录、传递定位信息给 subagent、验证 payload 结构、执行确定性写回、管理 git checkpoint、通过 CLI 持久化结果 |
+| Reviewer Subagent | 自主读取文件和执行测试，负责全部 completeness、correctness、coherence 裁决 |
+| Optimizer Subagent | 自主读取文件，提出保持行为不变的 Search/Replace 块；绝不直接修改文件 |
 | CLI | 确定性持久化、hash 计算、seal 验证 |
 
 角色声明 SHALL 显式包含约束：`You MUST NOT substitute your own completeness/correctness/coherence judgments for the reviewer's.`
 
-#### Scenario: Agent 理解自身是 coordinator 而不是 judge
+Coordinator 的 `[Mode: Evidence]` 步骤 SHALL 简化为：确定 changeDir 和 projectRoot 路径，不再读取候选文件内容。
 
+#### Scenario: Agent 理解自身是 coordinator 而不是 judge
 - **WHEN** top-level agent 加载 verify prompt
 - **THEN** 第一个内容块 SHALL 声明 coordinator 角色
-- **AND** SHALL 列出四个角色（coordinator、reviewer、optimizer、CLI）及其职责
+- **AND** SHALL 列出四个角色及其更新后的职责（coordinator 不再收集 evidence）
 - **AND** SHALL 显式禁止 coordinator 自行作出裁决
+
+#### Scenario: Evidence 步骤不再读取文件内容
+- **WHEN** coordinator 进入 `[Mode: Evidence]`
+- **THEN** coordinator SHALL 仅确定 changeDir 和 projectRoot 路径
+- **AND** SHALL NOT 读取候选实现文件的内容
+- **AND** SHALL NOT 执行 git diff 或 git status（由 subagent 自行执行）
 
 ### Requirement: 阶段模式标签
 
@@ -60,48 +67,39 @@ Mode label SHALL NOT 应用于 checkpoint 子状态（CREATED、BASELINE_RESTORE
 
 ### Requirement: Explicit subagent delegation instructions
 
-verify 工作流提示词 SHALL 提供明确的 subagent delegation 指令，用于启动 reviewer 和 optimizer subagent，替代 `"Spawn a clean-context reviewer subagent"` 这类过于抽象的描述。
+verify 工作流提示词 SHALL 提供明确的 subagent delegation 指令，用于启动 reviewer 和 optimizer subagent。
 
-提示词 SHALL NOT 写入任何工具专属 API 调用语法，例如 `Agent({...})`、`TaskOutput({...})` 或 `AskUserQuestion`。提示词 SHALL 只描述工作流意图、subagent 角色、skill invoke、输入包和等待规则。
+提示词 SHALL NOT 写入任何工具专属 API 调用语法。提示词 SHALL 只描述工作流意图、subagent 角色、skill invoke、输入信息和等待规则。
 
 reviewer subagent delegation 指令 SHALL 包含：
 
-- 调用 clean-context reviewer subagent
+- 调用 clean-context reviewer subagent，赋予 Read 和 Bash 工具能力
 - instruct subagent to invoke `openspec-reviewer`
-- 传入显式 evidence bundle（change artifacts、git evidence、final file contents、prior verify result、OPSX context）
+- 传入轻量定位信息：`changeName`、`changeDir`、`projectRoot`
+- 声明 subagent 将自主读取文件、执行 git 命令和按需跑测试
 - 要求 top-level agent 等待完整 reviewer payload 后再进入 payload validation
 - 要求 top-level agent MUST NOT substitute its own completeness/correctness/coherence verdict
 
 optimizer subagent delegation 指令 SHALL 包含：
 
-- 调用 clean-context optimizer subagent
+- 调用 clean-context optimizer subagent，赋予 Read 和 Bash 工具能力
 - instruct subagent to invoke `openspec-optimizer`
-- 传入输入契约（Phase 1 summary、change artifacts、final file contents、config、failed directions）
+- 传入轻量定位信息：`changeName`、`changeDir`、`projectRoot`
+- 声明 subagent 将自主从 `.verify-result.json` 读取 Phase 1 结果和 evidence 列表
 - 要求 optimizer 只返回 Search/Replace blocks 或 `No optimization opportunities found`
-- 要求 optimizer MUST NOT edit files directly
+- 要求 top-level agent 等待完整 optimizer payload 后再应用块或记录 NO_OPTIMIZATION_NEEDED
 
-#### Scenario: Reviewer subagent delegation 指令明确
+#### Scenario: Master 委派 reviewer 时只传定位信息
+- **WHEN** verify coordinator 进入 `[Mode: Delegate Review]`
+- **THEN** coordinator SHALL 传入 changeName、changeDir、projectRoot 三个字符串
+- **AND** SHALL NOT 传入 finalFileContents、changeArtifacts 或 gitEvidence 的完整文本
+- **AND** SHALL 声明 reviewer 拥有 Read + Bash 工具能力
 
-- **WHEN** verify prompt 在 subagent-orchestrated mode 中到达 Step 5
-- **THEN** prompt SHALL 明确要求调用 clean-context reviewer subagent
-- **AND** prompt SHALL instruct reviewer to invoke `openspec-reviewer`
-- **AND** prompt SHALL 在输入包内列出 evidence bundle 的每个字段
-- **AND** prompt SHALL 明确 top-level agent 必须等待完整 reviewer payload
-
-#### Scenario: Optimizer subagent delegation 指令明确
-
-- **WHEN** verify prompt 到达 Phase 2 optimization step
-- **THEN** prompt SHALL 明确要求调用 clean-context optimizer subagent
-- **AND** prompt SHALL instruct optimizer to invoke `openspec-optimizer`
-- **AND** prompt SHALL 将 failedDirections 作为具名输入字段传入
-- **AND** prompt SHALL 明确 optimizer 不得直接修改文件
-
-#### Scenario: Prompt 不包含工具专属 API 语法
-
-- **WHEN** verify prompt 被组装
-- **THEN** prompt SHALL NOT 包含 `Agent({`
-- **AND** prompt SHALL NOT 包含 `TaskOutput({`
-- **AND** prompt SHALL NOT 包含 `AskUserQuestion`
+#### Scenario: Master 委派 optimizer 时只传定位信息
+- **WHEN** verify coordinator 进入 `[Mode: Optimize]`
+- **THEN** coordinator SHALL 传入 changeName、changeDir、projectRoot 三个字符串
+- **AND** SHALL NOT 传入 phase1Summary、finalFileContents 或 config 的完整内容
+- **AND** SHALL 声明 optimizer 拥有 Read + Bash 工具能力
 
 ### Requirement: Subagent 超时和等待规则
 

@@ -1,0 +1,25 @@
+ADDED:
+  capabilities:
+    - id: cap.ai.subagent-self-read
+      type: capability
+      intent: Reviewer/Optimizer subagent 自主文件读取与测试执行能力定义，包括 Read+Bash 工具权限、安全约束和 L1 测试策略
+
+  relations:
+    - from: cap.ai.subagent-self-read
+      to: dom.verify
+      type: contains
+    - from: cap.ai.reviewer-skill
+      to: cap.ai.subagent-self-read
+      type: depends_on
+    - from: cap.ai.optimizer-skill
+      to: cap.ai.subagent-self-read
+      type: depends_on
+
+MODIFIED:
+  capabilities:
+    - id: cap.ai.reviewer-skill
+      intent: Phase 1 验证审查 subagent skill。Reviewer 自主读取文件和执行测试，Input Contract 从 5 字段 bundle 简化为 3 字段定位信息（changeName、changeDir、projectRoot）。保留 6步验证循环、严重性阈值、三个验证维度和结构化输出 schema
+    - id: cap.ai.optimizer-skill
+      intent: Phase 2 优化提案 subagent skill。Optimizer 自主从 .verify-result.json 读取 Phase 1 结果和 evidence 列表，Input Contract 从 7 字段 bundle 简化为 3 字段定位信息。保留 5类优化原则、Search/Replace 块输出格式和 failedDirections 避重协议
+    - id: cap.verify.prompt-orchestration
+      intent: Verification prompt orchestration patterns。Coordinator 的 Evidence 步骤简化为确定路径，Delegate Review 步骤只传定位信息并声明 subagent 拥有 Read+Bash 工具能力。保留 mode labels、timeout rules 和 coordinator 角色纪律

@@ -297,16 +297,16 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.reviewer-skill
-    intent: Phase 1 验证审查 subagent skill。定义 reviewer 的角色、输入合约、6步验证循环、严重性阈值、证据标准、三个验证维度（completeness/correctness/coherence）、OPSX 对齐检查、结构化输出 schema 和边界降级策略
+    intent: Phase 1 验证审查 subagent skill。Reviewer 自主读取文件和执行测试，Input Contract 从 5 字段 bundle 简化为 3 字段定位信息（changeName、changeDir、projectRoot）。保留 6步验证循环、严重性阈值、三个验证维度和结构化输出 schema
     type: capability
   - id: cap.ai.optimizer-skill
-    intent: Phase 2 优化提案 subagent skill。定义 optimizer 的角色、输入合约、5类优化原则与禁止项、Search/Replace 块输出格式、failedDirections 避重协议和边界处理
+    intent: Phase 2 优化提案 subagent skill。Optimizer 自主从 .verify-result.json 读取 Phase 1 结果和 evidence 列表，Input Contract 从 7 字段 bundle 简化为 3 字段定位信息。保留 5类优化原则、Search/Replace 块输出格式和 failedDirections 避重协议
     type: capability
   - id: cap.ai.internal-skill-installation
     intent: 内部 skill 安装管线。将 openspec-reviewer 和 openspec-optimizer 作为 core preset 的一部分，init/update 时安装到各 AI 工具的 skills 目录，不生成对应的 slash command
     type: capability
   - id: cap.verify.prompt-orchestration
-    intent: Verification prompt orchestration patterns that enforce coordinator role discipline, phased mode labels, explicit subagent delegation instructions, and timeout/waiting rules across the verify workflow
+    intent: Verification prompt orchestration patterns。Coordinator 的 Evidence 步骤简化为确定路径，Delegate Review 步骤只传定位信息并声明 subagent 拥有 Read+Bash 工具能力。保留 mode labels、timeout rules 和 coordinator 角色纪律
     type: capability
   - id: cap.verify.enforce-optimizer-invocation
     intent: 强制 optimizer subagent 调用约束——CLI 层 runtime enforcement（summary 非空校验）+ prompt 层协议约束（VERIFY_SIMPLE_CHANGE_FAST_PATH 重写为强制委托语义），确保 Phase 2 判断权始终归属 optimizer subagent
@@ -319,4 +319,7 @@ capabilities:
     type: capability
   - id: cap.sync.evidence-refresh
     intent: sync 完成后自动刷新 .verify-result.json 中与 sync 输出重叠的 evidence 文件哈希，使 verify freshness 判决不受合法 sync 写入的影响
+    type: capability
+  - id: cap.ai.subagent-self-read
+    intent: Reviewer/Optimizer subagent 自主文件读取与测试执行能力定义，包括 Read+Bash 工具权限、安全约束和 L1 测试策略
     type: capability
