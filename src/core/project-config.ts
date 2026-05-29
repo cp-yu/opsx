@@ -237,6 +237,7 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
     }
 
     config.git = JSON.parse(JSON.stringify(GIT_DEFAULTS)) as ProjectConfig['git'];
+    const gitConfig = config.git!;
     if (raw.git !== undefined) {
       if (typeof raw.git !== 'object' || raw.git === null || Array.isArray(raw.git)) {
         console.warn(`Invalid 'git' field in config (must be an object)`);
@@ -250,7 +251,7 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
             if (rawMerge.strategy !== undefined) {
               const strategyResult = gitMergeStrategyField.safeParse(rawMerge.strategy);
               if (strategyResult.success) {
-                config.git.merge.strategy = strategyResult.data;
+                gitConfig.merge.strategy = strategyResult.data;
               } else {
                 console.warn('git.merge.strategy must be one of: no-ff, ff-only, squash');
               }
@@ -259,7 +260,7 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
             if (rawMerge.messageFrom !== undefined) {
               const messageFromResult = gitMergeMessageFromField.safeParse(rawMerge.messageFrom);
               if (messageFromResult.success) {
-                config.git.merge.messageFrom = messageFromResult.data;
+                gitConfig.merge.messageFrom = messageFromResult.data;
               } else {
                 console.warn('git.merge.messageFrom must be one of: artifacts, manual');
               }
@@ -276,7 +277,7 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
             if (rawBranch.deleteAfterArchive !== undefined) {
               const deleteAfterArchiveResult = gitDeleteAfterArchiveField.safeParse(rawBranch.deleteAfterArchive);
               if (deleteAfterArchiveResult.success) {
-                config.git.branch.deleteAfterArchive = deleteAfterArchiveResult.data;
+                gitConfig.branch.deleteAfterArchive = deleteAfterArchiveResult.data;
               } else {
                 console.warn('git.branch.deleteAfterArchive must be boolean');
               }

@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { execFile } from 'child_process';
+import { execFile, spawn } from 'child_process';
 import { promisify } from 'util';
 import { getTaskProgressForChange, formatTaskStatus } from '../utils/task-progress.js';
 import { Validator } from './validation/validator.js';
@@ -17,6 +17,8 @@ import {
   formatVerifyGateFailure,
 } from './verify/freshness.js';
 import { selectActiveChange } from './change-utils.js';
+import { readProjectConfig } from './project-config.js';
+import { generateMergeMessage, writeManualMergeMessageDraft } from './archive/merge-message.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -25,6 +27,12 @@ interface ApplyIsolationState {
   branchName?: string;
   worktreePath?: string;
   originalBranch?: string;
+}
+
+interface GitCommandResult {
+  stdout: string;
+  stderr: string;
+  code: number;
 }
 
 /**
@@ -77,6 +85,192 @@ async function readApplyIsolationState(changeDir: string): Promise<ApplyIsolatio
   }
 }
 
+function toPosixProjectPath(projectRoot: string, filePath: string): string {
+  return path.relative(projectRoot, filePath).split(path.sep).join('/');
+}
+
+async function runGit(projectRoot: string, args: string[], input?: string): Promise<GitCommandResult> {
+  return await new Promise((resolve, reject) => {
+    const child = spawn('git', args, { cwd: projectRoot, windowsHide: true });
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout?.on('data', (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr?.on('data', (chunk) => {
+      stderr += chunk;
+    });
+    child.on('error', reject);
+    child.on('close', (code) => {
+      resolve({ stdout, stderr, code: code ?? 0 });
+    });
+
+    if (input !== undefined) {
+      child.stdin.end(input);
+    } else {
+      child.stdin.end();
+    }
+  });
+}
+
+async function isGitRepository(projectRoot: string): Promise<boolean> {
+  const result = await runGit(projectRoot, ['rev-parse', '--is-inside-work-tree']);
+  return result.code === 0;
+}
+
+async function resolveOriginalBranch(projectRoot: string, isolation: ApplyIsolationState | null): Promise<string | null> {
+  if (isolation?.originalBranch) {
+    return isolation.originalBranch;
+  }
+
+  const result = await runGit(projectRoot, ['symbolic-ref', 'refs/remotes/origin/HEAD', '--short']);
+  if (result.code !== 0) {
+    return null;
+  }
+
+  const branch = result.stdout.trim().replace(/^origin\//, '');
+  return branch || null;
+}
+
+async function findArchivedChangePathAsync(archiveDir: string, changeName: string): Promise<string | null> {
+  try {
+    const entries = await fs.readdir(archiveDir, { withFileTypes: true });
+    const matches = entries
+      .filter((entry) => entry.isDirectory() && entry.name.endsWith(`-${changeName}`))
+      .map((entry) => entry.name)
+      .sort()
+      .reverse();
+    return matches[0] ? path.join(archiveDir, matches[0]) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function currentBranch(projectRoot: string): Promise<string | null> {
+  const result = await runGit(projectRoot, ['branch', '--show-current']);
+  if (result.code !== 0) {
+    return null;
+  }
+  return result.stdout.trim() || null;
+}
+
+async function runArchiveCommit(projectRoot: string, changeName: string, archivePath: string): Promise<void> {
+  const archiveRelativePath = toPosixProjectPath(projectRoot, archivePath);
+  const addResult = await runGit(projectRoot, ['add', '--', archiveRelativePath]);
+  if (addResult.code !== 0) {
+    throw new Error(addResult.stderr.trim() || 'git add archive path failed');
+  }
+
+  const message = `docs(${changeName}): 归档变更制品
+
+## Changes
+- ${archiveRelativePath}/: 移动 change 目录到归档区
+`;
+  const result = await runGit(projectRoot, ['commit', '--only', '-F', '-', '--', archiveRelativePath], message);
+  if (result.code !== 0) {
+    throw new Error(result.stderr.trim() || 'git commit failed');
+  }
+}
+
+async function runBranchCleanup(
+  projectRoot: string,
+  originalBranch: string,
+  featureBranch: string,
+  deleteAfterArchive: boolean | undefined,
+  strategy: 'no-ff' | 'ff-only' | 'squash' | undefined
+): Promise<void> {
+  if (!deleteAfterArchive || strategy === 'squash') {
+    return;
+  }
+
+  const merged = await runGit(projectRoot, ['branch', '--merged', originalBranch]);
+  if (merged.code !== 0 || !merged.stdout.split('\n').some((line) => line.replace(/^[* ]\s*/, '').trim() === featureBranch)) {
+    return;
+  }
+
+  const result = await runGit(projectRoot, ['branch', '-d', featureBranch]);
+  if (result.code !== 0) {
+    throw new Error(result.stderr.trim() || `git branch -d ${featureBranch} failed`);
+  }
+}
+
+async function runArchiveMerge(
+  projectRoot: string,
+  archivePath: string,
+  isolation: ApplyIsolationState | null,
+  config: ReturnType<typeof readProjectConfig>
+): Promise<void> {
+  const originalBranch = await resolveOriginalBranch(projectRoot, isolation);
+  if (!originalBranch) {
+    return;
+  }
+
+  const projectConfig = config ?? readProjectConfig(projectRoot);
+  const mergeConfig = projectConfig?.git?.merge ?? { strategy: 'no-ff' as const, messageFrom: 'artifacts' as const };
+  const branchConfig = projectConfig?.git?.branch ?? { deleteAfterArchive: false };
+  const featureBranch = isolation?.branchName ?? await currentBranch(projectRoot);
+
+  if (!featureBranch || featureBranch === originalBranch) {
+    return;
+  }
+
+  if (mergeConfig?.messageFrom === 'manual') {
+    const draftPath = await writeManualMergeMessageDraft(archivePath);
+    console.log(`Manual merge message draft written to ${draftPath}`);
+    return;
+  }
+
+  const checkoutResult = await runGit(projectRoot, ['checkout', originalBranch]);
+  if (checkoutResult.code !== 0) {
+    throw new Error(checkoutResult.stderr.trim() || `Unable to checkout ${originalBranch}`);
+  }
+
+  if (mergeConfig?.strategy === 'ff-only') {
+    const mergeResult = await runGit(projectRoot, ['merge', '--ff-only', featureBranch]);
+    if (mergeResult.code !== 0) {
+      throw new Error(mergeResult.stderr.trim() || 'git merge --ff-only failed');
+    }
+    await runBranchCleanup(projectRoot, originalBranch, featureBranch, branchConfig?.deleteAfterArchive, mergeConfig?.strategy);
+    return;
+  }
+
+  if (mergeConfig?.strategy === 'squash') {
+    const squashResult = await runGit(projectRoot, ['merge', '--squash', featureBranch]);
+    if (squashResult.code !== 0) {
+      throw new Error(squashResult.stderr.trim() || 'git merge --squash failed');
+    }
+    const message = await generateMergeMessage(archivePath);
+    const commitResult = await runGit(projectRoot, ['commit', '-F', '-'], message.toString());
+    if (commitResult.code !== 0) {
+      throw new Error(commitResult.stderr.trim() || 'git commit failed');
+    }
+    await runBranchCleanup(projectRoot, originalBranch, featureBranch, branchConfig?.deleteAfterArchive, mergeConfig?.strategy);
+    return;
+  }
+
+  const mergeMessage = await generateMergeMessage(archivePath);
+  const mergeResult = await runGit(projectRoot, ['merge', '--no-ff', '--no-commit', featureBranch]);
+  if (mergeResult.code !== 0) {
+    await runGit(projectRoot, ['merge', '--abort']);
+    const detail = (mergeResult.stderr || mergeResult.stdout).trim();
+    throw new Error(`合并 originalBranch 时发生冲突；已 abort，请手动解决冲突后重跑 archive${detail ? `\n${detail}` : ''}`);
+  }
+
+  const commitCheck = await runGit(projectRoot, ['diff', '--cached', '--quiet']);
+  if (commitCheck.code !== 0 && commitCheck.code !== 1) {
+    throw new Error(commitCheck.stderr.trim() || 'git diff --cached failed');
+  }
+  if (commitCheck.code === 1) {
+    const commitResult = await runGit(projectRoot, ['commit', '-F', '-'], mergeMessage.toString());
+    if (commitResult.code !== 0) {
+      throw new Error(commitResult.stderr.trim() || 'git commit failed');
+    }
+  }
+
+  await runBranchCleanup(projectRoot, originalBranch, featureBranch, branchConfig?.deleteAfterArchive, mergeConfig?.strategy);
+}
+
 export class ArchiveCommand {
   async execute(
     changeName?: string,
@@ -105,6 +299,10 @@ export class ArchiveCommand {
     }
 
     const changeDir = path.join(changesDir, changeName);
+    const archivedChangePath = await findArchivedChangePathAsync(archiveDir, changeName);
+    let archivePath = archivedChangePath;
+    let isolationState: ApplyIsolationState | null = null;
+    let activeChangeExists = false;
 
     // Verify change exists
     try {
@@ -112,15 +310,25 @@ export class ArchiveCommand {
       if (!stat.isDirectory()) {
         throw new Error(`Change '${changeName}' not found.`);
       }
+      activeChangeExists = true;
+      isolationState = await readApplyIsolationState(changeDir);
     } catch {
-      throw new Error(`Change '${changeName}' not found.`);
+      if (!archivePath) {
+        throw new Error(`Change '${changeName}' not found.`);
+      }
+      isolationState = await readApplyIsolationState(archivePath);
+    }
+
+    if (!activeChangeExists && archivePath) {
+      const handledBranchSwitch = await this.runArchiveGitFlow(targetPath, changeName, archivePath, isolationState, false);
+      await this.handleApplyIsolationCleanup(isolationState, targetPath, options, handledBranchSwitch);
+      return;
     }
 
     const syncState = await assessChangeSyncState(targetPath, changeName);
     const pendingSync = syncState.requiresSync
       ? await getPendingChangeSync(targetPath, syncState)
       : null;
-    const isolationState = await readApplyIsolationState(changeDir);
 
     const skipValidation = options.validate === false || options.noValidate === true;
     const skipVerify = options.verify === false || options.noVerify === true;
@@ -284,7 +492,7 @@ export class ArchiveCommand {
 
     // Create archive directory with date prefix
     const archiveName = `${this.getArchiveDate()}-${changeName}`;
-    const archivePath = path.join(archiveDir, archiveName);
+    archivePath = path.join(archiveDir, archiveName);
 
     // Check if archive already exists
     try {
@@ -304,13 +512,33 @@ export class ArchiveCommand {
 
     console.log(`Change '${changeName}' archived as '${archiveName}'.`);
 
-    await this.handleApplyIsolationCleanup(isolationState, targetPath, options);
+    const handledBranchSwitch = await this.runArchiveGitFlow(targetPath, changeName, archivePath, isolationState, true);
+    await this.handleApplyIsolationCleanup(isolationState, targetPath, options, handledBranchSwitch);
+  }
+
+  private async runArchiveGitFlow(
+    projectRoot: string,
+    changeName: string,
+    archivePath: string,
+    isolation: ApplyIsolationState | null,
+    createArchiveCommit: boolean
+  ): Promise<boolean> {
+    if (!await isGitRepository(projectRoot)) {
+      return false;
+    }
+
+    if (createArchiveCommit) {
+      await runArchiveCommit(projectRoot, changeName, archivePath);
+    }
+    await runArchiveMerge(projectRoot, archivePath, isolation, readProjectConfig(projectRoot));
+    return Boolean(isolation?.originalBranch);
   }
 
   private async handleApplyIsolationCleanup(
     isolation: ApplyIsolationState | null,
     projectRoot: string,
-    options: { yes?: boolean }
+    options: { yes?: boolean },
+    branchSwitchHandled: boolean
   ): Promise<void> {
     if (!isolation) {
       return;
@@ -333,7 +561,7 @@ export class ArchiveCommand {
       }
     }
 
-    if (isolation.originalBranch) {
+    if (isolation.originalBranch && !branchSwitchHandled) {
       if (options.yes) {
         console.log(`Branch switch skipped under --yes: ${isolation.originalBranch}`);
       } else {
