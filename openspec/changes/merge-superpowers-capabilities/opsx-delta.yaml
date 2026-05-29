@@ -1,0 +1,58 @@
+schema_version: 1
+
+ADDED:
+  capabilities:
+    - id: cap.ai.explore-brainstorming
+      type: capability
+      intent: Explore 阶段的 brainstorming 流程，包含 6 步 checklist、一次一问纪律、2-3 方案对比、Design Summary 生成
+    - id: cap.apply.task-decomposition
+      type: capability
+      intent: Apply 阶段 Master agent 的任务拆解能力，将粗粒度任务拆解为详细 TDD 步骤
+    - id: cap.apply.implementer-subagent
+      type: capability
+      intent: Implementer subagent 的执行模型，机械执行详细 TDD 步骤
+    - id: cap.apply.branch-isolation
+      type: capability
+      intent: Apply 阶段的分支隔离策略，支持创建分支或 worktree
+    - id: cap.ai.propose-smart-routing
+      type: capability
+      intent: Propose 阶段的智能路由，根据输入详细程度决定是否需要 explore
+
+  relations:
+    - from: cap.ai.explore-brainstorming
+      type: contains
+      to: dom.ai-integration
+    - from: cap.apply.task-decomposition
+      type: contains
+      to: dom.apply
+    - from: cap.apply.implementer-subagent
+      type: contains
+      to: dom.apply
+    - from: cap.apply.branch-isolation
+      type: contains
+      to: dom.apply
+    - from: cap.ai.propose-smart-routing
+      type: contains
+      to: dom.ai-integration
+    - from: cap.apply.task-decomposition
+      type: depends_on
+      to: cap.ai.explore-brainstorming
+    - from: cap.apply.implementer-subagent
+      type: depends_on
+      to: cap.apply.task-decomposition
+    - from: cap.ai.propose-smart-routing
+      type: depends_on
+      to: cap.ai.explore-brainstorming
+
+MODIFIED:
+  capabilities:
+    - id: cap.ai.workflow-templates
+      intent: AI 工作流模板生成，包含 explore（brainstorming）、propose（智能路由）、apply（TDD + subagent）模板
+    - id: cap.ai.skill-generation
+      intent: AI 技能文件生成，包含 implementer subagent skill 和更新的 workflow skills
+    - id: cap.change.create
+      intent: 变更创建和管理，支持新的 explore → propose 工作流和 .apply-steps/ 目录
+    - id: cap.cli.instructions
+      intent: 指令生成系统，apply 指令返回任务拆解状态和详细步骤文件路径
+
+REMOVED: {}
