@@ -9,6 +9,7 @@ import { ArchiveCommand } from '../../src/core/archive.js';
 
 vi.mock('@inquirer/prompts', () => ({
   confirm: vi.fn(),
+  input: vi.fn(),
   select: vi.fn(),
 }));
 
@@ -178,8 +179,11 @@ git:
     expect(featureBranch).toBe('');
   });
 
-  it('skips git merge flow when isolation is missing and no remote default branch exists', async () => {
+  it('prompts for originalBranch when isolation and remote default branch are missing', async () => {
     projectRoot = await setupRepo();
+    const { input } = await import('@inquirer/prompts');
+    const mockInput = input as unknown as ReturnType<typeof vi.fn>;
+    mockInput.mockResolvedValueOnce('main');
     const changeDir = path.join(projectRoot, 'openspec', 'changes', 'feature-archive');
     await fs.mkdir(changeDir, { recursive: true });
     await writeFile(projectRoot, path.join('openspec', 'changes', 'feature-archive', 'tasks.md'), '- [x] Task 1\n');
@@ -194,9 +198,15 @@ git:
     await new ArchiveCommand().execute('feature-archive', { yes: true, noVerify: true, noValidate: true });
 
     const currentBranch = await git(projectRoot, ['branch', '--show-current']);
-    expect(currentBranch).toBe('feature-archive');
+    expect(currentBranch).toBe('main');
     const archiveDir = path.join(projectRoot, 'openspec', 'changes', 'archive');
     const archives = await fs.readdir(archiveDir);
-    expect(archives.some((entry) => entry.includes('feature-archive'))).toBe(true);
+    const archiveName = archives.find((entry) => entry.includes('feature-archive'));
+    expect(archiveName).toBeDefined();
+    const isolation = JSON.parse(await fs.readFile(path.join(archiveDir, archiveName!, '.apply-isolation.json'), 'utf-8'));
+    expect(isolation).toEqual(expect.objectContaining({
+      branchName: 'feature-archive',
+      originalBranch: 'main',
+    }));
   });
 });

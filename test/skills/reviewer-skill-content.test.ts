@@ -39,7 +39,9 @@ describe('openspec reviewer skill content', () => {
     expect(instructions).toContain('changeDir/.apply-isolation.json');
     expect(instructions).toContain('originalBranch');
     expect(instructions).toContain('git symbolic-ref refs/remotes/origin/HEAD --short');
-    expect(instructions).toContain('ask the user');
+    expect(instructions).toContain('git ls-files --modified --others --exclude-standard');
+    expect(instructions).toContain('evidenceFiles');
+    expect(instructions).toContain('WARNING in gitDiffSummary');
   });
 
   it('keeps codex and claude reviewer skill self-read sections equivalent', () => {

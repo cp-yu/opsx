@@ -50,8 +50,8 @@ Read the evidence yourself in this order:
 4. Resolve originalBranch for branch-aware scope anchoring:
    - First read changeDir/.apply-isolation.json and use originalBranch when present.
    - If missing, run git symbolic-ref refs/remotes/origin/HEAD --short and strip the origin/ prefix.
-   - If still unresolved, ask the user for the original branch before judging implementation scope.
-   Then run git status and git diff <originalBranch>...HEAD --name-only from projectRoot. Use the name-only output only to identify candidate files; never use diff hunks as behavior evidence.
+   - If still unresolved, run git ls-files --modified --others --exclude-standard and combine that degraded scope with prior verificationContext.evidenceFiles. Record a WARNING in gitDiffSummary that originalBranch could not be resolved and scope inference degraded.
+   Then run git status and, when originalBranch is resolved, git diff <originalBranch>...HEAD --name-only from projectRoot. Use the name-only output only to identify candidate files; never use diff hunks as behavior evidence.
 5. Identify candidate implementation/test files from prior verificationContext.evidenceFiles, name-only output, OPSX code-map refs, and requirement keywords.
 6. Read every candidate file before using it as positive or negative evidence.
 7. Read projectRoot/openspec/project.opsx.yaml and projectRoot/openspec/project.opsx.code-map.yaml when present.

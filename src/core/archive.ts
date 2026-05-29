@@ -35,6 +35,12 @@ interface GitCommandResult {
   code: number;
 }
 
+interface ArchiveBranchContext {
+  featureBranch: string | null;
+  originalBranch: string | null;
+  isolation: ApplyIsolationState | null;
+}
+
 /**
  * Recursively copy a directory. Used when fs.rename fails (e.g. EPERM on Windows).
  */
@@ -119,18 +125,48 @@ async function isGitRepository(projectRoot: string): Promise<boolean> {
   return result.code === 0;
 }
 
-async function resolveOriginalBranch(projectRoot: string, isolation: ApplyIsolationState | null): Promise<string | null> {
+async function writeApplyIsolationState(changeDir: string, isolation: ApplyIsolationState): Promise<void> {
+  await fs.writeFile(path.join(changeDir, '.apply-isolation.json'), JSON.stringify(isolation, null, 2), 'utf-8');
+}
+
+async function resolveArchiveBranchContext(
+  projectRoot: string,
+  archivePath: string,
+  isolation: ApplyIsolationState | null
+): Promise<ArchiveBranchContext> {
+  const featureBranch = isolation?.branchName ?? await currentBranch(projectRoot);
+  if (!featureBranch) {
+    return { featureBranch: null, originalBranch: null, isolation };
+  }
+
   if (isolation?.originalBranch) {
-    return isolation.originalBranch;
+    return { featureBranch, originalBranch: isolation.originalBranch, isolation };
   }
 
   const result = await runGit(projectRoot, ['symbolic-ref', 'refs/remotes/origin/HEAD', '--short']);
-  if (result.code !== 0) {
-    return null;
+  if (result.code === 0) {
+    const branch = result.stdout.trim().replace(/^origin\//, '');
+    if (branch) {
+      return { featureBranch, originalBranch: branch, isolation };
+    }
   }
 
-  const branch = result.stdout.trim().replace(/^origin\//, '');
-  return branch || null;
+  const { input } = await import('@inquirer/prompts');
+  const originalBranch = (await input({
+    message: 'Enter original branch to merge archive into:',
+  })).trim();
+  if (!originalBranch) {
+    return { featureBranch, originalBranch: null, isolation };
+  }
+
+  const updatedIsolation = {
+    ...(isolation ?? {}),
+    method: isolation?.method ?? 'branch',
+    branchName: isolation?.branchName ?? featureBranch,
+    originalBranch,
+  };
+  await writeApplyIsolationState(archivePath, updatedIsolation);
+  return { featureBranch, originalBranch, isolation: updatedIsolation };
 }
 
 async function findArchivedChangePathAsync(archiveDir: string, changeName: string): Promise<string | null> {
@@ -198,20 +234,14 @@ async function runBranchCleanup(
 async function runArchiveMerge(
   projectRoot: string,
   archivePath: string,
-  isolation: ApplyIsolationState | null,
+  branchContext: ArchiveBranchContext,
   config: ReturnType<typeof readProjectConfig>
 ): Promise<void> {
-  const originalBranch = await resolveOriginalBranch(projectRoot, isolation);
-  if (!originalBranch) {
-    return;
-  }
-
   const projectConfig = config ?? readProjectConfig(projectRoot);
   const mergeConfig = projectConfig?.git?.merge ?? { strategy: 'no-ff' as const, messageFrom: 'artifacts' as const };
   const branchConfig = projectConfig?.git?.branch ?? { deleteAfterArchive: false };
-  const featureBranch = isolation?.branchName ?? await currentBranch(projectRoot);
-
-  if (!featureBranch || featureBranch === originalBranch) {
+  const { featureBranch, originalBranch } = branchContext;
+  if (!featureBranch || !originalBranch || featureBranch === originalBranch) {
     return;
   }
 
@@ -231,7 +261,7 @@ async function runArchiveMerge(
     if (mergeResult.code !== 0) {
       throw new Error(mergeResult.stderr.trim() || 'git merge --ff-only failed');
     }
-    await runBranchCleanup(projectRoot, originalBranch, featureBranch, branchConfig?.deleteAfterArchive, mergeConfig?.strategy);
+    await runBranchCleanup(projectRoot, originalBranch, featureBranch, branchConfig.deleteAfterArchive, mergeConfig.strategy);
     return;
   }
 
@@ -245,7 +275,7 @@ async function runArchiveMerge(
     if (commitResult.code !== 0) {
       throw new Error(commitResult.stderr.trim() || 'git commit failed');
     }
-    await runBranchCleanup(projectRoot, originalBranch, featureBranch, branchConfig?.deleteAfterArchive, mergeConfig?.strategy);
+    await runBranchCleanup(projectRoot, originalBranch, featureBranch, branchConfig.deleteAfterArchive, mergeConfig.strategy);
     return;
   }
 
@@ -268,7 +298,7 @@ async function runArchiveMerge(
     }
   }
 
-  await runBranchCleanup(projectRoot, originalBranch, featureBranch, branchConfig?.deleteAfterArchive, mergeConfig?.strategy);
+  await runBranchCleanup(projectRoot, originalBranch, featureBranch, branchConfig.deleteAfterArchive, mergeConfig.strategy);
 }
 
 export class ArchiveCommand {
@@ -527,11 +557,12 @@ export class ArchiveCommand {
       return false;
     }
 
+    const branchContext = await resolveArchiveBranchContext(projectRoot, archivePath, isolation);
     if (createArchiveCommit) {
       await runArchiveCommit(projectRoot, changeName, archivePath);
     }
-    await runArchiveMerge(projectRoot, archivePath, isolation, readProjectConfig(projectRoot));
-    return Boolean(isolation?.originalBranch);
+    await runArchiveMerge(projectRoot, archivePath, branchContext, readProjectConfig(projectRoot));
+    return Boolean(branchContext.originalBranch);
   }
 
   private async handleApplyIsolationCleanup(
