@@ -1,0 +1,14 @@
+schema_version: 1
+ADDED:
+  capabilities:
+    - id: cap.archive.merge
+      type: capability
+      intent: Merge archived branch
+    - id: cap.archive.cleanup
+      type: capability
+      intent: Clean branch
+MODIFIED:
+  capabilities:
+    - id: cap.config.git
+      type: capability
+      intent: Load git config
