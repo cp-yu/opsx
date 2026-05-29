@@ -219,17 +219,17 @@
 
 #### Checks
 
-- [ ] C1 skill 文档含三步追加描述
+- [x] C1 skill 文档含三步追加描述
   - Verifies: `specs/opsx-archive-skill/spec.md` / Requirement "Archive 在 sync 完成后追加 archive commit、merge、cleanup 三步" / Scenario "三步顺序"
   - Command: `pnpm test -- archive-skill-content`
   - Expect: 两份 SKILL.md 中均含 Step 7/8/9 标题
 
-- [ ] C2 摘要扩展字段
+- [x] C2 摘要扩展字段
   - Verifies: `specs/opsx-archive-skill/spec.md` / Requirement "Archive 摘要扩展报告 merge 状态" / Scenario "摘要报告字段"
   - Command: `pnpm test -- archive-skill-content`
   - Expect: 摘要模板含 archive commit、merge strategy、feature branch 三字段
 
-- [ ] C3 git 段 projection 注入
+- [x] C3 git 段 projection 注入
   - Verifies: `specs/opsx-archive-skill/spec.md` / Requirement "Archive 通过 prompt projection 消费 git 配置" / Scenario "配置经投影后被 archive 消费"
   - Command: `pnpm test -- config-prompts`
   - Expect: archive surface 投影输出含 git.merge.strategy 等字段

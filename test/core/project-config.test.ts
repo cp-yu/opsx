@@ -10,6 +10,7 @@ import {
 import {
   buildConfigProjectionBundle,
   normalizeProjectConfig,
+  projectConfigForPrompt,
   projectConfigForRuntime,
 } from '../../src/core/config-projection.js';
 
@@ -1006,6 +1007,31 @@ rules:
             'git.branch.deleteAfterArchive: false',
           ],
         }),
+      ]);
+    });
+
+    it('keeps archive git projection lines available to archive skill prompts', () => {
+      const projection = projectConfigForPrompt(
+        {
+          schema: 'spec-driven',
+          git: {
+            merge: {
+              strategy: 'squash',
+              messageFrom: 'manual',
+            },
+            branch: {
+              deleteAfterArchive: true,
+            },
+          },
+          rules: {},
+        },
+        { surface: 'archive' }
+      );
+
+      expect(projection.compiledLines).toEqual([
+        'git.merge.strategy: squash',
+        'git.merge.messageFrom: manual',
+        'git.branch.deleteAfterArchive: true',
       ]);
     });
 
