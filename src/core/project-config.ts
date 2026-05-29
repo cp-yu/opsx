@@ -3,6 +3,20 @@ import path from 'path';
 import { parse as parseYaml } from 'yaml';
 import { z } from 'zod';
 
+const GIT_DEFAULTS = {
+  merge: {
+    strategy: 'no-ff' as const,
+    messageFrom: 'artifacts' as const,
+  },
+  branch: {
+    deleteAfterArchive: false,
+  },
+};
+
+const gitMergeStrategyField = z.enum(['no-ff', 'ff-only', 'squash']);
+const gitMergeMessageFromField = z.enum(['artifacts', 'manual']);
+const gitDeleteAfterArchiveField = z.boolean();
+
 /**
  * Zod schema for project configuration.
  *
@@ -62,6 +76,26 @@ export const ProjectConfigSchema = z.object({
     })
     .optional()
     .describe('Apply-stage branch/worktree isolation policy'),
+
+  // Optional: git archive/merge policy
+  git: z
+    .object({
+      merge: z
+        .object({
+          strategy: z.enum(['no-ff', 'ff-only', 'squash']).optional().default('no-ff'),
+          messageFrom: z.enum(['artifacts', 'manual']).optional().default('artifacts'),
+        })
+        .optional()
+        .default({ strategy: 'no-ff', messageFrom: 'artifacts' }),
+      branch: z
+        .object({
+          deleteAfterArchive: z.boolean().optional().default(false),
+        })
+        .optional()
+        .default({ deleteAfterArchive: false }),
+    })
+    .optional()
+    .describe('Git archive and merge policy'),
 
   // Optional: per-artifact rules (additive to schema's built-in guidance)
   rules: z
@@ -199,6 +233,58 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
         config.apply = applyResult.data;
       } else {
         console.warn(`Invalid 'apply' field in config (must be an object with defaultIsolation: ask | branch | worktree | none)`);
+      }
+    }
+
+    config.git = JSON.parse(JSON.stringify(GIT_DEFAULTS)) as ProjectConfig['git'];
+    if (raw.git !== undefined) {
+      if (typeof raw.git !== 'object' || raw.git === null || Array.isArray(raw.git)) {
+        console.warn(`Invalid 'git' field in config (must be an object)`);
+      } else {
+        const rawGit = raw.git as Record<string, unknown>;
+
+        if (rawGit.merge !== undefined) {
+          if (typeof rawGit.merge === 'object' && rawGit.merge !== null && !Array.isArray(rawGit.merge)) {
+            const rawMerge = rawGit.merge as Record<string, unknown>;
+
+            if (rawMerge.strategy !== undefined) {
+              const strategyResult = gitMergeStrategyField.safeParse(rawMerge.strategy);
+              if (strategyResult.success) {
+                config.git.merge.strategy = strategyResult.data;
+              } else {
+                console.warn('git.merge.strategy must be one of: no-ff, ff-only, squash');
+              }
+            }
+
+            if (rawMerge.messageFrom !== undefined) {
+              const messageFromResult = gitMergeMessageFromField.safeParse(rawMerge.messageFrom);
+              if (messageFromResult.success) {
+                config.git.merge.messageFrom = messageFromResult.data;
+              } else {
+                console.warn('git.merge.messageFrom must be one of: artifacts, manual');
+              }
+            }
+          } else {
+            console.warn(`Invalid 'git.merge' field in config (must be an object)`);
+          }
+        }
+
+        if (rawGit.branch !== undefined) {
+          if (typeof rawGit.branch === 'object' && rawGit.branch !== null && !Array.isArray(rawGit.branch)) {
+            const rawBranch = rawGit.branch as Record<string, unknown>;
+
+            if (rawBranch.deleteAfterArchive !== undefined) {
+              const deleteAfterArchiveResult = gitDeleteAfterArchiveField.safeParse(rawBranch.deleteAfterArchive);
+              if (deleteAfterArchiveResult.success) {
+                config.git.branch.deleteAfterArchive = deleteAfterArchiveResult.data;
+              } else {
+                console.warn('git.branch.deleteAfterArchive must be boolean');
+              }
+            }
+          } else {
+            console.warn(`Invalid 'git.branch' field in config (must be an object)`);
+          }
+        }
       }
     }
 

@@ -54,6 +54,15 @@ rules:
           schema: 'spec-driven',
           docLanguage: 'zh-CN',
           context: 'Tech stack: TypeScript, React\nAPI style: RESTful\n',
+          git: {
+            merge: {
+              strategy: 'no-ff',
+              messageFrom: 'artifacts',
+            },
+            branch: {
+              deleteAfterArchive: false,
+            },
+          },
           rules: {
             proposal: ['Include rollback plan', 'Identify affected teams'],
             specs: ['Use Given/When/Then format'],
@@ -71,6 +80,15 @@ rules:
 
         expect(config).toEqual({
           schema: 'spec-driven',
+          git: {
+            merge: {
+              strategy: 'no-ff',
+              messageFrom: 'artifacts',
+            },
+            branch: {
+              deleteAfterArchive: false,
+            },
+          },
         });
         expect(consoleWarnSpy).not.toHaveBeenCalled();
       });
@@ -93,6 +111,15 @@ optimization:
           optimization: {
             enabled: false,
             optRetries: 2,
+          },
+          git: {
+            merge: {
+              strategy: 'no-ff',
+              messageFrom: 'artifacts',
+            },
+            branch: {
+              deleteAfterArchive: false,
+            },
           },
         });
       });
@@ -122,7 +149,130 @@ apply:
           apply: {
             defaultIsolation: 'worktree',
           },
+          git: {
+            merge: {
+              strategy: 'no-ff',
+              messageFrom: 'artifacts',
+            },
+            branch: {
+              deleteAfterArchive: false,
+            },
+          },
         });
+      });
+
+      it('should parse complete git archive policy when present', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+git:
+  merge:
+    strategy: squash
+    messageFrom: manual
+  branch:
+    deleteAfterArchive: true
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          git: {
+            merge: {
+              strategy: 'squash',
+              messageFrom: 'manual',
+            },
+            branch: {
+              deleteAfterArchive: true,
+            },
+          },
+        });
+        expect(consoleWarnSpy).not.toHaveBeenCalled();
+      });
+
+      it('should fill default git archive policy when git node is missing', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(path.join(configDir, 'config.yaml'), 'schema: spec-driven\n');
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          git: {
+            merge: {
+              strategy: 'no-ff',
+              messageFrom: 'artifacts',
+            },
+            branch: {
+              deleteAfterArchive: false,
+            },
+          },
+        });
+        expect(consoleWarnSpy).not.toHaveBeenCalled();
+      });
+
+      it('should preserve valid git fields while defaulting missing nested fields', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+git:
+  merge:
+    strategy: ff-only
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config?.git).toEqual({
+          merge: {
+            strategy: 'ff-only',
+            messageFrom: 'artifacts',
+          },
+          branch: {
+            deleteAfterArchive: false,
+          },
+        });
+        expect(consoleWarnSpy).not.toHaveBeenCalled();
+      });
+
+      it('should warn per invalid git field and keep valid siblings', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+git:
+  merge:
+    strategy: rebase
+    messageFrom: manual
+  branch:
+    deleteAfterArchive: "true"
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config?.git).toEqual({
+          merge: {
+            strategy: 'no-ff',
+            messageFrom: 'manual',
+          },
+          branch: {
+            deleteAfterArchive: false,
+          },
+        });
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          'git.merge.strategy must be one of: no-ff, ff-only, squash'
+        );
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          'git.branch.deleteAfterArchive must be boolean'
+        );
       });
 
       it('should return partial config when schema is invalid', () => {
@@ -142,6 +292,15 @@ rules:
 
         expect(config).toEqual({
           context: 'Valid context here',
+          git: {
+            merge: {
+              strategy: 'no-ff',
+              messageFrom: 'artifacts',
+            },
+            branch: {
+              deleteAfterArchive: false,
+            },
+          },
           rules: {
             proposal: ['Valid rule'],
           },
@@ -168,6 +327,15 @@ rules:
 
         expect(config).toEqual({
           schema: 'spec-driven',
+          git: {
+            merge: {
+              strategy: 'no-ff',
+              messageFrom: 'artifacts',
+            },
+            branch: {
+              deleteAfterArchive: false,
+            },
+          },
           rules: {
             proposal: ['Valid rule'],
           },
@@ -193,6 +361,15 @@ context: Valid context
         expect(config).toEqual({
           schema: 'spec-driven',
           context: 'Valid context',
+          git: {
+            merge: {
+              strategy: 'no-ff',
+              messageFrom: 'artifacts',
+            },
+            branch: {
+              deleteAfterArchive: false,
+            },
+          },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
           expect.stringContaining("Invalid 'docLanguage' field")
@@ -215,6 +392,15 @@ rules: ["not", "an", "object"]
         expect(config).toEqual({
           schema: 'spec-driven',
           context: 'Valid context',
+          git: {
+            merge: {
+              strategy: 'no-ff',
+              messageFrom: 'artifacts',
+            },
+            branch: {
+              deleteAfterArchive: false,
+            },
+          },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
           expect.stringContaining("Invalid 'rules' field")
@@ -237,6 +423,15 @@ context: Valid context
         expect(config).toEqual({
           schema: 'spec-driven',
           context: 'Valid context',
+          git: {
+            merge: {
+              strategy: 'no-ff',
+              messageFrom: 'artifacts',
+            },
+            branch: {
+              deleteAfterArchive: false,
+            },
+          },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
           expect.stringContaining("Invalid 'optimization' field")
@@ -261,6 +456,15 @@ rules:
         expect(config).toEqual({
           schema: 'spec-driven',
           context: 'Valid context',
+          git: {
+            merge: {
+              strategy: 'no-ff',
+              messageFrom: 'artifacts',
+            },
+            branch: {
+              deleteAfterArchive: false,
+            },
+          },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
           expect.stringContaining("Invalid 'rules' field")
@@ -286,6 +490,15 @@ rules:
 
         expect(config).toEqual({
           schema: 'spec-driven',
+          git: {
+            merge: {
+              strategy: 'no-ff',
+              messageFrom: 'artifacts',
+            },
+            branch: {
+              deleteAfterArchive: false,
+            },
+          },
           rules: {
             proposal: ['Valid rule'],
             design: ['Another valid rule'],
@@ -315,6 +528,15 @@ rules:
 
         expect(config).toEqual({
           schema: 'spec-driven',
+          git: {
+            merge: {
+              strategy: 'no-ff',
+              messageFrom: 'artifacts',
+            },
+            branch: {
+              deleteAfterArchive: false,
+            },
+          },
           rules: {
             proposal: ['Valid rule', 'Another valid rule'],
           },
@@ -343,6 +565,15 @@ rules:
 
         expect(config).toEqual({
           schema: 'spec-driven',
+          git: {
+            merge: {
+              strategy: 'no-ff',
+              messageFrom: 'artifacts',
+            },
+            branch: {
+              deleteAfterArchive: false,
+            },
+          },
           rules: {
             specs: ['Valid rule'],
           },
@@ -416,7 +647,18 @@ rules:
 
         const config = readProjectConfig(tempDir);
 
-        expect(config).toEqual({ schema: 'spec-driven' });
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          git: {
+            merge: {
+              strategy: 'no-ff',
+              messageFrom: 'artifacts',
+            },
+            branch: {
+              deleteAfterArchive: false,
+            },
+          },
+        });
         expect(config?.context).toBeUndefined();
         expect(consoleWarnSpy).toHaveBeenCalledWith(
           expect.stringContaining('Context too large (51.0KB, limit: 50KB)')
@@ -653,6 +895,15 @@ rules:
         apply: {
           defaultIsolation: 'worktree',
         },
+        git: {
+          merge: {
+            strategy: 'squash',
+            messageFrom: 'manual',
+          },
+          branch: {
+            deleteAfterArchive: true,
+          },
+        },
         rules: {
           proposal: ['  Rule 1  ', ' ', 'Rule 2'],
           '  ': ['ignored'],
@@ -673,6 +924,15 @@ rules:
         },
         apply: {
           defaultIsolation: 'worktree',
+        },
+        git: {
+          merge: {
+            strategy: 'squash',
+            messageFrom: 'manual',
+          },
+          branch: {
+            deleteAfterArchive: true,
+          },
         },
         rules: {
           proposal: ['Rule 1', 'Rule 2'],
@@ -707,6 +967,46 @@ rules:
       expect(bundle.prompt.compiledLines.join('\n')).toContain('Tech stack: TypeScript');
       expect(bundle.prompt.compiledLines.join('\n')).toContain('Include rollback plan');
       expect(bundle.prompt.compiledLines.join('\n')).not.toContain('Use Given/When/Then');
+    });
+
+    it('projects git settings for archive prompt consumers', () => {
+      const bundle = buildConfigProjectionBundle(
+        {
+          schema: 'spec-driven',
+          git: {
+            merge: {
+              strategy: 'no-ff',
+              messageFrom: 'artifacts',
+            },
+            branch: {
+              deleteAfterArchive: false,
+            },
+          },
+          rules: {},
+        },
+        { surface: 'archive' }
+      );
+
+      expect(bundle.normalized.git).toEqual({
+        merge: {
+          strategy: 'no-ff',
+          messageFrom: 'artifacts',
+        },
+        branch: {
+          deleteAfterArchive: false,
+        },
+      });
+      expect(bundle.prompt.fragments).toEqual([
+        expect.objectContaining({
+          key: 'git',
+          scope: 'global',
+          lines: [
+            'git.merge.strategy: no-ff',
+            'git.merge.messageFrom: artifacts',
+            'git.branch.deleteAfterArchive: false',
+          ],
+        }),
+      ]);
     });
 
     it('omits invalid or missing fields from runtime projection and marks docLanguage as fingerprint-affecting', () => {

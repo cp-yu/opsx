@@ -15,6 +15,15 @@ export interface NormalizedProjectConfig {
   apply?: {
     defaultIsolation: 'ask' | 'branch' | 'worktree' | 'none';
   };
+  git?: {
+    merge: {
+      strategy: 'no-ff' | 'ff-only' | 'squash';
+      messageFrom: 'artifacts' | 'manual';
+    };
+    branch: {
+      deleteAfterArchive: boolean;
+    };
+  };
   rules: Record<string, string[]>;
 }
 
@@ -36,7 +45,7 @@ export interface ProjectionScope {
 }
 
 export interface ProjectionFragment {
-  key: 'docLanguage' | 'context' | 'rules';
+  key: 'docLanguage' | 'context' | 'rules' | 'git';
   scope: 'global' | 'artifact';
   lines: string[];
 }
@@ -123,6 +132,17 @@ export function normalizeProjectConfig(config: ProjectConfig | null): Normalized
     apply: config.apply
       ? {
           defaultIsolation: config.apply.defaultIsolation ?? 'ask',
+        }
+      : undefined,
+    git: config.git
+      ? {
+          merge: {
+            strategy: config.git.merge.strategy,
+            messageFrom: config.git.merge.messageFrom,
+          },
+          branch: {
+            deleteAfterArchive: config.git.branch.deleteAfterArchive,
+          },
         }
       : undefined,
     rules,
@@ -226,6 +246,30 @@ const projectionRules: ProjectionRule[] = [
         scope: 'artifact',
         lines: rules,
       };
+    },
+    affectsFingerprint() {
+      return false;
+    },
+  },
+  {
+    key: 'git',
+    buildPrompt(config, scope) {
+      if (scope.surface !== 'archive' || !config.git) {
+        return null;
+      }
+
+      return {
+        key: 'git',
+        scope: 'global',
+        lines: [
+          `git.merge.strategy: ${config.git.merge.strategy}`,
+          `git.merge.messageFrom: ${config.git.merge.messageFrom}`,
+          `git.branch.deleteAfterArchive: ${config.git.branch.deleteAfterArchive}`,
+        ],
+      };
+    },
+    buildRuntime() {
+      return null;
     },
     affectsFingerprint() {
       return false;

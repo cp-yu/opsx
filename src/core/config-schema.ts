@@ -1,5 +1,27 @@
 import { z } from 'zod';
 
+const GitConfigSchema = z
+  .object({
+    merge: z
+      .object({
+        strategy: z.enum(['no-ff', 'ff-only', 'squash']).optional().default('no-ff'),
+        messageFrom: z.enum(['artifacts', 'manual']).optional().default('artifacts'),
+      })
+      .optional()
+      .default({ strategy: 'no-ff', messageFrom: 'artifacts' }),
+    branch: z
+      .object({
+        deleteAfterArchive: z.boolean().optional().default(false),
+      })
+      .optional()
+      .default({ deleteAfterArchive: false }),
+  })
+  .optional()
+  .default({
+    merge: { strategy: 'no-ff', messageFrom: 'artifacts' },
+    branch: { deleteAfterArchive: false },
+  });
+
 /**
  * Zod schema for global OpenSpec configuration.
  * Uses passthrough() to preserve unknown fields for forward compatibility.
@@ -30,6 +52,7 @@ export const GlobalConfigSchema = z
       })
       .optional()
       .default({ defaultIsolation: 'ask' }),
+    git: GitConfigSchema,
     profile: z
       .enum(['core', 'expanded', 'custom'])
       .optional()
@@ -60,6 +83,15 @@ export const DEFAULT_CONFIG: GlobalConfigType = {
   },
   apply: {
     defaultIsolation: 'ask',
+  },
+  git: {
+    merge: {
+      strategy: 'no-ff',
+      messageFrom: 'artifacts',
+    },
+    branch: {
+      deleteAfterArchive: false,
+    },
   },
   profile: 'core',
   delivery: 'both',
@@ -126,6 +158,25 @@ export function validateConfigKeyPath(path: string): { valid: boolean; reason?: 
     return {
       valid: false,
       reason: 'apply only supports the nested key "defaultIsolation"',
+    };
+  }
+
+  if (rootKey === 'git') {
+    if (rawKeys.length === 1) {
+      return { valid: true };
+    }
+    if (rawKeys.length === 2 && (rawKeys[1] === 'merge' || rawKeys[1] === 'branch')) {
+      return { valid: true };
+    }
+    if (rawKeys.length === 3 && rawKeys[1] === 'merge' && (rawKeys[2] === 'strategy' || rawKeys[2] === 'messageFrom')) {
+      return { valid: true };
+    }
+    if (rawKeys.length === 3 && rawKeys[1] === 'branch' && rawKeys[2] === 'deleteAfterArchive') {
+      return { valid: true };
+    }
+    return {
+      valid: false,
+      reason: 'git only supports the nested keys "merge.strategy", "merge.messageFrom", and "branch.deleteAfterArchive"',
     };
   }
 

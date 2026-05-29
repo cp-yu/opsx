@@ -341,6 +341,34 @@ describe('config-schema', () => {
       const result = GlobalConfigSchema.parse({});
       expect(result.optimization).toEqual({ enabled: true, optRetries: 2 });
     });
+
+    it('should provide default git archive policy', () => {
+      const result = GlobalConfigSchema.parse({});
+      expect(result.git).toEqual({
+        merge: {
+          strategy: 'no-ff',
+          messageFrom: 'artifacts',
+        },
+        branch: {
+          deleteAfterArchive: false,
+        },
+      });
+    });
+
+    it('should accept valid git archive policy', () => {
+      const result = GlobalConfigSchema.safeParse({
+        git: {
+          merge: {
+            strategy: 'squash',
+            messageFrom: 'manual',
+          },
+          branch: {
+            deleteAfterArchive: true,
+          },
+        },
+      });
+      expect(result.success).toBe(true);
+    });
   });
 
   describe('DEFAULT_CONFIG', () => {
@@ -350,6 +378,18 @@ describe('config-schema', () => {
 
     it('should enable optimization by default', () => {
       expect(DEFAULT_CONFIG.optimization).toEqual({ enabled: true, optRetries: 2 });
+    });
+
+    it('should default git archive policy conservatively', () => {
+      expect(DEFAULT_CONFIG.git).toEqual({
+        merge: {
+          strategy: 'no-ff',
+          messageFrom: 'artifacts',
+        },
+        branch: {
+          deleteAfterArchive: false,
+        },
+      });
     });
   });
 
@@ -363,6 +403,21 @@ describe('config-schema', () => {
     it('rejects unknown nested optimization keys', () => {
       expect(validateConfigKeyPath('optimization.mode').valid).toBe(false);
       expect(validateConfigKeyPath('optimization.enabled.extra').valid).toBe(false);
+    });
+
+    it('allows git archive policy keys', () => {
+      expect(validateConfigKeyPath('git').valid).toBe(true);
+      expect(validateConfigKeyPath('git.merge').valid).toBe(true);
+      expect(validateConfigKeyPath('git.merge.strategy').valid).toBe(true);
+      expect(validateConfigKeyPath('git.merge.messageFrom').valid).toBe(true);
+      expect(validateConfigKeyPath('git.branch').valid).toBe(true);
+      expect(validateConfigKeyPath('git.branch.deleteAfterArchive').valid).toBe(true);
+    });
+
+    it('rejects unknown nested git keys', () => {
+      expect(validateConfigKeyPath('git.merge.mode').valid).toBe(false);
+      expect(validateConfigKeyPath('git.branch.forceDelete').valid).toBe(false);
+      expect(validateConfigKeyPath('git.push.afterMerge').valid).toBe(false);
     });
   });
 });
