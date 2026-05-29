@@ -218,6 +218,51 @@ When migrating, be selective. Ask yourself: "Does the AI need this for *every* p
 - Non-obvious constraints ("we can't use library X because...")
 - Critical conventions that often get ignored
 
+## Migrating tasks.md to TDD-ready Tasks
+
+Existing `## 1. Actions` / `## 2. Checks` files still work. New changes should use coarse Task sections so `/opsx:apply` can decompose work into `.apply-steps/` TDD cycles.
+
+### Before
+
+```markdown
+## 1. Actions
+
+- [ ] A1 Add registration route
+
+## 2. Checks
+
+- [ ] C1 Verify registration
+  - Covers: A1
+  - Verifies: `specs/auth/spec.md` / Requirement "User registration" / Scenario "Valid registration succeeds"
+  - Command: `npm test`
+```
+
+### After
+
+```markdown
+### Task 1: User registration API
+
+**Goal**: Implement email and password registration.
+
+**Files**:
+- Create: `src/routes/auth.ts`
+- Modify: `src/app.ts`
+- Test: `tests/auth.test.ts`
+
+**Requirements**:
+- Accept `POST /auth/register`
+- Validate email format
+- Hash passwords before storage
+
+#### Checks
+
+- [ ] C1 Verify registration
+  - Verifies: `specs/auth/spec.md` / Requirement "User registration" / Scenario "Valid registration succeeds"
+  - Command: `npm test`
+```
+
+Keep each Task to five or fewer Requirements. Split larger components into multiple Task sections.
+
 **Move to `rules:` instead**
 - Artifact-specific formatting ("use Given/When/Then in specs")
 - Review criteria ("proposals must include rollback plans")

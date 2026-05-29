@@ -155,19 +155,20 @@ artifacts:
 
   - id: tasks
     generates: tasks.md
-    description: Implementation actions and verification checks
+    description: Coarse implementation tasks with verification checks
     template: tasks.md
     instruction: |
-      Create the task list that breaks down implementation work into actions and goal-driven checks.
+      Create a coarse-grained task list that the apply phase can decompose into detailed TDD cycles.
 
       **IMPORTANT: Follow the template below exactly.** The apply phase parses
-      checkbox format to track progress. Tasks not using `- [ ]` won't be tracked.
+      `### Task N:` headings and nested checkboxes to track progress.
 
       Required structure:
-      - Use exactly two top-level sections: `## 1. Actions` and `## 2. Checks`
-      - Actions are implementation work items and MUST use checkbox IDs prefixed with `A`: `- [ ] A1 Task description`
-      - Checks are executable verification items and MUST use checkbox IDs prefixed with `C`: `- [ ] C1 Verify ...`
-      - Each check MUST include `Covers:` with one or more action IDs, and every action ID MUST be covered by at least one check
+      - Create one `### Task N: <name>` section per component or coherent work unit
+      - Each task MUST include `**Goal**:`, `**Files**:`, `**Requirements**:`, and `#### Checks`
+      - `Files` MUST use POSIX project-relative paths and label each path as `Create:`, `Modify:`, or `Test:`
+      - `Requirements` MUST contain no more than 5 bullet items per task; split complex work into multiple tasks
+      - `Checks` are executable verification items and MUST use checkbox IDs prefixed with `C`: `- [ ] C1 Verify ...`
       - Each check MUST include `Verifies:` before executable evidence fields, identifying the change-local spec requirement and scenario it verifies
       - Each check MUST include at least one executable evidence field: `Command:`, `Evidence:`, or `Expect:`
       - When this change has local delta specs, `Verifies:` MUST use a change-local relative POSIX path from the change directory: `specs/<capability>/spec.md`
@@ -175,35 +176,45 @@ artifacts:
       - `Verifies:` MUST NOT use `openspec/specs/...`, project-root-relative paths, archived/main spec paths, absolute paths, parent traversal, or backslash-separated paths
 
       Conversion rules:
+      - Generate one task from each major component in the design or Design Summary
+      - Put technical stack constraints and boundary conditions under Requirements, not free-form prose
       - Validation work maps to checks for invalid-input behavior
       - Bug fixes map to a check that reproduces the failure and proves the regression fix
       - Refactors map to a before/after behavior-equivalence check
       - Trivial edits such as typo, wording-only, or comment-only changes do not require full test-first decomposition, but still need at least one lightweight check with a non-empty `Verifies:` explaining how completion will be verified
+      - Existing Actions/Checks files remain valid for older changes, but new changes SHOULD use the Task/Goal/Files/Requirements/Checks format
 
       Example:
       ```
-      ## 1. Actions
+      ### Task 1: User registration API
 
-      - [ ] A1 Create new module structure
-      - [ ] A2 Add dependencies to package.json
+      **Goal**: Implement email and password registration.
 
-      ## 2. Checks
+      **Files**:
+      - Create: `src/routes/auth.ts`
+      - Modify: `src/app.ts`
+      - Test: `tests/auth.test.ts`
 
-      - [ ] C1 Verify module structure is loadable
-        - Covers: A1
-        - Verifies: `specs/example/spec.md` / Requirement "Module loading" / Scenario "Module imports successfully"
+      **Requirements**:
+      - Accept `POST /auth/register`
+      - Validate email format
+      - Hash passwords before storage
+
+      #### Checks
+
+      - [ ] C1 Verify registration endpoint
+        - Verifies: `specs/auth/spec.md` / Requirement "User registration" / Scenario "Valid registration succeeds"
         - Command: `npm test`
-        - Expect: module imports succeed
+        - Expect: registration test passes
 
-      - [ ] C2 Verify dependency installation
-        - Covers: A2
-        - Verifies: `specs/example/spec.md` / Requirement "Dependency management" / Scenario "Dependencies are pinned"
-        - Evidence: package lock diff
-        - Expect: dependency is pinned and installable
+      - [ ] C2 Verify invalid email rejection
+        - Verifies: `specs/auth/spec.md` / Requirement "User registration" / Scenario "Invalid email is rejected"
+        - Command: `npm test`
+        - Expect: invalid email test passes
       ```
 
       Reference specs for what needs to be built, design for how to build it.
-      Checks are executable verification work, not explanatory prose.
+      Checks are executable verification work, not explanatory prose. The apply phase will decompose each Task into TDD steps before implementation.
     requires:
       - specs
       - design
@@ -212,5 +223,5 @@ apply:
   requires: [tasks]
   tracks: tasks.md
   instruction: |
-    Read context files, work through pending tasks, mark complete as you go.
+    Read context files, decompose each pending coarse task into detailed TDD steps, dispatch implementer subagents, and mark nested checks complete as evidence passes.
     Pause if you hit blockers or need clarification.

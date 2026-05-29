@@ -55,6 +55,10 @@ describe('propose template post-validation flow', () => {
       expect(body).toContain('openspec instructions tasks --change "<name>" --json');
       expect(body).toContain('validateTaskStructure');
       expect(body).toContain('Actions');
+      expect(body).toContain('### Task N:');
+      expect(body).toContain('Goal');
+      expect(body).toContain('Files');
+      expect(body).toContain('Requirements');
       expect(body).toContain('Checks');
       expect(body).toContain('Covers:');
       expect(body).toContain('Verifies:');
@@ -65,6 +69,20 @@ describe('propose template post-validation flow', () => {
       expect(body).toContain('Expect:');
       expect(body).toContain('Do NOT invent semantic lint rules beyond the current templates');
       expect(body).toContain('Do NOT judge whether a check is semantically sufficient');
+    }
+  });
+
+  it('documents smart explore routing decisions', () => {
+    for (const body of getProposeBodies()) {
+      expect(body).toContain('inspect the current conversation for an explore-generated `Design Summary`');
+      expect(body).toContain('propose.smartRouting: false');
+      expect(body).toContain('propose.requireExplore: false');
+      expect(body).toContain("score the user's input across 5 dimensions");
+      expect(body).toContain('Detect multi-subsystem scope');
+      expect(body).toContain('Design Summary found: proceed and show that Design Summary is being used');
+      expect(body).toContain('输入足够详细，跳过 explore，直接生成制品。');
+      expect(body).toContain('这个需求涉及多个独立子系统，建议先运行 `/opsx:explore` 进行拆解。');
+      expect(body).toContain('Show input length, detail score, multi-subsystem result, and final decision');
     }
   });
 });

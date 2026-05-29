@@ -5,6 +5,13 @@ export interface TaskStructureIssue {
   code:
     | 'missing-actions-section'
     | 'missing-checks-section'
+    | 'missing-task-heading'
+    | 'malformed-task-heading'
+    | 'missing-task-goal'
+    | 'missing-task-files'
+    | 'missing-task-requirements'
+    | 'missing-task-checks'
+    | 'too-many-task-requirements'
     | 'malformed-action-id'
     | 'malformed-check-id'
     | 'missing-covers'
@@ -27,6 +34,7 @@ export interface TaskStructureValidation {
   issues: TaskStructureIssue[];
   actions: string[];
   checks: string[];
+  format: 'actions-checks' | 'coarse-tasks';
 }
 
 export interface TaskStructureValidationOptions {
@@ -46,8 +54,17 @@ interface SpecRequirement {
   scenarios: Set<string>;
 }
 
+interface CoarseTask {
+  id: string;
+  title: string;
+  line: number;
+  range: { start: number; end: number };
+}
+
 const CHECKBOX_RE = /^\s*-\s+\[[ xX]\]\s+(\S+)/;
 const FIELD_RE = /^\s*-\s+(Covers|Verifies|Command|Evidence|Expect):\s*(.*)$/;
+const TASK_FIELD_RE = /^\*\*(Goal|Files|Requirements)\*\*:\s*(.*)$/;
+const TASK_CHECKS_HEADING_RE = /^####\s+Checks\s*$/;
 const SPEC_PATH_RE = /`([^`]+)`/;
 const REQUIREMENT_RE = /\bRequirement\s+"([^"]+)"/;
 const SCENARIOS_RE = /\bScenarios?\s+(.+)$/;
@@ -59,6 +76,11 @@ export function validateTaskStructure(
 ): TaskStructureValidation {
   const lines = content.replace(/\r\n?/g, '\n').split('\n');
   const mask = buildCodeFenceMask(lines);
+  const coarseTasks = parseCoarseTasks(lines, mask);
+  if (coarseTasks.length > 0) {
+    return validateCoarseTasks(lines, mask, coarseTasks, options);
+  }
+
   const sections = findTaskSections(lines, mask);
   const issues: TaskStructureIssue[] = [];
   const specFiles = options.changeDir ? listChangeSpecFiles(options.changeDir) : new Set<string>();
@@ -116,6 +138,62 @@ export function validateTaskStructure(
     issues,
     actions: actions.map((item) => item.id),
     checks: checks.map((item) => item.id),
+    format: 'actions-checks',
+  };
+}
+
+function validateCoarseTasks(
+  lines: string[],
+  mask: boolean[],
+  tasks: CoarseTask[],
+  options: TaskStructureValidationOptions
+): TaskStructureValidation {
+  const issues: TaskStructureIssue[] = [];
+  const specFiles = options.changeDir ? listChangeSpecFiles(options.changeDir) : new Set<string>();
+  const checks: TaskItem[] = [];
+
+  for (const task of tasks) {
+    if (!task.title) {
+      issues.push(error('malformed-task-heading', `Task ${task.id} heading must include a title.`, task.line));
+    }
+
+    const fields = parseTaskFields(lines, mask, task.range);
+    if (!fields.has('Goal')) {
+      issues.push(error('missing-task-goal', `Task ${task.id} is missing Goal.`, task.line));
+    }
+    if (!fields.has('Files')) {
+      issues.push(error('missing-task-files', `Task ${task.id} is missing Files.`, task.line));
+    }
+    if (!fields.has('Requirements')) {
+      issues.push(error('missing-task-requirements', `Task ${task.id} is missing Requirements.`, task.line));
+    }
+    if (!fields.has('Checks')) {
+      issues.push(error('missing-task-checks', `Task ${task.id} is missing Checks.`, task.line));
+    }
+
+    const requirementCount = countListItemsInField(lines, mask, fields.get('Requirements'), task.range.end);
+    if (requirementCount > 5) {
+      issues.push(error('too-many-task-requirements', `Task ${task.id} must not have more than 5 Requirements.`, task.line));
+    }
+
+    const taskChecks = fields.has('Checks')
+      ? parseItems(lines, mask, fields.get('Checks')!)
+      : [];
+    for (const item of taskChecks) {
+      validateVerifies(item, specFiles, options.changeDir, issues);
+      if (!hasEvidenceField(item)) {
+        issues.push(error('missing-evidence-field', `Check ${item.id} must include Command, Evidence, or Expect.`, item.line));
+      }
+    }
+    checks.push(...taskChecks);
+  }
+
+  return {
+    valid: issues.every((issue) => issue.severity !== 'error'),
+    issues,
+    actions: tasks.map((task) => `Task ${task.id}`),
+    checks: checks.map((item) => item.id),
+    format: 'coarse-tasks',
   };
 }
 
@@ -265,6 +343,89 @@ function parseSpecRequirements(content: string): Map<string, SpecRequirement> {
   }
 
   return requirements;
+}
+
+function parseCoarseTasks(lines: string[], mask: boolean[]): CoarseTask[] {
+  const tasks: CoarseTask[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    if (mask[i]) {
+      continue;
+    }
+
+    const match = lines[i].match(/^###\s+Task\s+(\d+):\s*(.*?)\s*$/);
+    if (!match) {
+      continue;
+    }
+
+    tasks.push({
+      id: match[1],
+      title: match[2],
+      line: i + 1,
+      range: { start: i + 1, end: lines.length },
+    });
+  }
+
+  for (let i = 0; i < tasks.length; i++) {
+    tasks[i].range.end = tasks[i + 1]?.line ? tasks[i + 1].line - 1 : lines.length;
+  }
+
+  return tasks;
+}
+
+function parseTaskFields(
+  lines: string[],
+  mask: boolean[],
+  range: { start: number; end: number }
+): Map<string, { start: number; end: number }> {
+  const fields = new Map<string, { start: number; end: number }>();
+  const starts: Array<{ name: string; line: number }> = [];
+
+  for (let i = range.start; i < range.end; i++) {
+    if (mask[i]) {
+      continue;
+    }
+
+    const checks = lines[i].match(TASK_CHECKS_HEADING_RE);
+    if (checks) {
+      starts.push({ name: 'Checks', line: i });
+      continue;
+    }
+
+    const match = lines[i].match(TASK_FIELD_RE);
+    if (match) {
+      starts.push({ name: match[1], line: i });
+    }
+  }
+
+  for (let i = 0; i < starts.length; i++) {
+    fields.set(starts[i].name, {
+      start: starts[i].line + 1,
+      end: starts[i + 1]?.line ?? range.end,
+    });
+  }
+
+  return fields;
+}
+
+function countListItemsInField(
+  lines: string[],
+  mask: boolean[],
+  range: { start: number; end: number } | undefined,
+  fallbackEnd: number
+): number {
+  if (!range) {
+    return 0;
+  }
+
+  const end = Math.min(range.end, fallbackEnd);
+  let count = 0;
+  for (let i = range.start; i < end; i++) {
+    if (!mask[i] && /^\s*-\s+/.test(lines[i])) {
+      count++;
+    }
+  }
+  return count;
 }
 
 function parseItems(

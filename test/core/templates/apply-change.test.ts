@@ -37,4 +37,29 @@ describe('apply change workflow template', () => {
       expect(template).toContain(VERIFY_STATE_MACHINE_DIAGRAM);
     }
   });
+
+  it('documents TDD decomposition, implementer dispatch, and branch isolation', () => {
+    for (const template of [
+      getApplyChangeSkillTemplate().instructions,
+      getOpsxApplyCommandTemplate().content,
+    ]) {
+      expect(template).toContain('Branch Isolation Preflight');
+      expect(template).toContain('git branch --show-current');
+      expect(template).toContain('Create branch `<change-name>`');
+      expect(template).toContain('Create worktree at `.worktrees/<change-name>`');
+      expect(template).toContain("path.join(changeDir, '.apply-isolation.json')");
+      expect(template).toContain('using-git-worktrees');
+      expect(template).toContain('Master Agent TDD Decomposition');
+      expect(template).toContain("path.join(changeDir, '.apply-steps')");
+      expect(template).toContain('Step 1: Write Failing Test');
+      expect(template).toContain('Step 2: Run Test (Verify Fails)');
+      expect(template).toContain('Step 3: Implement Minimal Code');
+      expect(template).toContain('Step 4: Run Test (Verify Passes)');
+      expect(template).toContain('Step 5: Commit');
+      expect(template).toContain('openspec-implementer');
+      expect(template).toContain('cheapest available subagent model');
+      expect(template).toContain('Use a capable model only when the user or project configuration explicitly overrides the default');
+      expect(template).toContain('DONE_WITH_CONCERNS');
+    }
+  });
 });

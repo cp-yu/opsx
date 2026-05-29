@@ -54,11 +54,11 @@ AI:  Created openspec/changes/add-dark-mode/
      Ready for implementation!
 
 You: /opsx:apply
-AI:  Implementing tasks...
-     ✓ 1.1 Add theme context provider
-     ✓ 1.2 Create toggle component
-     ✓ 2.1 Add CSS variables
-     ✓ 2.2 Wire up localStorage
+AI:  Checking branch isolation...
+     ✓ Generated .apply-steps/task-1-theme-provider.md
+     ✓ Implementer ran TDD cycle: test failed, code added, test passed
+     ✓ Generated .apply-steps/task-2-theme-toggle.md
+     ✓ Implementer committed each passing cycle
      All tasks complete!
 
 You: /opsx:archive
@@ -97,6 +97,10 @@ openspec init
 ```
 
 Now tell your AI: `/opsx:propose <what-you-want-to-build>`
+
+For vague or multi-subsystem ideas, start with `/opsx:explore`. Explore now runs a structured brainstorming flow and produces a Design Summary in chat. `/opsx:propose` can reuse that summary, or skip explore when your input is already detailed.
+
+`/opsx:apply` now decomposes coarse `tasks.md` entries into `.apply-steps/` TDD cycles and dispatches implementer subagents. When run on `main` or `master`, it asks whether to create a feature branch, create a worktree, or continue on the current branch.
 
 If you want the `expanded` workflow preset (`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:sync`, `/opsx:bulk-archive`, `/opsx:onboard`), select it with `openspec config profile` and apply with `openspec update`. In the default `core` preset, `/opsx:archive` still exposes only one user-facing command, but it now runs the same full verify gate before archive and then performs spec + OPSX sync inline.
 
@@ -155,7 +159,7 @@ For a newer release, replace the version in the tarball URL and reinstall before
 
 ## Usage Notes
 
-**Model selection**: OpenSpec works best with high-reasoning models. We recommend Opus 4.5 and GPT 5.2 for both planning and implementation.
+**Model selection**: OpenSpec works best with high-reasoning models for exploration, proposal, design, and the apply coordinator. Implementer subagents should use the cheapest available model suitable for mechanical TDD execution unless you explicitly configure otherwise.
 
 **Context hygiene**: OpenSpec benefits from a clean context window. Clear your context before starting implementation and maintain good context hygiene throughout your session.
 

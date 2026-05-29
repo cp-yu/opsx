@@ -236,8 +236,13 @@ export function printInstructionsText(instructions: ArtifactInstructions, isBloc
  * Parses tasks.md content and extracts task items with their completion status.
  */
 function parseTasksFile(content: string): TaskItem[] {
+  const coarseTasks = parseCoarseTasksFile(content);
+  if (coarseTasks.length > 0) {
+    return coarseTasks;
+  }
+
   const tasks: TaskItem[] = [];
-  const lines = content.split('\n');
+  const lines = content.replace(/\r\n?/g, '\n').split('\n');
   let taskIndex = 0;
 
   for (const line of lines) {
@@ -256,6 +261,38 @@ function parseTasksFile(content: string): TaskItem[] {
   }
 
   return tasks;
+}
+
+function parseCoarseTasksFile(content: string): TaskItem[] {
+  const lines = content.replace(/\r\n?/g, '\n').split('\n');
+  const headings: Array<{ id: string; description: string; line: number }> = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const match = lines[i].match(/^###\s+Task\s+(\d+):\s*(.+?)\s*$/);
+    if (!match) {
+      continue;
+    }
+
+    headings.push({
+      id: match[1],
+      description: match[2].trim(),
+      line: i,
+    });
+  }
+
+  return headings.map((heading, index) => {
+    const end = headings[index + 1]?.line ?? lines.length;
+    const section = lines.slice(heading.line + 1, end);
+    const checkboxes = section
+      .map((line) => line.match(/^[-*]\s*\[([ xX])\]\s*(.+)\s*$/))
+      .filter((match): match is RegExpMatchArray => match !== null);
+
+    return {
+      id: heading.id,
+      description: heading.description,
+      done: checkboxes.length > 0 && checkboxes.every((match) => match[1].toLowerCase() === 'x'),
+    };
+  });
 }
 
 async function resolveCompletedApplyState(

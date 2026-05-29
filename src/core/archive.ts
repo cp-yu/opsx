@@ -1,5 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 import { getTaskProgressForChange, formatTaskStatus } from '../utils/task-progress.js';
 import { Validator } from './validation/validator.js';
 import chalk from 'chalk';
@@ -15,6 +17,15 @@ import {
   formatVerifyGateFailure,
 } from './verify/freshness.js';
 import { selectActiveChange } from './change-utils.js';
+
+const execFileAsync = promisify(execFile);
+
+interface ApplyIsolationState {
+  method?: 'branch' | 'worktree' | 'none';
+  branchName?: string;
+  worktreePath?: string;
+  originalBranch?: string;
+}
 
 /**
  * Recursively copy a directory. Used when fs.rename fails (e.g. EPERM on Windows).
@@ -50,6 +61,19 @@ async function moveDirectory(src: string, dest: string): Promise<void> {
     } else {
       throw err;
     }
+  }
+}
+
+async function readApplyIsolationState(changeDir: string): Promise<ApplyIsolationState | null> {
+  try {
+    const content = await fs.readFile(path.join(changeDir, '.apply-isolation.json'), 'utf-8');
+    const parsed = JSON.parse(content) as ApplyIsolationState;
+    if (!parsed || typeof parsed !== 'object') {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
   }
 }
 
@@ -96,6 +120,7 @@ export class ArchiveCommand {
     const pendingSync = syncState.requiresSync
       ? await getPendingChangeSync(targetPath, syncState)
       : null;
+    const isolationState = await readApplyIsolationState(changeDir);
 
     const skipValidation = options.validate === false || options.noValidate === true;
     const skipVerify = options.verify === false || options.noVerify === true;
@@ -278,6 +303,51 @@ export class ArchiveCommand {
     await moveDirectory(changeDir, archivePath);
 
     console.log(`Change '${changeName}' archived as '${archiveName}'.`);
+
+    await this.handleApplyIsolationCleanup(isolationState, targetPath, options);
+  }
+
+  private async handleApplyIsolationCleanup(
+    isolation: ApplyIsolationState | null,
+    projectRoot: string,
+    options: { yes?: boolean }
+  ): Promise<void> {
+    if (!isolation) {
+      return;
+    }
+
+    if (isolation.method === 'worktree' && isolation.worktreePath) {
+      const normalizedWorktreePath = path.normalize(path.resolve(projectRoot, isolation.worktreePath));
+      if (options.yes) {
+        console.log(`Worktree cleanup skipped under --yes: ${normalizedWorktreePath}`);
+      } else {
+        const { confirm } = await import('@inquirer/prompts');
+        const removeWorktree = await confirm({
+          message: `Delete worktree directory ${normalizedWorktreePath}?`,
+          default: false,
+        });
+        if (removeWorktree) {
+          await execFileAsync('git', ['worktree', 'remove', normalizedWorktreePath], { cwd: projectRoot });
+          console.log(`Removed worktree: ${normalizedWorktreePath}`);
+        }
+      }
+    }
+
+    if (isolation.originalBranch) {
+      if (options.yes) {
+        console.log(`Branch switch skipped under --yes: ${isolation.originalBranch}`);
+      } else {
+        const { confirm } = await import('@inquirer/prompts');
+        const switchBack = await confirm({
+          message: `Switch back to original branch ${isolation.originalBranch}?`,
+          default: false,
+        });
+        if (switchBack) {
+          await execFileAsync('git', ['checkout', isolation.originalBranch], { cwd: projectRoot });
+          console.log(`Switched back to branch: ${isolation.originalBranch}`);
+        }
+      }
+    }
   }
 
   private getArchiveDate(): string {

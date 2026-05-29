@@ -17,6 +17,19 @@ export const GlobalConfigSchema = z
       })
       .optional()
       .default({ enabled: true, optRetries: 2 }),
+    propose: z
+      .object({
+        smartRouting: z.boolean().optional().default(true),
+        requireExplore: z.boolean().optional(),
+      })
+      .optional()
+      .default({ smartRouting: true }),
+    apply: z
+      .object({
+        defaultIsolation: z.enum(['ask', 'branch', 'worktree', 'none']).optional().default('ask'),
+      })
+      .optional()
+      .default({ defaultIsolation: 'ask' }),
     profile: z
       .enum(['core', 'expanded', 'custom'])
       .optional()
@@ -41,6 +54,12 @@ export const DEFAULT_CONFIG: GlobalConfigType = {
   optimization: {
     enabled: true,
     optRetries: 2,
+  },
+  propose: {
+    smartRouting: true,
+  },
+  apply: {
+    defaultIsolation: 'ask',
   },
   profile: 'core',
   delivery: 'both',
@@ -81,6 +100,32 @@ export function validateConfigKeyPath(path: string): { valid: boolean; reason?: 
     return {
       valid: false,
       reason: 'optimization only supports the nested keys "enabled" and "optRetries"',
+    };
+  }
+
+  if (rootKey === 'propose') {
+    if (rawKeys.length === 1) {
+      return { valid: true };
+    }
+    if (rawKeys.length === 2 && (rawKeys[1] === 'smartRouting' || rawKeys[1] === 'requireExplore')) {
+      return { valid: true };
+    }
+    return {
+      valid: false,
+      reason: 'propose only supports the nested keys "smartRouting" and "requireExplore"',
+    };
+  }
+
+  if (rootKey === 'apply') {
+    if (rawKeys.length === 1) {
+      return { valid: true };
+    }
+    if (rawKeys.length === 2 && rawKeys[1] === 'defaultIsolation') {
+      return { valid: true };
+    }
+    return {
+      valid: false,
+      reason: 'apply only supports the nested key "defaultIsolation"',
     };
   }
 

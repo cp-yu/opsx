@@ -330,6 +330,25 @@ describe('artifact-workflow CLI commands', () => {
       expect(Array.isArray(json.dependencies)).toBe(true);
     });
 
+    it('outputs the coarse task template for tasks instructions', async () => {
+      await createTestChange('tasks-instr', ['proposal', 'design', 'specs']);
+
+      const result = await runCLI(['instructions', 'tasks', '--change', 'tasks-instr', '--json'], {
+        cwd: tempDir,
+      });
+      expect(result.exitCode).toBe(0);
+
+      const json = JSON.parse(result.stdout);
+      expect(json.artifactId).toBe('tasks');
+      expect(json.template).toContain('### Task 1:');
+      expect(json.template).toContain('**Goal**:');
+      expect(json.template).toContain('**Files**:');
+      expect(json.template).toContain('**Requirements**:');
+      expect(json.template).toContain('#### Checks');
+      expect(json.instruction).toContain('decompose into detailed TDD cycles');
+      expect(json.instruction).toContain('Design Summary');
+    });
+
     it('errors when artifact argument is missing', async () => {
       await createTestChange('test-change');
 
@@ -488,6 +507,122 @@ describe('artifact-workflow CLI commands', () => {
       expect(json.contextFiles.specs).toEqual([expectedSpecPath]);
     });
 
+    it('parses coarse tasks as apply progress and task items', async () => {
+      const changeDir = await createTestChange('coarse-apply', [
+        'proposal',
+        'design',
+        'specs',
+        'tasks',
+      ]);
+      await fs.writeFile(
+        path.join(changeDir, 'tasks.md'),
+        `### Task 1: Explore routing
+
+**Goal**: Add the explore-to-propose routing instruction.
+
+**Files**:
+- Modify: \`src/core/templates/workflows/propose.ts\`
+- Test: \`test/core/templates/propose-template.test.ts\`
+
+**Requirements**:
+- Reuse a confirmed Design Summary when present
+
+#### Checks
+
+- [x] C1 Verify Design Summary reuse
+  - Verifies: \`specs/propose-smart-routing/spec.md\` / Requirement "Propose 必须检测 explore 上下文" / Scenario "同会话 explore"
+  - Command: \`npm run test -- test/core/templates/propose-template.test.ts\`
+  - Expect: template mentions Design Summary reuse
+
+### Task 2: Apply decomposition
+
+**Goal**: Parse coarse tasks during apply.
+
+**Files**:
+- Modify: \`src/commands/workflow/instructions.ts\`
+- Test: \`test/commands/artifact-workflow.test.ts\`
+
+**Requirements**:
+- Keep unfinished tasks visible to apply
+
+#### Checks
+
+- [ ] C2 Verify pending coarse task
+  - Verifies: \`specs/apply-task-decomposition/spec.md\` / Requirement "Master agent 必须拆解粗粒度任务为 TDD 步骤" / Scenario "读取粗粒度任务"
+  - Command: \`npm run test -- test/commands/artifact-workflow.test.ts\`
+  - Expect: apply progress reports one remaining task
+`
+      );
+
+      const result = await runCLI(
+        ['instructions', 'apply', '--change', 'coarse-apply', '--json'],
+        { cwd: tempDir }
+      );
+      expect(result.exitCode).toBe(0);
+
+      const json = JSON.parse(result.stdout);
+      expect(json.progress).toEqual({ total: 2, complete: 1, remaining: 1 });
+      expect(json.tasks).toEqual([
+        { id: '1', description: 'Explore routing', done: true },
+        { id: '2', description: 'Apply decomposition', done: false },
+      ]);
+      expect(json.instruction).toContain('decompose each pending coarse task');
+      expect(json.instruction).toContain('dispatch implementer subagents');
+    });
+
+    it('keeps the explore-to-propose-to-apply instruction path coherent', async () => {
+      const changeDir = await createTestChange('workflow-integration', [
+        'proposal',
+        'design',
+        'specs',
+        'tasks',
+      ]);
+      await fs.writeFile(
+        path.join(changeDir, 'tasks.md'),
+        `### Task 1: Implement confirmed design
+
+**Goal**: Apply the design confirmed during explore.
+
+**Files**:
+- Modify: \`src/core/templates/workflows/apply-change.ts\`
+- Test: \`test/core/templates/apply-change.test.ts\`
+
+**Requirements**:
+- Decompose implementation into TDD cycles
+- Dispatch implementer subagents
+
+#### Checks
+
+- [ ] C1 Verify apply handoff
+  - Verifies: \`specs/apply-task-decomposition/spec.md\` / Requirement "Master agent 必须拆解粗粒度任务为 TDD 步骤" / Scenario "拆解为多个 TDD Cycle"
+  - Command: \`npm run test -- test/core/templates/apply-change.test.ts\`
+  - Expect: apply instructions include TDD cycle handoff
+`
+      );
+
+      const exploreResult = await runCLI(['instructions', 'proposal', '--change', 'workflow-integration', '--json'], {
+        cwd: tempDir,
+      });
+      const tasksResult = await runCLI(['instructions', 'tasks', '--change', 'workflow-integration', '--json'], {
+        cwd: tempDir,
+      });
+      const applyResult = await runCLI(['instructions', 'apply', '--change', 'workflow-integration', '--json'], {
+        cwd: tempDir,
+      });
+
+      expect(exploreResult.exitCode).toBe(0);
+      expect(tasksResult.exitCode).toBe(0);
+      expect(applyResult.exitCode).toBe(0);
+
+      const tasksJson = JSON.parse(tasksResult.stdout);
+      const applyJson = JSON.parse(applyResult.stdout);
+      expect(tasksJson.instruction).toContain('Design Summary');
+      expect(tasksJson.template).toContain('### Task 1:');
+      expect(applyJson.progress).toEqual({ total: 1, complete: 0, remaining: 1 });
+      expect(applyJson.tasks[0].description).toBe('Implement confirmed design');
+      expect(applyJson.instruction).toContain('detailed TDD steps');
+    });
+
     it('resolves single-star glob artifacts consistently between status and apply', async () => {
       const schemaDir = path.join(tempDir, 'openspec', 'schemas', 'glob-test');
       const templatesDir = path.join(schemaDir, 'templates');
@@ -552,7 +687,7 @@ apply:
       });
       expect(result.exitCode).toBe(0);
       // Should show the instruction from spec-driven schema apply block
-      expect(result.stdout).toContain('work through pending tasks');
+      expect(result.stdout).toContain('decompose each pending coarse task');
     });
 
     it('shows needs_verify state when all tasks are complete but verify is missing', async () => {

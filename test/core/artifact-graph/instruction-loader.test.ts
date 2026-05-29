@@ -152,17 +152,22 @@ describe('instruction-loader', () => {
       expect(instructions.template).toContain('## Why');
     });
 
-    it('should expose goal-driven Actions and Checks guidance for tasks', () => {
+    it('should expose coarse Task guidance for tasks', () => {
       const context = loadChangeContext(tempDir, 'my-change');
       const instructions = generateInstructions(context, 'tasks');
 
-      expect(instructions.template).toContain('## 1. Actions');
-      expect(instructions.template).toContain('## 2. Checks');
-      expect(instructions.template).toContain('- [ ] A1');
+      expect(instructions.template).toContain('### Task 1:');
+      expect(instructions.template).toContain('**Goal**:');
+      expect(instructions.template).toContain('**Files**:');
+      expect(instructions.template).toContain('**Requirements**:');
+      expect(instructions.template).toContain('#### Checks');
       expect(instructions.template).toContain('- [ ] C1');
-      expect(instructions.instruction).toContain('Actions');
+      expect(instructions.instruction).toContain('coarse-grained task list');
+      expect(instructions.instruction).toContain('### Task N:');
+      expect(instructions.instruction).toContain('Goal');
+      expect(instructions.instruction).toContain('Files');
+      expect(instructions.instruction).toContain('Requirements');
       expect(instructions.instruction).toContain('Checks');
-      expect(instructions.instruction).toContain('Covers:');
       expect(instructions.instruction).toContain('Verifies:');
       expect(instructions.instruction).toContain('specs/<capability>/spec.md');
       expect(instructions.instruction).toContain('Requirement title');

@@ -6,11 +6,10 @@ import { ChangeParser } from '../core/parsers/change-parser.js';
 import { Change } from '../core/schemas/index.js';
 import { isInteractive } from '../utils/interactive.js';
 import { getActiveChangeIds } from '../utils/item-discovery.js';
+import { countTasksFromContent } from '../utils/task-progress.js';
 
 // Constants for better maintainability
 const ARCHIVE_DIR = 'archive';
-const TASK_PATTERN = /^[-*]\s+\[[\sx]\]/i;
-const COMPLETED_TASK_PATTERN = /^[-*]\s+\[x\]/i;
 
 export class ChangeCommand {
   private converter: JsonConverter;
@@ -265,20 +264,7 @@ export class ChangeCommand {
   }
 
   private countTasks(content: string): { total: number; completed: number } {
-    const lines = content.split('\n');
-    let total = 0;
-    let completed = 0;
-    
-    for (const line of lines) {
-      if (line.match(TASK_PATTERN)) {
-        total++;
-        if (line.match(COMPLETED_TASK_PATTERN)) {
-          completed++;
-        }
-      }
-    }
-    
-    return { total, completed };
+    return countTasksFromContent(content);
   }
 
   private printNextSteps(): void {

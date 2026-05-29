@@ -35,4 +35,23 @@ describe('explore template impact sweeps', () => {
       expect(template).toContain('optional `focus`');
     }
   });
+
+  it('documents the mandatory six-step brainstorming checklist', () => {
+    for (const template of templates) {
+      expect(template).toContain('## Brainstorming Checklist');
+      expect(template).toContain('Explore MUST run this sequence before saying a proposal is ready');
+      expect(template).toContain('1. **Explore project context**');
+      expect(template).toContain('If the request spans multiple independent subsystems');
+      expect(template).toContain('recommend an implementation order');
+      expect(template).toContain('2. **Visual companion when useful**');
+      expect(template).toContain('3. **Clarify one question at a time**');
+      expect(template).toContain('Ask exactly one question, then wait for the answer');
+      expect(template).toContain('4. **Compare 2-3 options**');
+      expect(template).toContain('Present 2-3 viable approaches');
+      expect(template).toContain('5. **Confirm design in sections**');
+      expect(template).toContain('architecture, core components, data flow, technology stack, testing strategy, risks and trade-offs');
+      expect(template).toContain('6. **Generate Design Summary**');
+      expect(template).toContain('Produce a `Design Summary` in the conversation, not in a file');
+    }
+  });
 });

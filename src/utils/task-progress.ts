@@ -3,6 +3,7 @@ import path from 'path';
 
 const TASK_PATTERN = /^[-*]\s+\[[\sx]\]/i;
 const COMPLETED_TASK_PATTERN = /^[-*]\s+\[x\]/i;
+const COARSE_TASK_HEADING_PATTERN = /^###\s+Task\s+\d+:\s+.+\s*$/;
 
 export interface TaskProgress {
   total: number;
@@ -10,7 +11,13 @@ export interface TaskProgress {
 }
 
 export function countTasksFromContent(content: string): TaskProgress {
-  const lines = content.split('\n');
+  const normalized = content.replace(/\r\n?/g, '\n');
+  const coarse = countCoarseTasks(normalized);
+  if (coarse.total > 0) {
+    return coarse;
+  }
+
+  const lines = normalized.split('\n');
   let total = 0;
   let completed = 0;
   for (const line of lines) {
@@ -22,6 +29,33 @@ export function countTasksFromContent(content: string): TaskProgress {
     }
   }
   return { total, completed };
+}
+
+function countCoarseTasks(content: string): TaskProgress {
+  const lines = content.split('\n');
+  const headings: number[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    if (COARSE_TASK_HEADING_PATTERN.test(lines[i])) {
+      headings.push(i);
+    }
+  }
+
+  if (headings.length === 0) {
+    return { total: 0, completed: 0 };
+  }
+
+  let completed = 0;
+  for (let i = 0; i < headings.length; i++) {
+    const start = headings[i] + 1;
+    const end = headings[i + 1] ?? lines.length;
+    const checks = lines.slice(start, end).filter((line) => TASK_PATTERN.test(line));
+    if (checks.length > 0 && checks.every((line) => COMPLETED_TASK_PATTERN.test(line))) {
+      completed++;
+    }
+  }
+
+  return { total: headings.length, completed };
 }
 
 export async function getTaskProgressForChange(changesDir: string, changeName: string): Promise<TaskProgress> {
@@ -39,5 +73,4 @@ export function formatTaskStatus(progress: TaskProgress): string {
   if (progress.completed === progress.total) return '✓ Complete';
   return `${progress.completed}/${progress.total} tasks`;
 }
-
 

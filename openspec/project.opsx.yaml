@@ -59,7 +59,7 @@ capabilities:
     intent: 建立内部 workflow ID 到外部用户命令 slug 的映射，使生成、检测、迁移和清理命令制品时都遵循同一套命名契约
     type: capability
   - id: cap.ai.skill-generation
-    intent: 为配置的 AI 工具生成特定工具的技能文件，并在写入 skill 指令时按工具渲染用户可见 workflow 引用；其中 Codex 使用精确的 `$openspec-*` skill 名称；生成集合包含可复用的 openspec-impact-sweeper skill 且不为其生成 CLI command。
+    intent: AI 技能文件生成，包含 implementer subagent skill 和更新的 workflow skills
     status: active
     type: capability
   - id: cap.ai.template-artifact-pipeline
@@ -70,7 +70,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: verify/apply/archive/propose/explore 等模板共享面向 Agent 的 workflow guidance；explore 在代码变更概念、术语歧义或 proposal readiness 前调用 openspec-impact-sweeper 生成 OPSX-grounded 影响面报告；propose 的 post-propose warning validation 保持程序化结构校验且不检查 Impact Sweep。
+    intent: AI 工作流模板生成，包含 explore（brainstorming）、propose（智能路由）、apply（TDD + subagent）模板
     type: capability
   - id: cap.ai.impact-sweeper
     intent: 提供可复用的 openspec-impact-sweeper skill，基于 OPSX、specs 和 tracked source search 为项目概念生成轻量影响面 JSON 报告。
@@ -97,7 +97,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.change.create
-    intent: 创建新的变更目录，包含提案、规约、设计和任务文件
+    intent: 变更创建和管理，支持新的 explore → propose 工作流和 .apply-steps/ 目录
     status: active
     type: capability
   - id: cap.change.discovery
@@ -136,7 +136,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.instructions
-    intent: 输出用于创建制品或应用任务的丰富指令。apply 指令返回的 state 字段新增 needs_verify 和 needs_seal 取值
+    intent: 指令生成系统，apply 指令返回任务拆解状态和详细步骤文件路径
     status: active
     type: capability
   - id: cap.cli.list
@@ -326,4 +326,19 @@ capabilities:
     type: capability
   - id: cap.ai.subagent-self-read
     intent: Reviewer/Optimizer subagent 自主文件读取与测试执行能力定义，包括 Read+Bash 工具权限、安全约束和 L1 测试策略
+    type: capability
+  - id: cap.ai.explore-brainstorming
+    intent: Explore 阶段的 brainstorming 流程，包含 6 步 checklist、一次一问纪律、2-3 方案对比、Design Summary 生成
+    type: capability
+  - id: cap.apply.task-decomposition
+    intent: Apply 阶段 Master agent 的任务拆解能力，将粗粒度任务拆解为详细 TDD 步骤
+    type: capability
+  - id: cap.apply.implementer-subagent
+    intent: Implementer subagent 的执行模型，机械执行详细 TDD 步骤
+    type: capability
+  - id: cap.apply.branch-isolation
+    intent: Apply 阶段的分支隔离策略，支持创建分支或 worktree
+    type: capability
+  - id: cap.ai.propose-smart-routing
+    intent: Propose 阶段的智能路由，根据输入详细程度决定是否需要 explore
     type: capability

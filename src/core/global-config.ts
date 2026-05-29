@@ -14,6 +14,17 @@ export type Delivery = 'both' | 'skills' | 'commands';
 // TypeScript interfaces
 export interface GlobalConfig {
   featureFlags?: Record<string, boolean>;
+  optimization?: {
+    enabled?: boolean;
+    optRetries?: number;
+  };
+  propose?: {
+    smartRouting?: boolean;
+    requireExplore?: boolean;
+  };
+  apply?: {
+    defaultIsolation?: 'ask' | 'branch' | 'worktree' | 'none';
+  };
   profile?: Profile;
   delivery?: Delivery;
   workflows?: string[];
@@ -21,6 +32,16 @@ export interface GlobalConfig {
 
 const DEFAULT_CONFIG: GlobalConfig = {
   featureFlags: {},
+  optimization: {
+    enabled: true,
+    optRetries: 2,
+  },
+  propose: {
+    smartRouting: true,
+  },
+  apply: {
+    defaultIsolation: 'ask',
+  },
   profile: 'core',
   delivery: 'both',
 };
@@ -117,6 +138,18 @@ export function getGlobalConfig(): GlobalConfig {
       featureFlags: {
         ...DEFAULT_CONFIG.featureFlags,
         ...(parsed.featureFlags || {})
+      },
+      optimization: {
+        ...DEFAULT_CONFIG.optimization,
+        ...(parsed.optimization || {})
+      },
+      propose: {
+        ...DEFAULT_CONFIG.propose,
+        ...(parsed.propose || {})
+      },
+      apply: {
+        ...DEFAULT_CONFIG.apply,
+        ...(parsed.apply || {})
       }
     };
 
@@ -126,6 +159,15 @@ export function getGlobalConfig(): GlobalConfig {
     }
     if (parsed.delivery === undefined) {
       merged.delivery = DEFAULT_CONFIG.delivery;
+    }
+    if (parsed.optimization === undefined) {
+      merged.optimization = DEFAULT_CONFIG.optimization;
+    }
+    if (parsed.propose === undefined) {
+      merged.propose = DEFAULT_CONFIG.propose;
+    }
+    if (parsed.apply === undefined) {
+      merged.apply = DEFAULT_CONFIG.apply;
     }
 
     return merged;

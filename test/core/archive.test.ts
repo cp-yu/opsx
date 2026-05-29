@@ -1257,5 +1257,92 @@ E1 updated`);
       // Verify change was not archived
       await expect(fs.access(changeDir)).resolves.not.toThrow();
     });
+
+    it('skips apply isolation cleanup under --yes', async () => {
+      const changeName = 'isolated-yes';
+      const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
+      await fs.mkdir(changeDir, { recursive: true });
+      await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] Task 1\n');
+      await fs.writeFile(
+        path.join(changeDir, '.apply-isolation.json'),
+        JSON.stringify({
+          method: 'worktree',
+          branchName: changeName,
+          worktreePath: path.join(tempDir, '.worktrees', changeName),
+          originalBranch: 'main',
+        })
+      );
+
+      await archiveCommand.execute(changeName, { yes: true, noVerify: true, noValidate: true });
+
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining('Worktree cleanup skipped under --yes:')
+      );
+      expect(console.log).toHaveBeenCalledWith('Branch switch skipped under --yes: main');
+    });
+
+    it('prompts before apply isolation cleanup and respects declines', async () => {
+      const { confirm } = await import('@inquirer/prompts');
+      const mockConfirm = confirm as unknown as ReturnType<typeof vi.fn>;
+
+      const changeName = 'isolated-prompt';
+      const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
+      const worktreePath = path.join(tempDir, '.worktrees', changeName);
+      await fs.mkdir(changeDir, { recursive: true });
+      await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] Task 1\n');
+      await fs.writeFile(
+        path.join(changeDir, '.apply-isolation.json'),
+        JSON.stringify({
+          method: 'worktree',
+          branchName: changeName,
+          worktreePath,
+          originalBranch: 'main',
+        })
+      );
+
+      mockConfirm.mockResolvedValueOnce(false);
+      mockConfirm.mockResolvedValueOnce(false);
+
+      await archiveCommand.execute(changeName, { noVerify: true });
+
+      expect(mockConfirm).toHaveBeenCalledWith({
+        message: `Delete worktree directory ${path.normalize(worktreePath)}?`,
+        default: false,
+      });
+      expect(mockConfirm).toHaveBeenCalledWith({
+        message: 'Switch back to original branch main?',
+        default: false,
+      });
+    });
+
+    it('normalizes Windows-style worktree paths before prompting', async () => {
+      const { confirm } = await import('@inquirer/prompts');
+      const mockConfirm = confirm as unknown as ReturnType<typeof vi.fn>;
+
+      const changeName = 'isolated-windows-path';
+      const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
+      const worktreePath = `.worktrees\\${changeName}`;
+      await fs.mkdir(changeDir, { recursive: true });
+      await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] Task 1\n');
+      await fs.writeFile(
+        path.join(changeDir, '.apply-isolation.json'),
+        JSON.stringify({
+          method: 'worktree',
+          branchName: changeName,
+          worktreePath,
+          originalBranch: 'main',
+        })
+      );
+
+      mockConfirm.mockResolvedValueOnce(false);
+      mockConfirm.mockResolvedValueOnce(false);
+
+      await archiveCommand.execute(changeName, { noVerify: true });
+
+      expect(mockConfirm).toHaveBeenCalledWith({
+        message: `Delete worktree directory ${path.normalize(path.resolve('.', worktreePath))}?`,
+        default: false,
+      });
+    });
   });
 });

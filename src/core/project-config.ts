@@ -46,6 +46,23 @@ export const ProjectConfigSchema = z.object({
     .optional()
     .describe('Project-level Phase 2 optimization policy for verify workflows'),
 
+  // Optional: propose-stage smart routing policy
+  propose: z
+    .object({
+      smartRouting: z.boolean().optional().default(true),
+      requireExplore: z.boolean().optional(),
+    })
+    .optional()
+    .describe('Propose-stage explore routing policy'),
+
+  // Optional: apply-stage implementation policy
+  apply: z
+    .object({
+      defaultIsolation: z.enum(['ask', 'branch', 'worktree', 'none']).optional().default('ask'),
+    })
+    .optional()
+    .describe('Apply-stage branch/worktree isolation policy'),
+
   // Optional: per-artifact rules (additive to schema's built-in guidance)
   rules: z
     .record(
@@ -153,6 +170,35 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
         config.optimization = optimizationResult.data;
       } else {
         console.warn(`Invalid 'optimization' field in config (must be an object with boolean 'enabled' and optional integer 'optRetries')`);
+      }
+    }
+
+    // Parse propose field using Zod
+    if (raw.propose !== undefined) {
+      const proposeField = z.object({
+        smartRouting: z.boolean().optional().default(true),
+        requireExplore: z.boolean().optional(),
+      });
+      const proposeResult = proposeField.safeParse(raw.propose);
+
+      if (proposeResult.success) {
+        config.propose = proposeResult.data;
+      } else {
+        console.warn(`Invalid 'propose' field in config (must be an object with boolean 'smartRouting' and optional boolean 'requireExplore')`);
+      }
+    }
+
+    // Parse apply field using Zod
+    if (raw.apply !== undefined) {
+      const applyField = z.object({
+        defaultIsolation: z.enum(['ask', 'branch', 'worktree', 'none']).optional().default('ask'),
+      });
+      const applyResult = applyField.safeParse(raw.apply);
+
+      if (applyResult.success) {
+        config.apply = applyResult.data;
+      } else {
+        console.warn(`Invalid 'apply' field in config (must be an object with defaultIsolation: ask | branch | worktree | none)`);
       }
     }
 

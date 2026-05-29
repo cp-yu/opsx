@@ -97,6 +97,34 @@ optimization:
         });
       });
 
+      it('should parse propose and apply workflow policy when present', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+propose:
+  smartRouting: false
+  requireExplore: false
+apply:
+  defaultIsolation: worktree
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config).toEqual({
+          schema: 'spec-driven',
+          propose: {
+            smartRouting: false,
+            requireExplore: false,
+          },
+          apply: {
+            defaultIsolation: 'worktree',
+          },
+        });
+      });
+
       it('should return partial config when schema is invalid', () => {
         const configDir = path.join(tempDir, 'openspec');
         fs.mkdirSync(configDir, { recursive: true });
@@ -618,6 +646,13 @@ rules:
           enabled: false,
           optRetries: 2,
         },
+        propose: {
+          smartRouting: false,
+          requireExplore: false,
+        },
+        apply: {
+          defaultIsolation: 'worktree',
+        },
         rules: {
           proposal: ['  Rule 1  ', ' ', 'Rule 2'],
           '  ': ['ignored'],
@@ -631,6 +666,13 @@ rules:
         optimization: {
           enabled: false,
           optRetries: 2,
+        },
+        propose: {
+          smartRouting: false,
+          requireExplore: false,
+        },
+        apply: {
+          defaultIsolation: 'worktree',
         },
         rules: {
           proposal: ['Rule 1', 'Rule 2'],

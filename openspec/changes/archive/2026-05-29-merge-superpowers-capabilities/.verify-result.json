@@ -1,0 +1,495 @@
+{
+  "timestamp": "2026-05-29T12:14:52.982Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "d7d84d631c63efd83a85c346628782683a101e0a66770b6c67bf94ebc00dd353",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent",
+    "evidenceFiles": [
+      "CLAUDE.md",
+      "README.md",
+      "docs/migration-guide.md",
+      "openspec/changes/merge-superpowers-capabilities/design.md",
+      "openspec/changes/merge-superpowers-capabilities/opsx-delta.yaml",
+      "openspec/changes/merge-superpowers-capabilities/proposal.md",
+      "openspec/changes/merge-superpowers-capabilities/specs/apply-branch-isolation/spec.md",
+      "openspec/changes/merge-superpowers-capabilities/specs/apply-implementer-subagent/spec.md",
+      "openspec/changes/merge-superpowers-capabilities/specs/apply-task-decomposition/spec.md",
+      "openspec/changes/merge-superpowers-capabilities/specs/explore-brainstorming/spec.md",
+      "openspec/changes/merge-superpowers-capabilities/specs/propose-smart-routing/spec.md",
+      "openspec/changes/merge-superpowers-capabilities/tasks.md",
+      "openspec/project.opsx.code-map.yaml",
+      "openspec/project.opsx.yaml",
+      "schemas/spec-driven/schema.yaml",
+      "schemas/spec-driven/templates/tasks.md",
+      "src/commands/change.ts",
+      "src/commands/workflow/instructions.ts",
+      "src/core/archive.ts",
+      "src/core/config-projection.ts",
+      "src/core/config-schema.ts",
+      "src/core/global-config.ts",
+      "src/core/parsers/task-structure.ts",
+      "src/core/project-config.ts",
+      "src/core/shared/skill-generation.ts",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "src/core/templates/skill-templates.ts",
+      "src/core/templates/workflows/apply-change.ts",
+      "src/core/templates/workflows/archive-change.ts",
+      "src/core/templates/workflows/explore.ts",
+      "src/core/templates/workflows/implementer.ts",
+      "src/core/templates/workflows/propose.ts",
+      "src/utils/task-progress.ts",
+      "test/commands/artifact-workflow.test.ts",
+      "test/core/archive.test.ts",
+      "test/core/artifact-graph/instruction-loader.test.ts",
+      "test/core/parsers/task-structure.test.ts",
+      "test/core/project-config.test.ts",
+      "test/core/shared/skill-generation.test.ts",
+      "test/core/templates/apply-change.test.ts",
+      "test/core/templates/explore-template.test.ts",
+      "test/core/templates/implementer-template.test.ts",
+      "test/core/templates/propose-template.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts",
+      "test/utils/task-progress.test.ts"
+    ],
+    "evidenceFingerprint": "90337d748ef7be249c3b64d37296917a53d1a2c8a76f92237fe9418c668a9b09",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "CLAUDE.md",
+        "hash": "13dde98de4cfb621c04b3e0696c948da9b67aa206bbf94aa0d8df2f566c2588d"
+      },
+      {
+        "path": "docs/migration-guide.md",
+        "hash": "ac6393f55690812f2c56d364d377b4e51f0226faefe30e25091cfa0585e82af4"
+      },
+      {
+        "path": "openspec/changes/merge-superpowers-capabilities/design.md",
+        "hash": "29fd4a7c48c022c50f1679d95c54e47995502a51ed597e39df2d5b50cf4c5804"
+      },
+      {
+        "path": "openspec/changes/merge-superpowers-capabilities/opsx-delta.yaml",
+        "hash": "325f374a66ed99c007473efa8209c591f2556e5a3a0bc3e71b54213cad5a5458"
+      },
+      {
+        "path": "openspec/changes/merge-superpowers-capabilities/proposal.md",
+        "hash": "769e6ae90b36b2dafd90dfea0aebd5f49b315811190aac1667bc0a26d78470f2"
+      },
+      {
+        "path": "openspec/changes/merge-superpowers-capabilities/specs/apply-branch-isolation/spec.md",
+        "hash": "321c06b717aa553bd2d59ca6a7a82934ea6230cd26cb1ec902e72017d122025e"
+      },
+      {
+        "path": "openspec/changes/merge-superpowers-capabilities/specs/apply-implementer-subagent/spec.md",
+        "hash": "78520ad914a88f6425e4d27100dcef7d38c086e7a8a9a33f6b2f581a7691b6a0"
+      },
+      {
+        "path": "openspec/changes/merge-superpowers-capabilities/specs/apply-task-decomposition/spec.md",
+        "hash": "d420acb7ac89389b3a1f3ad8fb8d9d2bf01f646249f29ca17b8e3c6662eaaef7"
+      },
+      {
+        "path": "openspec/changes/merge-superpowers-capabilities/specs/explore-brainstorming/spec.md",
+        "hash": "1ab85c00b05524c1fab7c3894d319b2fb89a0f59b88f3ab8c85516aac40656b1"
+      },
+      {
+        "path": "openspec/changes/merge-superpowers-capabilities/specs/propose-smart-routing/spec.md",
+        "hash": "176a4a4238e301fb43f61ec5b7e9b1aaf039083feb9e2ca0b83dde29bc828d13"
+      },
+      {
+        "path": "openspec/changes/merge-superpowers-capabilities/tasks.md",
+        "hash": "d7d84d631c63efd83a85c346628782683a101e0a66770b6c67bf94ebc00dd353"
+      },
+      {
+        "path": "openspec/project.opsx.code-map.yaml",
+        "hash": "39ceef48855268fe7411868e89e8ca191ab9e51f17d374cd3ca3de0e084862fb"
+      },
+      {
+        "path": "openspec/project.opsx.yaml",
+        "hash": "0e02b47d0e2eecdd9bfdeb17c1ba2886c3932e31bb581c5d66f9031d1c753d69"
+      },
+      {
+        "path": "README.md",
+        "hash": "fd282efb501ffe21a7d9e635aca63f8f53a2d455f2a78e9ee406e51d7adcf3d8"
+      },
+      {
+        "path": "schemas/spec-driven/schema.yaml",
+        "hash": "f55a9196733729539ec82c728af9add1d1b541c6a7c54aeb234184363a2adc28"
+      },
+      {
+        "path": "schemas/spec-driven/templates/tasks.md",
+        "hash": "4aae4a81088c7c62510e2684877d90afd4245aa1abc403f1168b2f4388d67750"
+      },
+      {
+        "path": "src/commands/change.ts",
+        "hash": "078fd6ef85f5151fa715f470dfbd39d4c77a3f102135a8696560ad564d0db6bf"
+      },
+      {
+        "path": "src/commands/workflow/instructions.ts",
+        "hash": "c387ee4d173ded61d1e43f795df86c8b47354a3514b14e0ae1645eb8984a8f05"
+      },
+      {
+        "path": "src/core/archive.ts",
+        "hash": "8ab60c4569bc47401ecc34ea3bad518c0d33ff5171eac29f3f7dc878ffc82655"
+      },
+      {
+        "path": "src/core/config-projection.ts",
+        "hash": "067d736e6fccb17412444460dd1fa7deb42dd639a2cea0ba1b8857bebcaf8e59"
+      },
+      {
+        "path": "src/core/config-schema.ts",
+        "hash": "ca2f878543e2c9a9eef7c8d6422098c34be46dab7ed057e45832a53c82b34871"
+      },
+      {
+        "path": "src/core/global-config.ts",
+        "hash": "a6cdd7cb125821c876ef262798bf9355290ca752c2a7b34146b3a29514f26dc8"
+      },
+      {
+        "path": "src/core/parsers/task-structure.ts",
+        "hash": "f937611cfc0728c508ca67633a7c4658ed7042baeb20af52fac942666a9bb546"
+      },
+      {
+        "path": "src/core/project-config.ts",
+        "hash": "f317a07eec71ae1018c5356086eca5aaba7efe0ea67f563cf2b7ac783763c0ef"
+      },
+      {
+        "path": "src/core/shared/skill-generation.ts",
+        "hash": "9dcf20cf38d529580dd2c683a9ab4b38d805d77e37a95090cd8cf79e0de6bc3b"
+      },
+      {
+        "path": "src/core/templates/fragments/opsx-fragments.ts",
+        "hash": "abd416e6d776fe0dfd37195a8a99aab2adfb57ed9f7940b1ae55031b8703c4c4"
+      },
+      {
+        "path": "src/core/templates/skill-templates.ts",
+        "hash": "881207bb5292550888f8374bdfab88db9686ee05dbf865bc222521861af743a2"
+      },
+      {
+        "path": "src/core/templates/workflows/apply-change.ts",
+        "hash": "aaef54a49c43863bf0b2039c2bc825f1ef3b61b9780f3566c431cd55ae8a868f"
+      },
+      {
+        "path": "src/core/templates/workflows/archive-change.ts",
+        "hash": "13afc501ea2dd0d8e8d8842440696e5c5ef4dcf9429dd393152ed351fe11fa96"
+      },
+      {
+        "path": "src/core/templates/workflows/explore.ts",
+        "hash": "97327035d8826d439149bc08125d4c7d09724de6e2eb9217272068fd48c2394b"
+      },
+      {
+        "path": "src/core/templates/workflows/implementer.ts",
+        "hash": "d617fbf24a4f49de6244da34a183470814f9eb1daf3c80cf356522f119091214"
+      },
+      {
+        "path": "src/core/templates/workflows/propose.ts",
+        "hash": "507849ef03d462d5c074e6bd6f6fdf4551aa7a6732be4f706f7f84d858738d83"
+      },
+      {
+        "path": "src/utils/task-progress.ts",
+        "hash": "38e9a04ee37da8e4bebbc61115d3f248a099b1806566e17873262af2ddad682d"
+      },
+      {
+        "path": "test/commands/artifact-workflow.test.ts",
+        "hash": "d44617aa8afb58e61ee56ae8a12aa7e0ef6182713bfd09ad8758ba391c3e0cf1"
+      },
+      {
+        "path": "test/core/archive.test.ts",
+        "hash": "25d7e4f7d407dc61657bb3489218e810da8f6cd2e01b41caf8f04ec31affb04c"
+      },
+      {
+        "path": "test/core/artifact-graph/instruction-loader.test.ts",
+        "hash": "4456ab76b410be846316a322a6886468f2632524affbbb08682d18faa20eca0e"
+      },
+      {
+        "path": "test/core/parsers/task-structure.test.ts",
+        "hash": "e06aa18d726adf7e996a4d5f692a063152fe9015d21354d38a6194f617e9229d"
+      },
+      {
+        "path": "test/core/project-config.test.ts",
+        "hash": "24f63807c16516df3799e1026e1a29a94bfcf15e1c10d7c22895db75ec1f029a"
+      },
+      {
+        "path": "test/core/shared/skill-generation.test.ts",
+        "hash": "dea2ebb6e1b279c673cd239bca33e2f04773facc93ec5d395fa34ebf96784298"
+      },
+      {
+        "path": "test/core/templates/apply-change.test.ts",
+        "hash": "60520aefcf4f1bf828f374056eacf00e177e2b5618fee7a0c957689f3f092dcf"
+      },
+      {
+        "path": "test/core/templates/explore-template.test.ts",
+        "hash": "d9dd359ae53b0d7e21c145b78ed7ed32a5a92af03727da5b36a68e1708b000b6"
+      },
+      {
+        "path": "test/core/templates/implementer-template.test.ts",
+        "hash": "9e3ff51adec164ba52f661af28111b0c3b37f85eb6273523561b7df03cbc11cb"
+      },
+      {
+        "path": "test/core/templates/propose-template.test.ts",
+        "hash": "276927f8649c1e93305cbca28737b687d7851f6411471a9a15481fb34e623e1a"
+      },
+      {
+        "path": "test/core/templates/skill-templates-parity.test.ts",
+        "hash": "88079e66f4652a29e67e48adceb25bf89d44d0f6a426320b8b906bb0217a51a4"
+      },
+      {
+        "path": "test/utils/task-progress.test.ts",
+        "hash": "99a66f6ccf8231bd46a5b10f240de592965f80ef7bba6ec0753e868ac5a04e4c"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "1016cad72e14a3f0359c57e55983ce2b3aa64dbc"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-29T12:15:09.246Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "Fresh omission review found no code changes needed after refreshing verification evidence coverage."
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-29T12:14:52.982Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "d7d84d631c63efd83a85c346628782683a101e0a66770b6c67bf94ebc00dd353",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent",
+        "evidenceFiles": [
+          "CLAUDE.md",
+          "README.md",
+          "docs/migration-guide.md",
+          "openspec/changes/merge-superpowers-capabilities/design.md",
+          "openspec/changes/merge-superpowers-capabilities/opsx-delta.yaml",
+          "openspec/changes/merge-superpowers-capabilities/proposal.md",
+          "openspec/changes/merge-superpowers-capabilities/specs/apply-branch-isolation/spec.md",
+          "openspec/changes/merge-superpowers-capabilities/specs/apply-implementer-subagent/spec.md",
+          "openspec/changes/merge-superpowers-capabilities/specs/apply-task-decomposition/spec.md",
+          "openspec/changes/merge-superpowers-capabilities/specs/explore-brainstorming/spec.md",
+          "openspec/changes/merge-superpowers-capabilities/specs/propose-smart-routing/spec.md",
+          "openspec/changes/merge-superpowers-capabilities/tasks.md",
+          "openspec/project.opsx.code-map.yaml",
+          "openspec/project.opsx.yaml",
+          "schemas/spec-driven/schema.yaml",
+          "schemas/spec-driven/templates/tasks.md",
+          "src/commands/change.ts",
+          "src/commands/workflow/instructions.ts",
+          "src/core/archive.ts",
+          "src/core/config-projection.ts",
+          "src/core/config-schema.ts",
+          "src/core/global-config.ts",
+          "src/core/parsers/task-structure.ts",
+          "src/core/project-config.ts",
+          "src/core/shared/skill-generation.ts",
+          "src/core/templates/fragments/opsx-fragments.ts",
+          "src/core/templates/skill-templates.ts",
+          "src/core/templates/workflows/apply-change.ts",
+          "src/core/templates/workflows/archive-change.ts",
+          "src/core/templates/workflows/explore.ts",
+          "src/core/templates/workflows/implementer.ts",
+          "src/core/templates/workflows/propose.ts",
+          "src/utils/task-progress.ts",
+          "test/commands/artifact-workflow.test.ts",
+          "test/core/archive.test.ts",
+          "test/core/artifact-graph/instruction-loader.test.ts",
+          "test/core/parsers/task-structure.test.ts",
+          "test/core/project-config.test.ts",
+          "test/core/shared/skill-generation.test.ts",
+          "test/core/templates/apply-change.test.ts",
+          "test/core/templates/explore-template.test.ts",
+          "test/core/templates/implementer-template.test.ts",
+          "test/core/templates/propose-template.test.ts",
+          "test/core/templates/skill-templates-parity.test.ts",
+          "test/utils/task-progress.test.ts"
+        ],
+        "evidenceFingerprint": "5e676a781dd58071d03296587087d92b31fa5675a9bbed26140a3b5cf0252f8d",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "CLAUDE.md",
+            "hash": "13dde98de4cfb621c04b3e0696c948da9b67aa206bbf94aa0d8df2f566c2588d"
+          },
+          {
+            "path": "docs/migration-guide.md",
+            "hash": "ac6393f55690812f2c56d364d377b4e51f0226faefe30e25091cfa0585e82af4"
+          },
+          {
+            "path": "openspec/changes/merge-superpowers-capabilities/design.md",
+            "hash": "29fd4a7c48c022c50f1679d95c54e47995502a51ed597e39df2d5b50cf4c5804"
+          },
+          {
+            "path": "openspec/changes/merge-superpowers-capabilities/opsx-delta.yaml",
+            "hash": "325f374a66ed99c007473efa8209c591f2556e5a3a0bc3e71b54213cad5a5458"
+          },
+          {
+            "path": "openspec/changes/merge-superpowers-capabilities/proposal.md",
+            "hash": "769e6ae90b36b2dafd90dfea0aebd5f49b315811190aac1667bc0a26d78470f2"
+          },
+          {
+            "path": "openspec/changes/merge-superpowers-capabilities/specs/apply-branch-isolation/spec.md",
+            "hash": "321c06b717aa553bd2d59ca6a7a82934ea6230cd26cb1ec902e72017d122025e"
+          },
+          {
+            "path": "openspec/changes/merge-superpowers-capabilities/specs/apply-implementer-subagent/spec.md",
+            "hash": "78520ad914a88f6425e4d27100dcef7d38c086e7a8a9a33f6b2f581a7691b6a0"
+          },
+          {
+            "path": "openspec/changes/merge-superpowers-capabilities/specs/apply-task-decomposition/spec.md",
+            "hash": "d420acb7ac89389b3a1f3ad8fb8d9d2bf01f646249f29ca17b8e3c6662eaaef7"
+          },
+          {
+            "path": "openspec/changes/merge-superpowers-capabilities/specs/explore-brainstorming/spec.md",
+            "hash": "1ab85c00b05524c1fab7c3894d319b2fb89a0f59b88f3ab8c85516aac40656b1"
+          },
+          {
+            "path": "openspec/changes/merge-superpowers-capabilities/specs/propose-smart-routing/spec.md",
+            "hash": "176a4a4238e301fb43f61ec5b7e9b1aaf039083feb9e2ca0b83dde29bc828d13"
+          },
+          {
+            "path": "openspec/changes/merge-superpowers-capabilities/tasks.md",
+            "hash": "d7d84d631c63efd83a85c346628782683a101e0a66770b6c67bf94ebc00dd353"
+          },
+          {
+            "path": "openspec/project.opsx.code-map.yaml",
+            "hash": "145b0cbd13b19428312e3f4ac6160ede3513b92ae325d5d2d8b03a9d64ba100c"
+          },
+          {
+            "path": "openspec/project.opsx.yaml",
+            "hash": "574dbeb4c269ebc9e099ca82cee7284858e688ac39e8c805ca074679018180f4"
+          },
+          {
+            "path": "README.md",
+            "hash": "fd282efb501ffe21a7d9e635aca63f8f53a2d455f2a78e9ee406e51d7adcf3d8"
+          },
+          {
+            "path": "schemas/spec-driven/schema.yaml",
+            "hash": "f55a9196733729539ec82c728af9add1d1b541c6a7c54aeb234184363a2adc28"
+          },
+          {
+            "path": "schemas/spec-driven/templates/tasks.md",
+            "hash": "4aae4a81088c7c62510e2684877d90afd4245aa1abc403f1168b2f4388d67750"
+          },
+          {
+            "path": "src/commands/change.ts",
+            "hash": "078fd6ef85f5151fa715f470dfbd39d4c77a3f102135a8696560ad564d0db6bf"
+          },
+          {
+            "path": "src/commands/workflow/instructions.ts",
+            "hash": "c387ee4d173ded61d1e43f795df86c8b47354a3514b14e0ae1645eb8984a8f05"
+          },
+          {
+            "path": "src/core/archive.ts",
+            "hash": "8ab60c4569bc47401ecc34ea3bad518c0d33ff5171eac29f3f7dc878ffc82655"
+          },
+          {
+            "path": "src/core/config-projection.ts",
+            "hash": "067d736e6fccb17412444460dd1fa7deb42dd639a2cea0ba1b8857bebcaf8e59"
+          },
+          {
+            "path": "src/core/config-schema.ts",
+            "hash": "ca2f878543e2c9a9eef7c8d6422098c34be46dab7ed057e45832a53c82b34871"
+          },
+          {
+            "path": "src/core/global-config.ts",
+            "hash": "a6cdd7cb125821c876ef262798bf9355290ca752c2a7b34146b3a29514f26dc8"
+          },
+          {
+            "path": "src/core/parsers/task-structure.ts",
+            "hash": "f937611cfc0728c508ca67633a7c4658ed7042baeb20af52fac942666a9bb546"
+          },
+          {
+            "path": "src/core/project-config.ts",
+            "hash": "f317a07eec71ae1018c5356086eca5aaba7efe0ea67f563cf2b7ac783763c0ef"
+          },
+          {
+            "path": "src/core/shared/skill-generation.ts",
+            "hash": "9dcf20cf38d529580dd2c683a9ab4b38d805d77e37a95090cd8cf79e0de6bc3b"
+          },
+          {
+            "path": "src/core/templates/fragments/opsx-fragments.ts",
+            "hash": "abd416e6d776fe0dfd37195a8a99aab2adfb57ed9f7940b1ae55031b8703c4c4"
+          },
+          {
+            "path": "src/core/templates/skill-templates.ts",
+            "hash": "881207bb5292550888f8374bdfab88db9686ee05dbf865bc222521861af743a2"
+          },
+          {
+            "path": "src/core/templates/workflows/apply-change.ts",
+            "hash": "aaef54a49c43863bf0b2039c2bc825f1ef3b61b9780f3566c431cd55ae8a868f"
+          },
+          {
+            "path": "src/core/templates/workflows/archive-change.ts",
+            "hash": "13afc501ea2dd0d8e8d8842440696e5c5ef4dcf9429dd393152ed351fe11fa96"
+          },
+          {
+            "path": "src/core/templates/workflows/explore.ts",
+            "hash": "97327035d8826d439149bc08125d4c7d09724de6e2eb9217272068fd48c2394b"
+          },
+          {
+            "path": "src/core/templates/workflows/implementer.ts",
+            "hash": "d617fbf24a4f49de6244da34a183470814f9eb1daf3c80cf356522f119091214"
+          },
+          {
+            "path": "src/core/templates/workflows/propose.ts",
+            "hash": "507849ef03d462d5c074e6bd6f6fdf4551aa7a6732be4f706f7f84d858738d83"
+          },
+          {
+            "path": "src/utils/task-progress.ts",
+            "hash": "38e9a04ee37da8e4bebbc61115d3f248a099b1806566e17873262af2ddad682d"
+          },
+          {
+            "path": "test/commands/artifact-workflow.test.ts",
+            "hash": "d44617aa8afb58e61ee56ae8a12aa7e0ef6182713bfd09ad8758ba391c3e0cf1"
+          },
+          {
+            "path": "test/core/archive.test.ts",
+            "hash": "25d7e4f7d407dc61657bb3489218e810da8f6cd2e01b41caf8f04ec31affb04c"
+          },
+          {
+            "path": "test/core/artifact-graph/instruction-loader.test.ts",
+            "hash": "4456ab76b410be846316a322a6886468f2632524affbbb08682d18faa20eca0e"
+          },
+          {
+            "path": "test/core/parsers/task-structure.test.ts",
+            "hash": "e06aa18d726adf7e996a4d5f692a063152fe9015d21354d38a6194f617e9229d"
+          },
+          {
+            "path": "test/core/project-config.test.ts",
+            "hash": "24f63807c16516df3799e1026e1a29a94bfcf15e1c10d7c22895db75ec1f029a"
+          },
+          {
+            "path": "test/core/shared/skill-generation.test.ts",
+            "hash": "dea2ebb6e1b279c673cd239bca33e2f04773facc93ec5d395fa34ebf96784298"
+          },
+          {
+            "path": "test/core/templates/apply-change.test.ts",
+            "hash": "60520aefcf4f1bf828f374056eacf00e177e2b5618fee7a0c957689f3f092dcf"
+          },
+          {
+            "path": "test/core/templates/explore-template.test.ts",
+            "hash": "d9dd359ae53b0d7e21c145b78ed7ed32a5a92af03727da5b36a68e1708b000b6"
+          },
+          {
+            "path": "test/core/templates/implementer-template.test.ts",
+            "hash": "9e3ff51adec164ba52f661af28111b0c3b37f85eb6273523561b7df03cbc11cb"
+          },
+          {
+            "path": "test/core/templates/propose-template.test.ts",
+            "hash": "276927f8649c1e93305cbca28737b687d7851f6411471a9a15481fb34e623e1a"
+          },
+          {
+            "path": "test/core/templates/skill-templates-parity.test.ts",
+            "hash": "88079e66f4652a29e67e48adceb25bf89d44d0f6a426320b8b906bb0217a51a4"
+          },
+          {
+            "path": "test/utils/task-progress.test.ts",
+            "hash": "99a66f6ccf8231bd46a5b10f240de592965f80ef7bba6ec0753e868ac5a04e4c"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "1016cad72e14a3f0359c57e55983ce2b3aa64dbc"
+      }
+    }
+  }
+}

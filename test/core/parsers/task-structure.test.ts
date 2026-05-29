@@ -232,6 +232,73 @@ describe('validateTaskStructure', () => {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
   });
+
+  it('accepts coarse Task sections with Goal, Files, Requirements, and Checks', () => {
+    const tempDir = createChangeDir({
+      'example/spec.md': `## ADDED Requirements
+
+### Requirement: Parser behavior
+
+#### Scenario: Valid tasks pass
+`,
+    });
+
+    try {
+      const result = validateTaskStructure(
+        `### Task 1: Parser support
+
+**Goal**: Parse coarse tasks.
+
+**Files**:
+- Modify: \`src/core/parsers/task-structure.ts\`
+- Test: \`test/core/parsers/task-structure.test.ts\`
+
+**Requirements**:
+- Read Goal, Files, Requirements, and Checks
+- Keep requirements bounded
+
+#### Checks
+
+- [ ] C1 Verify coarse task parsing
+  - Verifies: \`specs/example/spec.md\` / Requirement "Parser behavior" / Scenario "Valid tasks pass"
+  - Command: \`pnpm test test/core/parsers/task-structure.test.ts\`
+`,
+        { changeDir: tempDir }
+      );
+
+      expect(result.valid).toBe(true);
+      expect(result.format).toBe('coarse-tasks');
+      expect(result.actions).toEqual(['Task 1']);
+      expect(result.checks).toEqual(['C1']);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports missing coarse Task fields and excessive requirements', () => {
+    const result = validateTaskStructure(`### Task 1: Missing fields
+
+**Requirements**:
+- one
+- two
+- three
+- four
+- five
+- six
+
+#### Checks
+
+- [ ] C1 Verify
+  - Verifies: manual verification
+  - Expect: done
+`);
+
+    expect(result.valid).toBe(false);
+    expect(result.format).toBe('coarse-tasks');
+    expect(result.issues.map((issue) => issue.code)).toContain('missing-task-goal');
+    expect(result.issues.map((issue) => issue.code)).toContain('missing-task-files');
+    expect(result.issues.map((issue) => issue.code)).toContain('too-many-task-requirements');
+  });
 });
 
 function createChangeDir(specs: Record<string, string>): string {
