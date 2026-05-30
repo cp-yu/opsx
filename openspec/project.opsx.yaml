@@ -288,7 +288,7 @@ capabilities:
     intent: 确定性 freshness 判定引擎，用 TypeScript 代码实现 tasksFileHash、evidenceFingerprint 计算和 FRESH/STALE/MISSING 判定。evidenceFingerprint 基于文件内容哈希（而非元数据）计算，消除文件系统触碰导致的误报 STALE。Phase 2 verification PASS 时重算 evidenceFingerprint，使其覆盖优化后的文件状态。STALE 判定时生成增强诊断细节（文件级指纹差异、git HEAD 对比），formatVerifyGateFailure 输出结构化可操作指引。新增 refreshVerifyEvidenceAfterSync 函数支持 sync 后增量刷新 evidence 哈希
     type: capability
   - id: cap.apply.verify-integration
-    intent: apply 命令内置 Phase 1 一致性验证和 Phase 2 优化循环。模板对 needs_verify 状态直接进入 Phase 1，对 needs_seal 状态直接进入 Phase 2/3，不需用户手动触发
+    intent: apply 命令内置 Phase 1 一致性验证、Phase 2 优化循环和 Phase 3 seal；Phase 1 或 seal failure 写回 remediation 后进入同一 recovery loop，不因首次失败直接 pause。
     type: capability
   - id: cap.apply.subagent-orchestration
     intent: apply 工作流中严格区分编码角色（主 agent）和判断角色（subagent reviewer/optimizer），保持关注点分离
@@ -331,13 +331,13 @@ capabilities:
     intent: Explore 阶段的 brainstorming 流程，包含 6 步 checklist、一次一问纪律、2-3 方案对比、Design Summary 生成
     type: capability
   - id: cap.apply.task-decomposition
-    intent: Apply 阶段 Master agent 的任务拆解能力，将粗粒度任务拆解为详细 TDD 步骤
+    intent: Apply 阶段 Master agent 将粗粒度任务拆解为 bounded TDD 步骤；超过 5 个 cycles 时自动拆为多个 step file 或 batch；普通拆解失败进入 master-led recovery，只有同一 task 的同一 normalized error signature 经 remediation 后连续失败 2 次才 pause。
     type: capability
   - id: cap.apply.implementer-subagent
-    intent: Implementer subagent 的执行模型，机械执行详细 TDD 步骤
+    intent: Implementer subagent 机械执行详细 TDD 步骤，并将 BLOCKED / NEEDS_CONTEXT 作为结构化 coordinator feedback 返回；输出 task、cycle、step、command、failure kind、error summary 以支持 master 判断错误是否重复。
     type: capability
   - id: cap.apply.branch-isolation
-    intent: Apply 阶段的分支隔离策略，支持创建分支或 worktree
+    intent: Apply 阶段分支隔离策略由 apply.defaultIsolation 驱动；main/master 上仅 ask 模式询问用户，branch/worktree/none 配置直接执行并持久化 .apply-isolation.json。
     type: capability
   - id: cap.ai.propose-smart-routing
     intent: Propose 阶段的智能路由，根据输入详细程度决定是否需要 explore

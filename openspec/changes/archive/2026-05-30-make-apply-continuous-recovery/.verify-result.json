@@ -1,0 +1,165 @@
+{
+  "timestamp": "2026-05-30T02:37:10.918Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "f0a0eabc643cc14d6a98b27bcf2f909c8f787028b3a5255227eca35b13e46a3c",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-reviewer",
+    "evidenceFiles": [
+      "openspec/changes/make-apply-continuous-recovery/design.md",
+      "openspec/changes/make-apply-continuous-recovery/opsx-delta.yaml",
+      "openspec/changes/make-apply-continuous-recovery/proposal.md",
+      "openspec/changes/make-apply-continuous-recovery/specs/apply-branch-isolation/spec.md",
+      "openspec/changes/make-apply-continuous-recovery/specs/apply-implementer-subagent/spec.md",
+      "openspec/changes/make-apply-continuous-recovery/specs/apply-task-decomposition/spec.md",
+      "openspec/changes/make-apply-continuous-recovery/specs/apply-verify-integration/spec.md",
+      "openspec/changes/make-apply-continuous-recovery/tasks.md",
+      "src/core/templates/workflows/apply-change.ts",
+      "src/core/templates/workflows/implementer.ts",
+      "test/core/templates/apply-change.test.ts",
+      "test/core/templates/implementer-template.test.ts"
+    ],
+    "evidenceFingerprint": "74450688290efb3980318195f58650e7baffb43aa3dfd06e7d9f483260ac817d",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/make-apply-continuous-recovery/design.md",
+        "hash": "38cd2ce5476dac9c2d6f6465cfc475b0209ee4894138be8e49150495f74e0df0"
+      },
+      {
+        "path": "openspec/changes/make-apply-continuous-recovery/opsx-delta.yaml",
+        "hash": "35338d367adf324358a53512422456cc33fc67ed8559426cb6d08450e1d41c0c"
+      },
+      {
+        "path": "openspec/changes/make-apply-continuous-recovery/proposal.md",
+        "hash": "b2bd24d879f22a197002d318b786f7beb8c0cf49cd4aa1580b1923a135c6f444"
+      },
+      {
+        "path": "openspec/changes/make-apply-continuous-recovery/specs/apply-branch-isolation/spec.md",
+        "hash": "3e641d52b706d594a0446e343d56cb96c78968e4039afff61b5654a0237e83a9"
+      },
+      {
+        "path": "openspec/changes/make-apply-continuous-recovery/specs/apply-implementer-subagent/spec.md",
+        "hash": "f786c80a54f2ce6bb3634d8749133c2fa33cacc4ed8e4a93ba0e1dd2839132ec"
+      },
+      {
+        "path": "openspec/changes/make-apply-continuous-recovery/specs/apply-task-decomposition/spec.md",
+        "hash": "10db04b53c2e49e54f82fd076bc3dfdc9e75df81329e4b8820386cf8ba94ba16"
+      },
+      {
+        "path": "openspec/changes/make-apply-continuous-recovery/specs/apply-verify-integration/spec.md",
+        "hash": "73aea64b976a415722ccbc1d6e39e831ac7cf2784031fc10f3cac3b6483ceadc"
+      },
+      {
+        "path": "openspec/changes/make-apply-continuous-recovery/tasks.md",
+        "hash": "f0a0eabc643cc14d6a98b27bcf2f909c8f787028b3a5255227eca35b13e46a3c"
+      },
+      {
+        "path": "src/core/templates/workflows/apply-change.ts",
+        "hash": "6e5cc97110f2babcffd0250bee9d55ac73ae7bc4b89524f875b8aa521b2b79ee"
+      },
+      {
+        "path": "src/core/templates/workflows/implementer.ts",
+        "hash": "bf7e85f99f6b0b3a11c373ad9dc066aba2ee119655fb90d77fa76536ad038103"
+      },
+      {
+        "path": "test/core/templates/apply-change.test.ts",
+        "hash": "768d9b17be4baac7e2b16ba9dce66a5abb43a12d48b0d8e94653767c57aff4cd"
+      },
+      {
+        "path": "test/core/templates/implementer-template.test.ts",
+        "hash": "4197d46fcffcbde497c4f1bd7e9eedda88a78c167d9644076275bd03fcf9c5a8"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "d04d52525fab798e72420fce492660197a42cc58"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-30T02:39:21.418Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "No optimization opportunities found"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-30T02:37:10.918Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "f0a0eabc643cc14d6a98b27bcf2f909c8f787028b3a5255227eca35b13e46a3c",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-reviewer",
+        "evidenceFiles": [
+          "openspec/changes/make-apply-continuous-recovery/design.md",
+          "openspec/changes/make-apply-continuous-recovery/opsx-delta.yaml",
+          "openspec/changes/make-apply-continuous-recovery/proposal.md",
+          "openspec/changes/make-apply-continuous-recovery/specs/apply-branch-isolation/spec.md",
+          "openspec/changes/make-apply-continuous-recovery/specs/apply-implementer-subagent/spec.md",
+          "openspec/changes/make-apply-continuous-recovery/specs/apply-task-decomposition/spec.md",
+          "openspec/changes/make-apply-continuous-recovery/specs/apply-verify-integration/spec.md",
+          "openspec/changes/make-apply-continuous-recovery/tasks.md",
+          "src/core/templates/workflows/apply-change.ts",
+          "src/core/templates/workflows/implementer.ts",
+          "test/core/templates/apply-change.test.ts",
+          "test/core/templates/implementer-template.test.ts"
+        ],
+        "evidenceFingerprint": "74450688290efb3980318195f58650e7baffb43aa3dfd06e7d9f483260ac817d",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/make-apply-continuous-recovery/design.md",
+            "hash": "38cd2ce5476dac9c2d6f6465cfc475b0209ee4894138be8e49150495f74e0df0"
+          },
+          {
+            "path": "openspec/changes/make-apply-continuous-recovery/opsx-delta.yaml",
+            "hash": "35338d367adf324358a53512422456cc33fc67ed8559426cb6d08450e1d41c0c"
+          },
+          {
+            "path": "openspec/changes/make-apply-continuous-recovery/proposal.md",
+            "hash": "b2bd24d879f22a197002d318b786f7beb8c0cf49cd4aa1580b1923a135c6f444"
+          },
+          {
+            "path": "openspec/changes/make-apply-continuous-recovery/specs/apply-branch-isolation/spec.md",
+            "hash": "3e641d52b706d594a0446e343d56cb96c78968e4039afff61b5654a0237e83a9"
+          },
+          {
+            "path": "openspec/changes/make-apply-continuous-recovery/specs/apply-implementer-subagent/spec.md",
+            "hash": "f786c80a54f2ce6bb3634d8749133c2fa33cacc4ed8e4a93ba0e1dd2839132ec"
+          },
+          {
+            "path": "openspec/changes/make-apply-continuous-recovery/specs/apply-task-decomposition/spec.md",
+            "hash": "10db04b53c2e49e54f82fd076bc3dfdc9e75df81329e4b8820386cf8ba94ba16"
+          },
+          {
+            "path": "openspec/changes/make-apply-continuous-recovery/specs/apply-verify-integration/spec.md",
+            "hash": "73aea64b976a415722ccbc1d6e39e831ac7cf2784031fc10f3cac3b6483ceadc"
+          },
+          {
+            "path": "openspec/changes/make-apply-continuous-recovery/tasks.md",
+            "hash": "f0a0eabc643cc14d6a98b27bcf2f909c8f787028b3a5255227eca35b13e46a3c"
+          },
+          {
+            "path": "src/core/templates/workflows/apply-change.ts",
+            "hash": "6e5cc97110f2babcffd0250bee9d55ac73ae7bc4b89524f875b8aa521b2b79ee"
+          },
+          {
+            "path": "src/core/templates/workflows/implementer.ts",
+            "hash": "bf7e85f99f6b0b3a11c373ad9dc066aba2ee119655fb90d77fa76536ad038103"
+          },
+          {
+            "path": "test/core/templates/apply-change.test.ts",
+            "hash": "768d9b17be4baac7e2b16ba9dce66a5abb43a12d48b0d8e94653767c57aff4cd"
+          },
+          {
+            "path": "test/core/templates/implementer-template.test.ts",
+            "hash": "4197d46fcffcbde497c4f1bd7e9eedda88a78c167d9644076275bd03fcf9c5a8"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "d04d52525fab798e72420fce492660197a42cc58"
+      }
+    }
+  }
+}
