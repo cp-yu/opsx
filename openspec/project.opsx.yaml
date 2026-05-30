@@ -70,7 +70,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: AI 工作流模板生成，包含 explore（brainstorming）、propose（智能路由）、apply（TDD + subagent）模板
+    intent: verify/apply/archive/propose 等模板共享面向 Agent 的 workflow guidance；OPSX_GENERATE_DELTA 片段包含具体 YAML 结构示例（ADDED/MODIFIED/REMOVED 为 YAML object key 而非 Markdown heading）；OPSX_POST_PROPOSE_VALIDATION 片段引用程序化 CLI（Validator.validateOpsxDelta）替代手动 dry-run；propose 的 post-propose warning validation 包含程序化 Actions/Checks 结构校验
     type: capability
   - id: cap.ai.impact-sweeper
     intent: 提供可复用的 openspec-impact-sweeper skill，基于 OPSX、specs 和 tracked source search 为项目概念生成轻量影响面 JSON 报告。
@@ -208,7 +208,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.opsx.delta-merge
-    intent: 将 opsx-delta.yaml 合并到主 OPSX 文件，支持 ADDED/MODIFIED/REMOVED。MODIFIED section 执行 shallow merge，仅更新 delta 中显式声明的字段
+    intent: 将 opsx-delta.yaml 合并到主 OPSX 文件，支持 ADDED/MODIFIED/REMOVED。MODIFIED section 执行 shallow merge，仅更新 delta 中显式声明的字段。Validator.validateOpsxDelta() 复用 applyOpsxDelta() 的 dry-run 语义在 validate 阶段提前检测合并错误
     status: active
     type: capability
   - id: cap.opsx.read-transparent
@@ -345,4 +345,10 @@ capabilities:
   - id: cap.archive.branch-merge
     intent: 归档时按结构化 commit message 把 feature 分支合并回 originalBranch；merge 策略与是否删除分支由 openspec/config.yaml 的 git 节点配置控制；merge message 默认从 proposal/design/tasks 生成，遵循 git-commit-reasons 模板；冲突时 abort 并保留 archive commit
     status: active
+    type: capability
+  - id: cap.schema.opsx-delta-artifact
+    intent: 将 opsx-delta 注册为 spec-driven schema 中的正式 artifact，提供 template 和 instruction，支持 `openspec instructions opsx-delta` 获取 YAML 结构指引
+    type: capability
+  - id: cap.validation.opsx-dry-run
+    intent: Validator.validateOpsxDelta() 方法执行 opsx-delta.yaml 的 dry-run merge 校验，检查 Zod schema 解析、引用完整性和 code-map 完整性；validate 命令变更路径 SHALL 并行执行 spec + OPSX 校验
     type: capability

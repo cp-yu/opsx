@@ -5,7 +5,7 @@
 ## Requirements
 ### Requirement: MODIFIED section 执行 shallow merge
 
-`applyOpsxDelta` 对 MODIFIED section 中的节点 SHALL 执行 shallow merge，仅更新 delta 中显式声明的字段，保留节点其余字段不变。
+`applyOpsxDelta` 对 MODIFIED section 中的节点 SHALL 执行 shallow merge，仅更新 delta 中显式声明的字段，保留节点其余字段不变。`Validator.validateOpsxDelta()` SHALL 复用 `applyOpsxDelta()` 的 dry-run merge 语义，在 validate 阶段提前检测 MODIFIED 节点不存在、引用完整性和 code-map 完整性问题。
 
 #### Scenario: MODIFIED capability 仅含 id 和 intent
 
@@ -28,6 +28,14 @@
 - **GIVEN** 主 OPSX 节点有 `domain: "dom.cli"`
 - **WHEN** delta MODIFIED 声明 `{id: cap.xxx, domain: undefined}` 或 `{id: cap.xxx}`（不写 domain）
 - **THEN** domain 字段保持原值不变（不删除）
+
+#### Scenario: validateOpsxDelta 提前检测 MODIFIED 引用不存在
+
+- **GIVEN** delta MODIFIED 声明 `{id: cap.nonexistent}`
+- **AND** `cap.nonexistent` 在主 OPSX 中不存在
+- **WHEN** `Validator.validateOpsxDelta(changeDir)` 执行
+- **THEN** 返回 ERROR 级别 issue，消息包含 `OPSX dry-run merge failed`
+- **AND** 不会等到 sync 阶段才发现错误
 
 ### Requirement: MODIFIED delta Schema 仅校验 id 和可变字段
 

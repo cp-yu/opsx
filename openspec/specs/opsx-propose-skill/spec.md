@@ -5,12 +5,12 @@
 ## Requirements
 ### Requirement: Post-propose warning validation
 
-`/opsx:propose` 在生成 apply-required artifacts 后 SHALL 执行一次 post-propose warning validation。该 validation SHALL 只包含程序化、可复现的文档结构检查；它 SHALL NOT 使用大语言模型执行语义质量判断。对于 `tasks.md`，validation SHALL 检查每个 `Checks` 条目的 `Verifies:` 字段结构，并在可用时对 change-local spec requirement/scenario 引用做确定性交叉校验。
+`/opsx:propose` 在生成 apply-required artifacts 后 SHALL 执行一次 post-propose warning validation。该 validation SHALL 只包含程序化、可复现的文档结构检查；它 SHALL NOT 使用大语言模型执行语义质量判断。
 
 #### Scenario: Validation runs after artifact generation
 - **WHEN** agent 完成 `proposal.md`、`specs/`、`design.md`、`tasks.md` 以及适用时的 `opsx-delta.yaml` 生成
 - **THEN** agent SHALL 在最终总结前执行一次文档体检
-- **AND** 该体检 SHALL 发生在 “Ready for implementation” 输出之前
+- **AND** 该体检 SHALL 发生在 "Ready for implementation" 输出之前
 
 #### Scenario: Validation is warning-only
 - **WHEN** post-propose validation 发现问题
@@ -31,27 +31,10 @@
 #### Scenario: Check fields are structurally validated
 - **WHEN** post-propose validation inspects `Checks`
 - **THEN** validation SHALL programmatically check that every check contains at least one executable evidence field from the allowed set: `Command:`, `Evidence:`, or `Expect:`
-- **AND** validation SHALL programmatically check that every check contains a non-empty `Verifies:` field
-- **AND** validation SHALL NOT judge whether the command, evidence, expectation, or `Verifies:` target is semantically sufficient
-
-#### Scenario: Verifies references are checked when change specs exist
-- **WHEN** post-propose validation inspects a `Verifies:` field
-- **AND** the change contains one or more local `specs/*/spec.md` files
-- **THEN** validation SHALL require a change-local relative path in the form `specs/<capability>/spec.md`
-- **AND** SHALL reject `openspec/specs/...`, project-root-relative paths, absolute paths, parent traversal, and backslash-separated paths
-- **AND** SHALL check that the referenced spec file exists
-- **AND** SHALL check that the referenced `Requirement` exists in that spec file
-- **AND** SHALL check that every referenced `Scenario` or `Scenarios` name exists under that requirement
-
-#### Scenario: Missing change specs degrade Verifies cross-check to warning
-- **WHEN** post-propose validation inspects `tasks.md`
-- **AND** the change contains no local `specs/*/spec.md` files
-- **AND** every check contains a non-empty `Verifies:` field
-- **THEN** validation SHALL return a warning explaining that no change specs were available for requirement/scenario cross-checking
-- **AND** SHALL NOT fail the task structure solely because `Verifies:` lacks a `specs/<capability>/spec.md` path
+- **AND** validation SHALL NOT judge whether the command, evidence, or expectation is semantically sufficient
 
 #### Scenario: Programmatic task warnings remain repair-only
-- **WHEN** programmatic task structure validation finds missing sections, malformed IDs, missing `Covers:`, dangling `Covers:` references, missing `Verifies:`, invalid `Verifies:` paths, missing requirement/scenario references, or missing evidence fields
+- **WHEN** programmatic task structure validation finds missing sections, malformed IDs, missing `Covers:`, dangling `Covers:` references, or missing evidence fields
 - **THEN** agent SHALL 将问题记录为 warning
 - **AND** SHALL 最多执行一轮 `tasks.md` 修复
 - **AND** SHALL NOT 阻断 apply-ready 输出
@@ -59,7 +42,7 @@
 #### Scenario: Semantic suitability is deferred to verify
 - **WHEN** post-propose validation checks `tasks.md`
 - **THEN** validation SHALL NOT classify actions as trivial or non-trivial
-- **AND** SHALL NOT judge whether a bugfix, validation, refactor check, or `Verifies:` target is semantically appropriate
+- **AND** SHALL NOT judge whether a bugfix, validation, or refactor check is semantically appropriate
 - **AND** semantic sufficiency SHALL be evaluated later by the verify/reviewer workflow against the generated artifacts and implementation evidence
 
 ### Requirement: Specs validation aligns with downstream sync/archive semantics
@@ -73,24 +56,24 @@
 - **AND** SHALL 与后续 change delta validation 的主要失败条件保持一致
 
 ### Requirement: OPSX validation aligns with downstream sync/archive semantics
-`opsx-delta.yaml` 的 post-propose 校验 SHALL 与后续 `sync` / `archive` prepare 阶段的 OPSX dry-run 合并校验语义保持基本一致。
+`opsx-delta.yaml` 的 post-propose 校验 SHALL 通过程序化 CLI 命令执行，而非手动 dry-run。`openspec validate "<name>" --type change` SHALL 自动包含 OPSX dry-run merge 校验（通过 `Validator.validateOpsxDelta()`），检查 Zod schema 解析、引用完整性和 code-map 完整性。
 
 #### Scenario: OPSX delta is validated against current project OPSX
 - **GIVEN** `openspec/project.opsx.yaml` 存在
 - **AND** change 中存在 `opsx-delta.yaml`
 - **WHEN** agent 执行 post-propose validation
-- **THEN** SHALL 按 dry-run 方式解析 `opsx-delta.yaml`
-- **AND** SHALL 基于当前 project OPSX 进行合并预演
+- **THEN** SHALL 调用 `openspec validate "<change>" --type change --json`
+- **AND** 该命令 SHALL 通过 `Validator.validateOpsxDelta()` 以程序化方式执行 OPSX dry-run merge 校验
 - **AND** SHALL 检查 referential integrity
 - **AND** SHALL 检查 code-map integrity
-- **AND** SHALL 与后续 `sync` / `archive` prepare 阶段的主要失败条件保持一致
+- **AND** SHALL NOT 依赖 LLM 手动读取文件并模拟 merge 语义
 
 #### Scenario: No formal OPSX exists
 - **GIVEN** `openspec/project.opsx.yaml` 不存在
 - **WHEN** change 中存在 `opsx-delta.yaml`
-- **THEN** agent SHALL 跳过 merge-based OPSX integrity 校验
+- **THEN** `Validator.validateOpsxDelta()` SHALL 优雅跳过
+- **AND** 返回 valid: true 且无 issues
 - **AND** SHALL NOT 报错
-- **AND** 最终报告 SHALL 说明该检查被跳过
 
 ### Requirement: Auxiliary artifact checks stay lightweight
 `proposal.md`、`design.md`、`tasks.md` 的 post-propose 检查 SHALL 保持轻量，并以当前 schema template 为准。

@@ -414,3 +414,21 @@ relations:
   - from: cap.archive.branch-merge
     type: depends_on
     to: cap.config.project
+  - from: cap.schema.opsx-delta-artifact
+    type: contains
+    to: dom.schema
+  - from: cap.validation.opsx-dry-run
+    type: contains
+    to: dom.validation
+  - from: cap.validation.opsx-dry-run
+    type: depends_on
+    to: cap.opsx.delta-merge
+  - from: cap.validation.opsx-dry-run
+    type: depends_on
+    to: cap.opsx.referential-integrity
+  - from: cap.schema.opsx-delta-artifact
+    type: depends_on
+    to: cap.artifact-graph.parse
+  - from: cap.validation.opsx-dry-run
+    type: depends_on
+    to: cap.cli.validate
