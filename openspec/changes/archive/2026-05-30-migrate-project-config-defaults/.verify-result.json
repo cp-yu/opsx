@@ -1,0 +1,221 @@
+{
+  "timestamp": "2026-05-30T07:03:07.964Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "1b26fb6032e3113145fc4f0625cfafaf1806ae6493da66f8d53ff0d0be6e5134",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-reviewer",
+    "evidenceFiles": [
+      "openspec/changes/migrate-project-config-defaults/.apply-isolation.json",
+      "openspec/changes/migrate-project-config-defaults/.verify-result.json",
+      "openspec/changes/migrate-project-config-defaults/design.md",
+      "openspec/changes/migrate-project-config-defaults/opsx-delta.yaml",
+      "openspec/changes/migrate-project-config-defaults/proposal.md",
+      "openspec/changes/migrate-project-config-defaults/specs/cli-init/spec.md",
+      "openspec/changes/migrate-project-config-defaults/specs/cli-update/spec.md",
+      "openspec/changes/migrate-project-config-defaults/specs/config-loading/spec.md",
+      "openspec/changes/migrate-project-config-defaults/tasks.md",
+      "openspec/project.opsx.code-map.yaml",
+      "openspec/project.opsx.yaml",
+      "src/core/config-prompts.ts",
+      "src/core/init.ts",
+      "src/core/project-config.ts",
+      "src/core/update.ts",
+      "test/core/init.test.ts",
+      "test/core/project-config.test.ts",
+      "test/core/update.test.ts"
+    ],
+    "evidenceFingerprint": "c72eabf05f8f2594d749a6571d02b574be7e8d46a4c948fc666e33eabb1c35cb",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/migrate-project-config-defaults/.apply-isolation.json",
+        "hash": "632d0397a609a52548d87b3421035cbfe0faa37e17f9398b1ff524962dd4d9a5"
+      },
+      {
+        "path": "openspec/changes/migrate-project-config-defaults/design.md",
+        "hash": "3fe05fefa099193e21ebb40ec8ec45b5c7591c4190f0017dee0c46b17aa5ed16"
+      },
+      {
+        "path": "openspec/changes/migrate-project-config-defaults/opsx-delta.yaml",
+        "hash": "e98e65d45f2e81453cae469eefab20a0f9518eb9b98306253d3d2f0b123d63ff"
+      },
+      {
+        "path": "openspec/changes/migrate-project-config-defaults/proposal.md",
+        "hash": "ae37ff02150bbc3089a45f85418beb93c25aabbc78c6b756f5325e5b2fe82d1c"
+      },
+      {
+        "path": "openspec/changes/migrate-project-config-defaults/specs/cli-init/spec.md",
+        "hash": "ff193ad1e70eaa8f5d47903aae1ac6e3f8b684ab81e672254405a65c4b8e99f9"
+      },
+      {
+        "path": "openspec/changes/migrate-project-config-defaults/specs/cli-update/spec.md",
+        "hash": "d8ad309fbf4bbfbf0374ac0cf0a312848d2e167ed78e4abe63b0bc0afdd14b62"
+      },
+      {
+        "path": "openspec/changes/migrate-project-config-defaults/specs/config-loading/spec.md",
+        "hash": "fe740233ce434caeff6582f4a5ebe9d0eea926d8281c36adc320be1a39397b17"
+      },
+      {
+        "path": "openspec/changes/migrate-project-config-defaults/tasks.md",
+        "hash": "1b26fb6032e3113145fc4f0625cfafaf1806ae6493da66f8d53ff0d0be6e5134"
+      },
+      {
+        "path": "openspec/project.opsx.code-map.yaml",
+        "hash": "4a8f88df2095819adb1b6991218b0c2a743d28cb7dbab6790a421716caecda81"
+      },
+      {
+        "path": "openspec/project.opsx.yaml",
+        "hash": "479d52caccb37ebcff7287f720643f519182827026e008a4d146ad79d436989d"
+      },
+      {
+        "path": "src/core/config-prompts.ts",
+        "hash": "d8106ece9e494f0b81a2b87657d6b9306933fff6360467b10edc618c5fa01e62"
+      },
+      {
+        "path": "src/core/init.ts",
+        "hash": "862a7759bd80062eb52287ff1936a1a17fb2468fcc409bbea1b7d3b666073e36"
+      },
+      {
+        "path": "src/core/project-config.ts",
+        "hash": "50aa1228ea9abbc06a6b0a58d93d00b21b87d2d1353d0ff7e9c444520b5a425d"
+      },
+      {
+        "path": "src/core/update.ts",
+        "hash": "f7821fc163000ac62549fdf971ddff987dc3fc59ff0d5abb173824e48003db03"
+      },
+      {
+        "path": "test/core/init.test.ts",
+        "hash": "ff097342fd06c394f043206501e40ad0beede9c9a3977770f775dd668c1de10f"
+      },
+      {
+        "path": "test/core/project-config.test.ts",
+        "hash": "8f4ae69629a4162b85dcdff5e5f078718ea57f11ba6433f7fd77a0c67f233f4c"
+      },
+      {
+        "path": "test/core/update.test.ts",
+        "hash": "4bc980e7900eef180ac01867b28a05c166e54462ce543926ed517be11d6fef6f"
+      }
+    ],
+    "skippedEvidenceFiles": [
+      "openspec/changes/migrate-project-config-defaults/.verify-result.json"
+    ],
+    "gitHeadCommit": "0da02100d8b1969c45afd15c6ddb63de8721e15d"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-30T07:05:36.931Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "No optimization opportunities found"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-30T07:03:07.964Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "1b26fb6032e3113145fc4f0625cfafaf1806ae6493da66f8d53ff0d0be6e5134",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-reviewer",
+        "evidenceFiles": [
+          "openspec/changes/migrate-project-config-defaults/.apply-isolation.json",
+          "openspec/changes/migrate-project-config-defaults/.verify-result.json",
+          "openspec/changes/migrate-project-config-defaults/design.md",
+          "openspec/changes/migrate-project-config-defaults/opsx-delta.yaml",
+          "openspec/changes/migrate-project-config-defaults/proposal.md",
+          "openspec/changes/migrate-project-config-defaults/specs/cli-init/spec.md",
+          "openspec/changes/migrate-project-config-defaults/specs/cli-update/spec.md",
+          "openspec/changes/migrate-project-config-defaults/specs/config-loading/spec.md",
+          "openspec/changes/migrate-project-config-defaults/tasks.md",
+          "openspec/project.opsx.code-map.yaml",
+          "openspec/project.opsx.yaml",
+          "src/core/config-prompts.ts",
+          "src/core/init.ts",
+          "src/core/project-config.ts",
+          "src/core/update.ts",
+          "test/core/init.test.ts",
+          "test/core/project-config.test.ts",
+          "test/core/update.test.ts"
+        ],
+        "evidenceFingerprint": "31ff16c30f8f747bea8c18ed34a38ae4a4a7355ffbeac1ebbed86f5f52f055d4",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/migrate-project-config-defaults/.apply-isolation.json",
+            "hash": "632d0397a609a52548d87b3421035cbfe0faa37e17f9398b1ff524962dd4d9a5"
+          },
+          {
+            "path": "openspec/changes/migrate-project-config-defaults/design.md",
+            "hash": "3fe05fefa099193e21ebb40ec8ec45b5c7591c4190f0017dee0c46b17aa5ed16"
+          },
+          {
+            "path": "openspec/changes/migrate-project-config-defaults/opsx-delta.yaml",
+            "hash": "e98e65d45f2e81453cae469eefab20a0f9518eb9b98306253d3d2f0b123d63ff"
+          },
+          {
+            "path": "openspec/changes/migrate-project-config-defaults/proposal.md",
+            "hash": "ae37ff02150bbc3089a45f85418beb93c25aabbc78c6b756f5325e5b2fe82d1c"
+          },
+          {
+            "path": "openspec/changes/migrate-project-config-defaults/specs/cli-init/spec.md",
+            "hash": "ff193ad1e70eaa8f5d47903aae1ac6e3f8b684ab81e672254405a65c4b8e99f9"
+          },
+          {
+            "path": "openspec/changes/migrate-project-config-defaults/specs/cli-update/spec.md",
+            "hash": "d8ad309fbf4bbfbf0374ac0cf0a312848d2e167ed78e4abe63b0bc0afdd14b62"
+          },
+          {
+            "path": "openspec/changes/migrate-project-config-defaults/specs/config-loading/spec.md",
+            "hash": "fe740233ce434caeff6582f4a5ebe9d0eea926d8281c36adc320be1a39397b17"
+          },
+          {
+            "path": "openspec/changes/migrate-project-config-defaults/tasks.md",
+            "hash": "1b26fb6032e3113145fc4f0625cfafaf1806ae6493da66f8d53ff0d0be6e5134"
+          },
+          {
+            "path": "openspec/project.opsx.code-map.yaml",
+            "hash": "655c31ce773bad1572870be99f8d9bce5c36a28cae4e78d4f4f10247da8878c1"
+          },
+          {
+            "path": "openspec/project.opsx.yaml",
+            "hash": "d2d7c95b37e8f38fdbd07ca65d73e38f278cea81eb684f1bf96de3422ce2730d"
+          },
+          {
+            "path": "src/core/config-prompts.ts",
+            "hash": "d8106ece9e494f0b81a2b87657d6b9306933fff6360467b10edc618c5fa01e62"
+          },
+          {
+            "path": "src/core/init.ts",
+            "hash": "862a7759bd80062eb52287ff1936a1a17fb2468fcc409bbea1b7d3b666073e36"
+          },
+          {
+            "path": "src/core/project-config.ts",
+            "hash": "50aa1228ea9abbc06a6b0a58d93d00b21b87d2d1353d0ff7e9c444520b5a425d"
+          },
+          {
+            "path": "src/core/update.ts",
+            "hash": "f7821fc163000ac62549fdf971ddff987dc3fc59ff0d5abb173824e48003db03"
+          },
+          {
+            "path": "test/core/init.test.ts",
+            "hash": "ff097342fd06c394f043206501e40ad0beede9c9a3977770f775dd668c1de10f"
+          },
+          {
+            "path": "test/core/project-config.test.ts",
+            "hash": "8f4ae69629a4162b85dcdff5e5f078718ea57f11ba6433f7fd77a0c67f233f4c"
+          },
+          {
+            "path": "test/core/update.test.ts",
+            "hash": "4bc980e7900eef180ac01867b28a05c166e54462ce543926ed517be11d6fef6f"
+          }
+        ],
+        "skippedEvidenceFiles": [
+          "openspec/changes/migrate-project-config-defaults/.verify-result.json"
+        ],
+        "gitHeadCommit": "0da02100d8b1969c45afd15c6ddb63de8721e15d"
+      }
+    }
+  }
+}

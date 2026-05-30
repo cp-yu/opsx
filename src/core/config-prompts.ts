@@ -1,4 +1,7 @@
-import type { ProjectConfig } from './project-config.js';
+import {
+  materializeProjectConfigDefaults,
+  type ProjectConfig,
+} from './project-config.js';
 
 /**
  * Serialize config to YAML string with helpful comments.
@@ -8,9 +11,15 @@ import type { ProjectConfig } from './project-config.js';
  */
 export function serializeConfig(config: Partial<ProjectConfig>): string {
   const lines: string[] = [];
+  const materialized = config.schema
+    ? materializeProjectConfigDefaults({
+        schema: config.schema,
+        docLanguage: config.docLanguage,
+      })
+    : config;
 
   // Schema (required)
-  lines.push(`schema: ${config.schema}`);
+  lines.push(`schema: ${materialized.schema}`);
   lines.push('');
 
   // Document language with comments
@@ -19,8 +28,8 @@ export function serializeConfig(config: Partial<ProjectConfig>): string {
   lines.push('# Keep template headings, IDs, schema keys, commands, and code tokens unchanged.');
   lines.push('# Example:');
   lines.push('#   docLanguage: zh-CN');
-  if (config.docLanguage) {
-    lines.push(`docLanguage: ${config.docLanguage}`);
+  if (materialized.docLanguage) {
+    lines.push(`docLanguage: ${materialized.docLanguage}`);
   }
   lines.push('');
 
@@ -42,12 +51,31 @@ export function serializeConfig(config: Partial<ProjectConfig>): string {
   lines.push('#   optimization:');
   lines.push('#     enabled: true');
   lines.push('#     optRetries: 2');
-  if (config.optimization) {
+  if (materialized.optimization) {
     lines.push('optimization:');
-    lines.push(`  enabled: ${config.optimization.enabled !== false}`);
-    if (config.optimization.optRetries !== undefined) {
-      lines.push(`  optRetries: ${config.optimization.optRetries}`);
+    lines.push(`  enabled: ${materialized.optimization.enabled !== false}`);
+    if (materialized.optimization.optRetries !== undefined) {
+      lines.push(`  optRetries: ${materialized.optimization.optRetries}`);
     }
+  }
+  lines.push('');
+
+  // Git archive and merge policy
+  lines.push('# Git archive and merge policy (optional)');
+  lines.push('# Example:');
+  lines.push('#   git:');
+  lines.push('#     merge:');
+  lines.push('#       strategy: no-ff');
+  lines.push('#       messageFrom: artifacts');
+  lines.push('#     branch:');
+  lines.push('#       deleteAfterArchive: false');
+  if (materialized.git) {
+    lines.push('git:');
+    lines.push('  merge:');
+    lines.push(`    strategy: ${materialized.git.merge.strategy}`);
+    lines.push(`    messageFrom: ${materialized.git.merge.messageFrom}`);
+    lines.push('  branch:');
+    lines.push(`    deleteAfterArchive: ${materialized.git.branch.deleteAfterArchive}`);
   }
   lines.push('');
 

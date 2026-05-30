@@ -2,7 +2,10 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
+import { parse as parseYaml } from 'yaml';
 import {
+  materializeProjectConfigDefaults,
+  migrateProjectConfigDefaults,
   readProjectConfig,
   validateConfigRules,
   suggestSchemas,
@@ -26,6 +29,187 @@ describe('project-config', () => {
   afterEach(() => {
     fs.rmSync(tempDir, { recursive: true, force: true });
     consoleWarnSpy.mockRestore();
+  });
+
+  describe('materializeProjectConfigDefaults', () => {
+    it('should include only functional disk defaults', () => {
+      const defaults = materializeProjectConfigDefaults({ schema: 'spec-driven' });
+
+      expect(defaults).toEqual({
+        schema: 'spec-driven',
+        optimization: {
+          enabled: true,
+          optRetries: 2,
+        },
+        git: {
+          merge: {
+            strategy: 'no-ff',
+            messageFrom: 'artifacts',
+          },
+          branch: {
+            deleteAfterArchive: false,
+          },
+        },
+      });
+      expect(defaults).not.toHaveProperty('docLanguage');
+      expect(defaults).not.toHaveProperty('context');
+      expect(defaults).not.toHaveProperty('rules');
+      expect(defaults).not.toHaveProperty('propose');
+      expect(defaults).not.toHaveProperty('apply');
+    });
+
+    it('should preserve explicit docLanguage without adding other optional fields', () => {
+      const defaults = materializeProjectConfigDefaults({
+        schema: 'spec-driven',
+        docLanguage: 'zh-CN',
+      });
+
+      expect(defaults.docLanguage).toBe('zh-CN');
+      expect(defaults).not.toHaveProperty('context');
+      expect(defaults).not.toHaveProperty('rules');
+      expect(defaults).not.toHaveProperty('propose');
+      expect(defaults).not.toHaveProperty('apply');
+    });
+  });
+
+  describe('migrateProjectConfigDefaults', () => {
+    it('should create config.yaml with functional defaults when config is missing', () => {
+      fs.mkdirSync(path.join(tempDir, 'openspec'), { recursive: true });
+
+      const result = migrateProjectConfigDefaults(tempDir);
+      const configPath = path.join(tempDir, 'openspec', 'config.yaml');
+      const content = fs.readFileSync(configPath, 'utf-8');
+      const parsed = parseYaml(content);
+
+      expect(result).toEqual({
+        status: 'created',
+        path: configPath,
+      });
+      expect(parsed).toEqual({
+        schema: 'spec-driven',
+        optimization: {
+          enabled: true,
+          optRetries: 2,
+        },
+        git: {
+          merge: {
+            strategy: 'no-ff',
+            messageFrom: 'artifacts',
+          },
+          branch: {
+            deleteAfterArchive: false,
+          },
+        },
+      });
+    });
+
+    it('should add nested missing defaults without overwriting existing values', () => {
+      const configDir = path.join(tempDir, 'openspec');
+      fs.mkdirSync(configDir, { recursive: true });
+      const configPath = path.join(configDir, 'config.yaml');
+      fs.writeFileSync(
+        configPath,
+        `schema: custom-schema
+optimization:
+  enabled: false
+git:
+  merge:
+    strategy: squash
+context: keep me
+`
+      );
+
+      const result = migrateProjectConfigDefaults(tempDir);
+      const parsed = parseYaml(fs.readFileSync(configPath, 'utf-8'));
+
+      expect(result).toEqual({
+        status: 'updated',
+        path: configPath,
+      });
+      expect(parsed.schema).toBe('custom-schema');
+      expect(parsed.context).toBe('keep me');
+      expect(parsed.optimization.enabled).toBe(false);
+      expect(parsed.optimization.optRetries).toBe(2);
+      expect(parsed.git.merge.strategy).toBe('squash');
+      expect(parsed.git.merge.messageFrom).toBe('artifacts');
+      expect(parsed.git.branch.deleteAfterArchive).toBe(false);
+      expect(parsed).not.toHaveProperty('propose');
+      expect(parsed).not.toHaveProperty('apply');
+    });
+
+    it('should mutate config.yml when config.yaml is missing', () => {
+      const configDir = path.join(tempDir, 'openspec');
+      fs.mkdirSync(configDir, { recursive: true });
+      const ymlPath = path.join(configDir, 'config.yml');
+      fs.writeFileSync(ymlPath, 'schema: spec-driven\n');
+
+      const result = migrateProjectConfigDefaults(tempDir);
+
+      expect(result).toEqual({
+        status: 'updated',
+        path: ymlPath,
+      });
+      expect(fs.existsSync(path.join(configDir, 'config.yaml'))).toBe(false);
+      expect(parseYaml(fs.readFileSync(ymlPath, 'utf-8')).git.merge.strategy).toBe('no-ff');
+    });
+
+    it('should leave invalid yaml unchanged and report skipped migration', () => {
+      const configDir = path.join(tempDir, 'openspec');
+      fs.mkdirSync(configDir, { recursive: true });
+      const configPath = path.join(configDir, 'config.yaml');
+      const original = 'schema: [unclosed';
+      fs.writeFileSync(configPath, original);
+
+      const result = migrateProjectConfigDefaults(tempDir);
+
+      expect(result).toEqual({
+        status: 'skipped',
+        path: configPath,
+        reason: 'invalid-yaml',
+      });
+      expect(fs.readFileSync(configPath, 'utf-8')).toBe(original);
+    });
+
+    it('should leave non-object yaml unchanged and report skipped migration', () => {
+      const configDir = path.join(tempDir, 'openspec');
+      fs.mkdirSync(configDir, { recursive: true });
+      const configPath = path.join(configDir, 'config.yaml');
+      const original = '"just a string"\n';
+      fs.writeFileSync(configPath, original);
+
+      const result = migrateProjectConfigDefaults(tempDir);
+
+      expect(result).toEqual({
+        status: 'skipped',
+        path: configPath,
+        reason: 'non-object',
+      });
+      expect(fs.readFileSync(configPath, 'utf-8')).toBe(original);
+    });
+
+    it('should preserve runtime defaults after disk materialization round trip', () => {
+      fs.mkdirSync(path.join(tempDir, 'openspec'), { recursive: true });
+
+      migrateProjectConfigDefaults(tempDir);
+      const config = readProjectConfig(tempDir);
+      const runtime = projectConfigForRuntime(config, { consumer: 'archive' });
+
+      expect(config?.optimization).toEqual({
+        enabled: true,
+        optRetries: 2,
+      });
+      expect(runtime.git).toEqual({
+        merge: {
+          strategy: 'no-ff',
+          messageFrom: 'artifacts',
+        },
+        branch: {
+          deleteAfterArchive: false,
+        },
+      });
+      expect(config).not.toHaveProperty('propose');
+      expect(config).not.toHaveProperty('apply');
+    });
   });
 
   describe('readProjectConfig', () => {

@@ -33,6 +33,18 @@ openspec/
 └── changes/
     └── archive/
 ```
+- **AND** write `openspec/config.yaml` using the current functional project config defaults
+- **AND** the generated config SHALL include `optimization.enabled: true`
+- **AND** the generated config SHALL include `optimization.optRetries: 2`
+- **AND** the generated config SHALL include `git.merge.strategy: no-ff`
+- **AND** the generated config SHALL include `git.merge.messageFrom: artifacts`
+- **AND** the generated config SHALL include `git.branch.deleteAfterArchive: false`
+
+#### Scenario: Creating OpenSpec structure on Windows
+
+- **WHEN** `openspec init` is executed on Windows
+- **THEN** build the `openspec/config.yaml` path using Node.js path utilities
+- **AND** write the same default YAML fields as on Unix systems
 
 ### Requirement: AI Tool Configuration
 

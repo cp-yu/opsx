@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
+import { parse as parseYaml } from 'yaml';
 import { InitCommand } from '../../src/core/init.js';
 import { getCommandSlug } from '../../src/core/shared/index.js';
 import { saveGlobalConfig, getGlobalConfig } from '../../src/core/global-config.js';
@@ -79,7 +80,7 @@ describe('InitCommand', () => {
       expect(await directoryExists(path.join(openspecPath, 'changes', 'archive'))).toBe(true);
     });
 
-    it('should create config.yaml with default schema', async () => {
+    it('should create config.yaml with functional defaults', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 
       await initCommand.execute(testDir);
@@ -88,7 +89,22 @@ describe('InitCommand', () => {
       expect(await fileExists(configPath)).toBe(true);
 
       const content = await fs.readFile(configPath, 'utf-8');
+      const parsed = parseYaml(content);
       expect(content).toContain('schema: spec-driven');
+      expect(content).toContain('optimization:');
+      expect(content).toContain('  enabled: true');
+      expect(content).toContain('  optRetries: 2');
+      expect(content).toContain('git:');
+      expect(content).toContain('  merge:');
+      expect(content).toContain('    strategy: no-ff');
+      expect(content).toContain('    messageFrom: artifacts');
+      expect(content).toContain('  branch:');
+      expect(content).toContain('    deleteAfterArchive: false');
+      expect(parsed).not.toHaveProperty('propose');
+      expect(parsed).not.toHaveProperty('apply');
+      expect(parsed).not.toHaveProperty('rules');
+      expect(parsed).not.toHaveProperty('context');
+      expect(parsed).not.toHaveProperty('docLanguage');
     });
 
     it('should write docLanguage to config.yaml during interactive init', async () => {

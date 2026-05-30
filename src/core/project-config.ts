@@ -1,17 +1,37 @@
-import { existsSync, readFileSync, statSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import path from 'path';
-import { parse as parseYaml } from 'yaml';
+import {
+  isMap,
+  parse as parseYaml,
+  parseDocument,
+  stringify as stringifyYaml,
+  type Document,
+} from 'yaml';
 import { z } from 'zod';
 
-const GIT_DEFAULTS = {
-  merge: {
-    strategy: 'no-ff' as const,
-    messageFrom: 'artifacts' as const,
+export const PROJECT_CONFIG_FUNCTIONAL_DEFAULTS = {
+  optimization: {
+    enabled: true,
+    optRetries: 2,
   },
-  branch: {
-    deleteAfterArchive: false,
+  git: {
+    merge: {
+      strategy: 'no-ff' as const,
+      messageFrom: 'artifacts' as const,
+    },
+    branch: {
+      deleteAfterArchive: false,
+    },
   },
 };
+
+const DEFAULT_PROJECT_SCHEMA = 'spec-driven';
+
+export type ProjectConfigDefaultsMigrationResult =
+  | { status: 'created'; path: string }
+  | { status: 'updated'; path: string }
+  | { status: 'unchanged'; path: string }
+  | { status: 'skipped'; path: string; reason: 'invalid-yaml' | 'non-object' };
 
 const gitMergeStrategyField = z.enum(['no-ff', 'ff-only', 'squash']);
 const gitMergeMessageFromField = z.enum(['artifacts', 'manual']);
@@ -110,6 +130,104 @@ export const ProjectConfigSchema = z.object({
 export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
 
 const MAX_CONTEXT_SIZE = 50 * 1024; // 50KB hard limit
+
+function cloneFunctionalDefaults() {
+  return {
+    optimization: {
+      ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.optimization,
+    },
+    git: {
+      merge: {
+        ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.merge,
+      },
+      branch: {
+        ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.branch,
+      },
+    },
+  };
+}
+
+export function materializeProjectConfigDefaults(
+  config: Pick<ProjectConfig, 'schema'> & Partial<Pick<ProjectConfig, 'docLanguage'>>
+): Pick<ProjectConfig, 'schema' | 'optimization' | 'git'> & Partial<Pick<ProjectConfig, 'docLanguage'>> {
+  const defaults = cloneFunctionalDefaults();
+  return config.docLanguage
+    ? { schema: config.schema, docLanguage: config.docLanguage, ...defaults }
+    : { schema: config.schema, ...defaults };
+}
+
+function findProjectConfigPath(projectRoot: string): { path: string; exists: boolean } {
+  const yamlPath = path.join(projectRoot, 'openspec', 'config.yaml');
+  if (existsSync(yamlPath)) {
+    return { path: yamlPath, exists: true };
+  }
+
+  const ymlPath = path.join(projectRoot, 'openspec', 'config.yml');
+  if (existsSync(ymlPath)) {
+    return { path: ymlPath, exists: true };
+  }
+
+  return { path: yamlPath, exists: false };
+}
+
+function setMissingPath(document: Document, keys: readonly string[], value: unknown): boolean {
+  let current = document.contents;
+  for (const key of keys.slice(0, -1)) {
+    if (!current || !isMap(current)) {
+      return false;
+    }
+    if (!current.has(key)) {
+      current.set(key, document.createNode({}));
+    }
+    current = current.get(key, true);
+  }
+
+  if (!current || !isMap(current)) {
+    return false;
+  }
+
+  const leaf = keys[keys.length - 1];
+  if (current.has(leaf)) {
+    return false;
+  }
+
+  current.set(leaf, value);
+  return true;
+}
+
+export function migrateProjectConfigDefaults(projectRoot: string): ProjectConfigDefaultsMigrationResult {
+  const configPath = findProjectConfigPath(projectRoot);
+  if (!configPath.exists) {
+    const defaults = materializeProjectConfigDefaults({ schema: DEFAULT_PROJECT_SCHEMA });
+    writeFileSync(configPath.path, stringifyYaml(defaults), 'utf-8');
+    return { status: 'created', path: configPath.path };
+  }
+
+  const content = readFileSync(configPath.path, 'utf-8');
+  const document = parseDocument(content);
+  if (document.errors.length > 0) {
+    return { status: 'skipped', path: configPath.path, reason: 'invalid-yaml' };
+  }
+  if (!document.contents || !isMap(document.contents)) {
+    return { status: 'skipped', path: configPath.path, reason: 'non-object' };
+  }
+
+  const defaults = materializeProjectConfigDefaults({ schema: DEFAULT_PROJECT_SCHEMA });
+  let changed = false;
+  changed = setMissingPath(document, ['schema'], defaults.schema) || changed;
+  changed = setMissingPath(document, ['optimization', 'enabled'], defaults.optimization.enabled) || changed;
+  changed = setMissingPath(document, ['optimization', 'optRetries'], defaults.optimization.optRetries) || changed;
+  changed = setMissingPath(document, ['git', 'merge', 'strategy'], defaults.git.merge.strategy) || changed;
+  changed = setMissingPath(document, ['git', 'merge', 'messageFrom'], defaults.git.merge.messageFrom) || changed;
+  changed = setMissingPath(document, ['git', 'branch', 'deleteAfterArchive'], defaults.git.branch.deleteAfterArchive) || changed;
+
+  if (!changed) {
+    return { status: 'unchanged', path: configPath.path };
+  }
+
+  writeFileSync(configPath.path, String(document), 'utf-8');
+  return { status: 'updated', path: configPath.path };
+}
 
 /**
  * Read and parse openspec/config.yaml from project root.
@@ -236,7 +354,7 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
       }
     }
 
-    config.git = JSON.parse(JSON.stringify(GIT_DEFAULTS)) as ProjectConfig['git'];
+    config.git = cloneFunctionalDefaults().git;
     const gitConfig = config.git!;
     if (raw.git !== undefined) {
       if (typeof raw.git !== 'object' || raw.git === null || Array.isArray(raw.git)) {
