@@ -118,12 +118,12 @@
 
 #### Checks
 
-- [ ] C11 Verify default materialization contract
+- [x] C11 Verify default materialization contract
   - Verifies: `specs/config-loading/spec.md` / Requirement "Materialize functional project config defaults" / Scenario "Default materialization includes optimization and git"
   - Command: `npm run test -- test/core/project-config.test.ts test/core/init.test.ts test/core/update.test.ts`
   - Expect: materialized defaults match runtime defaults for `optimization` and `git`
 
-- [ ] C12 Verify cross-platform config path behavior
+- [x] C12 Verify cross-platform config path behavior
   - Verifies: `specs/config-loading/spec.md` / Requirement "Materialize functional project config defaults" / Scenario "Cross-platform config path handling"
   - Evidence: test setup and implementation construct config paths with `path.join()` / `path.resolve()`
   - Expect: tests avoid hardcoded slash-sensitive expected paths and cover `.yaml` preference with `.yml` fallback

@@ -186,6 +186,30 @@ context: keep me
       });
       expect(fs.readFileSync(configPath, 'utf-8')).toBe(original);
     });
+
+    it('should preserve runtime defaults after disk materialization round trip', () => {
+      fs.mkdirSync(path.join(tempDir, 'openspec'), { recursive: true });
+
+      migrateProjectConfigDefaults(tempDir);
+      const config = readProjectConfig(tempDir);
+      const runtime = projectConfigForRuntime(config, { consumer: 'archive' });
+
+      expect(config?.optimization).toEqual({
+        enabled: true,
+        optRetries: 2,
+      });
+      expect(runtime.git).toEqual({
+        merge: {
+          strategy: 'no-ff',
+          messageFrom: 'artifacts',
+        },
+        branch: {
+          deleteAfterArchive: false,
+        },
+      });
+      expect(config).not.toHaveProperty('propose');
+      expect(config).not.toHaveProperty('apply');
+    });
   });
 
   describe('readProjectConfig', () => {
