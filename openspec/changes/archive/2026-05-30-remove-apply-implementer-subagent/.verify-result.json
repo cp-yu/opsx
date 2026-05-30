@@ -1,0 +1,184 @@
+{
+  "timestamp": "2026-05-30T09:22:09.522Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "64eb3ab931677dc25286260eb0eef1070ab0bdbf641ea1aa63dff345cf195ed1",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "current-agent-no-subagent",
+    "evidenceFiles": [
+      "README.md",
+      "docs/migration-guide.md",
+      "openspec/changes/remove-apply-implementer-subagent/tasks.md",
+      "openspec/project.opsx.relations.yaml",
+      "openspec/project.opsx.yaml",
+      "openspec/specs/apply-implementer-subagent/spec.md",
+      "openspec/specs/apply-task-decomposition/spec.md",
+      "schemas/spec-driven/schema.yaml",
+      "src/core/shared/skill-generation.ts",
+      "src/core/templates/skill-templates.ts",
+      "src/core/templates/workflows/apply-change.ts",
+      "test/commands/artifact-workflow.test.ts",
+      "test/core/shared/skill-generation.test.ts",
+      "test/core/templates/apply-change.test.ts"
+    ],
+    "evidenceFingerprint": "22d06408fc76cfd4dd2f503aaa623edbe55f8403557eb0636f3fd16509fe52c8",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "docs/migration-guide.md",
+        "hash": "6e253ed98b1706de83e6f8d22ccbdbb1f313fb4d6b5e55189ddfc97a2b2b9635"
+      },
+      {
+        "path": "openspec/changes/remove-apply-implementer-subagent/tasks.md",
+        "hash": "64eb3ab931677dc25286260eb0eef1070ab0bdbf641ea1aa63dff345cf195ed1"
+      },
+      {
+        "path": "openspec/project.opsx.relations.yaml",
+        "hash": "e7ed7fa6453c43e629b34919f45c4c754b08c421bde9b755d5e975debfbd32e2"
+      },
+      {
+        "path": "openspec/project.opsx.yaml",
+        "hash": "d34b8e8963f94d3c68c9709774366bb96a1b8c361b59ed0ae9efec278f66cf54"
+      },
+      {
+        "path": "openspec/specs/apply-implementer-subagent/spec.md",
+        "hash": "201c22cafad6ba2a7c9448ef04edd32d607f870473ed80ed389a4be810398c14"
+      },
+      {
+        "path": "openspec/specs/apply-task-decomposition/spec.md",
+        "hash": "874a8f6a49538e24dd58b2bbccfbe259e78733e20b45a5524ca30fa615d047ff"
+      },
+      {
+        "path": "README.md",
+        "hash": "953f6ece54dae7ee37842b200e225e27a1a25762e4827a2b34d803c417b03f6d"
+      },
+      {
+        "path": "schemas/spec-driven/schema.yaml",
+        "hash": "ac30e11a6f2b9ad45fdae536efb521b78f4a0bb4cc73173afef610bee253711a"
+      },
+      {
+        "path": "src/core/shared/skill-generation.ts",
+        "hash": "3a3b7041f101afe5e4e4080bdb8ac574b6870642beff29ca7756b96f88059c86"
+      },
+      {
+        "path": "src/core/templates/skill-templates.ts",
+        "hash": "0270d6c4e6f3e5b06c6fdb91d2d3e4ddcca2816ee4f259ee7743d33d946f1b30"
+      },
+      {
+        "path": "src/core/templates/workflows/apply-change.ts",
+        "hash": "79039c83f244e7fa99232f79203f823e5d7df4423b78b2d92d8a742843320c25"
+      },
+      {
+        "path": "test/commands/artifact-workflow.test.ts",
+        "hash": "b832b3459e2a8a4c3a1ac9269c46fa09604b4224b795332439db596fa670fe04"
+      },
+      {
+        "path": "test/core/shared/skill-generation.test.ts",
+        "hash": "816a2dfcfe219f68fd3ec4b9f665836ca055d9bd50e21796fa3cf3b30aac15eb"
+      },
+      {
+        "path": "test/core/templates/apply-change.test.ts",
+        "hash": "3824a9f51e89217f6786db8ee3015ce50d7477b626a3501c29f381d28cd109d6"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "b6a3b91347cbd086cc6962f0d1668ec1e87209f7"
+  },
+  "optimization": {
+    "status": "SKIPPED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-30T09:22:22.627Z",
+        "type": "optimization",
+        "status": "SKIPPED"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-30T09:22:09.522Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "64eb3ab931677dc25286260eb0eef1070ab0bdbf641ea1aa63dff345cf195ed1",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "current-agent-no-subagent",
+        "evidenceFiles": [
+          "README.md",
+          "docs/migration-guide.md",
+          "openspec/changes/remove-apply-implementer-subagent/tasks.md",
+          "openspec/project.opsx.relations.yaml",
+          "openspec/project.opsx.yaml",
+          "openspec/specs/apply-implementer-subagent/spec.md",
+          "openspec/specs/apply-task-decomposition/spec.md",
+          "schemas/spec-driven/schema.yaml",
+          "src/core/shared/skill-generation.ts",
+          "src/core/templates/skill-templates.ts",
+          "src/core/templates/workflows/apply-change.ts",
+          "test/commands/artifact-workflow.test.ts",
+          "test/core/shared/skill-generation.test.ts",
+          "test/core/templates/apply-change.test.ts"
+        ],
+        "evidenceFingerprint": "d78717a9149f184daff2c329ed992d2b00dc6f7ca40624988ec20c66ea5c7020",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "docs/migration-guide.md",
+            "hash": "6e253ed98b1706de83e6f8d22ccbdbb1f313fb4d6b5e55189ddfc97a2b2b9635"
+          },
+          {
+            "path": "openspec/changes/remove-apply-implementer-subagent/tasks.md",
+            "hash": "64eb3ab931677dc25286260eb0eef1070ab0bdbf641ea1aa63dff345cf195ed1"
+          },
+          {
+            "path": "openspec/project.opsx.relations.yaml",
+            "hash": "e7ed7fa6453c43e629b34919f45c4c754b08c421bde9b755d5e975debfbd32e2"
+          },
+          {
+            "path": "openspec/project.opsx.yaml",
+            "hash": "6bea28805d399cdc83fdab9a9c55be132ce091e4563d68709ba0fb097a1d2070"
+          },
+          {
+            "path": "openspec/specs/apply-implementer-subagent/spec.md",
+            "hash": "201c22cafad6ba2a7c9448ef04edd32d607f870473ed80ed389a4be810398c14"
+          },
+          {
+            "path": "openspec/specs/apply-task-decomposition/spec.md",
+            "hash": "874a8f6a49538e24dd58b2bbccfbe259e78733e20b45a5524ca30fa615d047ff"
+          },
+          {
+            "path": "README.md",
+            "hash": "953f6ece54dae7ee37842b200e225e27a1a25762e4827a2b34d803c417b03f6d"
+          },
+          {
+            "path": "schemas/spec-driven/schema.yaml",
+            "hash": "ac30e11a6f2b9ad45fdae536efb521b78f4a0bb4cc73173afef610bee253711a"
+          },
+          {
+            "path": "src/core/shared/skill-generation.ts",
+            "hash": "3a3b7041f101afe5e4e4080bdb8ac574b6870642beff29ca7756b96f88059c86"
+          },
+          {
+            "path": "src/core/templates/skill-templates.ts",
+            "hash": "0270d6c4e6f3e5b06c6fdb91d2d3e4ddcca2816ee4f259ee7743d33d946f1b30"
+          },
+          {
+            "path": "src/core/templates/workflows/apply-change.ts",
+            "hash": "79039c83f244e7fa99232f79203f823e5d7df4423b78b2d92d8a742843320c25"
+          },
+          {
+            "path": "test/commands/artifact-workflow.test.ts",
+            "hash": "b832b3459e2a8a4c3a1ac9269c46fa09604b4224b795332439db596fa670fe04"
+          },
+          {
+            "path": "test/core/shared/skill-generation.test.ts",
+            "hash": "816a2dfcfe219f68fd3ec4b9f665836ca055d9bd50e21796fa3cf3b30aac15eb"
+          },
+          {
+            "path": "test/core/templates/apply-change.test.ts",
+            "hash": "3824a9f51e89217f6786db8ee3015ce50d7477b626a3501c29f381d28cd109d6"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "b6a3b91347cbd086cc6962f0d1668ec1e87209f7"
+      }
+    }
+  }
+}

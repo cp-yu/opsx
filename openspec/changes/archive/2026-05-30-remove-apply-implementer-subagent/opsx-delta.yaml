@@ -1,0 +1,21 @@
+schema_version: 1
+MODIFIED:
+  capabilities:
+    - id: cap.apply.task-decomposition
+      intent: Apply 阶段 Master agent 直接读取 tasks.md、change-local specs、design 与项目代码上下文，将粗粒度任务拆解为当前上下文中的实现、测试和验证工作；不再生成 .apply-steps，也不再 dispatch implementer subagent。普通执行失败进入 master-led recovery，只有同一 task 的同一 normalized error signature 经 remediation 后连续失败 2 次才 pause。
+    - id: cap.apply.subagent-orchestration
+      intent: apply 工作流中严格区分编码角色（主 agent）和判断角色（subagent reviewer/optimizer）；subagent 仅用于 clean-context 验证和优化判断，不用于编码执行。
+    - id: cap.ai.skill-generation
+      intent: AI 技能文件生成，包含 reviewer、optimizer、impact-sweeper 等仍被 workflow 引用的内部 skill；不再生成 openspec-implementer。
+    - id: cap.ai.internal-skill-installation
+      intent: 内部 skill 安装管线安装仍被 workflow 引用的 active internal skills，并显式排除已删除的 openspec-implementer；不生成对应 slash command。
+REMOVED:
+  capabilities:
+    - id: cap.apply.implementer-subagent
+  relations:
+    - from: cap.apply.implementer-subagent
+      type: contains
+      to: dom.apply
+    - from: cap.apply.implementer-subagent
+      type: depends_on
+      to: cap.apply.task-decomposition

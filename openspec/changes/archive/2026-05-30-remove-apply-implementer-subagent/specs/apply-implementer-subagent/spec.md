@@ -1,9 +1,4 @@
-# apply-implementer-subagent Specification
-
-## Purpose
-记录 `openspec-implementer` coding subagent 能力已从 active apply workflow 中移除。
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: apply 不再调用 implementer subagent
 

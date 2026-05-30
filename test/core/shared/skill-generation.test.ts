@@ -9,9 +9,9 @@ import { transformWorkflowReferences } from '../../../src/utils/command-referenc
 
 describe('skill-generation', () => {
   describe('getSkillTemplates', () => {
-    it('should return all 16 skill templates', () => {
+    it('should return all 15 skill templates', () => {
       const templates = getSkillTemplates();
-      expect(templates).toHaveLength(16);
+      expect(templates).toHaveLength(15);
     });
 
     it('should have unique directory names', () => {
@@ -39,7 +39,7 @@ describe('skill-generation', () => {
       expect(dirNames).toContain('openspec-bootstrap-opsx');
       expect(dirNames).toContain('openspec-reviewer');
       expect(dirNames).toContain('openspec-optimizer');
-      expect(dirNames).toContain('openspec-implementer');
+      expect(dirNames).not.toContain('openspec-implementer');
       expect(dirNames).toContain('openspec-impact-sweeper');
     });
 
@@ -64,7 +64,7 @@ describe('skill-generation', () => {
 
     it('should filter by workflow IDs when provided — internal skills always included', () => {
       const filtered = getSkillTemplates(['propose', 'explore', 'apply', 'archive']);
-      expect(filtered).toHaveLength(8);
+      expect(filtered).toHaveLength(7);
       const ids = filtered.map(t => t.workflowId);
       expect(ids).toContain('propose');
       expect(ids).toContain('explore');
@@ -82,14 +82,14 @@ describe('skill-generation', () => {
 
     it('should return internal skills when filter matches nothing', () => {
       const filtered = getSkillTemplates(['nonexistent']);
-      expect(filtered).toHaveLength(4);
+      expect(filtered).toHaveLength(3);
       // Only internal skills, no workflow surfaces
       expect(filtered.every(e => e.workflowId.startsWith('openspec-'))).toBe(true);
     });
 
     it('should return single workflow template plus internal skills when filter has one workflow', () => {
       const filtered = getSkillTemplates(['propose']);
-      expect(filtered).toHaveLength(5);
+      expect(filtered).toHaveLength(4);
       expect(filtered[0].workflowId).toBe('propose');
       expect(filtered[0].dirName).toBe('openspec-propose');
     });

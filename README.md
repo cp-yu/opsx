@@ -55,10 +55,10 @@ AI:  Created openspec/changes/add-dark-mode/
 
 You: /opsx:apply
 AI:  Checking branch isolation...
-     ✓ Generated .apply-steps/task-1-theme-provider.md
-     ✓ Implementer ran TDD cycle: test failed, code added, test passed
-     ✓ Generated .apply-steps/task-2-theme-toggle.md
-     ✓ Implementer committed each passing cycle
+     ✓ Implemented task 1: theme provider
+     ✓ Tests passed for theme provider behavior
+     ✓ Implemented task 2: theme toggle
+     ✓ Checks marked complete after evidence passed
      All tasks complete!
 
 You: /opsx:archive
@@ -100,7 +100,7 @@ Now tell your AI: `/opsx:propose <what-you-want-to-build>`
 
 For vague or multi-subsystem ideas, start with `/opsx:explore`. Explore now runs a structured brainstorming flow and produces a Design Summary in chat. `/opsx:propose` can reuse that summary, or skip explore when your input is already detailed.
 
-`/opsx:apply` now decomposes coarse `tasks.md` entries into `.apply-steps/` TDD cycles and dispatches implementer subagents. When run on `main` or `master`, it asks whether to create a feature branch, create a worktree, or continue on the current branch.
+`/opsx:apply` now reads coarse `tasks.md` entries and has the current agent directly implement pending tasks, run checks, and mark evidence-backed progress. When run on `main` or `master`, it asks whether to create a feature branch, create a worktree, or continue on the current branch.
 
 If you want the `expanded` workflow preset (`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:sync`, `/opsx:bulk-archive`, `/opsx:onboard`), select it with `openspec config profile` and apply with `openspec update`. In the default `core` preset, `/opsx:archive` still exposes only one user-facing command, but it now runs the same full verify gate before archive and then performs spec + OPSX sync inline.
 
