@@ -566,8 +566,8 @@ describe('artifact-workflow CLI commands', () => {
         { id: '1', description: 'Explore routing', done: true },
         { id: '2', description: 'Apply decomposition', done: false },
       ]);
-      expect(json.instruction).toContain('decompose each pending coarse task');
-      expect(json.instruction).toContain('dispatch implementer subagents');
+      expect(json.instruction).toContain('directly implement each pending task');
+      expect(json.instruction).toContain('mark nested checks complete as evidence passes');
     });
 
     it('keeps the explore-to-propose-to-apply instruction path coherent', async () => {
@@ -588,15 +588,15 @@ describe('artifact-workflow CLI commands', () => {
 - Test: \`test/core/templates/apply-change.test.ts\`
 
 **Requirements**:
-- Decompose implementation into TDD cycles
-- Dispatch implementer subagents
+- Implement pending tasks directly
+- Mark checks complete after evidence passes
 
 #### Checks
 
-- [ ] C1 Verify apply handoff
-  - Verifies: \`specs/apply-task-decomposition/spec.md\` / Requirement "Master agent 必须拆解粗粒度任务为 TDD 步骤" / Scenario "拆解为多个 TDD Cycle"
+- [ ] C1 Verify direct apply
+  - Verifies: \`specs/apply-task-decomposition/spec.md\` / Requirement "Master agent 直接执行 pending task" / Scenario "拆解为可执行工作"
   - Command: \`npm run test -- test/core/templates/apply-change.test.ts\`
-  - Expect: apply instructions include TDD cycle handoff
+  - Expect: apply instructions include direct task implementation
 `
       );
 
@@ -620,7 +620,7 @@ describe('artifact-workflow CLI commands', () => {
       expect(tasksJson.template).toContain('### Task 1:');
       expect(applyJson.progress).toEqual({ total: 1, complete: 0, remaining: 1 });
       expect(applyJson.tasks[0].description).toBe('Implement confirmed design');
-      expect(applyJson.instruction).toContain('detailed TDD steps');
+      expect(applyJson.instruction).toContain('directly implement each pending task');
     });
 
     it('resolves single-star glob artifacts consistently between status and apply', async () => {
@@ -687,7 +687,7 @@ apply:
       });
       expect(result.exitCode).toBe(0);
       // Should show the instruction from spec-driven schema apply block
-      expect(result.stdout).toContain('decompose each pending coarse task');
+      expect(result.stdout).toContain('directly implement each pending task');
     });
 
     it('shows needs_verify state when all tasks are complete but verify is missing', async () => {

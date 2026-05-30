@@ -220,7 +220,7 @@ When migrating, be selective. Ask yourself: "Does the AI need this for *every* p
 
 ## Migrating tasks.md to TDD-ready Tasks
 
-Existing `## 1. Actions` / `## 2. Checks` files still work. New changes should use coarse Task sections so `/opsx:apply` can decompose work into `.apply-steps/` TDD cycles.
+Existing `## 1. Actions` / `## 2. Checks` files still work. New changes should use coarse Task sections so `/opsx:apply` can directly implement pending tasks and mark checks complete after evidence passes.
 
 ### Before
 

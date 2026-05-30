@@ -1,9 +1,4 @@
-# apply-task-decomposition Specification
-
-## Purpose
-定义 apply Phase 0 如何把 `tasks.md` 中的粗粒度任务转化为当前 Master agent 直接执行的实现工作。
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Master agent 直接执行 pending task
 

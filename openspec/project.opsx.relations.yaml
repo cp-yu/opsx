@@ -384,9 +384,6 @@ relations:
   - from: cap.apply.task-decomposition
     type: contains
     to: dom.apply
-  - from: cap.apply.implementer-subagent
-    type: contains
-    to: dom.apply
   - from: cap.apply.branch-isolation
     type: contains
     to: dom.apply
@@ -396,9 +393,6 @@ relations:
   - from: cap.apply.task-decomposition
     type: depends_on
     to: cap.ai.explore-brainstorming
-  - from: cap.apply.implementer-subagent
-    type: depends_on
-    to: cap.apply.task-decomposition
   - from: cap.ai.propose-smart-routing
     type: depends_on
     to: cap.ai.explore-brainstorming

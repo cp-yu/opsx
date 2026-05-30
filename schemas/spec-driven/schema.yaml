@@ -214,7 +214,7 @@ artifacts:
       ```
 
       Reference specs for what needs to be built, design for how to build it.
-      Checks are executable verification work, not explanatory prose. The apply phase will decompose each Task into TDD steps before implementation.
+      Checks are executable verification work, not explanatory prose. The apply phase will implement each pending Task directly and mark checks complete only after evidence passes.
     requires:
       - specs
       - design
@@ -223,5 +223,5 @@ apply:
   requires: [tasks]
   tracks: tasks.md
   instruction: |
-    Read context files, decompose each pending coarse task into detailed TDD steps, dispatch implementer subagents, and mark nested checks complete as evidence passes.
+    Read context files, directly implement each pending task, and mark nested checks complete as evidence passes.
     Pause if you hit blockers or need clarification.

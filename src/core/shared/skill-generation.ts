@@ -20,7 +20,6 @@ import {
 import { resolveVerifyExecutionModel } from '../templates/workflows/verify-execution-model.js';
 import { getReviewerSkillTemplate } from '../templates/workflows/reviewer.js';
 import { getOptimizerSkillTemplate } from '../templates/workflows/optimizer.js';
-import { getImplementerSkillTemplate } from '../templates/workflows/implementer.js';
 import { getImpactSweeperSkillTemplate } from '../templates/workflows/impact-sweeper.js';
 import { getWorkflowSurfaces, type CommandId, type WorkflowId } from '../workflow-surface.js';
 
@@ -42,10 +41,6 @@ const INTERNAL_SKILL_TEMPLATES: ReadonlyArray<{
   {
     dirName: 'openspec-optimizer',
     getSkillTemplate: getOptimizerSkillTemplate,
-  },
-  {
-    dirName: 'openspec-implementer',
-    getSkillTemplate: getImplementerSkillTemplate,
   },
   {
     dirName: 'openspec-impact-sweeper',

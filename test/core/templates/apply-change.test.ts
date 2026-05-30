@@ -38,7 +38,7 @@ describe('apply change workflow template', () => {
     }
   });
 
-  it('documents TDD decomposition, implementer dispatch, and branch isolation', () => {
+  it('documents direct Phase 0 implementation and branch isolation', () => {
     for (const template of [
       getApplyChangeSkillTemplate().instructions,
       getOpsxApplyCommandTemplate().content,
@@ -50,17 +50,14 @@ describe('apply change workflow template', () => {
       expect(template).toContain('use that as the default choice without prompting; only `ask` is interactive and means prompt');
       expect(template).toContain("path.join(changeDir, '.apply-isolation.json')");
       expect(template).toContain('using-git-worktrees');
-      expect(template).toContain('Master Agent TDD Decomposition');
-      expect(template).toContain("path.join(changeDir, '.apply-steps')");
-      expect(template).toContain('Step 1: Write Failing Test');
-      expect(template).toContain('Step 2: Run Test (Verify Fails)');
-      expect(template).toContain('Step 3: Implement Minimal Code');
-      expect(template).toContain('Step 4: Run Test (Verify Passes)');
-      expect(template).toContain('Step 5: Commit');
-      expect(template).toContain('openspec-implementer');
-      expect(template).toContain('cheapest available subagent model');
-      expect(template).toContain('Use a capable model only when the user or project configuration explicitly overrides the default');
-      expect(template).toContain('DONE_WITH_CONCERNS');
+      expect(template).toContain('Master Agent Direct Implementation');
+      expect(template).toContain('Implement the task directly in the current agent context');
+      expect(template).toContain('Use existing project test commands from task Checks when available');
+      expect(template).toContain('Mark the task\'s nested Checks complete in `tasks.md` only after implementation evidence passes');
+      expect(template).not.toContain("path.join(changeDir, '.apply-steps')");
+      expect(template).not.toContain('openspec-implementer');
+      expect(template).not.toContain('cheapest available subagent model');
+      expect(template).not.toContain('DONE_WITH_CONCERNS');
     }
   });
 
@@ -70,27 +67,27 @@ describe('apply change workflow template', () => {
       getOpsxApplyCommandTemplate().content,
     ]) {
       expect(template).toContain('Continuous Recovery Protocol');
-      expect(template).toContain('task + cycle + step + command + failure kind');
+      expect(template).toContain('task + check + command + failure kind');
       expect(template).toContain('two consecutive failures');
       expect(template).toContain('same task and same normalized error signature');
       expect(template).toContain('changed normalized error signature is progress');
       expect(template).toContain('User interrupt remains an immediate stop condition');
-      expect(template).toContain('BLOCKED and NEEDS_CONTEXT are recovery feedback');
+      expect(template).toContain('Failures are recovery feedback');
       expect(template).toContain('Phase 1 failures enter the same recovery loop');
       expect(template).toContain('If a task Goal or Requirements is ambiguous, enrich context from proposal, design, change-local specs, tasks.md, OPSX code-map, related specs, and project search');
-      expect(template).toContain('update the .apply-steps file and continue dispatch before asking the user');
-      expect(template).toContain('If project context is missing, convert the gap into verifiable exploration or check steps in the step file and continue execution');
+      expect(template).not.toContain('update the .apply-steps file and continue dispatch before asking the user');
+      expect(template).toContain('If project context is missing, convert the gap into verifiable exploration or check steps in the current task and continue execution');
     }
   });
 
-  it('auto-splits oversized task decompositions instead of pausing', () => {
+  it('does not require generated step files for oversized task execution', () => {
     for (const template of [
       getApplyChangeSkillTemplate().instructions,
       getOpsxApplyCommandTemplate().content,
     ]) {
-      expect(template).toContain('If more than 5 cycles are needed, split the task automatically');
-      expect(template).toContain('Each step file or batch MUST contain 1-5 TDD Cycles');
-      expect(template).toContain('Do not pause solely because a task needs more than 5 TDD Cycles');
+      expect(template).not.toContain('If more than 5 cycles are needed, split the task automatically');
+      expect(template).not.toContain('Each step file or batch MUST contain 1-5 TDD Cycles');
+      expect(template).not.toContain('Do not pause solely because a task needs more than 5 TDD Cycles');
     }
   });
 
