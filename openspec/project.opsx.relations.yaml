@@ -402,3 +402,15 @@ relations:
   - from: cap.ai.propose-smart-routing
     type: depends_on
     to: cap.ai.explore-brainstorming
+  - from: cap.archive.branch-merge
+    type: contains
+    to: dom.change-workflow
+  - from: cap.archive.branch-merge
+    type: depends_on
+    to: cap.apply.branch-isolation
+  - from: cap.archive.branch-merge
+    type: depends_on
+    to: cap.change.archive
+  - from: cap.archive.branch-merge
+    type: depends_on
+    to: cap.config.project

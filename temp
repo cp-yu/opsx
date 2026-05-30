@@ -47,10 +47,16 @@
   这样 explore 会更像讨论，而不是表单流程。当前重复就是因为原 prompt 同时要求“比较选项”和“逐段确认”，但没说“用户已经选了就别再比较”。
 ```
 
-现在apply会在一个新的分支进行，然后会不断的提交。  所以现在的reviewer和opt 需要避免从git diff中获取信息
-然后sync之后，archive需要从分支回到master，这个需要形成一个合理的message(几乎就是docs了), 然后使用no-ff合并到主分支   no-ff或者其他 可以在 OPSX config.yaml中配置
+[x]现在apply会在一个新的分支进行，然后会不断的提交。  所以现在的reviewer和opt 需要避免从git diff中获取信息
+[x]然后sync之后，archive需要从分支回到master，这个需要形成一个合理的message(几乎就是docs了), 然后使用no-ff合并到主分支   no-ff或者其他 可以在 OPSX config.yaml中配置
 
 ---
   - Optimizer 不再局限于 evidenceFiles，而是主动探索依赖图
  现在需要创建 cli的图搜索了。
+
+----
+
+  - apply 不允许以未提交实现代码结束。
+  - archive 必须提交剩余 artifacts/sync 结果。
+  - archive 在 branch isolation 下必须切回 originalBranch，除非 checkout 会覆盖未提交无关改动。删除旧分支
 
