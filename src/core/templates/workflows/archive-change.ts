@@ -156,7 +156,7 @@ ${buildArchiveFullVerifyContract(executionModel)}
    Use the fixed docs-style archive commit message. Artifact-generated messages apply only to later merge commits, not to this archive commit.
 
    \`\`\`bash
-   git add openspec
+   git add -- <archive-dir> <synced-spec-paths> <synced-opsx-paths>
    git commit -F -
    \`\`\`
 
