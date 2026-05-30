@@ -3,13 +3,19 @@ import path from 'path';
 import { parse as parseYaml } from 'yaml';
 import { z } from 'zod';
 
-const GIT_DEFAULTS = {
-  merge: {
-    strategy: 'no-ff' as const,
-    messageFrom: 'artifacts' as const,
+export const PROJECT_CONFIG_FUNCTIONAL_DEFAULTS = {
+  optimization: {
+    enabled: true,
+    optRetries: 2,
   },
-  branch: {
-    deleteAfterArchive: false,
+  git: {
+    merge: {
+      strategy: 'no-ff' as const,
+      messageFrom: 'artifacts' as const,
+    },
+    branch: {
+      deleteAfterArchive: false,
+    },
   },
 };
 
@@ -110,6 +116,31 @@ export const ProjectConfigSchema = z.object({
 export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
 
 const MAX_CONTEXT_SIZE = 50 * 1024; // 50KB hard limit
+
+function cloneFunctionalDefaults() {
+  return {
+    optimization: {
+      ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.optimization,
+    },
+    git: {
+      merge: {
+        ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.merge,
+      },
+      branch: {
+        ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.branch,
+      },
+    },
+  };
+}
+
+export function materializeProjectConfigDefaults(
+  config: Pick<ProjectConfig, 'schema'> & Partial<Pick<ProjectConfig, 'docLanguage'>>
+): Pick<ProjectConfig, 'schema' | 'optimization' | 'git'> & Partial<Pick<ProjectConfig, 'docLanguage'>> {
+  const defaults = cloneFunctionalDefaults();
+  return config.docLanguage
+    ? { schema: config.schema, docLanguage: config.docLanguage, ...defaults }
+    : { schema: config.schema, ...defaults };
+}
 
 /**
  * Read and parse openspec/config.yaml from project root.
@@ -236,7 +267,14 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
       }
     }
 
-    config.git = JSON.parse(JSON.stringify(GIT_DEFAULTS)) as ProjectConfig['git'];
+    config.git = {
+      merge: {
+        ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.merge,
+      },
+      branch: {
+        ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.branch,
+      },
+    };
     const gitConfig = config.git!;
     if (raw.git !== undefined) {
       if (typeof raw.git !== 'object' || raw.git === null || Array.isArray(raw.git)) {

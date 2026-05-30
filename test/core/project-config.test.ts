@@ -3,6 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import {
+  materializeProjectConfigDefaults,
   readProjectConfig,
   validateConfigRules,
   suggestSchemas,
@@ -26,6 +27,47 @@ describe('project-config', () => {
   afterEach(() => {
     fs.rmSync(tempDir, { recursive: true, force: true });
     consoleWarnSpy.mockRestore();
+  });
+
+  describe('materializeProjectConfigDefaults', () => {
+    it('should include only functional disk defaults', () => {
+      const defaults = materializeProjectConfigDefaults({ schema: 'spec-driven' });
+
+      expect(defaults).toEqual({
+        schema: 'spec-driven',
+        optimization: {
+          enabled: true,
+          optRetries: 2,
+        },
+        git: {
+          merge: {
+            strategy: 'no-ff',
+            messageFrom: 'artifacts',
+          },
+          branch: {
+            deleteAfterArchive: false,
+          },
+        },
+      });
+      expect(defaults).not.toHaveProperty('docLanguage');
+      expect(defaults).not.toHaveProperty('context');
+      expect(defaults).not.toHaveProperty('rules');
+      expect(defaults).not.toHaveProperty('propose');
+      expect(defaults).not.toHaveProperty('apply');
+    });
+
+    it('should preserve explicit docLanguage without adding other optional fields', () => {
+      const defaults = materializeProjectConfigDefaults({
+        schema: 'spec-driven',
+        docLanguage: 'zh-CN',
+      });
+
+      expect(defaults.docLanguage).toBe('zh-CN');
+      expect(defaults).not.toHaveProperty('context');
+      expect(defaults).not.toHaveProperty('rules');
+      expect(defaults).not.toHaveProperty('propose');
+      expect(defaults).not.toHaveProperty('apply');
+    });
   });
 
   describe('readProjectConfig', () => {
