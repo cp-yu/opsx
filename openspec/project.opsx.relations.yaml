@@ -432,3 +432,21 @@ relations:
   - from: cap.validation.opsx-dry-run
     type: depends_on
     to: cap.cli.validate
+  - from: cap.cli.command-reference-consistency
+    type: contains
+    to: dom.cli
+  - from: cap.cli.command-reference-consistency
+    type: depends_on
+    to: cap.ai.agent-docs
+  - from: cap.cli.command-reference-consistency
+    type: depends_on
+    to: cap.ai.workflow-templates
+  - from: cap.cli.command-reference-consistency
+    type: depends_on
+    to: cap.cli.validate
+  - from: cap.cli.command-reference-consistency
+    type: depends_on
+    to: cap.verify.cli-gate
+  - from: cap.cli.command-reference-consistency
+    type: depends_on
+    to: cap.opsx.bootstrap

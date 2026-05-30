@@ -352,3 +352,6 @@ capabilities:
   - id: cap.validation.opsx-dry-run
     intent: Validator.validateOpsxDelta() 方法执行 opsx-delta.yaml 的 dry-run merge 校验，检查 Zod schema 解析、引用完整性和 code-map 完整性；validate 命令变更路径 SHALL 并行执行 spec + OPSX 校验
     type: capability
+  - id: cap.cli.command-reference-consistency
+    intent: Ensure active documentation, generated Agent instructions, skills, prompts, and workflow templates reference only supported OpenSpec CLI command forms and report historical archive-only stale references separately.
+    type: capability
