@@ -15,6 +15,9 @@ export const PROJECT_CONFIG_FUNCTIONAL_DEFAULTS = {
     enabled: true,
     optRetries: 2,
   },
+  apply: {
+    defaultIsolation: 'ask' as const,
+  },
   git: {
     merge: {
       strategy: 'no-ff' as const,
@@ -135,6 +138,7 @@ const MAX_CONTEXT_SIZE = 50 * 1024; // 50KB hard limit
 type MaterializedProjectConfigDefaults = Pick<ProjectConfig, 'schema'> &
   Partial<Pick<ProjectConfig, 'docLanguage'>> & {
     optimization: typeof PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.optimization;
+    apply: typeof PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.apply;
     git: typeof PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git;
   };
 
@@ -142,6 +146,9 @@ function cloneFunctionalDefaults() {
   return {
     optimization: {
       ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.optimization,
+    },
+    apply: {
+      ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.apply,
     },
     git: {
       merge: {
@@ -224,6 +231,7 @@ export function migrateProjectConfigDefaults(projectRoot: string): ProjectConfig
   changed = setMissingPath(document, ['schema'], defaults.schema) || changed;
   changed = setMissingPath(document, ['optimization', 'enabled'], defaults.optimization.enabled) || changed;
   changed = setMissingPath(document, ['optimization', 'optRetries'], defaults.optimization.optRetries) || changed;
+  changed = setMissingPath(document, ['apply', 'defaultIsolation'], defaults.apply.defaultIsolation) || changed;
   changed = setMissingPath(document, ['git', 'merge', 'strategy'], defaults.git.merge.strategy) || changed;
   changed = setMissingPath(document, ['git', 'merge', 'messageFrom'], defaults.git.merge.messageFrom) || changed;
   changed = setMissingPath(document, ['git', 'branch', 'deleteAfterArchive'], defaults.git.branch.deleteAfterArchive) || changed;

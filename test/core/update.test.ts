@@ -112,6 +112,7 @@ describe('UpdateCommand', () => {
       const config = parseYaml(await fs.readFile(configPath, 'utf-8'));
       expect(config.optimization.enabled).toBe(true);
       expect(config.optimization.optRetries).toBe(2);
+      expect(config.apply.defaultIsolation).toBe('ask');
       expect(config.git.merge.strategy).toBe('no-ff');
       expect(config.git.merge.messageFrom).toBe('artifacts');
       expect(config.git.branch.deleteAfterArchive).toBe(false);
@@ -141,11 +142,41 @@ rules:
       expect(config.rules.proposal).toEqual(['keep this rule']);
       expect(config.optimization.enabled).toBe(true);
       expect(config.optimization.optRetries).toBe(2);
+      expect(config.apply.defaultIsolation).toBe('ask');
       expect(config.git.merge.strategy).toBe('no-ff');
       expect(config.git.merge.messageFrom).toBe('artifacts');
       expect(config.git.branch.deleteAfterArchive).toBe(false);
       expect(config).not.toHaveProperty('propose');
-      expect(config).not.toHaveProperty('apply');
+      expect(config.apply).toEqual({
+        defaultIsolation: 'ask',
+      });
+    });
+
+    it('should preserve existing apply isolation while adding missing defaults', async () => {
+      const configPath = path.join(testDir, 'openspec', 'config.yaml');
+      await fs.writeFile(
+        configPath,
+        `schema: custom-schema
+optimization:
+  enabled: false
+apply:
+  defaultIsolation: worktree
+git:
+  merge:
+    strategy: squash
+`
+      );
+
+      await updateCommand.execute(testDir);
+
+      const config = parseYaml(await fs.readFile(configPath, 'utf-8'));
+      expect(config.schema).toBe('custom-schema');
+      expect(config.optimization.enabled).toBe(false);
+      expect(config.optimization.optRetries).toBe(2);
+      expect(config.apply.defaultIsolation).toBe('worktree');
+      expect(config.git.merge.strategy).toBe('squash');
+      expect(config.git.merge.messageFrom).toBe('artifacts');
+      expect(config.git.branch.deleteAfterArchive).toBe(false);
     });
 
     it('should warn and continue refreshing tools when project config migration is skipped', async () => {

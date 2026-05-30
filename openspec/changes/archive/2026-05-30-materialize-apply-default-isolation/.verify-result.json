@@ -1,0 +1,285 @@
+{
+  "timestamp": "2026-05-30T13:03:52.002Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "e691a3deb5d3515c0cb3e0c49f59367ae753125589a329b329141a271c718737",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "archive-time-reviewer-subagent",
+    "evidenceFiles": [
+      "CLAUDE.md",
+      "openspec/changes/materialize-apply-default-isolation/.apply-isolation.json",
+      "openspec/changes/materialize-apply-default-isolation/design.md",
+      "openspec/changes/materialize-apply-default-isolation/opsx-delta.yaml",
+      "openspec/changes/materialize-apply-default-isolation/proposal.md",
+      "openspec/changes/materialize-apply-default-isolation/specs/apply-default-isolation-config/spec.md",
+      "openspec/changes/materialize-apply-default-isolation/specs/cli-init/spec.md",
+      "openspec/changes/materialize-apply-default-isolation/specs/cli-update/spec.md",
+      "openspec/changes/materialize-apply-default-isolation/specs/config-loading/spec.md",
+      "openspec/changes/materialize-apply-default-isolation/tasks.md",
+      "openspec/project.opsx.code-map.yaml",
+      "openspec/project.opsx.relations.yaml",
+      "openspec/project.opsx.yaml",
+      "openspec/specs/apply-default-isolation-config/spec.md",
+      "openspec/specs/cli-init/spec.md",
+      "openspec/specs/cli-update/spec.md",
+      "openspec/specs/config-loading/spec.md",
+      "src/core/config-prompts.ts",
+      "src/core/init.ts",
+      "src/core/project-config.ts",
+      "src/core/update.ts",
+      "test/core/init.test.ts",
+      "test/core/project-config.test.ts",
+      "test/core/update.test.ts"
+    ],
+    "evidenceFingerprint": "bccf85127e14527d6d75107178ce6a44431c25778ebd9adbffa22c998cffda36",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "CLAUDE.md",
+        "hash": "13dde98de4cfb621c04b3e0696c948da9b67aa206bbf94aa0d8df2f566c2588d"
+      },
+      {
+        "path": "openspec/changes/materialize-apply-default-isolation/.apply-isolation.json",
+        "hash": "3d551d3bd831e1135635b560ca61f1a309f3105bd21cd91dc8967b8927371f1c"
+      },
+      {
+        "path": "openspec/changes/materialize-apply-default-isolation/design.md",
+        "hash": "0a1bf0458ec04236258a27e0db65cfb974c7f564e8af2f443ec5fd2cfd6481d1"
+      },
+      {
+        "path": "openspec/changes/materialize-apply-default-isolation/opsx-delta.yaml",
+        "hash": "532c6dc0f7d810946ccb15c44a58b41a3ea94a2babd785af8b877baffc17f212"
+      },
+      {
+        "path": "openspec/changes/materialize-apply-default-isolation/proposal.md",
+        "hash": "92ee01a199613d6d4dd27428b332727a0b26762457cdd705294de95f6202463b"
+      },
+      {
+        "path": "openspec/changes/materialize-apply-default-isolation/specs/apply-default-isolation-config/spec.md",
+        "hash": "1ffd3582f474bcc8c2287084f31d1fd6805cd56bbb66d46f8578c20ea06b5f7f"
+      },
+      {
+        "path": "openspec/changes/materialize-apply-default-isolation/specs/cli-init/spec.md",
+        "hash": "803ea1df7c06bbcbb71fa6cc4271290c79de83846ec97b3d10add31028cc2a6a"
+      },
+      {
+        "path": "openspec/changes/materialize-apply-default-isolation/specs/cli-update/spec.md",
+        "hash": "0c3e47a3678a8f796b5e9b3aa9fe7eb273ec0e07a618460b84660d9bea3f61c6"
+      },
+      {
+        "path": "openspec/changes/materialize-apply-default-isolation/specs/config-loading/spec.md",
+        "hash": "5131b234aa0812a313b21ff4f1878bbf79a4da3d7f3c8f00bd845163b7181e3f"
+      },
+      {
+        "path": "openspec/changes/materialize-apply-default-isolation/tasks.md",
+        "hash": "e691a3deb5d3515c0cb3e0c49f59367ae753125589a329b329141a271c718737"
+      },
+      {
+        "path": "openspec/project.opsx.code-map.yaml",
+        "hash": "da1eef4718a356d2a708291051ae1ef6d0de682f9475fbec95d0f72e402f9f37"
+      },
+      {
+        "path": "openspec/project.opsx.relations.yaml",
+        "hash": "fbf71e9999e428753c1bd81a76cc90a25be412d821e265b8bccefae23e1468f1"
+      },
+      {
+        "path": "openspec/project.opsx.yaml",
+        "hash": "79bac1df25b1bd2f83adae3bad9ba14d41bc6f6c534eccb76601c464c60d3162"
+      },
+      {
+        "path": "openspec/specs/apply-default-isolation-config/spec.md",
+        "hash": "8a17bb88a8bf452e411bc84dabf1f8a013e069eaf6e2776da1266950f20b300b"
+      },
+      {
+        "path": "openspec/specs/cli-init/spec.md",
+        "hash": "243429440a1e4a6230508f87aea055e88363503065b6c3f1cfa919cc535cbbf3"
+      },
+      {
+        "path": "openspec/specs/cli-update/spec.md",
+        "hash": "046ceb6d4590136c05315a6ecf459a7d27920fa6dffc3f71a399648bb9eb17b3"
+      },
+      {
+        "path": "openspec/specs/config-loading/spec.md",
+        "hash": "a280d12547fa1e0e437c49d31f49c75a7ccb7358163866f76d2ca611bc1c8ed9"
+      },
+      {
+        "path": "src/core/config-prompts.ts",
+        "hash": "6f6ff3427ed206dd8839c65a4ce5a8d435018e9868b2156c38f8bde8983bb880"
+      },
+      {
+        "path": "src/core/init.ts",
+        "hash": "862a7759bd80062eb52287ff1936a1a17fb2468fcc409bbea1b7d3b666073e36"
+      },
+      {
+        "path": "src/core/project-config.ts",
+        "hash": "5f69d1dfeaa7868d7dedb53db8eb56cd154431f4b2207bed82d3a5f5ce4b6147"
+      },
+      {
+        "path": "src/core/update.ts",
+        "hash": "f7821fc163000ac62549fdf971ddff987dc3fc59ff0d5abb173824e48003db03"
+      },
+      {
+        "path": "test/core/init.test.ts",
+        "hash": "bfb79dfe94c8962d0d2e3cb6f2dd861c1ed0f5bb60450f4419cbff1519af1ef4"
+      },
+      {
+        "path": "test/core/project-config.test.ts",
+        "hash": "fb0bfb2ef9f4297eced9caa63f55551e0ba6073776ebe183c394a9242fd7d1f7"
+      },
+      {
+        "path": "test/core/update.test.ts",
+        "hash": "1c958ba1ef93fb1df6211c334aaac6f3485c66602eccd7c15632be4caf87e094"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "bb7fe7133fdfb6122e49d5d1fe57b69eed03d522"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-30T13:06:24.538Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "No optimization opportunities found"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-30T13:03:52.002Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "e691a3deb5d3515c0cb3e0c49f59367ae753125589a329b329141a271c718737",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "archive-time-reviewer-subagent",
+        "evidenceFiles": [
+          "CLAUDE.md",
+          "openspec/changes/materialize-apply-default-isolation/.apply-isolation.json",
+          "openspec/changes/materialize-apply-default-isolation/design.md",
+          "openspec/changes/materialize-apply-default-isolation/opsx-delta.yaml",
+          "openspec/changes/materialize-apply-default-isolation/proposal.md",
+          "openspec/changes/materialize-apply-default-isolation/specs/apply-default-isolation-config/spec.md",
+          "openspec/changes/materialize-apply-default-isolation/specs/cli-init/spec.md",
+          "openspec/changes/materialize-apply-default-isolation/specs/cli-update/spec.md",
+          "openspec/changes/materialize-apply-default-isolation/specs/config-loading/spec.md",
+          "openspec/changes/materialize-apply-default-isolation/tasks.md",
+          "openspec/project.opsx.code-map.yaml",
+          "openspec/project.opsx.relations.yaml",
+          "openspec/project.opsx.yaml",
+          "openspec/specs/apply-default-isolation-config/spec.md",
+          "openspec/specs/cli-init/spec.md",
+          "openspec/specs/cli-update/spec.md",
+          "openspec/specs/config-loading/spec.md",
+          "src/core/config-prompts.ts",
+          "src/core/init.ts",
+          "src/core/project-config.ts",
+          "src/core/update.ts",
+          "test/core/init.test.ts",
+          "test/core/project-config.test.ts",
+          "test/core/update.test.ts"
+        ],
+        "evidenceFingerprint": "bccf85127e14527d6d75107178ce6a44431c25778ebd9adbffa22c998cffda36",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "CLAUDE.md",
+            "hash": "13dde98de4cfb621c04b3e0696c948da9b67aa206bbf94aa0d8df2f566c2588d"
+          },
+          {
+            "path": "openspec/changes/materialize-apply-default-isolation/.apply-isolation.json",
+            "hash": "3d551d3bd831e1135635b560ca61f1a309f3105bd21cd91dc8967b8927371f1c"
+          },
+          {
+            "path": "openspec/changes/materialize-apply-default-isolation/design.md",
+            "hash": "0a1bf0458ec04236258a27e0db65cfb974c7f564e8af2f443ec5fd2cfd6481d1"
+          },
+          {
+            "path": "openspec/changes/materialize-apply-default-isolation/opsx-delta.yaml",
+            "hash": "532c6dc0f7d810946ccb15c44a58b41a3ea94a2babd785af8b877baffc17f212"
+          },
+          {
+            "path": "openspec/changes/materialize-apply-default-isolation/proposal.md",
+            "hash": "92ee01a199613d6d4dd27428b332727a0b26762457cdd705294de95f6202463b"
+          },
+          {
+            "path": "openspec/changes/materialize-apply-default-isolation/specs/apply-default-isolation-config/spec.md",
+            "hash": "1ffd3582f474bcc8c2287084f31d1fd6805cd56bbb66d46f8578c20ea06b5f7f"
+          },
+          {
+            "path": "openspec/changes/materialize-apply-default-isolation/specs/cli-init/spec.md",
+            "hash": "803ea1df7c06bbcbb71fa6cc4271290c79de83846ec97b3d10add31028cc2a6a"
+          },
+          {
+            "path": "openspec/changes/materialize-apply-default-isolation/specs/cli-update/spec.md",
+            "hash": "0c3e47a3678a8f796b5e9b3aa9fe7eb273ec0e07a618460b84660d9bea3f61c6"
+          },
+          {
+            "path": "openspec/changes/materialize-apply-default-isolation/specs/config-loading/spec.md",
+            "hash": "5131b234aa0812a313b21ff4f1878bbf79a4da3d7f3c8f00bd845163b7181e3f"
+          },
+          {
+            "path": "openspec/changes/materialize-apply-default-isolation/tasks.md",
+            "hash": "e691a3deb5d3515c0cb3e0c49f59367ae753125589a329b329141a271c718737"
+          },
+          {
+            "path": "openspec/project.opsx.code-map.yaml",
+            "hash": "da1eef4718a356d2a708291051ae1ef6d0de682f9475fbec95d0f72e402f9f37"
+          },
+          {
+            "path": "openspec/project.opsx.relations.yaml",
+            "hash": "fbf71e9999e428753c1bd81a76cc90a25be412d821e265b8bccefae23e1468f1"
+          },
+          {
+            "path": "openspec/project.opsx.yaml",
+            "hash": "79bac1df25b1bd2f83adae3bad9ba14d41bc6f6c534eccb76601c464c60d3162"
+          },
+          {
+            "path": "openspec/specs/apply-default-isolation-config/spec.md",
+            "hash": "8a17bb88a8bf452e411bc84dabf1f8a013e069eaf6e2776da1266950f20b300b"
+          },
+          {
+            "path": "openspec/specs/cli-init/spec.md",
+            "hash": "243429440a1e4a6230508f87aea055e88363503065b6c3f1cfa919cc535cbbf3"
+          },
+          {
+            "path": "openspec/specs/cli-update/spec.md",
+            "hash": "046ceb6d4590136c05315a6ecf459a7d27920fa6dffc3f71a399648bb9eb17b3"
+          },
+          {
+            "path": "openspec/specs/config-loading/spec.md",
+            "hash": "a280d12547fa1e0e437c49d31f49c75a7ccb7358163866f76d2ca611bc1c8ed9"
+          },
+          {
+            "path": "src/core/config-prompts.ts",
+            "hash": "6f6ff3427ed206dd8839c65a4ce5a8d435018e9868b2156c38f8bde8983bb880"
+          },
+          {
+            "path": "src/core/init.ts",
+            "hash": "862a7759bd80062eb52287ff1936a1a17fb2468fcc409bbea1b7d3b666073e36"
+          },
+          {
+            "path": "src/core/project-config.ts",
+            "hash": "5f69d1dfeaa7868d7dedb53db8eb56cd154431f4b2207bed82d3a5f5ce4b6147"
+          },
+          {
+            "path": "src/core/update.ts",
+            "hash": "f7821fc163000ac62549fdf971ddff987dc3fc59ff0d5abb173824e48003db03"
+          },
+          {
+            "path": "test/core/init.test.ts",
+            "hash": "bfb79dfe94c8962d0d2e3cb6f2dd861c1ed0f5bb60450f4419cbff1519af1ef4"
+          },
+          {
+            "path": "test/core/project-config.test.ts",
+            "hash": "fb0bfb2ef9f4297eced9caa63f55551e0ba6073776ebe183c394a9242fd7d1f7"
+          },
+          {
+            "path": "test/core/update.test.ts",
+            "hash": "1c958ba1ef93fb1df6211c334aaac6f3485c66602eccd7c15632be4caf87e094"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "bb7fe7133fdfb6122e49d5d1fe57b69eed03d522"
+      }
+    }
+  }
+}

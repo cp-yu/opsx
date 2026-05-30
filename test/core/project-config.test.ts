@@ -41,6 +41,9 @@ describe('project-config', () => {
           enabled: true,
           optRetries: 2,
         },
+        apply: {
+          defaultIsolation: 'ask',
+        },
         git: {
           merge: {
             strategy: 'no-ff',
@@ -55,7 +58,6 @@ describe('project-config', () => {
       expect(defaults).not.toHaveProperty('context');
       expect(defaults).not.toHaveProperty('rules');
       expect(defaults).not.toHaveProperty('propose');
-      expect(defaults).not.toHaveProperty('apply');
     });
 
     it('should preserve explicit docLanguage without adding other optional fields', () => {
@@ -68,7 +70,9 @@ describe('project-config', () => {
       expect(defaults).not.toHaveProperty('context');
       expect(defaults).not.toHaveProperty('rules');
       expect(defaults).not.toHaveProperty('propose');
-      expect(defaults).not.toHaveProperty('apply');
+      expect(defaults.apply).toEqual({
+        defaultIsolation: 'ask',
+      });
     });
   });
 
@@ -90,6 +94,9 @@ describe('project-config', () => {
         optimization: {
           enabled: true,
           optRetries: 2,
+        },
+        apply: {
+          defaultIsolation: 'ask',
         },
         git: {
           merge: {
@@ -134,7 +141,7 @@ context: keep me
       expect(parsed.git.merge.messageFrom).toBe('artifacts');
       expect(parsed.git.branch.deleteAfterArchive).toBe(false);
       expect(parsed).not.toHaveProperty('propose');
-      expect(parsed).not.toHaveProperty('apply');
+      expect(parsed.apply.defaultIsolation).toBe('ask');
     });
 
     it('should add defaults through missing nested parents', () => {
@@ -160,6 +167,9 @@ git:
       expect(parsed.optimization).toEqual({
         enabled: true,
         optRetries: 2,
+      });
+      expect(parsed.apply).toEqual({
+        defaultIsolation: 'ask',
       });
       expect(parsed.git).toEqual({
         merge: {
@@ -188,11 +198,14 @@ git: disabled
       const parsed = parseYaml(fs.readFileSync(configPath, 'utf-8'));
 
       expect(result).toEqual({
-        status: 'unchanged',
+        status: 'updated',
         path: configPath,
       });
       expect(parsed.optimization).toBeNull();
       expect(parsed.git).toBe('disabled');
+      expect(parsed.apply).toEqual({
+        defaultIsolation: 'ask',
+      });
     });
 
     it('should mutate config.yml when config.yaml is missing', () => {
@@ -266,7 +279,9 @@ git: disabled
         },
       });
       expect(config).not.toHaveProperty('propose');
-      expect(config).not.toHaveProperty('apply');
+      expect(config?.apply).toEqual({
+        defaultIsolation: 'ask',
+      });
     });
   });
 

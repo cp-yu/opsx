@@ -368,15 +368,17 @@ The update command SHALL remove workflow files that are no longer selected in th
 - **AND** the created file SHALL include `schema: spec-driven`
 - **AND** the created file SHALL include `optimization.enabled: true`
 - **AND** the created file SHALL include `optimization.optRetries: 2`
+- **AND** the created file SHALL include `apply.defaultIsolation: ask`
 - **AND** the created file SHALL include `git.merge.strategy: no-ff`
 - **AND** the created file SHALL include `git.merge.messageFrom: artifacts`
 - **AND** the created file SHALL include `git.branch.deleteAfterArchive: false`
 
 #### Scenario: Add missing top-level defaults
 
-- **WHEN** `openspec/config.yaml` exists with valid YAML object content that lacks `optimization` and `git`
+- **WHEN** `openspec/config.yaml` exists with valid YAML object content that lacks `optimization`, `apply`, and `git`
 - **AND** the user runs `openspec update`
 - **THEN** the command SHALL add the `optimization` default node
+- **AND** the command SHALL add the `apply` default node
 - **AND** the command SHALL add the `git` default node
 - **AND** the command SHALL preserve existing fields such as `schema`, `docLanguage`, `context`, and `rules`
 - **AND** the command SHALL preserve user-authored values outside the inserted defaults
@@ -384,10 +386,12 @@ The update command SHALL remove workflow files that are no longer selected in th
 #### Scenario: Add missing nested defaults without overwriting existing values
 
 - **WHEN** `openspec/config.yaml` contains `optimization.enabled: false`
+- **AND** contains `apply.defaultIsolation: worktree`
 - **AND** contains `git.merge.strategy: squash`
 - **AND** lacks `optimization.optRetries`, `git.merge.messageFrom`, and `git.branch.deleteAfterArchive`
 - **AND** the user runs `openspec update`
 - **THEN** the command SHALL keep `optimization.enabled: false`
+- **AND** the command SHALL keep `apply.defaultIsolation: worktree`
 - **AND** the command SHALL keep `git.merge.strategy: squash`
 - **AND** the command SHALL add `optimization.optRetries: 2`
 - **AND** the command SHALL add `git.merge.messageFrom: artifacts`
