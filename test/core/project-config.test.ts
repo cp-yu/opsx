@@ -137,6 +137,64 @@ context: keep me
       expect(parsed).not.toHaveProperty('apply');
     });
 
+    it('should add defaults through missing nested parents', () => {
+      const configDir = path.join(tempDir, 'openspec');
+      fs.mkdirSync(configDir, { recursive: true });
+      const configPath = path.join(configDir, 'config.yaml');
+      fs.writeFileSync(
+        configPath,
+        `schema: spec-driven
+git:
+  merge:
+    strategy: ff-only
+`
+      );
+
+      const result = migrateProjectConfigDefaults(tempDir);
+      const parsed = parseYaml(fs.readFileSync(configPath, 'utf-8'));
+
+      expect(result).toEqual({
+        status: 'updated',
+        path: configPath,
+      });
+      expect(parsed.optimization).toEqual({
+        enabled: true,
+        optRetries: 2,
+      });
+      expect(parsed.git).toEqual({
+        merge: {
+          strategy: 'ff-only',
+          messageFrom: 'artifacts',
+        },
+        branch: {
+          deleteAfterArchive: false,
+        },
+      });
+    });
+
+    it('should not overwrite non-map parents during nested default migration', () => {
+      const configDir = path.join(tempDir, 'openspec');
+      fs.mkdirSync(configDir, { recursive: true });
+      const configPath = path.join(configDir, 'config.yaml');
+      fs.writeFileSync(
+        configPath,
+        `schema: spec-driven
+optimization:
+git: disabled
+`
+      );
+
+      const result = migrateProjectConfigDefaults(tempDir);
+      const parsed = parseYaml(fs.readFileSync(configPath, 'utf-8'));
+
+      expect(result).toEqual({
+        status: 'unchanged',
+        path: configPath,
+      });
+      expect(parsed.optimization).toBeNull();
+      expect(parsed.git).toBe('disabled');
+    });
+
     it('should mutate config.yml when config.yaml is missing', () => {
       const configDir = path.join(tempDir, 'openspec');
       fs.mkdirSync(configDir, { recursive: true });

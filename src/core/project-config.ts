@@ -6,6 +6,7 @@ import {
   parseDocument,
   stringify as stringifyYaml,
   type Document,
+  type Node,
 } from 'yaml';
 import { z } from 'zod';
 
@@ -131,6 +132,12 @@ export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
 
 const MAX_CONTEXT_SIZE = 50 * 1024; // 50KB hard limit
 
+type MaterializedProjectConfigDefaults = Pick<ProjectConfig, 'schema'> &
+  Partial<Pick<ProjectConfig, 'docLanguage'>> & {
+    optimization: typeof PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.optimization;
+    git: typeof PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git;
+  };
+
 function cloneFunctionalDefaults() {
   return {
     optimization: {
@@ -149,7 +156,7 @@ function cloneFunctionalDefaults() {
 
 export function materializeProjectConfigDefaults(
   config: Pick<ProjectConfig, 'schema'> & Partial<Pick<ProjectConfig, 'docLanguage'>>
-): Pick<ProjectConfig, 'schema' | 'optimization' | 'git'> & Partial<Pick<ProjectConfig, 'docLanguage'>> {
+): MaterializedProjectConfigDefaults {
   const defaults = cloneFunctionalDefaults();
   return config.docLanguage
     ? { schema: config.schema, docLanguage: config.docLanguage, ...defaults }
@@ -171,7 +178,7 @@ function findProjectConfigPath(projectRoot: string): { path: string; exists: boo
 }
 
 function setMissingPath(document: Document, keys: readonly string[], value: unknown): boolean {
-  let current = document.contents;
+  let current: Node | null | undefined = document.contents;
   for (const key of keys.slice(0, -1)) {
     if (!current || !isMap(current)) {
       return false;
