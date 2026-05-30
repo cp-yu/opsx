@@ -112,8 +112,42 @@ describe('archive branch merge', () => {
   it('creates archive commit on feature branch and no-ff merge commit on original branch', async () => {
     projectRoot = await setupRepo();
     await writeChange(projectRoot);
-    await writeFile(projectRoot, 'openspec/specs/synced/spec.md', '# Synced spec\n');
-    await writeFile(projectRoot, 'openspec/project.opsx.yaml', 'schema_version: 1\n');
+    await writeFile(projectRoot, 'openspec/changes/feature-archive/specs/synced/spec.md', `# Synced - Changes
+
+## ADDED Requirements
+
+### Requirement: Synced behavior
+The system SHALL sync this requirement.
+`);
+    await writeFile(projectRoot, 'openspec/project.opsx.yaml', `schema_version: 1
+project:
+  id: proj.test
+  name: Test
+domains: []
+capabilities: []
+`);
+    await writeFile(projectRoot, 'openspec/project.opsx.relations.yaml', `schema_version: 1
+relations: []
+`);
+    await writeFile(projectRoot, 'openspec/project.opsx.code-map.yaml', `schema_version: 1
+nodes: []
+`);
+    await writeFile(projectRoot, 'openspec/changes/feature-archive/opsx-delta.yaml', `schema_version: 1
+ADDED:
+  domains:
+    - id: dom.auth
+      type: domain
+      intent: Authentication
+  capabilities:
+    - id: cap.auth.login
+      type: capability
+      intent: Login
+  relations:
+    - from: cap.auth.login
+      to: dom.auth
+      type: contains
+`);
+    await writeFile(projectRoot, 'openspec/specs/unrelated/spec.md', '# Unrelated\n');
     process.chdir(projectRoot);
 
     await new ArchiveCommand().execute('feature-archive', { yes: true, noVerify: true, noValidate: true });
@@ -136,6 +170,9 @@ describe('archive branch merge', () => {
     const archiveCommitFiles = await git(projectRoot, ['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD']);
     expect(archiveCommitFiles).toContain('openspec/specs/synced/spec.md');
     expect(archiveCommitFiles).toContain('openspec/project.opsx.yaml');
+    expect(archiveCommitFiles).toContain('openspec/project.opsx.relations.yaml');
+    expect(archiveCommitFiles).toContain('openspec/project.opsx.code-map.yaml');
+    expect(archiveCommitFiles).not.toContain('openspec/specs/unrelated/spec.md');
   });
 
   it('aborts merge conflict and keeps the feature archive commit and branch', async () => {

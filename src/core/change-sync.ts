@@ -56,6 +56,7 @@ export interface PreparedChangeSync {
 export interface AppliedChangeSyncSummary {
   specs: 'no-delta' | 'synced';
   opsx: 'no-delta' | 'synced';
+  files: string[];
 }
 
 export interface PendingChangeSync {
@@ -259,6 +260,7 @@ export async function applyPreparedChangeSync(
   return {
     specs: prepared.specs.writes.length > 0 ? 'synced' : 'no-delta',
     opsx: prepared.opsx ? 'synced' : 'no-delta',
+    files: syncedFiles,
   };
 }
 

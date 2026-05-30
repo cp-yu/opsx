@@ -192,13 +192,10 @@ async function currentBranch(projectRoot: string): Promise<string | null> {
   return result.stdout.trim() || null;
 }
 
-async function existingArchiveCommitPaths(projectRoot: string, archivePath: string): Promise<string[]> {
+async function existingArchiveCommitPaths(projectRoot: string, archivePath: string, syncedFiles: string[]): Promise<string[]> {
   const candidates = [
     toPosixProjectPath(projectRoot, archivePath),
-    'openspec/specs',
-    'openspec/project.opsx.yaml',
-    'openspec/project.opsx.relations.yaml',
-    'openspec/project.opsx.code-map.yaml',
+    ...syncedFiles,
   ];
   const existing: string[] = [];
 
@@ -212,9 +209,14 @@ async function existingArchiveCommitPaths(projectRoot: string, archivePath: stri
   return existing;
 }
 
-async function runArchiveCommit(projectRoot: string, changeName: string, archivePath: string): Promise<void> {
+async function runArchiveCommit(
+  projectRoot: string,
+  changeName: string,
+  archivePath: string,
+  syncedFiles: string[]
+): Promise<void> {
   const archiveRelativePath = toPosixProjectPath(projectRoot, archivePath);
-  const commitPaths = await existingArchiveCommitPaths(projectRoot, archivePath);
+  const commitPaths = await existingArchiveCommitPaths(projectRoot, archivePath, syncedFiles);
   const addResult = await runGit(projectRoot, ['add', '--', ...commitPaths]);
   if (addResult.code !== 0) {
     throw new Error(addResult.stderr.trim() || 'git add archive path failed');
@@ -354,6 +356,7 @@ export class ArchiveCommand {
     const changeDir = path.join(changesDir, changeName);
     const archivedChangePath = await findArchivedChangePathAsync(archiveDir, changeName);
     let archivePath = archivedChangePath;
+    let syncedFiles: string[] = [];
     let isolationState: ApplyIsolationState | null = null;
     let activeChangeExists = false;
 
@@ -531,7 +534,8 @@ export class ArchiveCommand {
               syncTargets.push('OPSX delta');
             }
             console.log(`Archive sync state: ${syncTargets.join(' + ')} pending.`);
-            await applyPreparedChangeSync(targetPath, preparedSync);
+            const summary = await applyPreparedChangeSync(targetPath, preparedSync);
+            syncedFiles = summary.files;
           }
         } catch (err: any) {
           console.log(String(err.message || err));
@@ -565,7 +569,7 @@ export class ArchiveCommand {
 
     console.log(`Change '${changeName}' archived as '${archiveName}'.`);
 
-    const handledBranchSwitch = await this.runArchiveGitFlow(targetPath, changeName, archivePath, isolationState, true);
+    const handledBranchSwitch = await this.runArchiveGitFlow(targetPath, changeName, archivePath, isolationState, true, syncedFiles);
     await this.handleApplyIsolationCleanup(isolationState, targetPath, options, handledBranchSwitch);
   }
 
@@ -574,7 +578,8 @@ export class ArchiveCommand {
     changeName: string,
     archivePath: string,
     isolation: ApplyIsolationState | null,
-    createArchiveCommit: boolean
+    createArchiveCommit: boolean,
+    syncedFiles: string[] = []
   ): Promise<boolean> {
     if (!await isGitRepository(projectRoot)) {
       return false;
@@ -582,7 +587,7 @@ export class ArchiveCommand {
 
     const branchContext = await resolveArchiveBranchContext(projectRoot, archivePath, isolation);
     if (createArchiveCommit) {
-      await runArchiveCommit(projectRoot, changeName, archivePath);
+      await runArchiveCommit(projectRoot, changeName, archivePath, syncedFiles);
     }
     const projection = projectConfigForRuntime(readProjectConfig(projectRoot), { consumer: 'archive' });
     await runArchiveMerge(projectRoot, archivePath, branchContext, projection);
