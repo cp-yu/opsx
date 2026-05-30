@@ -21,4 +21,18 @@ describe('implementer template', () => {
     expect(template).toContain('Step 4 MUST pass');
     expect(template).toContain('DONE | BLOCKED | NEEDS_CONTEXT | DONE_WITH_CONCERNS');
   });
+
+  it('documents structured recovery feedback for blocker statuses', () => {
+    const template = getImplementerSkillTemplate().instructions;
+
+    expect(template).toContain('Recovery Feedback Contract');
+    expect(template).toContain('BLOCKED and NEEDS_CONTEXT are recovery feedback to the master agent');
+    expect(template).toContain('"task": "task identifier"');
+    expect(template).toContain('"cycle": "cycle identifier"');
+    expect(template).toContain('"step": "step identifier"');
+    expect(template).toContain('"command": "command when applicable"');
+    expect(template).toContain('"failureKind": "checkpoint_failed | command_failed | ambiguous_instruction | missing_input | git_failed | other"');
+    expect(template).toContain('"errorSummary": "stable concise summary for signature comparison"');
+    expect(template).toContain('normalized error signature');
+  });
 });
