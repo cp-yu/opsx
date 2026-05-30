@@ -9,6 +9,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import os from 'os';
 import { randomUUID } from 'crypto';
+import { parse as parseYaml } from 'yaml';
 
 // Shared mutable mock config state
 const mockState = {
@@ -107,6 +108,69 @@ describe('UpdateCommand', () => {
         expect.stringContaining('No configured tools found')
       );
 
+      const configPath = path.join(testDir, 'openspec', 'config.yaml');
+      const config = parseYaml(await fs.readFile(configPath, 'utf-8'));
+      expect(config.optimization.enabled).toBe(true);
+      expect(config.optimization.optRetries).toBe(2);
+      expect(config.git.merge.strategy).toBe('no-ff');
+      expect(config.git.merge.messageFrom).toBe('artifacts');
+      expect(config.git.branch.deleteAfterArchive).toBe(false);
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should preserve existing config fields while adding missing defaults', async () => {
+      const configPath = path.join(testDir, 'openspec', 'config.yaml');
+      await fs.writeFile(
+        configPath,
+        `schema: custom-schema
+docLanguage: zh-CN
+context: keep me
+rules:
+  proposal:
+    - keep this rule
+`
+      );
+
+      await updateCommand.execute(testDir);
+
+      const config = parseYaml(await fs.readFile(configPath, 'utf-8'));
+      expect(config.schema).toBe('custom-schema');
+      expect(config.docLanguage).toBe('zh-CN');
+      expect(config.context).toBe('keep me');
+      expect(config.rules.proposal).toEqual(['keep this rule']);
+      expect(config.optimization.enabled).toBe(true);
+      expect(config.optimization.optRetries).toBe(2);
+      expect(config.git.merge.strategy).toBe('no-ff');
+      expect(config.git.merge.messageFrom).toBe('artifacts');
+      expect(config.git.branch.deleteAfterArchive).toBe(false);
+      expect(config).not.toHaveProperty('propose');
+      expect(config).not.toHaveProperty('apply');
+    });
+
+    it('should warn and continue refreshing tools when project config migration is skipped', async () => {
+      const configPath = path.join(testDir, 'openspec', 'config.yaml');
+      const originalConfig = 'schema: [unclosed';
+      await fs.writeFile(configPath, originalConfig);
+
+      const skillsDir = path.join(testDir, '.claude', 'skills', 'openspec-explore');
+      await fs.mkdir(skillsDir, { recursive: true });
+      await fs.writeFile(path.join(skillsDir, 'SKILL.md'), 'old content');
+
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'log');
+
+      await updateCommand.execute(testDir);
+
+      expect(await fs.readFile(configPath, 'utf-8')).toBe(originalConfig);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Project config default migration skipped')
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Updated: Claude Code')
+      );
+
+      warnSpy.mockRestore();
       consoleSpy.mockRestore();
     });
   });

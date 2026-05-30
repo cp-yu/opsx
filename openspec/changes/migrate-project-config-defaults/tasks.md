@@ -86,17 +86,17 @@
 
 #### Checks
 
-- [ ] C8 Verify update creates config before no-tools return
+- [x] C8 Verify update creates config before no-tools return
   - Verifies: `specs/cli-update/spec.md` / Requirement "Migrate project config defaults" / Scenario "Create config when missing"
   - Command: `npm run test -- test/core/update.test.ts`
   - Expect: `openspec update` creates `openspec/config.yaml` even when no configured tools are found
 
-- [ ] C9 Verify update preserves existing config fields
+- [x] C9 Verify update preserves existing config fields
   - Verifies: `specs/cli-update/spec.md` / Requirement "Migrate project config defaults" / Scenario "Add missing top-level defaults"
   - Command: `npm run test -- test/core/update.test.ts`
   - Expect: update adds missing `optimization` and `git` nodes while preserving existing `schema`, `context`, `docLanguage`, and `rules`
 
-- [ ] C10 Verify invalid config does not block refresh
+- [x] C10 Verify invalid config does not block refresh
   - Verifies: `specs/cli-update/spec.md` / Requirement "Migrate project config defaults" / Scenario "Skip invalid config without blocking tool refresh"
   - Command: `npm run test -- test/core/update.test.ts`
   - Expect: update leaves invalid config unchanged and still reaches the existing tool refresh path when tools are configured

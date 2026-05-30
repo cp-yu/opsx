@@ -44,6 +44,7 @@ import {
   scanInstalledWorkflows as scanInstalledWorkflowsShared,
   migrateIfNeeded as migrateIfNeededShared,
 } from './migration.js';
+import { migrateProjectConfigDefaults } from './project-config.js';
 import { ArtifactSyncEngine } from './templates/sync-engine.js';
 
 const require = createRequire(import.meta.url);
@@ -84,6 +85,15 @@ export class UpdateCommand {
     // 1. Check openspec directory exists
     if (!await FileSystemUtils.directoryExists(openspecPath)) {
       throw new Error(`No OpenSpec directory found. Run 'openspec init' first.`);
+    }
+
+    const configMigration = migrateProjectConfigDefaults(resolvedProjectPath);
+    if (configMigration.status === 'skipped') {
+      console.warn(
+        chalk.yellow(
+          `Project config default migration skipped for ${path.relative(resolvedProjectPath, configMigration.path)} (${configMigration.reason})`
+        )
+      );
     }
 
     // 2. Perform one-time migration if needed before any legacy upgrade generation.
