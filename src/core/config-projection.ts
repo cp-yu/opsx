@@ -62,6 +62,7 @@ export interface RuntimeProjection {
   consumer: string;
   artifactId?: string;
   fragments: ProjectionFragment[];
+  git?: NormalizedProjectConfig['git'];
   proseLanguage?: string;
   preserveCanonicalTokens: true;
   forbidHardcodedEnglishBoilerplate: boolean;
@@ -268,8 +269,20 @@ const projectionRules: ProjectionRule[] = [
         ],
       };
     },
-    buildRuntime() {
-      return null;
+    buildRuntime(config, scope) {
+      if (scope.runtimeConsumer !== 'archive' || !config.git) {
+        return null;
+      }
+
+      return {
+        key: 'git',
+        scope: 'global',
+        lines: [
+          `git.merge.strategy: ${config.git.merge.strategy}`,
+          `git.merge.messageFrom: ${config.git.merge.messageFrom}`,
+          `git.branch.deleteAfterArchive: ${config.git.branch.deleteAfterArchive}`,
+        ],
+      };
     },
     affectsFingerprint() {
       return false;
@@ -313,6 +326,7 @@ export function projectConfigForRuntime(
     consumer: scope.consumer,
     artifactId: scope.artifactId,
     fragments,
+    git: scope.consumer === 'archive' ? normalized.git : undefined,
     proseLanguage: normalized.docLanguage,
     preserveCanonicalTokens: true,
     forbidHardcodedEnglishBoilerplate: Boolean(normalized.docLanguage),

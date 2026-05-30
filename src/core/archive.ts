@@ -18,6 +18,7 @@ import {
 } from './verify/freshness.js';
 import { selectActiveChange } from './change-utils.js';
 import { readProjectConfig } from './project-config.js';
+import { projectConfigForRuntime, type RuntimeProjection } from './config-projection.js';
 import { generateMergeMessage, writeManualMergeMessageDraft } from './archive/merge-message.js';
 
 const execFileAsync = promisify(execFile);
@@ -191,9 +192,30 @@ async function currentBranch(projectRoot: string): Promise<string | null> {
   return result.stdout.trim() || null;
 }
 
+async function existingArchiveCommitPaths(projectRoot: string, archivePath: string): Promise<string[]> {
+  const candidates = [
+    toPosixProjectPath(projectRoot, archivePath),
+    'openspec/specs',
+    'openspec/project.opsx.yaml',
+    'openspec/project.opsx.relations.yaml',
+    'openspec/project.opsx.code-map.yaml',
+  ];
+  const existing: string[] = [];
+
+  for (const candidate of candidates) {
+    try {
+      await fs.access(path.join(projectRoot, candidate));
+      existing.push(candidate);
+    } catch {}
+  }
+
+  return existing;
+}
+
 async function runArchiveCommit(projectRoot: string, changeName: string, archivePath: string): Promise<void> {
   const archiveRelativePath = toPosixProjectPath(projectRoot, archivePath);
-  const addResult = await runGit(projectRoot, ['add', '--', archiveRelativePath]);
+  const commitPaths = await existingArchiveCommitPaths(projectRoot, archivePath);
+  const addResult = await runGit(projectRoot, ['add', '--', ...commitPaths]);
   if (addResult.code !== 0) {
     throw new Error(addResult.stderr.trim() || 'git add archive path failed');
   }
@@ -202,8 +224,10 @@ async function runArchiveCommit(projectRoot: string, changeName: string, archive
 
 ## Changes
 - ${archiveRelativePath}/: 移动 change 目录到归档区
+- openspec/specs/: 同步 delta spec
+- openspec/project.opsx.*.yaml: 应用 OPSX delta
 `;
-  const result = await runGit(projectRoot, ['commit', '--only', '-F', '-', '--', archiveRelativePath], message);
+  const result = await runGit(projectRoot, ['commit', '--only', '-F', '-', '--', ...commitPaths], message);
   if (result.code !== 0) {
     throw new Error(result.stderr.trim() || 'git commit failed');
   }
@@ -235,11 +259,10 @@ async function runArchiveMerge(
   projectRoot: string,
   archivePath: string,
   branchContext: ArchiveBranchContext,
-  config: ReturnType<typeof readProjectConfig>
+  projection: RuntimeProjection
 ): Promise<void> {
-  const projectConfig = config ?? readProjectConfig(projectRoot);
-  const mergeConfig = projectConfig?.git?.merge ?? { strategy: 'no-ff' as const, messageFrom: 'artifacts' as const };
-  const branchConfig = projectConfig?.git?.branch ?? { deleteAfterArchive: false };
+  const mergeConfig = projection.git?.merge ?? { strategy: 'no-ff' as const, messageFrom: 'artifacts' as const };
+  const branchConfig = projection.git?.branch ?? { deleteAfterArchive: false };
   const { featureBranch, originalBranch } = branchContext;
   if (!featureBranch || !originalBranch || featureBranch === originalBranch) {
     return;
@@ -561,7 +584,8 @@ export class ArchiveCommand {
     if (createArchiveCommit) {
       await runArchiveCommit(projectRoot, changeName, archivePath);
     }
-    await runArchiveMerge(projectRoot, archivePath, branchContext, readProjectConfig(projectRoot));
+    const projection = projectConfigForRuntime(readProjectConfig(projectRoot), { consumer: 'archive' });
+    await runArchiveMerge(projectRoot, archivePath, branchContext, projection);
     return Boolean(branchContext.originalBranch);
   }
 

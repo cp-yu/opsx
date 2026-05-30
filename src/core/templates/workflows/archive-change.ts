@@ -153,7 +153,7 @@ ${buildArchiveFullVerifyContract(executionModel)}
 
    After moving the change directory, create an archive commit on the current feature branch.
 
-   Use the archived path and synced files already changed in the worktree. Build the commit message from archive artifacts when \`git.merge.messageFrom: artifacts\`.
+   Use the fixed docs-style archive commit message. Artifact-generated messages apply only to later merge commits, not to this archive commit.
 
    \`\`\`bash
    git add openspec

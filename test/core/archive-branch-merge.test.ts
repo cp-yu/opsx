@@ -112,6 +112,8 @@ describe('archive branch merge', () => {
   it('creates archive commit on feature branch and no-ff merge commit on original branch', async () => {
     projectRoot = await setupRepo();
     await writeChange(projectRoot);
+    await writeFile(projectRoot, 'openspec/specs/synced/spec.md', '# Synced spec\n');
+    await writeFile(projectRoot, 'openspec/project.opsx.yaml', 'schema_version: 1\n');
     process.chdir(projectRoot);
 
     await new ArchiveCommand().execute('feature-archive', { yes: true, noVerify: true, noValidate: true });
@@ -127,6 +129,13 @@ describe('archive branch merge', () => {
     await git(projectRoot, ['checkout', 'feature-archive']);
     const archiveCommitSubject = await git(projectRoot, ['log', '-1', '--pretty=%s']);
     expect(archiveCommitSubject).toBe('docs(feature-archive): 归档变更制品');
+    const archiveCommitMessage = await git(projectRoot, ['log', '-1', '--pretty=%B']);
+    expect(archiveCommitMessage).toContain('openspec/changes/archive/');
+    expect(archiveCommitMessage).toContain('openspec/specs/: 同步 delta spec');
+    expect(archiveCommitMessage).toContain('openspec/project.opsx.*.yaml: 应用 OPSX delta');
+    const archiveCommitFiles = await git(projectRoot, ['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD']);
+    expect(archiveCommitFiles).toContain('openspec/specs/synced/spec.md');
+    expect(archiveCommitFiles).toContain('openspec/project.opsx.yaml');
   });
 
   it('aborts merge conflict and keeps the feature archive commit and branch', async () => {

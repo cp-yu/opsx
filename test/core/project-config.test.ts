@@ -1028,10 +1028,56 @@ rules:
         { surface: 'archive' }
       );
 
-      expect(projection.compiledLines).toEqual([
-        'git.merge.strategy: squash',
-        'git.merge.messageFrom: manual',
-        'git.branch.deleteAfterArchive: true',
+      expect(projection.fragments).toEqual([
+        expect.objectContaining({
+          key: 'git',
+          scope: 'global',
+          lines: [
+            'git.merge.strategy: squash',
+            'git.merge.messageFrom: manual',
+            'git.branch.deleteAfterArchive: true',
+          ],
+        }),
+      ]);
+    });
+
+    it('exposes archive git settings through runtime projection', () => {
+      const projection = projectConfigForRuntime(
+        {
+          schema: 'spec-driven',
+          git: {
+            merge: {
+              strategy: 'squash',
+              messageFrom: 'manual',
+            },
+            branch: {
+              deleteAfterArchive: true,
+            },
+          },
+          rules: {},
+        },
+        { consumer: 'archive' }
+      );
+
+      expect(projection.git).toEqual({
+        merge: {
+          strategy: 'squash',
+          messageFrom: 'manual',
+        },
+        branch: {
+          deleteAfterArchive: true,
+        },
+      });
+      expect(projection.fragments).toEqual([
+        expect.objectContaining({
+          key: 'git',
+          scope: 'global',
+          lines: [
+            'git.merge.strategy: squash',
+            'git.merge.messageFrom: manual',
+            'git.branch.deleteAfterArchive: true',
+          ],
+        }),
       ]);
     });
 
