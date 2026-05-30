@@ -1,0 +1,315 @@
+{
+  "timestamp": "2026-05-30T00:59:02.410Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "3689743fa48d87f0e011c8f4bac9039e3345ecf16b923411d58c1a8f3c141f99",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      "openspec/changes/add-branch-aware-archive-merge/design.md",
+      "openspec/changes/add-branch-aware-archive-merge/opsx-delta.yaml",
+      "openspec/changes/add-branch-aware-archive-merge/proposal.md",
+      "openspec/changes/add-branch-aware-archive-merge/specs/archive-branch-merge/spec.md",
+      "openspec/changes/add-branch-aware-archive-merge/specs/config-loading/spec.md",
+      "openspec/changes/add-branch-aware-archive-merge/specs/openspec-optimizer-skill/spec.md",
+      "openspec/changes/add-branch-aware-archive-merge/specs/openspec-reviewer-skill/spec.md",
+      "openspec/changes/add-branch-aware-archive-merge/specs/opsx-archive-skill/spec.md",
+      "openspec/changes/add-branch-aware-archive-merge/tasks.md",
+      "openspec/project.opsx.code-map.yaml",
+      "openspec/project.opsx.relations.yaml",
+      "openspec/project.opsx.yaml",
+      "src/core/archive.ts",
+      "src/core/archive/merge-message.ts",
+      "src/core/config-projection.ts",
+      "src/core/config-schema.ts",
+      "src/core/project-config.ts",
+      "src/core/templates/workflows/archive-change.ts",
+      "src/core/templates/workflows/optimizer.ts",
+      "src/core/templates/workflows/reviewer.ts",
+      "test/core/archive-branch-merge.test.ts",
+      "test/core/archive/merge-message.test.ts",
+      "test/core/config-schema.test.ts",
+      "test/core/project-config.test.ts",
+      "test/skills/archive-skill-content.test.ts",
+      "test/skills/optimizer-skill-content.test.ts",
+      "test/skills/reviewer-skill-content.test.ts"
+    ],
+    "evidenceFingerprint": "ca566247332e8a58bbffff89240caafbf38f7fb088973776903218d389e42df9",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/add-branch-aware-archive-merge/design.md",
+        "hash": "7a5bc7d85efb050167ef4d40d6245c3314865743e135d68154ef1d268e5e6f74"
+      },
+      {
+        "path": "openspec/changes/add-branch-aware-archive-merge/opsx-delta.yaml",
+        "hash": "b203bd446489241813ab596dbed904d926c94e276cc2f8fcb2da47a25c686741"
+      },
+      {
+        "path": "openspec/changes/add-branch-aware-archive-merge/proposal.md",
+        "hash": "a0edfb2644e11f5fcd75ce7723928193f43ad1a619294cf891e277bdc651178d"
+      },
+      {
+        "path": "openspec/changes/add-branch-aware-archive-merge/specs/archive-branch-merge/spec.md",
+        "hash": "04057b1afddbe53ab3e40c35e3270c5a20300e119265d6ec38ec5c116cdd5cda"
+      },
+      {
+        "path": "openspec/changes/add-branch-aware-archive-merge/specs/config-loading/spec.md",
+        "hash": "ffe0f364556ab9af18fbe4e5ecb3dbf7b962721f3f144bf849c78df9d5b07216"
+      },
+      {
+        "path": "openspec/changes/add-branch-aware-archive-merge/specs/openspec-optimizer-skill/spec.md",
+        "hash": "b9d34f97400952bd4784014e79ebd7d931e82c2f06b8a9e6c3f58935f34ee2d5"
+      },
+      {
+        "path": "openspec/changes/add-branch-aware-archive-merge/specs/openspec-reviewer-skill/spec.md",
+        "hash": "4c917cdf20addf0eed3301c82d63d2a737d65e417f5e104649e61616ea017a48"
+      },
+      {
+        "path": "openspec/changes/add-branch-aware-archive-merge/specs/opsx-archive-skill/spec.md",
+        "hash": "4d5b6b3f68b10ce5a189db56ab92a1cfce86620afb4474be0aa594a235e9c6d3"
+      },
+      {
+        "path": "openspec/changes/add-branch-aware-archive-merge/tasks.md",
+        "hash": "3689743fa48d87f0e011c8f4bac9039e3345ecf16b923411d58c1a8f3c141f99"
+      },
+      {
+        "path": "openspec/project.opsx.code-map.yaml",
+        "hash": "39ceef48855268fe7411868e89e8ca191ab9e51f17d374cd3ca3de0e084862fb"
+      },
+      {
+        "path": "openspec/project.opsx.relations.yaml",
+        "hash": "3300d652b0cd881083246a7331a9132126008092af40decde1dee688b99295c9"
+      },
+      {
+        "path": "openspec/project.opsx.yaml",
+        "hash": "0e02b47d0e2eecdd9bfdeb17c1ba2886c3932e31bb581c5d66f9031d1c753d69"
+      },
+      {
+        "path": "src/core/archive.ts",
+        "hash": "86aa0bae890db1dfac1119136c382c0b1e2e74d5bd32cfbc29ceecce1d4f51e6"
+      },
+      {
+        "path": "src/core/archive/merge-message.ts",
+        "hash": "2c09cdf2b4963648f7ebfa18329e93c99fc4b2fc211b356bb753015e38097856"
+      },
+      {
+        "path": "src/core/config-projection.ts",
+        "hash": "36301e65499ce8792afaa1554575e8cfa09515b397f5a7f55121dd88eb12c74d"
+      },
+      {
+        "path": "src/core/config-schema.ts",
+        "hash": "9b80c36b7a7cbff257653a7a5c2c22d8a42b6985fbc917a28ad3520dcb0372e7"
+      },
+      {
+        "path": "src/core/project-config.ts",
+        "hash": "5e727daf50d807a7f92f0b998992081e8c2264d77226fba178117134808dfc52"
+      },
+      {
+        "path": "src/core/templates/workflows/archive-change.ts",
+        "hash": "0dd763167d8244411129ebc2b9a6fc14bc4408939076cc7a7e15cc77a3f6cf1b"
+      },
+      {
+        "path": "src/core/templates/workflows/optimizer.ts",
+        "hash": "06f66f8a6a1282acc84877f54c27ad68ba49bc1818c859c7a02a025e25848c3d"
+      },
+      {
+        "path": "src/core/templates/workflows/reviewer.ts",
+        "hash": "e87b004c7563b1d431dc622b1b86f7929ae2d1177a4df32df6d778816414e06d"
+      },
+      {
+        "path": "test/core/archive-branch-merge.test.ts",
+        "hash": "ca962825b0dd6fb1f8971a221d037236d1d65fa2ca514d3959ce6d265d3bc4c9"
+      },
+      {
+        "path": "test/core/archive/merge-message.test.ts",
+        "hash": "4b1a5334822df78004a626d30123ba69ba657bb4c0144cf681929049ad026e15"
+      },
+      {
+        "path": "test/core/config-schema.test.ts",
+        "hash": "350e733544e972a12fa9085c4810848a1d884dfc5d8fb050e27c18c677ff31f4"
+      },
+      {
+        "path": "test/core/project-config.test.ts",
+        "hash": "0b0fa3944d510a3aed9de785a78d23c19e77cc1d6d0d05fd31251f3d24fabe31"
+      },
+      {
+        "path": "test/skills/archive-skill-content.test.ts",
+        "hash": "4bf8f049f7be93fd88b179abd1c51675419c2e5223192f2c151235f138cca2a8"
+      },
+      {
+        "path": "test/skills/optimizer-skill-content.test.ts",
+        "hash": "cb5e101bfd4372d1c795522d1374c4fb37ea2df0ae15ef1f389998496926d6fe"
+      },
+      {
+        "path": "test/skills/reviewer-skill-content.test.ts",
+        "hash": "1df4be37b6c00fac7c327dc3852750a6f466ea51e18cb7b03ba0c6c84d3d8d51"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "8286bd39d050827855c43f6f432d4e1712bebee1"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-05-30T00:59:20.381Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "Optimizer subagent Pauli returned: No optimization opportunities found"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-05-30T00:59:02.410Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "3689743fa48d87f0e011c8f4bac9039e3345ecf16b923411d58c1a8f3c141f99",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          "openspec/changes/add-branch-aware-archive-merge/design.md",
+          "openspec/changes/add-branch-aware-archive-merge/opsx-delta.yaml",
+          "openspec/changes/add-branch-aware-archive-merge/proposal.md",
+          "openspec/changes/add-branch-aware-archive-merge/specs/archive-branch-merge/spec.md",
+          "openspec/changes/add-branch-aware-archive-merge/specs/config-loading/spec.md",
+          "openspec/changes/add-branch-aware-archive-merge/specs/openspec-optimizer-skill/spec.md",
+          "openspec/changes/add-branch-aware-archive-merge/specs/openspec-reviewer-skill/spec.md",
+          "openspec/changes/add-branch-aware-archive-merge/specs/opsx-archive-skill/spec.md",
+          "openspec/changes/add-branch-aware-archive-merge/tasks.md",
+          "openspec/project.opsx.code-map.yaml",
+          "openspec/project.opsx.relations.yaml",
+          "openspec/project.opsx.yaml",
+          "src/core/archive.ts",
+          "src/core/archive/merge-message.ts",
+          "src/core/config-projection.ts",
+          "src/core/config-schema.ts",
+          "src/core/project-config.ts",
+          "src/core/templates/workflows/archive-change.ts",
+          "src/core/templates/workflows/optimizer.ts",
+          "src/core/templates/workflows/reviewer.ts",
+          "test/core/archive-branch-merge.test.ts",
+          "test/core/archive/merge-message.test.ts",
+          "test/core/config-schema.test.ts",
+          "test/core/project-config.test.ts",
+          "test/skills/archive-skill-content.test.ts",
+          "test/skills/optimizer-skill-content.test.ts",
+          "test/skills/reviewer-skill-content.test.ts"
+        ],
+        "evidenceFingerprint": "ca566247332e8a58bbffff89240caafbf38f7fb088973776903218d389e42df9",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/add-branch-aware-archive-merge/design.md",
+            "hash": "7a5bc7d85efb050167ef4d40d6245c3314865743e135d68154ef1d268e5e6f74"
+          },
+          {
+            "path": "openspec/changes/add-branch-aware-archive-merge/opsx-delta.yaml",
+            "hash": "b203bd446489241813ab596dbed904d926c94e276cc2f8fcb2da47a25c686741"
+          },
+          {
+            "path": "openspec/changes/add-branch-aware-archive-merge/proposal.md",
+            "hash": "a0edfb2644e11f5fcd75ce7723928193f43ad1a619294cf891e277bdc651178d"
+          },
+          {
+            "path": "openspec/changes/add-branch-aware-archive-merge/specs/archive-branch-merge/spec.md",
+            "hash": "04057b1afddbe53ab3e40c35e3270c5a20300e119265d6ec38ec5c116cdd5cda"
+          },
+          {
+            "path": "openspec/changes/add-branch-aware-archive-merge/specs/config-loading/spec.md",
+            "hash": "ffe0f364556ab9af18fbe4e5ecb3dbf7b962721f3f144bf849c78df9d5b07216"
+          },
+          {
+            "path": "openspec/changes/add-branch-aware-archive-merge/specs/openspec-optimizer-skill/spec.md",
+            "hash": "b9d34f97400952bd4784014e79ebd7d931e82c2f06b8a9e6c3f58935f34ee2d5"
+          },
+          {
+            "path": "openspec/changes/add-branch-aware-archive-merge/specs/openspec-reviewer-skill/spec.md",
+            "hash": "4c917cdf20addf0eed3301c82d63d2a737d65e417f5e104649e61616ea017a48"
+          },
+          {
+            "path": "openspec/changes/add-branch-aware-archive-merge/specs/opsx-archive-skill/spec.md",
+            "hash": "4d5b6b3f68b10ce5a189db56ab92a1cfce86620afb4474be0aa594a235e9c6d3"
+          },
+          {
+            "path": "openspec/changes/add-branch-aware-archive-merge/tasks.md",
+            "hash": "3689743fa48d87f0e011c8f4bac9039e3345ecf16b923411d58c1a8f3c141f99"
+          },
+          {
+            "path": "openspec/project.opsx.code-map.yaml",
+            "hash": "39ceef48855268fe7411868e89e8ca191ab9e51f17d374cd3ca3de0e084862fb"
+          },
+          {
+            "path": "openspec/project.opsx.relations.yaml",
+            "hash": "3300d652b0cd881083246a7331a9132126008092af40decde1dee688b99295c9"
+          },
+          {
+            "path": "openspec/project.opsx.yaml",
+            "hash": "0e02b47d0e2eecdd9bfdeb17c1ba2886c3932e31bb581c5d66f9031d1c753d69"
+          },
+          {
+            "path": "src/core/archive.ts",
+            "hash": "86aa0bae890db1dfac1119136c382c0b1e2e74d5bd32cfbc29ceecce1d4f51e6"
+          },
+          {
+            "path": "src/core/archive/merge-message.ts",
+            "hash": "2c09cdf2b4963648f7ebfa18329e93c99fc4b2fc211b356bb753015e38097856"
+          },
+          {
+            "path": "src/core/config-projection.ts",
+            "hash": "36301e65499ce8792afaa1554575e8cfa09515b397f5a7f55121dd88eb12c74d"
+          },
+          {
+            "path": "src/core/config-schema.ts",
+            "hash": "9b80c36b7a7cbff257653a7a5c2c22d8a42b6985fbc917a28ad3520dcb0372e7"
+          },
+          {
+            "path": "src/core/project-config.ts",
+            "hash": "5e727daf50d807a7f92f0b998992081e8c2264d77226fba178117134808dfc52"
+          },
+          {
+            "path": "src/core/templates/workflows/archive-change.ts",
+            "hash": "0dd763167d8244411129ebc2b9a6fc14bc4408939076cc7a7e15cc77a3f6cf1b"
+          },
+          {
+            "path": "src/core/templates/workflows/optimizer.ts",
+            "hash": "06f66f8a6a1282acc84877f54c27ad68ba49bc1818c859c7a02a025e25848c3d"
+          },
+          {
+            "path": "src/core/templates/workflows/reviewer.ts",
+            "hash": "e87b004c7563b1d431dc622b1b86f7929ae2d1177a4df32df6d778816414e06d"
+          },
+          {
+            "path": "test/core/archive-branch-merge.test.ts",
+            "hash": "ca962825b0dd6fb1f8971a221d037236d1d65fa2ca514d3959ce6d265d3bc4c9"
+          },
+          {
+            "path": "test/core/archive/merge-message.test.ts",
+            "hash": "4b1a5334822df78004a626d30123ba69ba657bb4c0144cf681929049ad026e15"
+          },
+          {
+            "path": "test/core/config-schema.test.ts",
+            "hash": "350e733544e972a12fa9085c4810848a1d884dfc5d8fb050e27c18c677ff31f4"
+          },
+          {
+            "path": "test/core/project-config.test.ts",
+            "hash": "0b0fa3944d510a3aed9de785a78d23c19e77cc1d6d0d05fd31251f3d24fabe31"
+          },
+          {
+            "path": "test/skills/archive-skill-content.test.ts",
+            "hash": "4bf8f049f7be93fd88b179abd1c51675419c2e5223192f2c151235f138cca2a8"
+          },
+          {
+            "path": "test/skills/optimizer-skill-content.test.ts",
+            "hash": "cb5e101bfd4372d1c795522d1374c4fb37ea2df0ae15ef1f389998496926d6fe"
+          },
+          {
+            "path": "test/skills/reviewer-skill-content.test.ts",
+            "hash": "1df4be37b6c00fac7c327dc3852750a6f466ea51e18cb7b03ba0c6c84d3d8d51"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "8286bd39d050827855c43f6f432d4e1712bebee1"
+      }
+    }
+  }
+}

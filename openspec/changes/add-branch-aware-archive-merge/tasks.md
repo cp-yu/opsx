@@ -233,3 +233,11 @@
   - Verifies: `specs/opsx-archive-skill/spec.md` / Requirement "Archive 通过 prompt projection 消费 git 配置" / Scenario "配置经投影后被 archive 消费"
   - Command: `pnpm test -- config-prompts`
   - Expect: archive surface 投影输出含 git.merge.strategy 等字段
+
+## Remediation
+
+- [x] [code_fix] 限定 archive commit staging 到归档目录与本次 sync 实际写入文件，并用 `test/core/archive-branch-merge.test.ts` 覆盖无关 specs 不进入 commit。
+- [x] [artifact_fix] 统一 no-isolation 合同：缺失 isolation 时按 originalBranch 回退解析继续 merge，非 git 仓库才跳过三步。
+- [x] [code_fix] 更新 archive template parity baseline，显式接受 archive 模板文案变更。
+- [x] [artifact_fix] 将 no-ff merge 合同修正为 `git merge --no-ff --no-commit` 后 `git commit -F -`，匹配当前跨平台实现。
+- [x] [artifact_fix] 移除 archive skill 模板和本地 skill 副本中的 no-isolation legacy skip 文案，改为 originalBranch 回退解析语义。
