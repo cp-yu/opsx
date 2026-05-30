@@ -49,22 +49,22 @@
 
 #### Checks
 
-- [ ] C4 Verify missing config creation
+- [x] C4 Verify missing config creation
   - Verifies: `specs/cli-update/spec.md` / Requirement "Migrate project config defaults" / Scenario "Create config when missing"
   - Command: `npm run test -- test/core/project-config.test.ts`
   - Expect: helper creates `openspec/config.yaml` with `schema`, `optimization`, and `git` defaults when no config file exists
 
-- [ ] C5 Verify nested missing-only merge
+- [x] C5 Verify nested missing-only merge
   - Verifies: `specs/cli-update/spec.md` / Requirement "Migrate project config defaults" / Scenario "Add missing nested defaults without overwriting existing values"
   - Command: `npm run test -- test/core/project-config.test.ts`
   - Expect: helper preserves `optimization.enabled: false` and `git.merge.strategy: squash` while adding only missing nested defaults
 
-- [ ] C6 Verify config.yml fallback
+- [x] C6 Verify config.yml fallback
   - Verifies: `specs/cli-update/spec.md` / Requirement "Migrate project config defaults" / Scenario "Migrate config.yml alias"
   - Command: `npm run test -- test/core/project-config.test.ts`
   - Expect: helper mutates `openspec/config.yml` and does not create `openspec/config.yaml` when only `.yml` exists
 
-- [ ] C7 Verify invalid config skip
+- [x] C7 Verify invalid config skip
   - Verifies: `specs/cli-update/spec.md` / Requirement "Migrate project config defaults" / Scenario "Skip invalid config without blocking tool refresh"
   - Command: `npm run test -- test/core/project-config.test.ts`
   - Expect: helper leaves invalid or non-object config content unchanged and reports a skipped migration result
