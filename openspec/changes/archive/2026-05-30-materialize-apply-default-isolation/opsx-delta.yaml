@@ -1,0 +1,26 @@
+schema_version: 1
+ADDED:
+  capabilities:
+    - id: cap.config.apply-default-isolation
+      type: capability
+      intent: 将 apply.defaultIsolation 作为项目配置的功能性磁盘默认值物化；init 生成配置时写出 ask 默认与允许值注释，update 以 missing-only 方式补齐旧配置且不覆盖用户值。
+      status: active
+  relations:
+    - from: dom.config
+      type: contains
+      to: cap.config.apply-default-isolation
+    - from: cap.config.apply-default-isolation
+      type: depends_on
+      to: cap.config.project
+    - from: cap.config.apply-default-isolation
+      type: depends_on
+      to: cap.apply.branch-isolation
+MODIFIED:
+  capabilities:
+    - id: cap.cli.init
+      intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品；首次 init 自动生成 OPSX 骨架文件，并创建包含 schema、optimization、apply.defaultIsolation 与 git 功能性默认值的 openspec/config.yaml。
+    - id: cap.cli.update
+      intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品；同时对 openspec/config.yaml 或 config.yml 执行非覆盖项目配置默认值迁移，补齐 optimization、apply.defaultIsolation 与 git 功能性默认节点。
+    - id: cap.config.project
+      intent: 加载、验证、合并并物化项目级配置 openspec/config.yaml；将有效字段暴露为 prompt/runtime projection 的统一输入，并为 init/update 提供 optimization、apply.defaultIsolation 与 git 的共享磁盘默认值。
+REMOVED: {}

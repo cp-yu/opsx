@@ -60,6 +60,17 @@ export function serializeConfig(config: Partial<ProjectConfig>): string {
   }
   lines.push('');
 
+  // Apply isolation policy
+  lines.push('# Apply-stage implementation policy (optional)');
+  lines.push('# Example:');
+  lines.push('#   apply:');
+  lines.push('#     defaultIsolation: ask  # ask / branch / worktree / none');
+  if (materialized.apply) {
+    lines.push('apply:');
+    lines.push(`  defaultIsolation: ${materialized.apply.defaultIsolation}  # ask / branch / worktree / none`);
+  }
+  lines.push('');
+
   // Git archive and merge policy
   lines.push('# Git archive and merge policy (optional)');
   lines.push('# Example:');

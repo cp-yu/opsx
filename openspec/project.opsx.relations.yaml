@@ -450,3 +450,12 @@ relations:
   - from: cap.cli.update
     type: depends_on
     to: cap.config.migration
+  - from: dom.config
+    type: contains
+    to: cap.config.apply-default-isolation
+  - from: cap.config.apply-default-isolation
+    type: depends_on
+    to: cap.config.project
+  - from: cap.config.apply-default-isolation
+    type: depends_on
+    to: cap.apply.branch-isolation

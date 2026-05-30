@@ -94,6 +94,8 @@ describe('InitCommand', () => {
       expect(content).toContain('optimization:');
       expect(content).toContain('  enabled: true');
       expect(content).toContain('  optRetries: 2');
+      expect(content).toContain('apply:');
+      expect(content).toContain('  defaultIsolation: ask  # ask / branch / worktree / none');
       expect(content).toContain('git:');
       expect(content).toContain('  merge:');
       expect(content).toContain('    strategy: no-ff');
@@ -101,7 +103,9 @@ describe('InitCommand', () => {
       expect(content).toContain('  branch:');
       expect(content).toContain('    deleteAfterArchive: false');
       expect(parsed).not.toHaveProperty('propose');
-      expect(parsed).not.toHaveProperty('apply');
+      expect(parsed.apply).toEqual({
+        defaultIsolation: 'ask',
+      });
       expect(parsed).not.toHaveProperty('rules');
       expect(parsed).not.toHaveProperty('context');
       expect(parsed).not.toHaveProperty('docLanguage');

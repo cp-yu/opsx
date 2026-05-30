@@ -239,11 +239,12 @@ The system SHALL continue operation with default values when config loading or p
 
 The project config layer SHALL expose a shared default materialization contract for disk writes so `openspec init` and `openspec update` use the same functional defaults for project configuration.
 
-#### Scenario: Default materialization includes optimization and git
+#### Scenario: Default materialization includes optimization, apply, and git
 
 - **WHEN** project config defaults are materialized for disk output
 - **THEN** the materialized defaults SHALL include `optimization.enabled: true`
 - **AND** SHALL include `optimization.optRetries: 2`
+- **AND** SHALL include `apply.defaultIsolation: ask`
 - **AND** SHALL include `git.merge.strategy: no-ff`
 - **AND** SHALL include `git.merge.messageFrom: artifacts`
 - **AND** SHALL include `git.branch.deleteAfterArchive: false`
@@ -252,7 +253,7 @@ The project config layer SHALL expose a shared default materialization contract 
 
 - **WHEN** project config defaults are materialized for disk output
 - **THEN** the materialized defaults SHALL NOT add `docLanguage`, `context`, or `rules` without explicit user input
-- **AND** SHALL NOT add `propose` or `apply` policy nodes until they are confirmed as runtime-consumed project defaults
+- **AND** SHALL NOT add `propose` policy nodes until they are confirmed as runtime-consumed project defaults
 
 #### Scenario: Missing-only merge preserves user values
 
@@ -267,4 +268,3 @@ The project config layer SHALL expose a shared default materialization contract 
 - **WHEN** default materialization reads or writes project config files
 - **THEN** it SHALL build paths with Node.js path utilities
 - **AND** SHALL preserve the `.yaml` preference and `.yml` fallback behavior consistently across Windows, macOS, and Linux
-
