@@ -178,7 +178,8 @@ ${buildArchiveFullVerifyContract(executionModel)}
    For \`git.merge.strategy: no-ff\`:
    \`\`\`bash
    git checkout <original-branch>
-   git merge --no-ff <feature-branch>
+   git merge --no-ff --no-commit <feature-branch>
+   git commit -F -
    \`\`\`
 
    For \`git.merge.strategy: ff-only\`:
@@ -205,7 +206,9 @@ ${buildArchiveFullVerifyContract(executionModel)}
 
    Read \`openspec/changes/archive/YYYY-MM-DD-<name>/.apply-isolation.json\` after the change directory moves.
 
-   **If no isolation file exists**: use this legacy fallback only: skip branch/worktree cleanup, leave the current branch unchanged, and continue to summary.
+   **If no isolation file exists or \`originalBranch\` is empty**: resolve the original branch using \`git symbolic-ref refs/remotes/origin/HEAD --short\`; if that fails, ask for the original branch name and persist it in \`.apply-isolation.json\`.
+
+   **If originalBranch cannot be resolved**: skip merge and branch cleanup, leave the current branch unchanged, and continue to summary.
 
    **If \`method === "worktree"\` and \`worktreePath\` exists**:
    - Ask: "Delete worktree directory <path>?"
