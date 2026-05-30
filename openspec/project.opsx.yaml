@@ -132,7 +132,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.init
-    intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品；首次 init 自动生成 OPSX 骨架文件并引导用户运行 bootstrap；成功输出与入门提示按工具表面渲染用户可见调用语法，Codex 使用 skills 引导而非 slash commands
+    intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品；首次 init 自动生成 OPSX 骨架文件，并创建包含 schema、optimization 与 git 功能性默认值的 openspec/config.yaml。
     status: active
     type: capability
   - id: cap.cli.instructions
@@ -172,7 +172,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.update
-    intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品；刷新后的 onboarding 与 restart 提示按工具表面渲染用户可见调用语法，Codex 不再使用 slash-command 叙事
+    intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品；同时对 openspec/config.yaml 或 config.yml 执行非覆盖项目配置默认值迁移，补齐 optimization 与 git 功能性默认节点。
     status: active
     type: capability
   - id: cap.cli.validate
@@ -188,11 +188,11 @@ capabilities:
     status: active
     type: capability
   - id: cap.config.migration
-    intent: 处理配置格式迁移和向后兼容
+    intent: 处理配置格式迁移和向后兼容，包括全局 profile 迁移与项目 config.yaml/config.yml 的非覆盖默认值补齐。
     status: active
     type: capability
   - id: cap.config.project
-    intent: 加载和验证项目级配置（openspec/config.yaml），并将有效字段暴露为可供 prompt projection 与 runtime projection 共同消费的统一输入；新增 git 节点（merge.strategy、merge.messageFrom、branch.deleteAfterArchive）支持归档分支合并策略配置
+    intent: 加载、验证、合并并物化项目级配置 openspec/config.yaml；将有效字段暴露为 prompt/runtime projection 的统一输入，并为 init/update 提供 optimization 与 git 的共享磁盘默认值。
     status: active
     type: capability
   - id: cap.config.schema-validation

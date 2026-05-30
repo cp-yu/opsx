@@ -450,3 +450,9 @@ relations:
   - from: cap.cli.command-reference-consistency
     type: depends_on
     to: cap.opsx.bootstrap
+  - from: cap.cli.update
+    type: depends_on
+    to: cap.config.project
+  - from: cap.cli.update
+    type: depends_on
+    to: cap.config.migration
