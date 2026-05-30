@@ -35,3 +35,9 @@ rules:
     - Prefer explicit lookups over pattern matching or regex
     - If we generate it, we track it by name in a constant
 docLanguage: 中文
+git:
+  merge:
+    strategy: no-ff
+    messageFrom: artifacts
+  branch:
+    deleteAfterArchive: false
