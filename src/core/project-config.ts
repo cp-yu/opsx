@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 import {
   isMap,
@@ -354,14 +354,7 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
       }
     }
 
-    config.git = {
-      merge: {
-        ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.merge,
-      },
-      branch: {
-        ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.branch,
-      },
-    };
+    config.git = cloneFunctionalDefaults().git;
     const gitConfig = config.git!;
     if (raw.git !== undefined) {
       if (typeof raw.git !== 'object' || raw.git === null || Array.isArray(raw.git)) {
