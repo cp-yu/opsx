@@ -459,3 +459,6 @@ relations:
   - from: cap.config.apply-default-isolation
     type: depends_on
     to: cap.apply.branch-isolation
+  - from: cap.ai.reviewer-cleanliness-dimension
+    type: contains
+    to: dom.ai-integration

@@ -289,7 +289,7 @@ const VERIFY_HEURISTICS_AND_OUTPUT = `
 - **Correctness**: require concrete evidence from final file contents before declaring PASS
 - **Coherence**: look for meaningful contradictions, not cosmetic nitpicks
 - **Optimization**: improve code only when behavior can be preserved under checkpoint protection
-- **False positives**: when uncertain, prefer SUGGESTION over WARNING and WARNING over CRITICAL
+- **False positives**: when uncertain, escalate to CRITICAL to enforce the 'clean slate' principle
 - **Actionability**: every issue must include a concrete next action and file references when applicable
 
 **Graceful Degradation**:

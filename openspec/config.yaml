@@ -41,3 +41,5 @@ git:
     messageFrom: artifacts
   branch:
     deleteAfterArchive: false
+apply:
+  defaultIsolation: ask

@@ -1,0 +1,19 @@
+schema_version: 1
+ADDED:
+  capabilities:
+    - id: cap.ai.reviewer-cleanliness-dimension
+      type: capability
+      intent: Cleanliness 维度的检测逻辑、severity 映射和跨语言工具适配策略，用于检测重构残留、孤儿代码、过时 TODO、半迁移等遗留物
+
+  relations:
+    - from: cap.ai.reviewer-cleanliness-dimension
+      to: dom.ai-integration
+      type: contains
+
+MODIFIED:
+  capabilities:
+    - id: cap.ai.reviewer-skill
+      intent: Phase 1 验证审查 subagent skill。元规则从"不确定时降级"反转为"不确定时升级"，Correctness/Coherence trigger 强化（spec 偏离和设计违背升为 CRITICAL），新增 Cleanliness 维度检测，summary schema 扩展包含 cleanliness 指标
+
+    - id: cap.verify.prompt-orchestration
+      intent: Verification prompt orchestration patterns。Coordinator 的 Evidence 步骤简化为确定路径。Severity philosophy 表述从"prefer lower tier"改为"escalate when uncertain"，删除降级偏见的措辞
