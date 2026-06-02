@@ -109,6 +109,17 @@ describe('profile sync drift detection', () => {
     expect(hasDrift).toBe(false);
   });
 
+  it('detects drift when stale managed implementer skill exists', () => {
+    setupCoreSkills(tempDir);
+    setupCoreCommands(tempDir);
+    const staleSkillPath = path.join(tempDir, '.claude', 'skills', 'openspec-implementer', 'SKILL.md');
+    fs.mkdirSync(path.dirname(staleSkillPath), { recursive: true });
+    fs.writeFileSync(staleSkillPath, 'name: openspec-implementer\n');
+
+    const hasDrift = hasProjectConfigDrift(tempDir, CORE_WORKFLOWS, 'both');
+    expect(hasDrift).toBe(true);
+  });
+
   it('detects drift when extra workflows are installed for both delivery', () => {
     setupCoreSkills(tempDir);
     setupCoreCommands(tempDir);

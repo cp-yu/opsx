@@ -1,5 +1,5 @@
 schema_version: 1
-generated_at: 2026-05-30T12:55:52.529Z
+generated_at: 2026-06-02T04:59:01.185Z
 nodes:
   - id: cap.ai.agent-docs
     refs:
@@ -32,6 +32,14 @@ nodes:
       - path: test/core/templates/impact-sweeper-template.test.ts
       - path: test/core/templates/explore-template.test.ts
       - path: openspec/sweeper/.gitignore
+  - id: cap.ai.internal-skill-installation
+    refs:
+      - path: src/core/shared/skill-generation.ts
+      - path: src/core/templates/sync-engine.ts
+      - path: src/core/workflow-installation.ts
+      - path: test/core/shared/skill-generation.test.ts
+      - path: test/core/workflow-installation.test.ts
+      - path: test/core/profile-sync-drift.test.ts
   - id: cap.verify.optimize
     refs:
       - path: src/core/templates/fragments/opsx-fragments.ts
@@ -110,6 +118,12 @@ nodes:
       - path: src/cli/index.ts
         line_start: 367
         line_end: 390
+  - id: cap.apply.task-decomposition
+    refs:
+      - path: src/core/templates/workflows/apply-change.ts
+      - path: schemas/spec-driven/schema.yaml
+      - path: test/core/templates/apply-change.test.ts
+      - path: test/commands/artifact-workflow.test.ts
   - id: cap.cli.list
     refs:
       - path: src/core/list.ts

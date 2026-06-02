@@ -65,7 +65,7 @@ The workflow SHALL use `openspec status` output to determine what can be created
 
 ### Requirement: Instructions Command
 
-The system SHALL output enriched instructions for creating an artifact, including for scaffolded changes. For the spec-driven `tasks` artifact, the generated instructions SHALL require `tasks.md` to separate implementation actions from goal-driven verification checks and SHALL require every check to declare what change-local spec requirement and scenario it verifies.
+The system SHALL output enriched instructions for creating an artifact, including for scaffolded changes. For the spec-driven `tasks` artifact, the generated instructions SHALL require `tasks.md` to separate implementation goals from executable verification Checks and SHALL require every Check to declare what change-local spec requirement and scenario it verifies. For the spec-driven apply instruction, the generated instruction SHALL require strict Master-agent TDD for behavior and code Checks while preserving evidence-only handling for non-runtime text or artifact Checks.
 
 #### Scenario: Show enriched instructions
 
@@ -97,13 +97,13 @@ The system SHALL output enriched instructions for creating an artifact, includin
 - **THEN** system outputs template and metadata for creating the proposal
 - **AND** does not require any artifacts to already exist
 
-#### Scenario: Tasks instructions require Actions and Checks sections
+#### Scenario: Tasks instructions require coarse Tasks and Checks sections
 
 - **WHEN** user runs `openspec instructions tasks --change <id> --json`
-- **THEN** the returned `instruction` SHALL tell the agent to write `tasks.md` with separate `Actions` and `Checks` sections
-- **AND** `Actions` SHALL contain checkbox items for implementation work using an `A` prefix
+- **THEN** the returned `instruction` SHALL tell the agent to write `tasks.md` with coarse `### Task N:` sections
+- **AND** each task SHALL contain `Goal`, `Files`, `Requirements`, and nested `Checks`
 - **AND** `Checks` SHALL contain checkbox items for executable verification work using a `C` prefix
-- **AND** the instruction SHALL keep the existing `- [ ]` checkbox prefix contract intact for both sections
+- **AND** the instruction SHALL keep the existing `- [ ]` checkbox prefix contract intact for checks
 
 #### Scenario: Tasks instructions require Verifies fields
 
@@ -119,22 +119,31 @@ The system SHALL output enriched instructions for creating an artifact, includin
 - **THEN** the returned `instruction` SHALL tell the agent to convert validation work into a check for invalid-input behavior
 - **AND** SHALL tell the agent to convert bug fixes into a check that reproduces and proves the regression fix
 - **AND** SHALL tell the agent to convert refactors into a before-and-after behavior verification check
-- **AND** each check SHALL state which action IDs it covers
-- **AND** every action ID SHALL be covered by at least one check
+- **AND** every task SHALL include at least one Check
 
 #### Scenario: Checks are executable verification items
 
 - **WHEN** user runs `openspec instructions tasks --change <id> --json`
-- **THEN** the returned `instruction` SHALL tell the agent that each check is executable verification work, not explanatory prose
-- **AND** each check SHALL include a command, evidence source, or observable expectation sufficient for an agent to run or inspect it
-- **AND** each check SHALL anchor that verification to a `Verifies:` target before implementation starts
+- **THEN** the returned `instruction` SHALL tell the agent that each Check is executable verification work, not explanatory prose
+- **AND** each Check SHALL include a command, evidence source, or observable expectation sufficient for an agent to run or inspect it
+- **AND** each Check SHALL anchor that verification to a `Verifies:` target before implementation starts
 
-#### Scenario: Tasks instructions allow trivial fast path
+#### Scenario: Tasks instructions allow non-runtime text fast path
 
 - **WHEN** user runs `openspec instructions tasks --change <id> --json`
-- **THEN** the returned `instruction` SHALL state that trivial edits such as typo or wording-only fixes do not require the full test-first decomposition
-- **AND** SHALL still require at least one lightweight check that explains how completion will be verified
-- **AND** that lightweight check SHALL still include a non-empty `Verifies:` field
+- **THEN** the returned `instruction` SHALL state that non-runtime text or non-runtime artifact changes do not require artificial failing tests
+- **AND** SHALL still require at least one lightweight Check that explains how completion will be verified
+- **AND** that lightweight Check SHALL still include a non-empty `Verifies:` field
+- **AND** the instruction SHALL state that config, schema, template, workflow template, and agent instruction template changes default to behavior Checks unless the task proves there is no runtime or generated-surface consumer
+
+#### Scenario: Apply instructions require strict TDD for behavior Checks
+
+- **WHEN** user runs `openspec instructions apply --change <id> --json`
+- **THEN** the returned `instruction` SHALL tell the agent to execute behavior and code Checks through strict TDD
+- **AND** the instruction SHALL require adding or updating the targeted test before implementation
+- **AND** the instruction SHALL require running the Check command or equivalent targeted command and confirming the expected failure before implementation
+- **AND** the instruction SHALL require minimal implementation followed by rerunning the same or equivalent Check command and confirming pass before marking progress
+- **AND** the instruction SHALL NOT describe apply as directly implementing each pending task without the red/green checkpoint
 
 #### Scenario: Verifies path remains change-local and cross-platform
 
@@ -320,4 +329,3 @@ The setup command SHALL display clear output about what was generated.
 
 - **WHEN** command generation is skipped due to missing adapter
 - **THEN** output includes message: "Command generation skipped - no adapter for <tool>"
-

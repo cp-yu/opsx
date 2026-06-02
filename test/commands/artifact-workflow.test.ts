@@ -345,7 +345,11 @@ describe('artifact-workflow CLI commands', () => {
       expect(json.template).toContain('**Files**:');
       expect(json.template).toContain('**Requirements**:');
       expect(json.template).toContain('#### Checks');
-      expect(json.instruction).toContain('decompose into detailed TDD cycles');
+      expect(json.instruction).toContain('coarse-grained task list');
+      expect(json.instruction).toContain('executable Checks');
+      expect(json.instruction).toContain('non-runtime text or non-runtime artifact changes do not require artificial failing tests');
+      expect(json.instruction).toContain('config, schema, template, workflow template, and agent instruction template changes default to behavior Checks');
+      expect(json.instruction).not.toContain('decompose into detailed TDD cycles');
       expect(json.instruction).toContain('Design Summary');
     });
 
@@ -566,8 +570,10 @@ describe('artifact-workflow CLI commands', () => {
         { id: '1', description: 'Explore routing', done: true },
         { id: '2', description: 'Apply decomposition', done: false },
       ]);
-      expect(json.instruction).toContain('directly implement each pending task');
-      expect(json.instruction).toContain('mark nested checks complete as evidence passes');
+      expect(json.instruction).toContain('strict red/green TDD');
+      expect(json.instruction).toContain('confirm the expected failure before implementation');
+      expect(json.instruction).toContain('confirm pass before marking nested Checks complete');
+      expect(json.instruction).not.toContain('directly implement each pending task');
     });
 
     it('keeps the explore-to-propose-to-apply instruction path coherent', async () => {
@@ -588,15 +594,15 @@ describe('artifact-workflow CLI commands', () => {
 - Test: \`test/core/templates/apply-change.test.ts\`
 
 **Requirements**:
-- Implement pending tasks directly
-- Mark checks complete after evidence passes
+- Execute behavior Checks through strict red/green TDD
+- Mark checks complete after red/green evidence passes
 
 #### Checks
 
-- [ ] C1 Verify direct apply
+- [ ] C1 Verify strict apply
   - Verifies: \`specs/apply-task-decomposition/spec.md\` / Requirement "Master agent 直接执行 pending task" / Scenario "拆解为可执行工作"
   - Command: \`npm run test -- test/core/templates/apply-change.test.ts\`
-  - Expect: apply instructions include direct task implementation
+  - Expect: apply instructions include strict red/green TDD
 `
       );
 
@@ -620,7 +626,8 @@ describe('artifact-workflow CLI commands', () => {
       expect(tasksJson.template).toContain('### Task 1:');
       expect(applyJson.progress).toEqual({ total: 1, complete: 0, remaining: 1 });
       expect(applyJson.tasks[0].description).toBe('Implement confirmed design');
-      expect(applyJson.instruction).toContain('directly implement each pending task');
+      expect(applyJson.instruction).toContain('strict red/green TDD');
+      expect(applyJson.instruction).not.toContain('directly implement each pending task');
     });
 
     it('resolves single-star glob artifacts consistently between status and apply', async () => {
@@ -687,7 +694,9 @@ apply:
       });
       expect(result.exitCode).toBe(0);
       // Should show the instruction from spec-driven schema apply block
-      expect(result.stdout).toContain('directly implement each pending task');
+      expect(result.stdout).toContain('strict red/green TDD');
+      expect(result.stdout).toContain('confirm the expected failure before implementation');
+      expect(result.stdout).not.toContain('directly implement each pending task');
     });
 
     it('shows needs_verify state when all tasks are complete but verify is missing', async () => {

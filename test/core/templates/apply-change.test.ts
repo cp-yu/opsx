@@ -38,7 +38,7 @@ describe('apply change workflow template', () => {
     }
   });
 
-  it('documents direct Phase 0 implementation and branch isolation', () => {
+  it('documents strict Phase 0 TDD and branch isolation', () => {
     for (const template of [
       getApplyChangeSkillTemplate().instructions,
       getOpsxApplyCommandTemplate().content,
@@ -50,10 +50,16 @@ describe('apply change workflow template', () => {
       expect(template).toContain('use that as the default choice without prompting; only `ask` is interactive and means prompt');
       expect(template).toContain("path.join(changeDir, '.apply-isolation.json')");
       expect(template).toContain('using-git-worktrees');
-      expect(template).toContain('Master Agent Direct Implementation');
-      expect(template).toContain('Implement the task directly in the current agent context');
-      expect(template).toContain('Use existing project test commands from task Checks when available');
-      expect(template).toContain('Mark the task\'s nested Checks complete in `tasks.md` only after implementation evidence passes');
+      expect(template).toContain('Master Agent Strict TDD Implementation');
+      expect(template).toContain('For behavior or code Checks, add or update the targeted test before implementation.');
+      expect(template).toContain('Run the declared Check command or equivalent targeted command and confirm the expected failure before implementation.');
+      expect(template).toContain('Make the minimal implementation needed for that Check.');
+      expect(template).toContain('Rerun the same or equivalent Check command and confirm pass before updating task or remediation checkboxes.');
+      expect(template).toContain('Non-runtime text or artifact Checks do not require artificial red failures.');
+      expect(template).toContain('Config, schema, template, workflow template, and agent instruction template Checks default to behavior/code Checks');
+      expect(template).toContain('Mark the task\'s nested Checks complete in `tasks.md` only after red/green evidence or final non-runtime evidence passes.');
+      expect(template).not.toContain('Master Agent Direct Implementation');
+      expect(template).not.toContain('Implement the task directly in the current agent context');
       expect(template).not.toContain("path.join(changeDir, '.apply-steps')");
       expect(template).not.toContain('openspec-implementer');
       expect(template).not.toContain('cheapest available subagent model');

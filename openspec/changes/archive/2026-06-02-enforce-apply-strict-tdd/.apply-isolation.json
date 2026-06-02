@@ -1,0 +1,5 @@
+{
+  "method": "branch",
+  "branchName": "enforce-apply-strict-tdd",
+  "originalBranch": "main"
+}

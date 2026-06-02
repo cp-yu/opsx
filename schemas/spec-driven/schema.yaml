@@ -158,7 +158,7 @@ artifacts:
     description: Coarse implementation tasks with verification checks
     template: tasks.md
     instruction: |
-      Create a coarse-grained task list that the apply phase can decompose into detailed TDD cycles.
+      Create a coarse-grained task list with executable Checks that the apply phase can run through strict evidence gates.
 
       **IMPORTANT: Follow the template below exactly.** The apply phase parses
       `### Task N:` headings and nested checkboxes to track progress.
@@ -181,7 +181,8 @@ artifacts:
       - Validation work maps to checks for invalid-input behavior
       - Bug fixes map to a check that reproduces the failure and proves the regression fix
       - Refactors map to a before/after behavior-equivalence check
-      - Trivial edits such as typo, wording-only, or comment-only changes do not require full test-first decomposition, but still need at least one lightweight check with a non-empty `Verifies:` explaining how completion will be verified
+      - non-runtime text or non-runtime artifact changes do not require artificial failing tests, but still need at least one lightweight check with a non-empty `Verifies:` explaining how completion will be verified
+      - config, schema, template, workflow template, and agent instruction template changes default to behavior Checks unless the task proves there is no runtime or generated-surface consumer
       - Existing Actions/Checks files remain valid for older changes, but new changes SHOULD use the Task/Goal/Files/Requirements/Checks format
 
       Example:
@@ -214,7 +215,7 @@ artifacts:
       ```
 
       Reference specs for what needs to be built, design for how to build it.
-      Checks are executable verification work, not explanatory prose. The apply phase will implement each pending Task directly and mark checks complete only after evidence passes.
+      Checks are executable verification work, not explanatory prose. The apply phase will execute each pending behavior/code Check through strict red/green TDD and mark checks complete only after red/green evidence or final non-runtime evidence passes.
     requires:
       - specs
       - design
@@ -223,5 +224,7 @@ apply:
   requires: [tasks]
   tracks: tasks.md
   instruction: |
-    Read context files, directly implement each pending task, and mark nested checks complete as evidence passes.
+    Read context files and execute each pending behavior/code Check through strict red/green TDD: add or update the targeted test first, run the Check command or equivalent targeted command and confirm the expected failure before implementation, make the minimal implementation, then rerun and confirm pass before marking nested Checks complete.
+    For non-runtime text or artifact Checks, do not create artificial failing tests; use the declared Command, Evidence, or Expect fields as final evidence.
+    Config, schema, template, workflow template, and agent instruction template Checks default to behavior Checks unless the task proves there is no runtime or generated-surface consumer.
     Pause if you hit blockers or need clarification.

@@ -28,6 +28,25 @@
 - **THEN** the explicit internal skill list SHALL NOT contain `openspec-implementer`
 - **AND** the implementation SHALL NOT remove it through directory scanning, glob filtering, or regex matching
 
+### Requirement: Managed generated surfaces remove stale implementer residue
+
+系统 SHALL 在 managed skill generation 和 update 路径中移除 active tool surfaces 中由旧版本生成的 stale `openspec-implementer` skill files。删除 SHALL 使用明确的 managed internal skill directory name list，而不是目录扫描、glob filtering 或 regex inference。
+
+#### Scenario: Update removes stale implementer skill by explicit name
+
+- **WHEN** 用户执行 `openspec update`
+- **AND** 目标 AI 工具具有 managed skills directory
+- **AND** 该 directory 包含旧版本生成的 `openspec-implementer`
+- **THEN** 系统 SHALL 通过显式 stale skill directory name 删除该 managed directory
+- **AND** 系统 SHALL NOT 删除 reviewer、optimizer、impact-sweeper 或用户自定义 skill directories
+
+#### Scenario: Init does not install stale implementer skill
+
+- **WHEN** 用户执行 `openspec init`
+- **AND** 目标 AI 工具具有 skillsDir
+- **THEN** 系统 SHALL install active workflow skills and active internal skills only
+- **AND** installed internal skill directory names SHALL NOT include `openspec-implementer`
+
 ### Requirement: 内部 skill 不产 slash command
 内部 skill 条目 SHALL NOT 注册到 `WorkflowManifestRegistry`。命令生成管线（`getCommandTemplates()` 和 `getCommandContents()`）SHALL 跳过内部 skill 条目。
 
@@ -65,4 +84,3 @@ Skill 目录名 SHALL 定义为显式常量（如 `'openspec-reviewer'`、`'open
 - **THEN** 文件 SHALL 以 YAML frontmatter 开头（name、description、license、compatibility、metadata）
 - **AND** 后接 Markdown body（角色、硬约束、输入合约...）
 - **AND** 格式 SHALL 与 workflow skill 文件完全一致
-

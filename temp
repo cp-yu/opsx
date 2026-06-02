@@ -1,18 +1,6 @@
-现在工具哪里 需要有功能可以创建change/**/specs/ 文件夹，因为每次claude code都要询问用户，这影响体验。
-
-
-  验证结果： openspec validate 通过，无 warning。结构检查：8A / 8C / 8 Covers / 16 evidence fields，全部合规。 这里的C 感觉需要优化
-
-
  增加cli，辅助sweeper 
-
- ---
-现在apply运行着运行着就会 paused一下，应该持续运行的
-
  ---
  模拟grill-with-doc维护名词
-
-
  ---
 现在的explore好像会脱离期望路径，进行编辑项目
 同时explore询问问题，会重复前面的选择内容一遍。
