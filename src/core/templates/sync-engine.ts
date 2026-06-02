@@ -19,12 +19,12 @@ import {
   generateSkillContent,
   getSkillTemplates,
   getCommandContents,
+  getManagedSkillDirNames,
 } from '../shared/skill-generation.js';
 import type { SkillTemplateEntry } from '../shared/skill-generation.js';
 import { runTransforms } from './transforms/index.js';
 import {
   ALL_WORKFLOWS,
-  WORKFLOW_TO_SKILL_DIR,
   getCommandSlug,
   normalizeWorkflowIds,
   type WorkflowId,
@@ -154,7 +154,7 @@ function buildPlan(request: ArtifactSyncRequest): ToolSyncPlan | null {
     commandEntries,
     expectedSkillDirNames: skillEntries.map((e) => e.dirName),
     expectedCommandSlugs: commandEntries.map((e) => e.content.commandSlug),
-    managedSkillDirNames: ALL_WORKFLOWS.map((workflowId) => WORKFLOW_TO_SKILL_DIR[workflowId]),
+    managedSkillDirNames: getManagedSkillDirNames(),
     managedCommandSlugs: ALL_WORKFLOWS.map((workflowId) => getCommandSlug(workflowId)),
   };
 }

@@ -7,8 +7,10 @@ import {
   createToolWorkflowArtifactPlan,
   createWorkflowArtifactPlan,
   getManagedCommandFiles,
+  MANAGED_STALE_INTERNAL_SKILL_DIR_NAMES,
   resolveEffectiveWorkflows,
 } from '../../src/core/workflow-installation.js';
+import { ArtifactSyncEngine } from '../../src/core/templates/sync-engine.js';
 
 describe('workflow installation planning', () => {
   let testDir: string;
@@ -63,6 +65,36 @@ describe('workflow installation planning', () => {
       'openspec-impact-sweeper',
     ]);
     expect(plan.expectedCommandSlugs).toEqual([]);
+  });
+
+  it('tracks stale internal skill directories by explicit name', () => {
+    expect(MANAGED_STALE_INTERNAL_SKILL_DIR_NAMES).toEqual(['openspec-implementer']);
+
+    const plan = createToolWorkflowArtifactPlan('claude', ['propose', 'explore'], 'both', testDir);
+    expect(plan.managedSkillDirNames).toContain('openspec-implementer');
+    expect(plan.expectedSkillDirNames).not.toContain('openspec-implementer');
+  });
+
+  it('removes only explicitly managed stale implementer skill directories during sync', async () => {
+    const skillsDir = path.join(testDir, '.claude', 'skills');
+    await fs.mkdir(path.join(skillsDir, 'openspec-implementer'), { recursive: true });
+    await fs.writeFile(path.join(skillsDir, 'openspec-implementer', 'SKILL.md'), 'name: openspec-implementer\n');
+    await fs.mkdir(path.join(skillsDir, 'user-skill'), { recursive: true });
+    await fs.writeFile(path.join(skillsDir, 'user-skill', 'SKILL.md'), 'name: user-skill\n');
+
+    const result = await ArtifactSyncEngine.syncOne({
+      toolId: 'claude',
+      projectPath: testDir,
+      workflows: ['propose', 'explore'],
+      delivery: 'both',
+      version: 'test',
+    });
+
+    expect(result.error).toBeUndefined();
+    expect(result.skillsRemoved).toBe(1);
+    await expect(fs.stat(path.join(skillsDir, 'openspec-implementer'))).rejects.toThrow();
+    await expect(fs.stat(path.join(skillsDir, 'user-skill', 'SKILL.md'))).resolves.toBeDefined();
+    await expect(fs.stat(path.join(skillsDir, 'openspec-reviewer', 'SKILL.md'))).resolves.toBeDefined();
   });
 
   it('resolves legacy codex command files via explicit paths', () => {

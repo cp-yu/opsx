@@ -59,7 +59,7 @@ capabilities:
     intent: 建立内部 workflow ID 到外部用户命令 slug 的映射，使生成、检测、迁移和清理命令制品时都遵循同一套命名契约
     type: capability
   - id: cap.ai.skill-generation
-    intent: AI 技能文件生成，包含 reviewer、optimizer、impact-sweeper 等仍被 workflow 引用的内部 skill；不再生成 openspec-implementer。
+    intent: AI 技能文件生成，包含 reviewer、optimizer、impact-sweeper 等仍被 workflow 引用的内部 skill；不生成 openspec-implementer，并通过显式 managed stale skill name 清理旧生成残留。
     status: active
     type: capability
   - id: cap.ai.template-artifact-pipeline
@@ -70,7 +70,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: verify/apply/archive/propose 等模板共享面向 Agent 的 workflow guidance；OPSX_GENERATE_DELTA 片段包含具体 YAML 结构示例（ADDED/MODIFIED/REMOVED 为 YAML object key 而非 Markdown heading）；OPSX_POST_PROPOSE_VALIDATION 片段引用程序化 CLI（Validator.validateOpsxDelta）替代手动 dry-run；propose 的 post-propose warning validation 包含程序化 Actions/Checks 结构校验
+    intent: verify/apply/archive/propose 等模板共享面向 Agent 的 workflow guidance；apply-change 模板 Phase 0 明确要求 Master-agent strict TDD checkpoints，同时继续保留 reviewer/optimizer/seal 门禁。
     type: capability
   - id: cap.ai.impact-sweeper
     intent: 提供可复用的 openspec-impact-sweeper skill，基于 OPSX、specs 和 tracked source search 为项目概念生成轻量影响面 JSON 报告。
@@ -136,7 +136,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.instructions
-    intent: 指令生成系统，apply 指令返回任务拆解状态和详细步骤文件路径
+    intent: 指令生成系统，apply 指令返回任务状态并要求 behavior/code Checks 执行严格 red/green TDD；tasks 指令生成 coarse Task + Checks 结构，不再暗示生成 .apply-steps 或依赖 implementer。
     status: active
     type: capability
   - id: cap.cli.list
@@ -291,7 +291,7 @@ capabilities:
     intent: apply 命令内置 Phase 1 一致性验证、Phase 2 优化循环和 Phase 3 seal；Phase 1 或 seal failure 写回 remediation 后进入同一 recovery loop，不因首次失败直接 pause。
     type: capability
   - id: cap.apply.subagent-orchestration
-    intent: apply 工作流中严格区分编码角色（主 agent）和判断角色（subagent reviewer/optimizer）；subagent 仅用于 clean-context 验证和优化判断，不用于编码执行。
+    intent: apply 工作流中严格区分编码角色和判断角色；Master agent 负责严格 TDD 编码执行，reviewer/optimizer subagent 仅用于 clean-context 验证和优化判断，不用于编码执行。
     type: capability
   - id: cap.ai.agent-prompt-guidance
     intent: 面向 Agent 的 verify gate 提示词指引系统。VERIFY_SIMPLE_CHANGE_FAST_PATH 从"允许 master agent 自主跳过"改为"强制委托 optimizer subagent"语义。共享片段（状态机流程图、JSON schema 速查表、CLI 错误恢复决策树）中 OPTIMIZATION_PROPOSED 行补全 --files 参数，错误恢复增加 FILES_REQUIRED 条目。apply-change 模板 Phase 2 命令模板同步补全 --files
@@ -307,7 +307,7 @@ capabilities:
     intent: Phase 2 优化提案 subagent skill。Optimizer 自主从 .verify-result.json 读取 Phase 1 结果和 evidence 列表，Input Contract 从 7 字段 bundle 简化为 3 字段定位信息。Scope 锚定改为 git diff <originalBranch>...HEAD --name-only，并新增一层依赖展开协议（imports/callers/OPSX relations）扩大优化候选；展开候选不进入 affectedFileHashes 也不作为 patch 目标。保留 5类优化原则、Search/Replace 块输出格式和 failedDirections 避重协议
     type: capability
   - id: cap.ai.internal-skill-installation
-    intent: 内部 skill 安装管线安装仍被 workflow 引用的 active internal skills，并显式排除已删除的 openspec-implementer；不生成对应 slash command。
+    intent: 内部 skill 安装管线安装仍被 workflow 引用的 active internal skills，并显式排除和清理已删除的 openspec-implementer；不生成对应 slash command。
     type: capability
   - id: cap.verify.prompt-orchestration
     intent: Verification prompt orchestration patterns。Coordinator 的 Evidence 步骤简化为确定路径，Delegate Review 步骤只传定位信息并声明 subagent 拥有 Read+Bash 工具能力。保留 mode labels、timeout rules 和 coordinator 角色纪律
@@ -331,7 +331,7 @@ capabilities:
     intent: Explore 阶段的 brainstorming 流程，包含 6 步 checklist、一次一问纪律、2-3 方案对比、Design Summary 生成
     type: capability
   - id: cap.apply.task-decomposition
-    intent: Apply 阶段 Master agent 直接读取 tasks.md、change-local specs、design 与项目代码上下文，将粗粒度任务拆解为当前上下文中的实现、测试和验证工作；不再生成 .apply-steps，也不再 dispatch implementer subagent。普通执行失败进入 master-led recovery，只有同一 task 的同一 normalized error signature 经 remediation 后连续失败 2 次才 pause。
+    intent: Apply Phase 0 中 Master agent 直接读取 tasks.md、change-local specs、design 与项目代码上下文，但必须按 pending Check 执行严格 TDD。行为/代码 Check 需要 test first、预期失败、最小实现、通过确认后才勾选；非运行时文本制品只需最终证据。继续不生成 .apply-steps，也不 dispatch openspec-implementer。
     type: capability
   - id: cap.apply.branch-isolation
     intent: Apply 阶段分支隔离策略由 apply.defaultIsolation 驱动；main/master 上仅 ask 模式询问用户，branch/worktree/none 配置直接执行并持久化 .apply-isolation.json。

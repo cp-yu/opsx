@@ -21,7 +21,13 @@ import { resolveVerifyExecutionModel } from '../templates/workflows/verify-execu
 import { getReviewerSkillTemplate } from '../templates/workflows/reviewer.js';
 import { getOptimizerSkillTemplate } from '../templates/workflows/optimizer.js';
 import { getImpactSweeperSkillTemplate } from '../templates/workflows/impact-sweeper.js';
-import { getWorkflowSurfaces, type CommandId, type WorkflowId } from '../workflow-surface.js';
+import {
+  ALL_WORKFLOWS,
+  WORKFLOW_TO_SKILL_DIR,
+  getWorkflowSurfaces,
+  type CommandId,
+  type WorkflowId,
+} from '../workflow-surface.js';
 
 /**
  * Internal subagent skill templates.
@@ -47,6 +53,15 @@ const INTERNAL_SKILL_TEMPLATES: ReadonlyArray<{
     getSkillTemplate: getImpactSweeperSkillTemplate,
   },
 ];
+
+export const MANAGED_STALE_INTERNAL_SKILL_DIR_NAMES = ['openspec-implementer'] as const;
+
+export function getManagedSkillDirNames(): string[] {
+  return [
+    ...ALL_WORKFLOWS.map((workflowId) => WORKFLOW_TO_SKILL_DIR[workflowId]),
+    ...MANAGED_STALE_INTERNAL_SKILL_DIR_NAMES,
+  ];
+}
 
 const EXECUTION_MODEL_SKILL_TEMPLATES: Partial<
   Record<WorkflowId, (executionModel: ReturnType<typeof resolveVerifyExecutionModel>) => SkillTemplate>

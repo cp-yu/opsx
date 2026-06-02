@@ -1,0 +1,15 @@
+schema_version: 1
+MODIFIED:
+  capabilities:
+    - id: cap.apply.task-decomposition
+      intent: Apply Phase 0 中 Master agent 直接读取 tasks.md、change-local specs、design 与项目代码上下文，但必须按 pending Check 执行严格 TDD。行为/代码 Check 需要 test first、预期失败、最小实现、通过确认后才勾选；非运行时文本制品只需最终证据。继续不生成 .apply-steps，也不 dispatch openspec-implementer。
+    - id: cap.apply.subagent-orchestration
+      intent: apply 工作流中严格区分编码角色和判断角色；Master agent 负责严格 TDD 编码执行，reviewer/optimizer subagent 仅用于 clean-context 验证和优化判断，不用于编码执行。
+    - id: cap.cli.instructions
+      intent: 指令生成系统，apply 指令返回任务状态并要求 behavior/code Checks 执行严格 red/green TDD；tasks 指令生成 coarse Task + Checks 结构，不再暗示生成 .apply-steps 或依赖 implementer。
+    - id: cap.ai.workflow-templates
+      intent: verify/apply/archive/propose 等模板共享面向 Agent 的 workflow guidance；apply-change 模板 Phase 0 明确要求 Master-agent strict TDD checkpoints，同时继续保留 reviewer/optimizer/seal 门禁。
+    - id: cap.ai.skill-generation
+      intent: AI 技能文件生成，包含 reviewer、optimizer、impact-sweeper 等仍被 workflow 引用的内部 skill；不生成 openspec-implementer，并通过显式 managed stale skill name 清理旧生成残留。
+    - id: cap.ai.internal-skill-installation
+      intent: 内部 skill 安装管线安装仍被 workflow 引用的 active internal skills，并显式排除和清理已删除的 openspec-implementer；不生成对应 slash command。

@@ -100,7 +100,7 @@ Now tell your AI: `/opsx:propose <what-you-want-to-build>`
 
 For vague or multi-subsystem ideas, start with `/opsx:explore`. Explore now runs a structured brainstorming flow and produces a Design Summary in chat. `/opsx:propose` can reuse that summary, or skip explore when your input is already detailed.
 
-`/opsx:apply` now reads coarse `tasks.md` entries and has the current agent directly implement pending tasks, run checks, and mark evidence-backed progress. When run on `main` or `master`, it asks whether to create a feature branch, create a worktree, or continue on the current branch.
+`/opsx:apply` now reads coarse `tasks.md` entries and has the current agent execute pending behavior checks through strict red/green TDD before marking evidence-backed progress. When run on `main` or `master`, it asks whether to create a feature branch, create a worktree, or continue on the current branch.
 
 If you want the `expanded` workflow preset (`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:sync`, `/opsx:bulk-archive`, `/opsx:onboard`), select it with `openspec config profile` and apply with `openspec update`. In the default `core` preset, `/opsx:archive` still exposes only one user-facing command, but it now runs the same full verify gate before archive and then performs spec + OPSX sync inline.
 
@@ -159,7 +159,7 @@ For a newer release, replace the version in the tarball URL and reinstall before
 
 ## Usage Notes
 
-**Model selection**: OpenSpec works best with high-reasoning models for exploration, proposal, design, and the apply coordinator. Implementer subagents should use the cheapest available model suitable for mechanical TDD execution unless you explicitly configure otherwise.
+**Model selection**: OpenSpec works best with high-reasoning models for exploration, proposal, design, and apply. Apply uses reviewer and optimizer subagents for judgment gates, not coding execution.
 
 **Context hygiene**: OpenSpec benefits from a clean context window. Clear your context before starting implementation and maintain good context hygiene throughout your session.
 

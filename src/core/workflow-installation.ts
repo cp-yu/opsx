@@ -6,7 +6,6 @@ import { AI_TOOLS, getAITool, toolSupportsCommandGeneration } from './config.js'
 import type { Delivery } from './global-config.js';
 import {
   ALL_WORKFLOWS,
-  WORKFLOW_TO_SKILL_DIR,
   getCommandSlug,
   normalizeWorkflowIds,
   type WorkflowId,
@@ -15,10 +14,13 @@ import {
   getSkillTemplates,
   getCommandTemplates,
   getCommandContents,
+  getManagedSkillDirNames,
   type SkillTemplateEntry,
   type CommandTemplateEntry,
 } from './shared/skill-generation.js';
 import type { CommandContent } from './command-generation/index.js';
+
+export { MANAGED_STALE_INTERNAL_SKILL_DIR_NAMES } from './shared/skill-generation.js';
 
 export interface WorkflowArtifactPlan {
   workflows: readonly WorkflowId[];
@@ -83,7 +85,7 @@ export function createWorkflowArtifactPlan(
     commandContents,
     expectedSkillDirNames: skillTemplates.map((entry) => entry.dirName),
     expectedCommandSlugs: commandTemplates.map((entry) => entry.commandSlug),
-    managedSkillDirNames: ALL_WORKFLOWS.map((workflowId) => WORKFLOW_TO_SKILL_DIR[workflowId]),
+    managedSkillDirNames: getManagedSkillDirNames(),
     managedCommandSlugs: ALL_WORKFLOWS.map((workflowId) => getCommandSlug(workflowId)),
   };
 }
@@ -132,7 +134,7 @@ export function createToolWorkflowArtifactPlan(
     commandContents,
     expectedSkillDirNames: skillTemplates.map((entry) => entry.dirName),
     expectedCommandSlugs: commandTemplates.map((entry) => entry.commandSlug),
-    managedSkillDirNames: ALL_WORKFLOWS.map((workflowId) => WORKFLOW_TO_SKILL_DIR[workflowId]),
+    managedSkillDirNames: getManagedSkillDirNames(),
     managedCommandSlugs: ALL_WORKFLOWS.map((workflowId) => getCommandSlug(workflowId)),
   };
 }
