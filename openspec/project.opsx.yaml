@@ -301,7 +301,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.reviewer-skill
-    intent: Phase 1 验证审查 subagent skill。Reviewer 自主读取文件和执行测试，Input Contract 从 5 字段 bundle 简化为 3 字段定位信息（changeName、changeDir、projectRoot）。Scope 锚定改为 git diff <originalBranch>...HEAD --name-only，判断证据仅基于 Read 到的最终磁盘内容，不再使用 diff 内容；保留 6步验证循环、严重性阈值、三个验证维度和结构化输出 schema
+    intent: Phase 1 验证审查 subagent skill。元规则从"不确定时降级"反转为"不确定时升级"，Correctness/Coherence trigger 强化（spec 偏离和设计违背升为 CRITICAL），新增 Cleanliness 维度检测，summary schema 扩展包含 cleanliness 指标
     type: capability
   - id: cap.ai.optimizer-skill
     intent: Phase 2 优化提案 subagent skill。Optimizer 自主从 .verify-result.json 读取 Phase 1 结果和 evidence 列表，Input Contract 从 7 字段 bundle 简化为 3 字段定位信息。Scope 锚定改为 git diff <originalBranch>...HEAD --name-only，并新增一层依赖展开协议（imports/callers/OPSX relations）扩大优化候选；展开候选不进入 affectedFileHashes 也不作为 patch 目标。保留 5类优化原则、Search/Replace 块输出格式和 failedDirections 避重协议
@@ -310,7 +310,7 @@ capabilities:
     intent: 内部 skill 安装管线安装仍被 workflow 引用的 active internal skills，并显式排除和清理已删除的 openspec-implementer；不生成对应 slash command。
     type: capability
   - id: cap.verify.prompt-orchestration
-    intent: Verification prompt orchestration patterns。Coordinator 的 Evidence 步骤简化为确定路径，Delegate Review 步骤只传定位信息并声明 subagent 拥有 Read+Bash 工具能力。保留 mode labels、timeout rules 和 coordinator 角色纪律
+    intent: Verification prompt orchestration patterns。Coordinator 的 Evidence 步骤简化为确定路径。Severity philosophy 表述从"prefer lower tier"改为"escalate when uncertain"，删除降级偏见的措辞
     type: capability
   - id: cap.verify.enforce-optimizer-invocation
     intent: 强制 optimizer subagent 调用约束——CLI 层 runtime enforcement（summary 非空校验）+ prompt 层协议约束（VERIFY_SIMPLE_CHANGE_FAST_PATH 重写为强制委托语义），确保 Phase 2 判断权始终归属 optimizer subagent
@@ -355,4 +355,7 @@ capabilities:
   - id: cap.config.apply-default-isolation
     intent: 将 apply.defaultIsolation 作为项目配置的功能性磁盘默认值物化；init 生成配置时写出 ask 默认与允许值注释，update 以 missing-only 方式补齐旧配置且不覆盖用户值。
     status: active
+    type: capability
+  - id: cap.ai.reviewer-cleanliness-dimension
+    intent: Cleanliness 维度的检测逻辑、severity 映射和跨语言工具适配策略，用于检测重构残留、孤儿代码、过时 TODO、半迁移等遗留物
     type: capability

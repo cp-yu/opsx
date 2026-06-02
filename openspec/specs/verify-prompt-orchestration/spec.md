@@ -154,9 +154,17 @@ verify 工作流中新增或修改的 prompt text SHALL 全部使用英文，与
 
 Mode label SHALL 使用英文格式 `[Mode: ...]`，例如 `[Mode: Evidence]`、`[Mode: Delegate Review]`。
 
+Severity philosophy 表述 SHALL 从"prefer lower tier"改为"escalate when uncertain"，删除降级偏见的措辞。
+
 #### Scenario: Mode label 使用英文
 
 - **WHEN** verify prompt 被组装
 - **THEN** 所有 mode label SHALL 以 `[Mode: <EnglishLabel>]` 形式出现
 - **AND** SHALL NOT 使用 `[模式：证据]` 这类中文 mode label
+
+#### Scenario: 删除"prefer lower tier"表述
+
+- **WHEN** verify-change.ts 模板被渲染
+- **THEN** SHALL NOT 包含 "when uncertain, prefer SUGGESTION over WARNING and WARNING over CRITICAL" 表述
+- **AND** SHALL 替换为 "when uncertain, escalate to CRITICAL to enforce the 'clean slate' principle"
 
