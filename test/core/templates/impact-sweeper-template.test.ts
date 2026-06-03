@@ -37,10 +37,13 @@ describe('impact sweeper template', () => {
     }
   });
 
-  it('requires OPSX-first evidence and bounded reverse search', () => {
-    expect(instructions).toContain('openspec/project.opsx.yaml');
-    expect(instructions).toContain('openspec/project.opsx.code-map.yaml');
-    expect(instructions).toContain('openspec/project.opsx.relations.yaml');
+  it('requires CLI-backed OPSX evidence and bounded reverse search', () => {
+    expect(instructions).toContain('openspec opsx query <node-id> --json');
+    expect(instructions).toContain('Use the returned `node`, `relations`, and `codeMap` fields as evidence');
+    expect(instructions).toContain('OPSX files not found');
+    expect(instructions).toContain('openspec list --specs --json');
+    expect(instructions).toContain("Extract each spec entry's `capabilities` string array");
+    expect(instructions).toContain('Treat a missing frontmatter mapping as an empty array');
     expect(instructions).toContain('one-hop relations');
     expect(instructions).toContain('Expand to second-hop relations only when');
     expect(instructions).toContain('shared infrastructure');

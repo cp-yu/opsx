@@ -474,3 +474,9 @@ relations:
   - from: cap.opsx.bootstrap-backfill-specs
     type: contains
     to: dom.opsx
+  - from: cap.cli.opsx-query
+    type: contains
+    to: dom.cli
+  - from: cap.cli.opsx-query
+    type: depends_on
+    to: cap.opsx.read-transparent

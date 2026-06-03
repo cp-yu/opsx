@@ -58,6 +58,10 @@ describe('apply change workflow template', () => {
       expect(template).toContain('Non-runtime text or artifact Checks do not require artificial red failures.');
       expect(template).toContain('Config, schema, template, workflow template, and agent instruction template Checks default to behavior/code Checks');
       expect(template).toContain('Mark the task\'s nested Checks complete in `tasks.md` only after red/green evidence or final non-runtime evidence passes.');
+      expect(template).toContain('openspec list --specs --json');
+      expect(template).toContain("capabilities` string array");
+      expect(template).toContain('capabilities: []');
+      expect(template).not.toContain('openspec spec list');
       expect(template).not.toContain('Master Agent Direct Implementation');
       expect(template).not.toContain('Implement the task directly in the current agent context');
       expect(template).not.toContain("path.join(changeDir, '.apply-steps')");

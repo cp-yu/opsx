@@ -1,8 +1,7 @@
 import { program } from 'commander';
-import { existsSync, readdirSync, readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { MarkdownParser } from '../core/parsers/markdown-parser.js';
-import { parseSpecFrontmatter } from '../core/parsers/spec-frontmatter.js';
 import { Validator } from '../core/validation/validator.js';
 import type { Spec } from '../core/schemas/index.js';
 import { isInteractive } from '../utils/interactive.js';
@@ -131,70 +130,6 @@ export function registerSpecCommand(rootProgram: typeof program) {
       try {
         const cmd = new SpecCommand();
         await cmd.show(specId, options as any);
-      } catch (error) {
-        console.error(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        process.exitCode = 1;
-      }
-    });
-
-  specCommand
-    .command('list')
-    .description('List all available specifications')
-    .option('--json', 'Output as JSON')
-    .option('--long', 'Show id and title with counts')
-    .action((options: { json?: boolean; long?: boolean }) => {
-      try {
-        if (!existsSync(SPECS_DIR)) {
-          console.log('No items found');
-          return;
-        }
-
-        const specs = readdirSync(SPECS_DIR, { withFileTypes: true })
-          .filter(dirent => dirent.isDirectory())
-          .map(dirent => {
-            const specPath = join(SPECS_DIR, dirent.name, 'spec.md');
-            if (existsSync(specPath)) {
-              const content = readFileSync(specPath, 'utf-8');
-              const capabilities = parseSpecFrontmatter(content).capabilities;
-              try {
-                const parser = new MarkdownParser(content);
-                const spec = parser.parseSpec(dirent.name);
-                
-                return {
-                  id: dirent.name,
-                  title: spec.name,
-                  requirementCount: spec.requirements.length,
-                  capabilities,
-                };
-              } catch {
-                return {
-                  id: dirent.name,
-                  title: dirent.name,
-                  requirementCount: 0,
-                  capabilities,
-                };
-              }
-            }
-            return null;
-          })
-          .filter((spec): spec is { id: string; title: string; requirementCount: number; capabilities: string[] } => spec !== null)
-          .sort((a, b) => a.id.localeCompare(b.id));
-
-        if (options.json) {
-          console.log(JSON.stringify(specs, null, 2));
-        } else {
-          if (specs.length === 0) {
-            console.log('No items found');
-            return;
-          }
-          if (!options.long) {
-            specs.forEach(spec => console.log(spec.id));
-            return;
-          }
-          specs.forEach(spec => {
-            console.log(`${spec.id}: ${spec.title} [requirements ${spec.requirementCount}]`);
-          });
-        }
       } catch (error) {
         console.error(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
         process.exitCode = 1;

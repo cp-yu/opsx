@@ -85,4 +85,13 @@ describe('propose template post-validation flow', () => {
       expect(body).toContain('Show input length, detail score, multi-subsystem result, and final decision');
     }
   });
+
+  it('uses list --specs JSON for capability-aware spec discovery', () => {
+    for (const body of getProposeBodies()) {
+      expect(body).toContain('openspec list --specs --json');
+      expect(body).toContain("capabilities` string array");
+      expect(body).toContain('capabilities: []');
+      expect(body).not.toContain('openspec spec list');
+    }
+  });
 });

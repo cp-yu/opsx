@@ -4,6 +4,7 @@ import { getTaskProgressForChange, formatTaskStatus } from '../utils/task-progre
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { MarkdownParser } from './parsers/markdown-parser.js';
+import { parseSpecFrontmatter } from './parsers/spec-frontmatter.js';
 import { checkFreshness } from './verify/freshness.js';
 
 interface ChangeInfo {
@@ -172,22 +173,32 @@ export class ListCommand {
       return;
     }
 
-    type SpecInfo = { id: string; requirementCount: number };
+    type SpecInfo = { id: string; title: string; requirementCount: number; capabilities: string[] };
     const specs: SpecInfo[] = [];
     for (const id of specDirs) {
       const specPath = join(specsDir, id, 'spec.md');
       try {
         const content = readFileSync(specPath, 'utf-8');
-        const parser = new MarkdownParser(content);
-        const spec = parser.parseSpec(id);
-        specs.push({ id, requirementCount: spec.requirements.length });
+        const capabilities = parseSpecFrontmatter(content).capabilities;
+        try {
+          const parser = new MarkdownParser(content);
+          const spec = parser.parseSpec(id);
+          specs.push({ id, title: spec.name, requirementCount: spec.requirements.length, capabilities });
+        } catch {
+          specs.push({ id, title: id, requirementCount: 0, capabilities });
+        }
       } catch {
         // If spec cannot be read or parsed, include with 0 count
-        specs.push({ id, requirementCount: 0 });
+        specs.push({ id, title: id, requirementCount: 0, capabilities: [] });
       }
     }
 
     specs.sort((a, b) => a.id.localeCompare(b.id));
+    if (json) {
+      console.log(JSON.stringify(specs, null, 2));
+      return;
+    }
+
     console.log('Specs:');
     const padding = '  ';
     const nameWidth = Math.max(...specs.map(s => s.id.length));

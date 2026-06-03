@@ -23,6 +23,17 @@ Before reading other context files, check whether \`openspec/project.opsx.yaml\`
 export const OPSX_READ_CONTEXT = OPSX_SHARED_CONTEXT;
 
 /**
+ * Fragment: CLI-backed OPSX query context
+ * Used in: propose, apply-change
+ */
+export const OPSX_CLI_QUERY_CONTEXT = `
+Use OpenSpec CLI query surfaces for architecture context instead of reading OPSX YAML files directly.
+- Run \`openspec list --specs --json\` to get specs and their \`capabilities\` string arrays.
+- For known or affected OPSX node IDs, run \`openspec opsx query <node-id> --json\` to get node details, relations, and code-map refs.
+- Treat CLI output as navigation context, not as a replacement for change artifacts.
+`.trim();
+
+/**
  * Fragment: Generate opsx-delta.yaml
  * Used in: propose, ff-change
  */
@@ -32,7 +43,7 @@ export const OPSX_GENERATE_DELTA = `
 - Use the returned \`template\`, \`instruction\`, and \`outputPath\` to generate \`opsx-delta.yaml\`
 - Read \`proposal.md\` to extract the capability list
 - Read all delta specs in \`openspec/changes/<name>/specs/*/spec.md\`
-- Read \`openspec/project.opsx.yaml\` if it exists for current-system context
+- For existing capability or domain IDs, run \`openspec opsx query <node-id> --json\` for current-system context
 - Treat \`ADDED\`, \`MODIFIED\`, and \`REMOVED\` as YAML object keys, not Markdown headings
 - Follow a concrete YAML object structure such as:
   \`\`\`yaml

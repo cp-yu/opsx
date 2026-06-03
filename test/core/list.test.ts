@@ -245,5 +245,64 @@ Regular text that should be ignored
       expect(changes['fresh-change'].status).toBe('complete');
       expect(changes['missing-change'].status).toBe('in-progress');
     });
+
+    it('capabilities字段包含spec frontmatter中的capabilities', async () => {
+      const specsDir = path.join(tempDir, 'openspec', 'specs');
+      await fs.mkdir(path.join(specsDir, 'cli-list'), { recursive: true });
+      await fs.writeFile(
+        path.join(specsDir, 'cli-list', 'spec.md'),
+        `---
+capabilities:
+  - cap.cli.list
+---
+# CLI List
+
+## Purpose
+List specs.
+
+## Requirements
+
+### Requirement: JSON output
+The system SHALL output JSON.
+`
+      );
+
+      const listCommand = new ListCommand();
+      await listCommand.execute(tempDir, 'specs', { json: true });
+
+      const output = JSON.parse(logOutput[0]);
+      expect(output).toEqual([
+        {
+          id: 'cli-list',
+          title: 'cli-list',
+          requirementCount: 1,
+          capabilities: ['cap.cli.list'],
+        },
+      ]);
+    });
+
+    it('空数组用于无frontmatter的spec capabilities字段', async () => {
+      const specsDir = path.join(tempDir, 'openspec', 'specs');
+      await fs.mkdir(path.join(specsDir, 'legacy'), { recursive: true });
+      await fs.writeFile(
+        path.join(specsDir, 'legacy', 'spec.md'),
+        `# Legacy
+
+## Purpose
+Legacy spec.
+
+## Requirements
+`
+      );
+
+      const listCommand = new ListCommand();
+      await listCommand.execute(tempDir, 'specs', { json: true });
+
+      const output = JSON.parse(logOutput[0]);
+      expect(output[0]).toMatchObject({
+        id: 'legacy',
+        capabilities: [],
+      });
+    });
   });
 });

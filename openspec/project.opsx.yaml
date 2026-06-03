@@ -70,10 +70,10 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: verify/apply/archive/propose 等模板共享面向 Agent 的 workflow guidance；propose 和 apply-change 模板新增 spec 发现指令，引导 LLM 通过 spec list --json 查询 cap→spec 映射避免漏改和冗余
+    intent: 提供 AI workflow 模板，使用统一 CLI 查询接口（openspec list --specs）
     type: capability
   - id: cap.ai.impact-sweeper
-    intent: 提供可复用的 openspec-impact-sweeper skill，基于 OPSX、specs frontmatter cap→spec 映射和 tracked source search 为项目概念生成轻量影响面 JSON 报告
+    intent: 通过 CLI 查询接口获取 OPSX 数据和 cap→spec 映射，生成影响面报告
     status: active
     type: capability
   - id: cap.artifact-graph.instruction-loader
@@ -140,7 +140,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.list
-    intent: 列出变更或规约，支持过滤、JSON 输出和 verifyStatus 字段
+    intent: 列出变更或 specs，specs 模式支持 JSON 输出包含 capabilities 字段
     status: active
     type: capability
   - id: cap.cli.new-change
@@ -160,7 +160,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.spec
-    intent: 使用子命令管理和查看 OpenSpec 规约；spec list --json 输出增加 capabilities 字段，基于 Spec Registry 提供 cap↔spec 关联信息
+    intent: 使用 show 和 validate 子命令管理和查看 OpenSpec 规约；list 功能已迁移到 openspec list --specs
     status: active
     type: capability
   - id: cap.cli.status
@@ -367,4 +367,7 @@ capabilities:
     type: capability
   - id: cap.opsx.bootstrap-backfill-specs
     intent: Backfill Engine——通过命名匹配和 LLM 语义推断为无 frontmatter 的 specs 批量补全 capabilities 关联声明
+    type: capability
+  - id: cap.cli.opsx-query
+    intent: 查询 OPSX 节点信息、关系和 code-map 引用的 CLI 命令
     type: capability
