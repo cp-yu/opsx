@@ -2,6 +2,7 @@ import { program } from 'commander';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { MarkdownParser } from '../core/parsers/markdown-parser.js';
+import { parseSpecFrontmatter } from '../core/parsers/spec-frontmatter.js';
 import { Validator } from '../core/validation/validator.js';
 import type { Spec } from '../core/schemas/index.js';
 import { isInteractive } from '../utils/interactive.js';
@@ -153,25 +154,30 @@ export function registerSpecCommand(rootProgram: typeof program) {
           .map(dirent => {
             const specPath = join(SPECS_DIR, dirent.name, 'spec.md');
             if (existsSync(specPath)) {
+              const content = readFileSync(specPath, 'utf-8');
+              const capabilities = parseSpecFrontmatter(content).capabilities;
               try {
-                const spec = parseSpecFromFile(specPath, dirent.name);
+                const parser = new MarkdownParser(content);
+                const spec = parser.parseSpec(dirent.name);
                 
                 return {
                   id: dirent.name,
                   title: spec.name,
-                  requirementCount: spec.requirements.length
+                  requirementCount: spec.requirements.length,
+                  capabilities,
                 };
               } catch {
                 return {
                   id: dirent.name,
                   title: dirent.name,
-                  requirementCount: 0
+                  requirementCount: 0,
+                  capabilities,
                 };
               }
             }
             return null;
           })
-          .filter((spec): spec is { id: string; title: string; requirementCount: number } => spec !== null)
+          .filter((spec): spec is { id: string; title: string; requirementCount: number; capabilities: string[] } => spec !== null)
           .sort((a, b) => a.id.localeCompare(b.id));
 
         if (options.json) {

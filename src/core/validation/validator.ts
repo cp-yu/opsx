@@ -19,6 +19,7 @@ import {
   VALIDATION_MESSAGES
 } from './constants.js';
 import { parseDeltaSpec, normalizeRequirementName, extractRequirementsSection } from '../parsers/requirement-blocks.js';
+import { parseSpecFrontmatter } from '../parsers/spec-frontmatter.js';
 import { findMainSpecStructureIssues } from '../parsers/spec-structure.js';
 import { FileSystemUtils } from '../../utils/file-system.js';
 
@@ -305,6 +306,8 @@ export class Validator {
       issues.push({ level: 'ERROR', path: 'file', message: this.enrichTopLevelError('change', VALIDATION_MESSAGES.CHANGE_NO_DELTAS) });
     }
 
+    await this.validateMainSpecFrontmatter(changeDir, issues);
+
     return this.createReport(issues);
   }
 
@@ -580,5 +583,56 @@ export class Validator {
     const head = sections.slice(0, -1);
     const last = sections[sections.length - 1];
     return `${head.join(', ')} and ${last}`;
+  }
+
+  private async validateMainSpecFrontmatter(changeDir: string, issues: ValidationIssue[]): Promise<void> {
+    const projectRoot = path.resolve(changeDir, '..', '..', '..');
+    const mainSpecsDir = path.join(projectRoot, 'openspec', 'specs');
+    const projectBundle = await readProjectOpsx(projectRoot);
+    const knownCaps = projectBundle
+      ? new Set(projectBundle.capabilities.map(capability => capability.id))
+      : null;
+
+    let entries;
+    try {
+      entries = await fs.readdir(mainSpecsDir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+
+      const specName = entry.name;
+      const specPath = path.join(mainSpecsDir, specName, 'spec.md');
+      let content: string;
+      try {
+        content = await fs.readFile(specPath, 'utf-8');
+      } catch {
+        continue;
+      }
+
+      const { capabilities } = parseSpecFrontmatter(content);
+      const issuePath = `openspec/specs/${specName}/spec.md`;
+      if (capabilities.length === 0) {
+        issues.push({
+          level: 'WARNING',
+          path: issuePath,
+          message: `Spec "${specName}" has no capabilities frontmatter. Add capabilities frontmatter to map it to OPSX capabilities.`,
+        });
+        continue;
+      }
+
+      if (!knownCaps) continue;
+      for (const capId of capabilities) {
+        if (!knownCaps.has(capId)) {
+          issues.push({
+            level: 'WARNING',
+            path: issuePath,
+            message: `Spec "${specName}" declares unknown capability "${capId}" in frontmatter.`,
+          });
+        }
+      }
+    }
   }
 }
