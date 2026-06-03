@@ -70,10 +70,10 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: verify/apply/archive/propose 等模板共享面向 Agent 的 workflow guidance；apply-change 模板 Phase 0 明确要求 Master-agent strict TDD checkpoints，同时继续保留 reviewer/optimizer/seal 门禁。
+    intent: verify/apply/archive/propose 等模板共享面向 Agent 的 workflow guidance；propose 和 apply-change 模板新增 spec 发现指令，引导 LLM 通过 spec list --json 查询 cap→spec 映射避免漏改和冗余
     type: capability
   - id: cap.ai.impact-sweeper
-    intent: 提供可复用的 openspec-impact-sweeper skill，基于 OPSX、specs 和 tracked source search 为项目概念生成轻量影响面 JSON 报告。
+    intent: 提供可复用的 openspec-impact-sweeper skill，基于 OPSX、specs frontmatter cap→spec 映射和 tracked source search 为项目概念生成轻量影响面 JSON 报告
     status: active
     type: capability
   - id: cap.artifact-graph.instruction-loader
@@ -160,7 +160,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.spec
-    intent: 使用子命令管理和查看 OpenSpec 规约
+    intent: 使用子命令管理和查看 OpenSpec 规约；spec list --json 输出增加 capabilities 字段，基于 Spec Registry 提供 cap↔spec 关联信息
     status: active
     type: capability
   - id: cap.cli.status
@@ -316,7 +316,7 @@ capabilities:
     intent: 强制 optimizer subagent 调用约束——CLI 层 runtime enforcement（summary 非空校验）+ prompt 层协议约束（VERIFY_SIMPLE_CHANGE_FAST_PATH 重写为强制委托语义），确保 Phase 2 判断权始终归属 optimizer subagent
     type: capability
   - id: cap.validation.spec-section-type-cross-check
-    intent: 在 change delta spec 验证中增加 section-type 与主 spec header 存在性的交叉验证，确保 MODIFIED/REMOVED/RENAMED 引用的 header 存在于主 spec，ADDED 的 header 不存在于主 spec
+    intent: 在 change delta spec 验证中增加 section-type 与主 spec header 存在性的交叉验证；新增 frontmatter capabilities 存在性校验（cap 是否在 OPSX 中）和缺失 frontmatter 的 warning
     type: capability
   - id: cap.cli.verify-aware-instructions
     intent: instructions apply 命令在判定 change 完成状态时集成 verify freshness 检查，返回 needs_verify/needs_seal/all_done 三态而非仅基于 task checkbox
@@ -358,4 +358,10 @@ capabilities:
     type: capability
   - id: cap.ai.reviewer-cleanliness-dimension
     intent: Cleanliness 维度的检测逻辑、severity 映射和跨语言工具适配策略，用于检测重构残留、孤儿代码、过时 TODO、半迁移等遗留物
+    type: capability
+  - id: cap.spec.frontmatter
+    intent: Spec 文件 YAML frontmatter 解析，提取 capabilities 关联声明
+    type: capability
+  - id: cap.spec.registry
+    intent: 运行时 cap↔spec 双向映射注册表，提供 getSpecsForCap、getCapsForSpec、getOrphanedSpecs、getUncoveredCaps 查询 API
     type: capability

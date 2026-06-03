@@ -462,3 +462,12 @@ relations:
   - from: cap.ai.reviewer-cleanliness-dimension
     type: contains
     to: dom.ai-integration
+  - from: cap.spec.frontmatter
+    type: contains
+    to: dom.validation
+  - from: cap.spec.registry
+    type: contains
+    to: dom.validation
+  - from: cap.spec.registry
+    type: depends_on
+    to: cap.spec.frontmatter

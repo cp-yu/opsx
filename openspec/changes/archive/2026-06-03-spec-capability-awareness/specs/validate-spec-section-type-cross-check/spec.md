@@ -1,8 +1,5 @@
-# validate-spec-section-type-cross-check Specification
+## MODIFIED Requirements
 
-## Purpose
-此规约记录变更 validate-spec-section-type-integrity 引入的行为，请在后续同步或归档前补全正式 Purpose。
-## Requirements
 ### Requirement: MODIFIED requirement header 必须存在于主 spec
 
 `validateChangeDeltaSpecs()` SHALL 对每个 `## MODIFIED Requirements` 下的 `### Requirement: <name>` 读取对应主 spec（`openspec/specs/<capability>/spec.md`），使用 `normalizeRequirementName()` 匹配，验证该 header 存在。不存在时 SHALL 报 ERROR。
@@ -33,56 +30,7 @@
 - **AND** 主 spec 中 header 为 `### Requirement: Bar`
 - **THEN** 匹配 SHALL 成功（通过 `normalizeRequirementName()` 规范化后比较）
 
-### Requirement: ADDED requirement header 不得已存在于主 spec
-
-`validateChangeDeltaSpecs()` SHALL 对每个 `## ADDED Requirements` 下的 `### Requirement: <name>` 检查对应主 spec 中是否已存在同名 header。已存在时 SHALL 报 ERROR。
-
-#### Scenario: ADDED header 不存在于主 spec
-
-- **WHEN** change spec `specs/foo/spec.md` 包含 `## ADDED Requirements` 下的 `### Requirement: New Thing`
-- **AND** 主 spec `openspec/specs/foo/spec.md` 不包含 `### Requirement: New Thing`
-- **THEN** 验证 SHALL 通过
-
-#### Scenario: ADDED header 已存在于主 spec
-
-- **WHEN** change spec `specs/foo/spec.md` 包含 `## ADDED Requirements` 下的 `### Requirement: Existing`
-- **AND** 主 spec `openspec/specs/foo/spec.md` 已包含 `### Requirement: Existing`
-- **THEN** 验证 SHALL 报 ERROR
-- **AND** 错误信息 SHALL 建议使用 `## MODIFIED Requirements`
-
-#### Scenario: 主 spec 不存在时 ADDED 合法
-
-- **WHEN** change spec `specs/foo/spec.md` 包含 `## ADDED Requirements`
-- **AND** 主 spec `openspec/specs/foo/spec.md` 不存在
-- **THEN** 验证 SHALL 通过（新 capability 的所有 requirement 都是 ADDED）
-
-### Requirement: REMOVED/RENAMED requirement header 必须存在于主 spec
-
-`validateChangeDeltaSpecs()` SHALL 对 `## REMOVED Requirements` 和 `## RENAMED Requirements` 中引用的 header 验证其存在于主 spec。
-
-#### Scenario: REMOVED header 存在于主 spec
-
-- **WHEN** change spec 包含 `## REMOVED Requirements` 下的 `### Requirement: Old`
-- **AND** 主 spec 包含 `### Requirement: Old`
-- **THEN** 验证 SHALL 通过
-
-#### Scenario: REMOVED header 不存在于主 spec
-
-- **WHEN** change spec 包含 `## REMOVED Requirements` 下的 `### Requirement: Ghost`
-- **AND** 主 spec 不包含 `### Requirement: Ghost`
-- **THEN** 验证 SHALL 报 ERROR
-
-#### Scenario: RENAMED FROM header 存在于主 spec
-
-- **WHEN** change spec 包含 `## RENAMED Requirements` 的 FROM: `Old Name`
-- **AND** 主 spec 包含 `### Requirement: Old Name`
-- **THEN** 验证 SHALL 通过
-
-#### Scenario: RENAMED FROM header 不存在于主 spec
-
-- **WHEN** change spec 包含 `## RENAMED Requirements` 的 FROM: `Missing`
-- **AND** 主 spec 不包含 `### Requirement: Missing`
-- **THEN** 验证 SHALL 报 ERROR
+## ADDED Requirements
 
 ### Requirement: Frontmatter capabilities 存在性校验
 
@@ -121,4 +69,3 @@
 - **WHEN** `openspec/project.opsx.yaml` 不存在
 - **THEN** 验证 SHALL 跳过 frontmatter cap 存在性校验
 - **AND** SHALL 仍然对缺失 frontmatter 的 spec 产生 WARNING
-

@@ -1,0 +1,295 @@
+{
+  "timestamp": "2026-06-03T13:47:04.529Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "bad261c14537489cc524562e1dc13aeae9f260722a9bae892084f74cdb6d704e",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent",
+    "evidenceFiles": [
+      "openspec/changes/spec-capability-awareness/.apply-isolation.json",
+      "openspec/changes/spec-capability-awareness/design.md",
+      "openspec/changes/spec-capability-awareness/opsx-delta.yaml",
+      "openspec/changes/spec-capability-awareness/proposal.md",
+      "openspec/changes/spec-capability-awareness/specs/ai-workflow-templates/spec.md",
+      "openspec/changes/spec-capability-awareness/specs/cli-spec/spec.md",
+      "openspec/changes/spec-capability-awareness/specs/internal-skill-installation/spec.md",
+      "openspec/changes/spec-capability-awareness/specs/spec-frontmatter/spec.md",
+      "openspec/changes/spec-capability-awareness/specs/spec-registry/spec.md",
+      "openspec/changes/spec-capability-awareness/specs/validate-spec-section-type-cross-check/spec.md",
+      "openspec/changes/spec-capability-awareness/tasks.md",
+      "openspec/project.opsx.code-map.yaml",
+      "openspec/project.opsx.relations.yaml",
+      "openspec/project.opsx.yaml",
+      "src/commands/spec.ts",
+      "src/core/parsers/spec-frontmatter.ts",
+      "src/core/spec-registry.ts",
+      "src/core/templates/workflows/apply-change.ts",
+      "src/core/templates/workflows/impact-sweeper.ts",
+      "src/core/templates/workflows/propose.ts",
+      "src/core/validation/validator.ts",
+      "test/cli-e2e/spec-list.test.ts",
+      "test/core/parsers/spec-frontmatter.test.ts",
+      "test/core/spec-registry.test.ts",
+      "test/core/validation.cross-check.test.ts"
+    ],
+    "evidenceFingerprint": "bc8c97cd27206273b577e3d139ecd91506dcec7d9dba3f842ec7569cb47ecdf8",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/spec-capability-awareness/.apply-isolation.json",
+        "hash": "7e207e3d56b65416c0d8dd8e82095c1a1bd70903fe7e17fe816da3fa9f143fbd"
+      },
+      {
+        "path": "openspec/changes/spec-capability-awareness/design.md",
+        "hash": "aaa55f3379c2739264c44ba11174864ab181f6a2ef773b8d63cc19557dc16145"
+      },
+      {
+        "path": "openspec/changes/spec-capability-awareness/opsx-delta.yaml",
+        "hash": "81763f68ad8e152a8fc7ef6ca7e11f3410fa4a9fe01228f21f3316a8a7b54da4"
+      },
+      {
+        "path": "openspec/changes/spec-capability-awareness/proposal.md",
+        "hash": "b2c59590ffa53e0f3ea621bf37803d5b978005770572a97dfeff3f455406ba9e"
+      },
+      {
+        "path": "openspec/changes/spec-capability-awareness/specs/ai-workflow-templates/spec.md",
+        "hash": "b04472ff986472ad2f13347918a1578de4cc736482d35691f3777ad27f72c346"
+      },
+      {
+        "path": "openspec/changes/spec-capability-awareness/specs/cli-spec/spec.md",
+        "hash": "6aeda95f5dd6c54fbed8925b9da14853f56bbf0062ce0eb2a77703d7cce63a9d"
+      },
+      {
+        "path": "openspec/changes/spec-capability-awareness/specs/internal-skill-installation/spec.md",
+        "hash": "2e36556481b2d06a7d556d1b80171143c93daefbc86be7d9a131fd2119a4f9b3"
+      },
+      {
+        "path": "openspec/changes/spec-capability-awareness/specs/spec-frontmatter/spec.md",
+        "hash": "82f9786c7ffb3a67debe90470b2c0d3ff021341c10f47e7fcf88c10d8c43a01f"
+      },
+      {
+        "path": "openspec/changes/spec-capability-awareness/specs/spec-registry/spec.md",
+        "hash": "69a259c9df5f2d5952052b22f46f7aeb52772a793c87ec16c026115f040bb02a"
+      },
+      {
+        "path": "openspec/changes/spec-capability-awareness/specs/validate-spec-section-type-cross-check/spec.md",
+        "hash": "8a28a2628dece7c1aeeac5eef1aaec29c4b30a7d9a089f08e04445bee2d12604"
+      },
+      {
+        "path": "openspec/changes/spec-capability-awareness/tasks.md",
+        "hash": "bad261c14537489cc524562e1dc13aeae9f260722a9bae892084f74cdb6d704e"
+      },
+      {
+        "path": "openspec/project.opsx.code-map.yaml",
+        "hash": "09b06ce18aebbdd8a104f7a9777d885be087c76927c2d726e73a088d3c40a7b4"
+      },
+      {
+        "path": "openspec/project.opsx.relations.yaml",
+        "hash": "099aa79fcc16bc9847beb329d2c9d31187be5d0736d2ce24c1627d2d15ad8ac6"
+      },
+      {
+        "path": "openspec/project.opsx.yaml",
+        "hash": "7cf77aaa01b8896ef389751740ee1011b853df7b1dfb5b1ce264f3260478fb4a"
+      },
+      {
+        "path": "src/commands/spec.ts",
+        "hash": "89f618e41bee888e25074d6e812ed75bdf964a466630ade9723948c6a373951a"
+      },
+      {
+        "path": "src/core/parsers/spec-frontmatter.ts",
+        "hash": "4d40c8f6e3f623684482fbac5aaa7f6ac5da0e5e4efeef6cf6adf71626e7c7fc"
+      },
+      {
+        "path": "src/core/spec-registry.ts",
+        "hash": "4850afab6866e120cb99c45409e77666815deb837ae8bf9480b6289da2302368"
+      },
+      {
+        "path": "src/core/templates/workflows/apply-change.ts",
+        "hash": "95f8b8420ceda2afa9025f562d2b69ac1b155f326a5c0ba826c24b7a75a29360"
+      },
+      {
+        "path": "src/core/templates/workflows/impact-sweeper.ts",
+        "hash": "436c7cbd0ee7bb009eb7e898d8294ff96eb131597942bfb0ed36680622befa50"
+      },
+      {
+        "path": "src/core/templates/workflows/propose.ts",
+        "hash": "911e91a6e6ab124b94f3400a90bebcc475990cc9f79aa5a0044c49ac27b0da4c"
+      },
+      {
+        "path": "src/core/validation/validator.ts",
+        "hash": "cf80451229ebfc29fc97a01d73aeb3380f927d19b7f95e6de23e943c0e81b455"
+      },
+      {
+        "path": "test/cli-e2e/spec-list.test.ts",
+        "hash": "758d3ef3b7e576aeac88474047645f8a8e528d8778d8c3250d39b8619b06c428"
+      },
+      {
+        "path": "test/core/parsers/spec-frontmatter.test.ts",
+        "hash": "73cd7c5e8d3c4085c5150a1e7a628791ab4bb1a13db7765b41ca3106d88ca61a"
+      },
+      {
+        "path": "test/core/spec-registry.test.ts",
+        "hash": "c90a73b11263f0a7d092645a2743b681655a3ff9cb612c75f63d9fe69ef3b417"
+      },
+      {
+        "path": "test/core/validation.cross-check.test.ts",
+        "hash": "eddee16ae8c5034601ba6f5f08a3b077df1e57295b63c2d11e1daa2d457dd564"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "39fa41b9580399074e5d9433793ecc4b4cb373fe"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-03T13:50:26.654Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "No optimization opportunities found"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-06-03T13:47:04.529Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "bad261c14537489cc524562e1dc13aeae9f260722a9bae892084f74cdb6d704e",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent",
+        "evidenceFiles": [
+          "openspec/changes/spec-capability-awareness/.apply-isolation.json",
+          "openspec/changes/spec-capability-awareness/design.md",
+          "openspec/changes/spec-capability-awareness/opsx-delta.yaml",
+          "openspec/changes/spec-capability-awareness/proposal.md",
+          "openspec/changes/spec-capability-awareness/specs/ai-workflow-templates/spec.md",
+          "openspec/changes/spec-capability-awareness/specs/cli-spec/spec.md",
+          "openspec/changes/spec-capability-awareness/specs/internal-skill-installation/spec.md",
+          "openspec/changes/spec-capability-awareness/specs/spec-frontmatter/spec.md",
+          "openspec/changes/spec-capability-awareness/specs/spec-registry/spec.md",
+          "openspec/changes/spec-capability-awareness/specs/validate-spec-section-type-cross-check/spec.md",
+          "openspec/changes/spec-capability-awareness/tasks.md",
+          "openspec/project.opsx.code-map.yaml",
+          "openspec/project.opsx.relations.yaml",
+          "openspec/project.opsx.yaml",
+          "src/commands/spec.ts",
+          "src/core/parsers/spec-frontmatter.ts",
+          "src/core/spec-registry.ts",
+          "src/core/templates/workflows/apply-change.ts",
+          "src/core/templates/workflows/impact-sweeper.ts",
+          "src/core/templates/workflows/propose.ts",
+          "src/core/validation/validator.ts",
+          "test/cli-e2e/spec-list.test.ts",
+          "test/core/parsers/spec-frontmatter.test.ts",
+          "test/core/spec-registry.test.ts",
+          "test/core/validation.cross-check.test.ts"
+        ],
+        "evidenceFingerprint": "93f13b182830dc88d8a7e43f40f8e327f55753fcbb7067a48952ae6c3cd4a13f",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/spec-capability-awareness/.apply-isolation.json",
+            "hash": "7e207e3d56b65416c0d8dd8e82095c1a1bd70903fe7e17fe816da3fa9f143fbd"
+          },
+          {
+            "path": "openspec/changes/spec-capability-awareness/design.md",
+            "hash": "aaa55f3379c2739264c44ba11174864ab181f6a2ef773b8d63cc19557dc16145"
+          },
+          {
+            "path": "openspec/changes/spec-capability-awareness/opsx-delta.yaml",
+            "hash": "81763f68ad8e152a8fc7ef6ca7e11f3410fa4a9fe01228f21f3316a8a7b54da4"
+          },
+          {
+            "path": "openspec/changes/spec-capability-awareness/proposal.md",
+            "hash": "b2c59590ffa53e0f3ea621bf37803d5b978005770572a97dfeff3f455406ba9e"
+          },
+          {
+            "path": "openspec/changes/spec-capability-awareness/specs/ai-workflow-templates/spec.md",
+            "hash": "b04472ff986472ad2f13347918a1578de4cc736482d35691f3777ad27f72c346"
+          },
+          {
+            "path": "openspec/changes/spec-capability-awareness/specs/cli-spec/spec.md",
+            "hash": "6aeda95f5dd6c54fbed8925b9da14853f56bbf0062ce0eb2a77703d7cce63a9d"
+          },
+          {
+            "path": "openspec/changes/spec-capability-awareness/specs/internal-skill-installation/spec.md",
+            "hash": "2e36556481b2d06a7d556d1b80171143c93daefbc86be7d9a131fd2119a4f9b3"
+          },
+          {
+            "path": "openspec/changes/spec-capability-awareness/specs/spec-frontmatter/spec.md",
+            "hash": "82f9786c7ffb3a67debe90470b2c0d3ff021341c10f47e7fcf88c10d8c43a01f"
+          },
+          {
+            "path": "openspec/changes/spec-capability-awareness/specs/spec-registry/spec.md",
+            "hash": "69a259c9df5f2d5952052b22f46f7aeb52772a793c87ec16c026115f040bb02a"
+          },
+          {
+            "path": "openspec/changes/spec-capability-awareness/specs/validate-spec-section-type-cross-check/spec.md",
+            "hash": "8a28a2628dece7c1aeeac5eef1aaec29c4b30a7d9a089f08e04445bee2d12604"
+          },
+          {
+            "path": "openspec/changes/spec-capability-awareness/tasks.md",
+            "hash": "bad261c14537489cc524562e1dc13aeae9f260722a9bae892084f74cdb6d704e"
+          },
+          {
+            "path": "openspec/project.opsx.code-map.yaml",
+            "hash": "01db83a0e55f2b486aaee6831f945ef548f128feda6daaf253609f57d565ceb2"
+          },
+          {
+            "path": "openspec/project.opsx.relations.yaml",
+            "hash": "2757dbbcec1890254cb53919c4a8f6177a0376819d73c2ecbd69b28d7aed2649"
+          },
+          {
+            "path": "openspec/project.opsx.yaml",
+            "hash": "9980ad1e580ba8e89c00e3a3e0c6381232b57133ea41e6859db673c7e167571e"
+          },
+          {
+            "path": "src/commands/spec.ts",
+            "hash": "89f618e41bee888e25074d6e812ed75bdf964a466630ade9723948c6a373951a"
+          },
+          {
+            "path": "src/core/parsers/spec-frontmatter.ts",
+            "hash": "4d40c8f6e3f623684482fbac5aaa7f6ac5da0e5e4efeef6cf6adf71626e7c7fc"
+          },
+          {
+            "path": "src/core/spec-registry.ts",
+            "hash": "4850afab6866e120cb99c45409e77666815deb837ae8bf9480b6289da2302368"
+          },
+          {
+            "path": "src/core/templates/workflows/apply-change.ts",
+            "hash": "95f8b8420ceda2afa9025f562d2b69ac1b155f326a5c0ba826c24b7a75a29360"
+          },
+          {
+            "path": "src/core/templates/workflows/impact-sweeper.ts",
+            "hash": "436c7cbd0ee7bb009eb7e898d8294ff96eb131597942bfb0ed36680622befa50"
+          },
+          {
+            "path": "src/core/templates/workflows/propose.ts",
+            "hash": "911e91a6e6ab124b94f3400a90bebcc475990cc9f79aa5a0044c49ac27b0da4c"
+          },
+          {
+            "path": "src/core/validation/validator.ts",
+            "hash": "cf80451229ebfc29fc97a01d73aeb3380f927d19b7f95e6de23e943c0e81b455"
+          },
+          {
+            "path": "test/cli-e2e/spec-list.test.ts",
+            "hash": "758d3ef3b7e576aeac88474047645f8a8e528d8778d8c3250d39b8619b06c428"
+          },
+          {
+            "path": "test/core/parsers/spec-frontmatter.test.ts",
+            "hash": "73cd7c5e8d3c4085c5150a1e7a628791ab4bb1a13db7765b41ca3106d88ca61a"
+          },
+          {
+            "path": "test/core/spec-registry.test.ts",
+            "hash": "c90a73b11263f0a7d092645a2743b681655a3ff9cb612c75f63d9fe69ef3b417"
+          },
+          {
+            "path": "test/core/validation.cross-check.test.ts",
+            "hash": "eddee16ae8c5034601ba6f5f08a3b077df1e57295b63c2d11e1daa2d457dd564"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "39fa41b9580399074e5d9433793ecc4b4cb373fe"
+      }
+    }
+  }
+}

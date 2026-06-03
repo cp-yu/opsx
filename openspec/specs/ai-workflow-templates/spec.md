@@ -8,6 +8,19 @@ verify/apply/archive 三个模板中 spawn reviewer subagent 的步骤 SHALL 从
 
 模板中的 invoke 指令 SHALL 使用工具适配的 skill 名称引用（如 Claude Code 使用 `openspec-reviewer`，Codex 使用 `$openspec-reviewer`），利用 `cap.ai.tool-invocation-references` 的现有变换管线。
 
+#### Scenario: Propose 模板包含 spec 发现指令
+
+- **WHEN** propose 模板被加载
+- **THEN** SHALL 包含步骤指示 LLM 运行 `openspec spec list --json` 获取现有 specs 及其 capabilities 关联
+- **AND** SHALL 指示 LLM 交叉对比提议的新 capabilities 与已有 specs，避免创建冗余 spec
+
+#### Scenario: Apply 模板包含 spec 交叉检查指令
+
+- **WHEN** apply-change 模板被加载
+- **THEN** SHALL 包含步骤指示 LLM 在实现 capability 前查询关联的所有 specs
+- **AND** SHALL 指示 LLM 运行 `openspec spec list --json` 获取 cap→spec 映射
+- **AND** SHALL 指示 LLM 确认是否需要同步更新 delta spec
+
 #### Scenario: Verify 模板 spawn reviewer subagent
 - **WHEN** verify 模板在 subagent-orchestrated 模式下执行 Phase 1
 - **AND** 当前 AI 工具支持 subagent skill invoke
@@ -28,8 +41,8 @@ verify/apply/archive 模板 SHALL NOT 在模板 body 中内联 reviewer 或 opti
 
 #### Scenario: 模板内容精简
 - **WHEN** 比较改进前后的 verify 模板
-- **THEN** 原内联的 reviewer 合约文本 SHALL 被替换为简短的 invoke 指令
-- **AND** 模板 SHALL 不因篇幅膨胀而降低可维护性
+- **THEN** 改进后模板 SHALL NOT 包含 reviewer 的验证维度列表、severity 定义、或输出 JSON schema
+- **AND** 改进后模板 SHALL 保留 evidence 包组装和 subagent spawn 指令
 
 ### Requirement: 向后兼容 reread 模式
 `current-agent-reread` 执行模式 SHALL 不受影响。不支持 subagent skill invoke 的工具 SHALL 继续使用 reread 骨架，无需加载内部 skill 文件。
