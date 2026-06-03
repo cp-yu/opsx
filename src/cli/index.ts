@@ -25,11 +25,13 @@ import {
   bootstrapInstructionsCommand,
   bootstrapValidateCommand,
   bootstrapPromoteCommand,
+  bootstrapBackfillSpecsCommand,
   type BootstrapInitOptions,
   type BootstrapStatusOptions,
   type BootstrapInstructionsOptions,
   type BootstrapValidateOptions,
   type BootstrapPromoteOptions,
+  type BootstrapBackfillOptions,
 } from '../commands/bootstrap.js';
 import {
   statusCommand,
@@ -599,6 +601,20 @@ bootstrapCmd
   .action(async (options: BootstrapPromoteOptions) => {
     try {
       await bootstrapPromoteCommand(options);
+    } catch (error) {
+      console.log();
+      ora().fail(`Error: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+bootstrapCmd
+  .command('backfill-specs')
+  .description('Backfill spec frontmatter capability mappings')
+  .option('--json', 'Output as JSON')
+  .action(async (options: BootstrapBackfillOptions) => {
+    try {
+      await bootstrapBackfillSpecsCommand(options);
     } catch (error) {
       console.log();
       ora().fail(`Error: ${(error as Error).message}`);

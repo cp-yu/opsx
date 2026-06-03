@@ -597,6 +597,11 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
           },
         ],
       },
+      {
+        name: 'backfill-specs',
+        description: 'Backfill spec frontmatter capability mappings',
+        flags: [COMMON_FLAGS.json],
+      },
     ],
   },
   {

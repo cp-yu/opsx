@@ -12,6 +12,7 @@ import {
   projectConfigForRuntime,
   type RuntimeProjection,
 } from '../core/config-projection.js';
+import { backfillSpecs, type BackfillSpecsResult } from '../core/backfill-specs.js';
 import { readProjectConfig } from '../core/project-config.js';
 import { Validator } from '../core/validation/validator.js';
 import {
@@ -326,6 +327,7 @@ interface DerivedBootstrapArtifacts {
 
 export interface PromoteBootstrapResult {
   retainedWorkspaceNotice: string;
+  backfill: BackfillSpecsResult;
 }
 
 interface BootstrapWorkspaceCompletion {
@@ -2503,8 +2505,11 @@ export async function promoteBootstrap(projectRoot: string): Promise<PromoteBoot
       : state.metadata.refresh_anchor_commit,
   });
 
+  const backfill = await backfillSpecs(projectRoot);
+
   return {
     retainedWorkspaceNotice: BOOTSTRAP_WORKSPACE_RETAINED_NOTICE,
+    backfill,
   };
 }
 

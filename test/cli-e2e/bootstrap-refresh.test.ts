@@ -217,7 +217,9 @@ describe('openspec bootstrap refresh', () => {
 
     await expect(readFile(projectDir, 'openspec/project.opsx.yaml')).resolves.toContain('intent: Existing formal intent');
     await expect(readFile(projectDir, 'openspec/project.opsx.yaml')).resolves.toContain('cap.auth.session');
-    await expect(readFile(projectDir, 'openspec/specs/auth/spec.md')).resolves.toBe('# Existing auth spec\n');
+    const authSpec = await readFile(projectDir, 'openspec/specs/auth/spec.md');
+    expect(authSpec).toContain('capabilities:\n  - cap.auth.login\n  - cap.auth.session');
+    expect(authSpec.endsWith('# Existing auth spec\n')).toBe(true);
     await expect(readFile(projectDir, 'openspec/specs/sessions/spec.md')).resolves.toContain('### Requirement: Session tracking');
 
     const metadata = parseYaml(await readFile(projectDir, 'openspec/bootstrap/.bootstrap.yaml')) as Record<string, unknown>;

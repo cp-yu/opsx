@@ -204,7 +204,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.opsx.bootstrap
-    intent: 提供基于现有 CLI 的 bootstrap 工作流，支持 TTY 模式选择、invalid domain-map 诊断、gate 驱动的五阶段生命周期，以及对 retained workspace 的显式 completed/restart 语义；promote 后保留工作区并通过显式 restart 路径开启下一轮 run
+    intent: 提供基于现有 CLI 的 bootstrap 工作流，支持 TTY 模式选择、invalid domain-map 诊断、gate 驱动的五阶段生命周期，以及对 retained workspace 的显式 completed/restart 语义；promote 后自动调用 backfill-specs 补全 spec frontmatter，并保留工作区通过显式 restart 路径开启下一轮 run
     status: active
     type: capability
   - id: cap.opsx.delta-merge
@@ -364,4 +364,7 @@ capabilities:
     type: capability
   - id: cap.spec.registry
     intent: 运行时 cap↔spec 双向映射注册表，提供 getSpecsForCap、getCapsForSpec、getOrphanedSpecs、getUncoveredCaps 查询 API
+    type: capability
+  - id: cap.opsx.bootstrap-backfill-specs
+    intent: Backfill Engine——通过命名匹配和 LLM 语义推断为无 frontmatter 的 specs 批量补全 capabilities 关联声明
     type: capability

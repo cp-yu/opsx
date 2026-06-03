@@ -471,3 +471,6 @@ relations:
   - from: cap.spec.registry
     type: depends_on
     to: cap.spec.frontmatter
+  - from: cap.opsx.bootstrap-backfill-specs
+    type: contains
+    to: dom.opsx
