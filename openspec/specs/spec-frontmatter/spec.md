@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.spec.frontmatter
+---
 # spec-frontmatter Specification
 
 ## Purpose

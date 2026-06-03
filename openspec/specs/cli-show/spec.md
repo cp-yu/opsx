@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.cli.show
+---
 # cli-show Specification
 
 ## Purpose

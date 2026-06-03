@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.cli.feedback
+---
 # cli-feedback Specification
 
 ## Purpose

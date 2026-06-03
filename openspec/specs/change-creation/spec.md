@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.change.create
+---
 # change-creation Specification
 
 ## Purpose

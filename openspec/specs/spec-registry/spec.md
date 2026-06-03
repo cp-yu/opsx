@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.spec.registry
+---
 # spec-registry Specification
 
 ## Purpose

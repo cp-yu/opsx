@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.cli.spec
+---
 # cli-spec Specification
 
 ## Purpose

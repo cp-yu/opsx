@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.cli.completion
+---
 # cli-completion Specification
 
 ## Purpose

@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.cli.change
+---
 # cli-change Specification
 
 ## Purpose

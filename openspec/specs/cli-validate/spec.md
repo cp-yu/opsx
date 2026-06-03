@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.cli.validate
+---
 # cli-validate Specification
 
 ## Purpose

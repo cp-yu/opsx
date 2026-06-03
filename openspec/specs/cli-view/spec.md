@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.cli.view
+---
 # cli-view Specification
 
 ## Purpose

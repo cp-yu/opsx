@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.opsx.bootstrap
+---
 ## Purpose
 
 Define the bootstrap workflow contract: how `openspec bootstrap` CLI subcommands guide users through initializing and promoting OPSX architecture files.

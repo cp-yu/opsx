@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.cli.list
+---
 # List Command Specification
 
 ## Purpose

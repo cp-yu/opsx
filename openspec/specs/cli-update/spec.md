@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.cli.update
+---
 # Update Command Specification
 
 ## Purpose
