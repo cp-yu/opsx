@@ -1,8 +1,11 @@
+---
+capabilities:
+  - cap.cli.spec
+---
 # cli-spec Specification
 
 ## Purpose
 Define `openspec spec` command behavior for listing, showing, and validating source-of-truth specifications.
-
 ## Requirements
 ### Requirement: Interactive spec show
 
@@ -23,37 +26,6 @@ The spec show command SHALL support interactive selection when no spec-id is pro
 - **THEN** do not prompt interactively
 - **AND** print the existing error message for missing spec-id
 - **AND** set non-zero exit code
-
-### Requirement: Spec Command
-
-The system SHALL provide a `spec` command with subcommands for displaying, listing, and validating specifications.
-
-#### Scenario: Show spec as JSON
-
-- **WHEN** executing `openspec spec show init --json`
-- **THEN** parse the markdown spec file
-- **AND** extract headings and content hierarchically
-- **AND** output valid JSON to stdout
-
-#### Scenario: List all specs
-
-- **WHEN** executing `openspec spec list`
-- **THEN** scan the openspec/specs directory
-- **AND** return list of all available capabilities
-- **AND** support JSON output with `--json` flag
-
-#### Scenario: Filter spec content
-
-- **WHEN** executing `openspec spec show init --requirements`
-- **THEN** display only requirement names and SHALL statements
-- **AND** exclude scenario content
-
-#### Scenario: Validate spec structure
-
-- **WHEN** executing `openspec spec validate init`
-- **THEN** parse the spec file
-- **AND** validate against Zod schema
-- **AND** report any structural issues
 
 ### Requirement: JSON Schema Definition
 

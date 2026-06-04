@@ -10,6 +10,13 @@
 
 内部 skill 模板的 `SkillTemplate.metadata` SHALL 包含 `type: 'subagent'` 标记 when the skill is used as a subagent.
 
+#### Scenario: Impact sweeper skill 指令包含 spec frontmatter 扫描
+
+- **WHEN** `openspec-impact-sweeper` skill 模板的 Evidence Protocol 被加载
+- **THEN** 指令 SHALL 包含步骤要求扫描 `openspec/specs/*/spec.md` 的 YAML frontmatter
+- **AND** SHALL 指示从 frontmatter 构建 cap→spec 映射
+- **AND** SHALL 指示将受影响 cap 的关联 specs 写入报告的 `mustCheck` 字段
+
 #### Scenario: Init 时安装 core preset 包含内部 skill
 - **WHEN** 用户执行 `openspec init` 选择 core preset
 - **AND** 目标 AI 工具具有 skillsDir（如 Claude Code、Codex、Pi）
@@ -84,3 +91,4 @@ Skill 目录名 SHALL 定义为显式常量（如 `'openspec-reviewer'`、`'open
 - **THEN** 文件 SHALL 以 YAML frontmatter 开头（name、description、license、compatibility、metadata）
 - **AND** 后接 Markdown body（角色、硬约束、输入合约...）
 - **AND** 格式 SHALL 与 workflow skill 文件完全一致
+

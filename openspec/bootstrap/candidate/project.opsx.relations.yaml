@@ -1,0 +1,482 @@
+schema_version: 1
+relations:
+  - from: cap.ai.agent-prompt-guidance
+    type: depends_on
+    to: cap.ai.workflow-templates
+  - from: cap.ai.agent-prompt-guidance
+    type: depends_on
+    to: cap.verify.cli-gate
+  - from: cap.ai.agent-prompt-guidance
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.command-generation
+    type: depends_on
+    to: cap.ai.command-slugs
+  - from: cap.ai.command-slugs
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.explore-brainstorming
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.impact-sweeper
+    type: depends_on
+    to: cap.ai.skill-generation
+  - from: cap.ai.impact-sweeper
+    type: depends_on
+    to: cap.ai.workflow-templates
+  - from: cap.ai.internal-skill-installation
+    type: depends_on
+    to: cap.ai.skill-generation
+  - from: cap.ai.internal-skill-installation
+    type: depends_on
+    to: cap.ai.tool-adapters
+  - from: cap.ai.internal-skill-installation
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.optimizer-skill
+    type: depends_on
+    to: cap.ai.skill-generation
+  - from: cap.ai.optimizer-skill
+    type: depends_on
+    to: cap.ai.subagent-self-read
+  - from: cap.ai.optimizer-skill
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.propose-smart-routing
+    type: depends_on
+    to: cap.ai.explore-brainstorming
+  - from: cap.ai.propose-smart-routing
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.reviewer-cleanliness-dimension
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.reviewer-skill
+    type: depends_on
+    to: cap.ai.skill-generation
+  - from: cap.ai.reviewer-skill
+    type: depends_on
+    to: cap.ai.subagent-self-read
+  - from: cap.ai.reviewer-skill
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.skill-generation
+    type: depends_on
+    to: cap.ai.tool-invocation-references
+  - from: cap.ai.skill-generation
+    type: depends_on
+    to: cap.ai.workflow-templates
+  - from: cap.ai.subagent-self-read
+    type: contains
+    to: dom.verify
+  - from: cap.ai.tool-invocation-references
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.verify-writeback
+    type: depends_on
+    to: cap.ai.workflow-templates
+  - from: cap.ai.verify-writeback
+    type: contains
+    to: dom.ai-integration
+  - from: cap.apply.branch-isolation
+    type: contains
+    to: dom.apply
+  - from: cap.apply.subagent-orchestration
+    type: contains
+    to: dom.apply
+  - from: cap.apply.task-decomposition
+    type: depends_on
+    to: cap.ai.explore-brainstorming
+  - from: cap.apply.task-decomposition
+    type: contains
+    to: dom.apply
+  - from: cap.apply.verify-integration
+    type: depends_on
+    to: cap.cli.verify-aware-instructions
+  - from: cap.apply.verify-integration
+    type: depends_on
+    to: cap.verify.cli-gate
+  - from: cap.apply.verify-integration
+    type: depends_on
+    to: cap.verify.execution-model-selection
+  - from: cap.apply.verify-integration
+    type: depends_on
+    to: cap.verify.optimize
+  - from: cap.apply.verify-integration
+    type: contains
+    to: dom.apply
+  - from: cap.archive.branch-merge
+    type: depends_on
+    to: cap.apply.branch-isolation
+  - from: cap.archive.branch-merge
+    type: depends_on
+    to: cap.change.archive
+  - from: cap.archive.branch-merge
+    type: depends_on
+    to: cap.config.project
+  - from: cap.archive.branch-merge
+    type: contains
+    to: dom.change-workflow
+  - from: cap.artifact-graph.instruction-loader
+    type: depends_on
+    to: cap.artifact-graph.parse
+  - from: cap.artifact-graph.instruction-loader
+    type: depends_on
+    to: cap.config.project
+  - from: cap.change.archive
+    type: depends_on
+    to: cap.change.specs-sync
+  - from: cap.change.archive
+    type: depends_on
+    to: cap.opsx.delta-merge
+  - from: cap.change.archive
+    type: depends_on
+    to: cap.verify.cli-gate
+  - from: cap.change.create
+    type: depends_on
+    to: cap.artifact-graph.schema-resolution
+  - from: cap.change.specs-sync
+    type: depends_on
+    to: cap.verify.cli-gate
+  - from: cap.cli.command-reference-consistency
+    type: depends_on
+    to: cap.ai.agent-docs
+  - from: cap.cli.command-reference-consistency
+    type: depends_on
+    to: cap.ai.workflow-templates
+  - from: cap.cli.command-reference-consistency
+    type: depends_on
+    to: cap.cli.validate
+  - from: cap.cli.command-reference-consistency
+    type: depends_on
+    to: cap.opsx.bootstrap
+  - from: cap.cli.command-reference-consistency
+    type: depends_on
+    to: cap.verify.cli-gate
+  - from: cap.cli.command-reference-consistency
+    type: contains
+    to: dom.cli
+  - from: cap.cli.init
+    type: depends_on
+    to: cap.ai.command-slugs
+  - from: cap.cli.init
+    type: depends_on
+    to: cap.ai.skill-generation
+  - from: cap.cli.init
+    type: depends_on
+    to: cap.ai.tool-adapters
+  - from: cap.cli.init
+    type: depends_on
+    to: cap.ai.tool-invocation-references
+  - from: cap.cli.init
+    type: depends_on
+    to: cap.config.project
+  - from: cap.cli.instructions
+    type: depends_on
+    to: cap.artifact-graph.instruction-loader
+  - from: cap.cli.opsx-query
+    type: depends_on
+    to: cap.opsx.read-transparent
+  - from: cap.cli.opsx-query
+    type: contains
+    to: dom.cli
+  - from: cap.cli.status
+    type: depends_on
+    to: cap.artifact-graph.parse
+  - from: cap.cli.sync
+    type: relates_to
+    to: cap.cli.archive
+  - from: cap.cli.sync
+    type: contains
+    to: dom.cli
+  - from: cap.cli.update
+    type: depends_on
+    to: cap.ai.command-slugs
+  - from: cap.cli.update
+    type: depends_on
+    to: cap.ai.tool-invocation-references
+  - from: cap.cli.update
+    type: depends_on
+    to: cap.config.migration
+  - from: cap.cli.update
+    type: depends_on
+    to: cap.config.project
+  - from: cap.cli.verify-aware-instructions
+    type: depends_on
+    to: cap.verify.freshness-engine
+  - from: cap.cli.verify-aware-instructions
+    type: contains
+    to: dom.cli
+  - from: cap.cli.verify-aware-instructions
+    type: depends_on
+    to: dom.verify
+  - from: cap.config.apply-default-isolation
+    type: depends_on
+    to: cap.apply.branch-isolation
+  - from: cap.config.apply-default-isolation
+    type: depends_on
+    to: cap.config.project
+  - from: cap.opsx.bootstrap-backfill-specs
+    type: contains
+    to: dom.opsx
+  - from: cap.opsx.bootstrap-refresh
+    type: depends_on
+    to: cap.opsx.bootstrap
+  - from: cap.opsx.bootstrap-refresh
+    type: depends_on
+    to: cap.opsx.delta-merge
+  - from: cap.opsx.delta-merge
+    type: depends_on
+    to: cap.opsx.atomic-write
+  - from: cap.opsx.delta-merge
+    type: depends_on
+    to: cap.opsx.referential-integrity
+  - from: cap.schema.opsx-delta-artifact
+    type: depends_on
+    to: cap.artifact-graph.parse
+  - from: cap.schema.opsx-delta-artifact
+    type: contains
+    to: dom.schema
+  - from: cap.spec.frontmatter
+    type: contains
+    to: dom.validation
+  - from: cap.spec.registry
+    type: depends_on
+    to: cap.spec.frontmatter
+  - from: cap.spec.registry
+    type: contains
+    to: dom.validation
+  - from: cap.validation.opsx
+    type: depends_on
+    to: cap.opsx.referential-integrity
+  - from: cap.validation.opsx
+    type: depends_on
+    to: cap.opsx.spec-refs-validation
+  - from: cap.validation.opsx-dry-run
+    type: depends_on
+    to: cap.cli.validate
+  - from: cap.validation.opsx-dry-run
+    type: depends_on
+    to: cap.opsx.delta-merge
+  - from: cap.validation.opsx-dry-run
+    type: depends_on
+    to: cap.opsx.referential-integrity
+  - from: cap.validation.opsx-dry-run
+    type: contains
+    to: dom.validation
+  - from: cap.validation.spec-section-type-cross-check
+    type: relates_to
+    to: cap.cli.validate
+  - from: cap.validation.spec-section-type-cross-check
+    type: depends_on
+    to: cap.validation.change
+  - from: cap.validation.spec-section-type-cross-check
+    type: contains
+    to: dom.validation
+  - from: cap.verify.cli-gate
+    type: depends_on
+    to: cap.verify.freshness-engine
+  - from: cap.verify.cli-gate
+    type: contains
+    to: dom.verify
+  - from: cap.verify.enforce-optimizer-invocation
+    type: relates_to
+    to: cap.ai.agent-prompt-guidance
+  - from: cap.verify.enforce-optimizer-invocation
+    type: relates_to
+    to: cap.verify.optimize
+  - from: cap.verify.enforce-optimizer-invocation
+    type: contains
+    to: dom.verify
+  - from: cap.verify.execution-model-selection
+    type: contains
+    to: dom.verify
+  - from: cap.verify.freshness-engine
+    type: contains
+    to: dom.verify
+  - from: cap.verify.optimize
+    type: depends_on
+    to: cap.ai.workflow-templates
+  - from: cap.verify.optimize
+    type: contains
+    to: dom.verify
+  - from: cap.verify.prompt-orchestration
+    type: relates_to
+    to: cap.ai.optimizer-skill
+  - from: cap.verify.prompt-orchestration
+    type: relates_to
+    to: cap.ai.reviewer-skill
+  - from: cap.verify.prompt-orchestration
+    type: relates_to
+    to: cap.ai.workflow-templates
+  - from: cap.verify.prompt-orchestration
+    type: contains
+    to: dom.verify
+  - from: dom.ai-integration
+    type: contains
+    to: cap.ai.agent-docs
+  - from: dom.ai-integration
+    type: contains
+    to: cap.ai.command-generation
+  - from: dom.ai-integration
+    type: contains
+    to: cap.ai.impact-sweeper
+  - from: dom.ai-integration
+    type: contains
+    to: cap.ai.skill-generation
+  - from: dom.ai-integration
+    type: contains
+    to: cap.ai.tool-adapters
+  - from: dom.ai-integration
+    type: contains
+    to: cap.ai.workflow-templates
+  - from: dom.artifact-graph
+    type: contains
+    to: cap.artifact-graph.instruction-loader
+  - from: dom.artifact-graph
+    type: contains
+    to: cap.artifact-graph.parse
+  - from: dom.artifact-graph
+    type: contains
+    to: cap.artifact-graph.schema-resolution
+  - from: dom.artifact-graph
+    type: contains
+    to: cap.artifact-graph.state-tracking
+  - from: dom.change-workflow
+    type: contains
+    to: cap.change.archive
+  - from: dom.change-workflow
+    type: contains
+    to: cap.change.create
+  - from: dom.change-workflow
+    type: contains
+    to: cap.change.discovery
+  - from: dom.change-workflow
+    type: contains
+    to: cap.change.metadata
+  - from: dom.change-workflow
+    type: contains
+    to: cap.change.specs-sync
+  - from: dom.cli
+    type: contains
+    to: cap.cli.archive
+  - from: dom.cli
+    type: contains
+    to: cap.cli.change
+  - from: dom.cli
+    type: contains
+    to: cap.cli.completion
+  - from: dom.cli
+    type: contains
+    to: cap.cli.config
+  - from: dom.cli
+    type: contains
+    to: cap.cli.feedback
+  - from: dom.cli
+    type: contains
+    to: cap.cli.init
+  - from: dom.cli
+    type: contains
+    to: cap.cli.init-opsx-skeleton
+  - from: dom.cli
+    type: contains
+    to: cap.cli.instructions
+  - from: dom.cli
+    type: contains
+    to: cap.cli.list
+  - from: dom.cli
+    type: contains
+    to: cap.cli.new-change
+  - from: dom.cli
+    type: contains
+    to: cap.cli.schema
+  - from: dom.cli
+    type: contains
+    to: cap.cli.schemas
+  - from: dom.cli
+    type: contains
+    to: cap.cli.show
+  - from: dom.cli
+    type: contains
+    to: cap.cli.spec
+  - from: dom.cli
+    type: contains
+    to: cap.cli.status
+  - from: dom.cli
+    type: contains
+    to: cap.cli.templates
+  - from: dom.cli
+    type: contains
+    to: cap.cli.update
+  - from: dom.cli
+    type: contains
+    to: cap.cli.validate
+  - from: dom.cli
+    type: contains
+    to: cap.cli.view
+  - from: dom.config
+    type: contains
+    to: cap.config.apply-default-isolation
+  - from: dom.config
+    type: contains
+    to: cap.config.global
+  - from: dom.config
+    type: contains
+    to: cap.config.migration
+  - from: dom.config
+    type: contains
+    to: cap.config.project
+  - from: dom.config
+    type: contains
+    to: cap.config.schema-validation
+  - from: dom.opsx
+    type: contains
+    to: cap.opsx.atomic-write
+  - from: dom.opsx
+    type: contains
+    to: cap.opsx.bootstrap
+  - from: dom.opsx
+    type: contains
+    to: cap.opsx.bootstrap-refresh
+  - from: dom.opsx
+    type: contains
+    to: cap.opsx.delta-merge
+  - from: dom.opsx
+    type: contains
+    to: cap.opsx.read-transparent
+  - from: dom.opsx
+    type: contains
+    to: cap.opsx.referential-integrity
+  - from: dom.opsx
+    type: contains
+    to: cap.opsx.sharding
+  - from: dom.opsx
+    type: contains
+    to: cap.opsx.spec-refs-validation
+  - from: dom.opsx
+    type: contains
+    to: cap.opsx.yaml-operations
+  - from: dom.schema
+    type: contains
+    to: cap.schema.fork
+  - from: dom.schema
+    type: contains
+    to: cap.schema.init
+  - from: dom.schema
+    type: contains
+    to: cap.schema.parse
+  - from: dom.schema
+    type: contains
+    to: cap.schema.validate
+  - from: dom.validation
+    type: contains
+    to: cap.validation.change
+  - from: dom.validation
+    type: contains
+    to: cap.validation.opsx
+  - from: dom.validation
+    type: contains
+    to: cap.validation.spec
+  - from: dom.verify
+    type: depends_on
+    to: dom.validation

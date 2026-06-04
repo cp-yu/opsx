@@ -1,0 +1,375 @@
+{
+  "timestamp": "2026-06-03T17:43:50.533Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "c167e9aa0ce52f21cf3f72f4858c39435d11c02aad2da3cb0c80ff4417173ad5",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      "openspec/changes/unify-cli-query-interface/.apply-isolation.json",
+      "openspec/changes/unify-cli-query-interface/design.md",
+      "openspec/changes/unify-cli-query-interface/opsx-delta.yaml",
+      "openspec/changes/unify-cli-query-interface/proposal.md",
+      "openspec/changes/unify-cli-query-interface/specs/ai-impact-sweeper/spec.md",
+      "openspec/changes/unify-cli-query-interface/specs/ai-workflow-templates/spec.md",
+      "openspec/changes/unify-cli-query-interface/specs/cli-list/spec.md",
+      "openspec/changes/unify-cli-query-interface/specs/cli-opsx-query/spec.md",
+      "openspec/changes/unify-cli-query-interface/specs/cli-spec/spec.md",
+      "openspec/changes/unify-cli-query-interface/tasks.md",
+      "openspec/project.opsx.code-map.yaml",
+      "openspec/project.opsx.relations.yaml",
+      "openspec/project.opsx.yaml",
+      "src/cli/index.ts",
+      "src/commands/opsx.ts",
+      "src/commands/spec.ts",
+      "src/core/completions/command-registry.ts",
+      "src/core/list.ts",
+      "src/core/parsers/spec-frontmatter.ts",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "src/core/templates/workflows/apply-change.ts",
+      "src/core/templates/workflows/impact-sweeper.ts",
+      "src/core/templates/workflows/propose.ts",
+      "src/utils/opsx-utils.ts",
+      "test/cli-e2e/opsx-query.test.ts",
+      "test/commands/completion.test.ts",
+      "test/commands/opsx.test.ts",
+      "test/commands/spec.test.ts",
+      "test/core/list.test.ts",
+      "test/core/templates/apply-change.test.ts",
+      "test/core/templates/impact-sweeper-template.test.ts",
+      "test/core/templates/opsx-fragments.test.ts",
+      "test/core/templates/propose-template.test.ts"
+    ],
+    "evidenceFingerprint": "4ee2abc89ce6cd775d86c8dfec9373c8043b1c820d7d42e71182a1d706bf6f3e",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/unify-cli-query-interface/.apply-isolation.json",
+        "hash": "bf87ddc767ac6c45cff2506b2d9de6b154c08c1a671b108d77ab8c135b33e430"
+      },
+      {
+        "path": "openspec/changes/unify-cli-query-interface/design.md",
+        "hash": "bbb208b41d4540f71a0148cefbe47575c0c817f9beef1a69d54e27123dbcdb6d"
+      },
+      {
+        "path": "openspec/changes/unify-cli-query-interface/opsx-delta.yaml",
+        "hash": "c8ca580f50cd711997ba0207a5288892bcd066d2926b6366a302a67cab3b2750"
+      },
+      {
+        "path": "openspec/changes/unify-cli-query-interface/proposal.md",
+        "hash": "b74c65b164c6b2c0c19e5840e33ab5ab6c7569195c6781e7adf81f7b1677592e"
+      },
+      {
+        "path": "openspec/changes/unify-cli-query-interface/specs/ai-impact-sweeper/spec.md",
+        "hash": "6066bddf0ab2c23b9b4826aaf3f6bf6c0757195411ed7dd5793c70f71bf05686"
+      },
+      {
+        "path": "openspec/changes/unify-cli-query-interface/specs/ai-workflow-templates/spec.md",
+        "hash": "3d8d9161bd73bb91d50278d8da9e226c280edfd53b43f0901ce028265fe3efe1"
+      },
+      {
+        "path": "openspec/changes/unify-cli-query-interface/specs/cli-list/spec.md",
+        "hash": "8462063ff561f70f4d150faa8b58450e8ff9fc06de9c6c3f5a4d5e4a7661704f"
+      },
+      {
+        "path": "openspec/changes/unify-cli-query-interface/specs/cli-opsx-query/spec.md",
+        "hash": "593a5bef8346453ba3bd140635a7eadcd14acbcf12e6225ad5b72ceb6f701d54"
+      },
+      {
+        "path": "openspec/changes/unify-cli-query-interface/specs/cli-spec/spec.md",
+        "hash": "5c19757f71a94a5f29d0d9639217a88b9195adefffe53e244a8ffad1ea9ce374"
+      },
+      {
+        "path": "openspec/changes/unify-cli-query-interface/tasks.md",
+        "hash": "c167e9aa0ce52f21cf3f72f4858c39435d11c02aad2da3cb0c80ff4417173ad5"
+      },
+      {
+        "path": "openspec/project.opsx.code-map.yaml",
+        "hash": "197aae678ce084d865d538e7f7cb8ca56f686eab25ef8a672e8356e671cefb8b"
+      },
+      {
+        "path": "openspec/project.opsx.relations.yaml",
+        "hash": "84d3894de119b4b1749b4086d47a023c4c9d849ee5791851b2c4242864d15003"
+      },
+      {
+        "path": "openspec/project.opsx.yaml",
+        "hash": "4e2da72912d1ea4129b4197ed2a3450e2edf4d1ad20d974d0615e201bb3d2bd8"
+      },
+      {
+        "path": "src/cli/index.ts",
+        "hash": "014d61148eff687959bf5079fa482936bc0411778acf6e9c9e5cbd8f90a1d082"
+      },
+      {
+        "path": "src/commands/opsx.ts",
+        "hash": "e65676b9370b198a94c24e48b6b4ebb1a8f856b745347389c75c5501cbc52e3f"
+      },
+      {
+        "path": "src/commands/spec.ts",
+        "hash": "64b578fc93e15704fa3946a652d14ef87c47fa402f5e1b45374dc2c5943ee139"
+      },
+      {
+        "path": "src/core/completions/command-registry.ts",
+        "hash": "76e53fd9c631a65d13127bf8bfcf8c84f584f2013b556e00fc8051031f3507ae"
+      },
+      {
+        "path": "src/core/list.ts",
+        "hash": "888f3c176c57599bf774664ca02b7d8a1d7f64d0fc97a1613d907f306149393e"
+      },
+      {
+        "path": "src/core/parsers/spec-frontmatter.ts",
+        "hash": "4d40c8f6e3f623684482fbac5aaa7f6ac5da0e5e4efeef6cf6adf71626e7c7fc"
+      },
+      {
+        "path": "src/core/templates/fragments/opsx-fragments.ts",
+        "hash": "99fd384bd691cd57053f496619dce2be62acff0be5c32b663430b835f113535d"
+      },
+      {
+        "path": "src/core/templates/workflows/apply-change.ts",
+        "hash": "3a6cdcc2671ac748f4919c74e641b6cf8fea35e10e44efaa88253a1618a12726"
+      },
+      {
+        "path": "src/core/templates/workflows/impact-sweeper.ts",
+        "hash": "0a38a140d9c7a9c412c66a75858cb97226b701b02274ee7ff895478148816c9e"
+      },
+      {
+        "path": "src/core/templates/workflows/propose.ts",
+        "hash": "60f42084f0a025e97b25fbb6daf1f602820ac42b89871e71c4e4d42310eeda29"
+      },
+      {
+        "path": "src/utils/opsx-utils.ts",
+        "hash": "0a09ad735fcaec3e1354c46babf2f1607ca23e7aff41fc9e35e28ce1cd57ca6a"
+      },
+      {
+        "path": "test/cli-e2e/opsx-query.test.ts",
+        "hash": "06e8a02b14f60f5772601bd4210bd826813768357fbec730ad02ba55a16413ed"
+      },
+      {
+        "path": "test/commands/completion.test.ts",
+        "hash": "4e885129262b6899b420b8e3e3f025db792dad73f4ced7fb36f53d271b6e8743"
+      },
+      {
+        "path": "test/commands/opsx.test.ts",
+        "hash": "53b4dfd8beea7df14929003beab655ffbc59898268fb42d2c12a984db14bc0a7"
+      },
+      {
+        "path": "test/commands/spec.test.ts",
+        "hash": "2f293edf0d7898a42261d7d32916e0313d51baf7db090d4e309aaec098990ef1"
+      },
+      {
+        "path": "test/core/list.test.ts",
+        "hash": "3d3c022d13814352e30f8f3a7f184e8eca8ac41ebbabb93d7cc6d0a2bf0b65ff"
+      },
+      {
+        "path": "test/core/templates/apply-change.test.ts",
+        "hash": "84d47d8c314a9b7ed82f7795f76a0355e51efc580f39ff5c33401db4f85302d1"
+      },
+      {
+        "path": "test/core/templates/impact-sweeper-template.test.ts",
+        "hash": "98183f58e71c4c3ebfb3a07a4b1fb1905c5cba3f250ea2e84eac332cf1be1de7"
+      },
+      {
+        "path": "test/core/templates/opsx-fragments.test.ts",
+        "hash": "71e4aa299826918a88d6ab1c194b61b76dcf74dbfa17b4274cf16d78a122d194"
+      },
+      {
+        "path": "test/core/templates/propose-template.test.ts",
+        "hash": "7bfc7e583954227b8ddd90f2b937d86084e4059ffe5e13dab34411c717b6e81e"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "0dbc0fd05caf257219188087286fe76ca80e4737"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-03T17:48:31.988Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "No optimization opportunities found"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-06-03T17:43:50.533Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "c167e9aa0ce52f21cf3f72f4858c39435d11c02aad2da3cb0c80ff4417173ad5",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          "openspec/changes/unify-cli-query-interface/.apply-isolation.json",
+          "openspec/changes/unify-cli-query-interface/design.md",
+          "openspec/changes/unify-cli-query-interface/opsx-delta.yaml",
+          "openspec/changes/unify-cli-query-interface/proposal.md",
+          "openspec/changes/unify-cli-query-interface/specs/ai-impact-sweeper/spec.md",
+          "openspec/changes/unify-cli-query-interface/specs/ai-workflow-templates/spec.md",
+          "openspec/changes/unify-cli-query-interface/specs/cli-list/spec.md",
+          "openspec/changes/unify-cli-query-interface/specs/cli-opsx-query/spec.md",
+          "openspec/changes/unify-cli-query-interface/specs/cli-spec/spec.md",
+          "openspec/changes/unify-cli-query-interface/tasks.md",
+          "openspec/project.opsx.code-map.yaml",
+          "openspec/project.opsx.relations.yaml",
+          "openspec/project.opsx.yaml",
+          "src/cli/index.ts",
+          "src/commands/opsx.ts",
+          "src/commands/spec.ts",
+          "src/core/completions/command-registry.ts",
+          "src/core/list.ts",
+          "src/core/parsers/spec-frontmatter.ts",
+          "src/core/templates/fragments/opsx-fragments.ts",
+          "src/core/templates/workflows/apply-change.ts",
+          "src/core/templates/workflows/impact-sweeper.ts",
+          "src/core/templates/workflows/propose.ts",
+          "src/utils/opsx-utils.ts",
+          "test/cli-e2e/opsx-query.test.ts",
+          "test/commands/completion.test.ts",
+          "test/commands/opsx.test.ts",
+          "test/commands/spec.test.ts",
+          "test/core/list.test.ts",
+          "test/core/templates/apply-change.test.ts",
+          "test/core/templates/impact-sweeper-template.test.ts",
+          "test/core/templates/opsx-fragments.test.ts",
+          "test/core/templates/propose-template.test.ts"
+        ],
+        "evidenceFingerprint": "301defac8bb1a5fbaec0bd1f7828b6c3c261f8ee5aad4c33d9373e516cd18199",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/unify-cli-query-interface/.apply-isolation.json",
+            "hash": "bf87ddc767ac6c45cff2506b2d9de6b154c08c1a671b108d77ab8c135b33e430"
+          },
+          {
+            "path": "openspec/changes/unify-cli-query-interface/design.md",
+            "hash": "bbb208b41d4540f71a0148cefbe47575c0c817f9beef1a69d54e27123dbcdb6d"
+          },
+          {
+            "path": "openspec/changes/unify-cli-query-interface/opsx-delta.yaml",
+            "hash": "c8ca580f50cd711997ba0207a5288892bcd066d2926b6366a302a67cab3b2750"
+          },
+          {
+            "path": "openspec/changes/unify-cli-query-interface/proposal.md",
+            "hash": "b74c65b164c6b2c0c19e5840e33ab5ab6c7569195c6781e7adf81f7b1677592e"
+          },
+          {
+            "path": "openspec/changes/unify-cli-query-interface/specs/ai-impact-sweeper/spec.md",
+            "hash": "6066bddf0ab2c23b9b4826aaf3f6bf6c0757195411ed7dd5793c70f71bf05686"
+          },
+          {
+            "path": "openspec/changes/unify-cli-query-interface/specs/ai-workflow-templates/spec.md",
+            "hash": "3d8d9161bd73bb91d50278d8da9e226c280edfd53b43f0901ce028265fe3efe1"
+          },
+          {
+            "path": "openspec/changes/unify-cli-query-interface/specs/cli-list/spec.md",
+            "hash": "8462063ff561f70f4d150faa8b58450e8ff9fc06de9c6c3f5a4d5e4a7661704f"
+          },
+          {
+            "path": "openspec/changes/unify-cli-query-interface/specs/cli-opsx-query/spec.md",
+            "hash": "593a5bef8346453ba3bd140635a7eadcd14acbcf12e6225ad5b72ceb6f701d54"
+          },
+          {
+            "path": "openspec/changes/unify-cli-query-interface/specs/cli-spec/spec.md",
+            "hash": "5c19757f71a94a5f29d0d9639217a88b9195adefffe53e244a8ffad1ea9ce374"
+          },
+          {
+            "path": "openspec/changes/unify-cli-query-interface/tasks.md",
+            "hash": "c167e9aa0ce52f21cf3f72f4858c39435d11c02aad2da3cb0c80ff4417173ad5"
+          },
+          {
+            "path": "openspec/project.opsx.code-map.yaml",
+            "hash": "4cc157b5dacb42d4328d98fcdfd89d102e4b591a96f22df0643977f7f78f1930"
+          },
+          {
+            "path": "openspec/project.opsx.relations.yaml",
+            "hash": "dc3c2a7ebae54eeb17a0275fbaf30336e93820dd4f043b99d35a947707fa07c7"
+          },
+          {
+            "path": "openspec/project.opsx.yaml",
+            "hash": "fc60ccb2595688ae0b3366bdebce78b55d79e315370054d2e9dfa9a9cadacea6"
+          },
+          {
+            "path": "src/cli/index.ts",
+            "hash": "014d61148eff687959bf5079fa482936bc0411778acf6e9c9e5cbd8f90a1d082"
+          },
+          {
+            "path": "src/commands/opsx.ts",
+            "hash": "e65676b9370b198a94c24e48b6b4ebb1a8f856b745347389c75c5501cbc52e3f"
+          },
+          {
+            "path": "src/commands/spec.ts",
+            "hash": "64b578fc93e15704fa3946a652d14ef87c47fa402f5e1b45374dc2c5943ee139"
+          },
+          {
+            "path": "src/core/completions/command-registry.ts",
+            "hash": "76e53fd9c631a65d13127bf8bfcf8c84f584f2013b556e00fc8051031f3507ae"
+          },
+          {
+            "path": "src/core/list.ts",
+            "hash": "888f3c176c57599bf774664ca02b7d8a1d7f64d0fc97a1613d907f306149393e"
+          },
+          {
+            "path": "src/core/parsers/spec-frontmatter.ts",
+            "hash": "4d40c8f6e3f623684482fbac5aaa7f6ac5da0e5e4efeef6cf6adf71626e7c7fc"
+          },
+          {
+            "path": "src/core/templates/fragments/opsx-fragments.ts",
+            "hash": "99fd384bd691cd57053f496619dce2be62acff0be5c32b663430b835f113535d"
+          },
+          {
+            "path": "src/core/templates/workflows/apply-change.ts",
+            "hash": "3a6cdcc2671ac748f4919c74e641b6cf8fea35e10e44efaa88253a1618a12726"
+          },
+          {
+            "path": "src/core/templates/workflows/impact-sweeper.ts",
+            "hash": "0a38a140d9c7a9c412c66a75858cb97226b701b02274ee7ff895478148816c9e"
+          },
+          {
+            "path": "src/core/templates/workflows/propose.ts",
+            "hash": "60f42084f0a025e97b25fbb6daf1f602820ac42b89871e71c4e4d42310eeda29"
+          },
+          {
+            "path": "src/utils/opsx-utils.ts",
+            "hash": "0a09ad735fcaec3e1354c46babf2f1607ca23e7aff41fc9e35e28ce1cd57ca6a"
+          },
+          {
+            "path": "test/cli-e2e/opsx-query.test.ts",
+            "hash": "06e8a02b14f60f5772601bd4210bd826813768357fbec730ad02ba55a16413ed"
+          },
+          {
+            "path": "test/commands/completion.test.ts",
+            "hash": "4e885129262b6899b420b8e3e3f025db792dad73f4ced7fb36f53d271b6e8743"
+          },
+          {
+            "path": "test/commands/opsx.test.ts",
+            "hash": "53b4dfd8beea7df14929003beab655ffbc59898268fb42d2c12a984db14bc0a7"
+          },
+          {
+            "path": "test/commands/spec.test.ts",
+            "hash": "2f293edf0d7898a42261d7d32916e0313d51baf7db090d4e309aaec098990ef1"
+          },
+          {
+            "path": "test/core/list.test.ts",
+            "hash": "3d3c022d13814352e30f8f3a7f184e8eca8ac41ebbabb93d7cc6d0a2bf0b65ff"
+          },
+          {
+            "path": "test/core/templates/apply-change.test.ts",
+            "hash": "84d47d8c314a9b7ed82f7795f76a0355e51efc580f39ff5c33401db4f85302d1"
+          },
+          {
+            "path": "test/core/templates/impact-sweeper-template.test.ts",
+            "hash": "98183f58e71c4c3ebfb3a07a4b1fb1905c5cba3f250ea2e84eac332cf1be1de7"
+          },
+          {
+            "path": "test/core/templates/opsx-fragments.test.ts",
+            "hash": "71e4aa299826918a88d6ab1c194b61b76dcf74dbfa17b4274cf16d78a122d194"
+          },
+          {
+            "path": "test/core/templates/propose-template.test.ts",
+            "hash": "7bfc7e583954227b8ddd90f2b937d86084e4059ffe5e13dab34411c717b6e81e"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "0dbc0fd05caf257219188087286fe76ca80e4737"
+      }
+    }
+  }
+}

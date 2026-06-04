@@ -115,27 +115,6 @@ The system SHALL process credit card payments securely`;
     });
   });
 
-  describe('spec list', () => {
-    it('should list all available specs (IDs only by default)', async () => {
-      const result = await runSpecCli(['spec', 'list']);
-      expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('auth');
-      expect(result.stdout).toContain('payment');
-      expect(result.stdout).not.toMatch(/Requirements:\s*\d+/);
-    });
-
-    it('should output spec list as JSON with --json flag', async () => {
-      const result = await runSpecCli(['spec', 'list', '--json']);
-      expect(result.exitCode).toBe(0);
-
-      const json = JSON.parse(result.stdout);
-      expect(json).toHaveLength(2);
-      expect(json.find((s: any) => s.id === 'auth')).toBeDefined();
-      expect(json.find((s: any) => s.id === 'payment')).toBeDefined();
-      expect(json[0].requirementCount).toBeDefined();
-    });
-  });
-
   describe('spec validate', () => {
     it('should validate a valid spec', async () => {
       const result = await runSpecCli(['spec', 'validate', 'auth']);
@@ -184,18 +163,12 @@ This section has no actual requirements`;
       expect(result.stderr).toContain('not found');
     });
 
-    it('should handle missing specs directory gracefully', async () => {
-      await fs.rm(specsDir, { recursive: true, force: true });
-      const result = await runSpecCli(['spec', 'list']);
+    it('should not expose removed spec list help', async () => {
+      const result = await runSpecCli(['spec', '--help']);
       expect(result.exitCode).toBe(0);
-      expect(result.stdout.trim()).toBe('No items found');
-    });
-
-    it('should honor --no-color (no ANSI escapes)', async () => {
-      const result = await runSpecCli(['--no-color', 'spec', 'list', '--long']);
-      expect(result.exitCode).toBe(0);
-      const hasAnsi = /\u001b\[[0-9;]*m/.test(result.stdout);
-      expect(hasAnsi).toBe(false);
+      expect(result.stdout).toContain('show');
+      expect(result.stdout).toContain('validate');
+      expect(result.stdout).not.toContain('list');
     });
   });
 });

@@ -244,17 +244,6 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         ],
       },
       {
-        name: 'list',
-        description: 'List all specifications',
-        flags: [
-          COMMON_FLAGS.json,
-          {
-            name: 'long',
-            description: 'Show id and title with counts',
-          },
-        ],
-      },
-      {
         name: 'validate',
         description: 'Validate a specification',
         acceptsPositional: true,
@@ -263,6 +252,29 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
           COMMON_FLAGS.strict,
           COMMON_FLAGS.jsonValidation,
           COMMON_FLAGS.noInteractive,
+        ],
+      },
+    ],
+  },
+  {
+    name: 'opsx',
+    description: 'Query OpenSpec OPSX architecture data',
+    flags: [],
+    subcommands: [
+      {
+        name: 'query',
+        description: 'Query an OPSX node',
+        acceptsPositional: true,
+        flags: [
+          {
+            name: 'relations',
+            description: 'Include relations only',
+          },
+          {
+            name: 'code-map',
+            description: 'Include code-map refs only',
+          },
+          COMMON_FLAGS.json,
         ],
       },
     ],
@@ -596,6 +608,11 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
             description: 'Skip confirmation',
           },
         ],
+      },
+      {
+        name: 'backfill-specs',
+        description: 'Backfill spec frontmatter capability mappings',
+        flags: [COMMON_FLAGS.json],
       },
     ],
   },

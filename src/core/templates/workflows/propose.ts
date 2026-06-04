@@ -7,9 +7,9 @@
 import type { SkillTemplate, CommandTemplate } from '../types.js';
 import {
   ARTIFACT_DOC_LANGUAGE_CONTRACT,
+  OPSX_CLI_QUERY_CONTEXT,
   OPSX_GENERATE_DELTA,
   OPSX_POST_PROPOSE_VALIDATION,
-  OPSX_SHARED_CONTEXT,
 } from '../fragments/opsx-fragments.js';
 
 const SMART_ROUTING_GUIDANCE = `## Smart Explore Routing
@@ -83,9 +83,15 @@ ${SMART_ROUTING_GUIDANCE}
    - \`applyRequires\`: array of artifact IDs needed before implementation (e.g., \`["tasks"]\`)
    - \`artifacts\`: list of all artifacts with their status and dependencies
 
-${OPSX_SHARED_CONTEXT}
+${OPSX_CLI_QUERY_CONTEXT}
 
 4. **Create artifacts in sequence until apply-ready**
+
+   Before creating specs, run:
+   \`\`\`bash
+   openspec list --specs --json
+   \`\`\`
+   Use each spec's \`capabilities\` string array to compare proposed capabilities against existing specs. Specs without frontmatter return \`capabilities: []\`. Reuse or modify the matching spec when it already covers the capability instead of creating a redundant spec.
 
    Use the **TodoWrite tool** to track progress through the artifacts.
 
@@ -210,9 +216,15 @@ ${SMART_ROUTING_GUIDANCE}
    - \`applyRequires\`: array of artifact IDs needed before implementation (e.g., \`["tasks"]\`)
    - \`artifacts\`: list of all artifacts with their status and dependencies
 
-${OPSX_SHARED_CONTEXT}
+${OPSX_CLI_QUERY_CONTEXT}
 
 4. **Create artifacts in sequence until apply-ready**
+
+   Before creating specs, run:
+   \`\`\`bash
+   openspec list --specs --json
+   \`\`\`
+   Use each spec's \`capabilities\` string array to compare proposed capabilities against existing specs. Specs without frontmatter return \`capabilities: []\`. Reuse or modify the matching spec when it already covers the capability instead of creating a redundant spec.
 
    Use the **TodoWrite tool** to track progress through the artifacts.
 

@@ -1,0 +1,30 @@
+schema_version: 1
+ADDED:
+  capabilities:
+    - id: cap.spec.frontmatter
+      type: capability
+      intent: Spec 文件 YAML frontmatter 解析，提取 capabilities 关联声明
+    - id: cap.spec.registry
+      type: capability
+      intent: 运行时 cap↔spec 双向映射注册表，提供 getSpecsForCap、getCapsForSpec、getOrphanedSpecs、getUncoveredCaps 查询 API
+  relations:
+    - from: cap.spec.frontmatter
+      type: contains
+      to: dom.validation
+    - from: cap.spec.registry
+      type: contains
+      to: dom.validation
+    - from: cap.spec.registry
+      type: depends_on
+      to: cap.spec.frontmatter
+
+MODIFIED:
+  capabilities:
+    - id: cap.cli.spec
+      intent: 使用子命令管理和查看 OpenSpec 规约；spec list --json 输出增加 capabilities 字段，基于 Spec Registry 提供 cap↔spec 关联信息
+    - id: cap.validation.spec-section-type-cross-check
+      intent: 在 change delta spec 验证中增加 section-type 与主 spec header 存在性的交叉验证；新增 frontmatter capabilities 存在性校验（cap 是否在 OPSX 中）和缺失 frontmatter 的 warning
+    - id: cap.ai.impact-sweeper
+      intent: 提供可复用的 openspec-impact-sweeper skill，基于 OPSX、specs frontmatter cap→spec 映射和 tracked source search 为项目概念生成轻量影响面 JSON 报告
+    - id: cap.ai.workflow-templates
+      intent: verify/apply/archive/propose 等模板共享面向 Agent 的 workflow guidance；propose 和 apply-change 模板新增 spec 发现指令，引导 LLM 通过 spec list --json 查询 cap→spec 映射避免漏改和冗余

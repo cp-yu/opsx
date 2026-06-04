@@ -29,9 +29,9 @@
 
 #### Scenario: header 匹配使用 normalizeRequirementName
 
-- **WHEN** change spec 中 MODIFIED header 为 `### Requirement: Foo Bar`
-- **AND** 主 spec 中 header 为 `### Requirement: foo bar`（大小写不同）
-- **THEN** 验证 SHALL 视为匹配，不报 ERROR
+- **WHEN** change spec 中 header 为 `### Requirement:  Bar ` (含多余空格)
+- **AND** 主 spec 中 header 为 `### Requirement: Bar`
+- **THEN** 匹配 SHALL 成功（通过 `normalizeRequirementName()` 规范化后比较）
 
 ### Requirement: ADDED requirement header 不得已存在于主 spec
 
@@ -83,4 +83,42 @@
 - **WHEN** change spec 包含 `## RENAMED Requirements` 的 FROM: `Missing`
 - **AND** 主 spec 不包含 `### Requirement: Missing`
 - **THEN** 验证 SHALL 报 ERROR
+
+### Requirement: Frontmatter capabilities 存在性校验
+
+`validateChangeDeltaSpecs()` 或独立的 `validateSpecFrontmatter()` SHALL 对 `openspec/specs/*/spec.md` 的 frontmatter 中声明的每个 cap ID 校验其是否存在于 `openspec/project.opsx.yaml` 的 capabilities 列表中。
+
+#### Scenario: Frontmatter cap 存在于 OPSX
+
+- **WHEN** spec `openspec/specs/foo/spec.md` 的 frontmatter 声明 `capabilities: [cap.cli.archive]`
+- **AND** `project.opsx.yaml` 包含 `cap.cli.archive`
+- **THEN** 验证 SHALL 通过
+
+#### Scenario: Frontmatter cap 不存在于 OPSX
+
+- **WHEN** spec `openspec/specs/foo/spec.md` 的 frontmatter 声明 `capabilities: [cap.nonexistent]`
+- **AND** `project.opsx.yaml` 不包含 `cap.nonexistent`
+- **THEN** 验证 SHALL 产生 WARNING（非 ERROR）
+- **AND** 警告信息 SHALL 包含 cap ID 和 spec 名称
+
+### Requirement: 缺失 frontmatter 的 warning
+
+验证系统 SHALL 对 `openspec/specs/*/spec.md` 中无 frontmatter 或 capabilities 为空的 spec 产生 WARNING。
+
+#### Scenario: spec 无 frontmatter
+
+- **WHEN** `openspec/specs/foo/spec.md` 不包含 YAML frontmatter
+- **THEN** 验证 SHALL 产生 WARNING
+- **AND** 警告信息 SHALL 指明 spec 名称并建议添加 capabilities frontmatter
+
+#### Scenario: spec 有 frontmatter 但 capabilities 为空
+
+- **WHEN** `openspec/specs/foo/spec.md` 的 frontmatter 为 `---\ncapabilities: []\n---`
+- **THEN** 验证 SHALL 产生 WARNING
+
+#### Scenario: OPSX 文件不存在时跳过 cap 存在性校验
+
+- **WHEN** `openspec/project.opsx.yaml` 不存在
+- **THEN** 验证 SHALL 跳过 frontmatter cap 存在性校验
+- **AND** SHALL 仍然对缺失 frontmatter 的 spec 产生 WARNING
 

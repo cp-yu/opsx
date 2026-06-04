@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.cli.init
+---
 # CLI Init Specification
 
 ## Purpose

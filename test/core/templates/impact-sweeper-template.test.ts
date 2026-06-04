@@ -21,6 +21,12 @@ describe('impact sweeper template', () => {
     for (const field of [
       '"concept"',
       '"projectRoot"',
+      '"terminologyObservations"',
+      '"userInput"',
+      '"foundInSpecs"',
+      '"term"',
+      '"specs"',
+      '"count"',
       '"termMappings"',
       '"userTerm"',
       '"projectTerms"',
@@ -37,10 +43,22 @@ describe('impact sweeper template', () => {
     }
   });
 
-  it('requires OPSX-first evidence and bounded reverse search', () => {
-    expect(instructions).toContain('openspec/project.opsx.yaml');
-    expect(instructions).toContain('openspec/project.opsx.code-map.yaml');
-    expect(instructions).toContain('openspec/project.opsx.relations.yaml');
+  it('documents terminology awareness extraction', () => {
+    expect(instructions).toContain('## Terminology Awareness');
+    expect(instructions).toContain("Identify terms semantically related to user's `concept` input");
+    expect(instructions).toContain("if concept is '流程', extract '工作流', 'workflow', '工作流程' etc.");
+    expect(instructions).toContain('Record in `terminologyObservations` field');
+    expect(instructions).toContain('Report facts only, no judgment or recommendations');
+    expect(instructions).toContain('If terminology extraction fails, omit `terminologyObservations` and keep the report usable');
+  });
+
+  it('requires CLI-backed OPSX evidence and bounded reverse search', () => {
+    expect(instructions).toContain('openspec opsx query <node-id> --json');
+    expect(instructions).toContain('Use the returned `node`, `relations`, and `codeMap` fields as evidence');
+    expect(instructions).toContain('OPSX files not found');
+    expect(instructions).toContain('openspec list --specs --json');
+    expect(instructions).toContain("Extract each spec entry's `capabilities` string array");
+    expect(instructions).toContain('Treat a missing frontmatter mapping as an empty array');
     expect(instructions).toContain('one-hop relations');
     expect(instructions).toContain('Expand to second-hop relations only when');
     expect(instructions).toContain('shared infrastructure');

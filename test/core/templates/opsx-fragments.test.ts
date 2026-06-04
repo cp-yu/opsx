@@ -6,6 +6,7 @@ import {
   GIT_EVIDENCE_PROTOCOL,
   OPTIMIZATION_PROTOCOL_SUBAGENT,
   OPSX_NAVIGATION_GUIDANCE,
+  OPSX_CLI_QUERY_CONTEXT,
   OPSX_POST_PROPOSE_VALIDATION,
   OPSX_READ_CONTEXT,
   OPSX_SHARED_CONTEXT,
@@ -35,7 +36,10 @@ import {
   getOpsxProposeCommandTemplate,
   getOpsxProposeSkillTemplate,
 } from '../../../src/core/templates/workflows/propose.js';
-import { getApplyChangeSkillTemplate } from '../../../src/core/templates/workflows/apply-change.js';
+import {
+  getApplyChangeSkillTemplate,
+  getOpsxApplyCommandTemplate,
+} from '../../../src/core/templates/workflows/apply-change.js';
 import { getArchiveChangeSkillTemplate } from '../../../src/core/templates/workflows/archive-change.js';
 import { SUBAGENT_VERIFY_EXECUTION_MODEL } from '../../../src/core/templates/workflows/verify-execution-model.js';
 import { getSyncSpecsSkillTemplate } from '../../../src/core/templates/workflows/sync-specs.js';
@@ -46,12 +50,25 @@ describe('OPSX shared context fragments', () => {
     expect(OPSX_READ_CONTEXT).toBe(OPSX_SHARED_CONTEXT);
   });
 
-  it('reuses OPSX_SHARED_CONTEXT across explore, propose, and apply templates', () => {
+  it('uses raw OPSX navigation only for explore and CLI query context for propose/apply', () => {
     expect(getExploreSkillTemplate().instructions).toContain(OPSX_SHARED_CONTEXT);
     expect(getExploreSkillTemplate().instructions).toContain(OPSX_NAVIGATION_GUIDANCE);
 
-    expect(getOpsxProposeSkillTemplate().instructions).toContain(OPSX_SHARED_CONTEXT);
-    expect(getApplyChangeSkillTemplate().instructions).toContain(OPSX_SHARED_CONTEXT);
+    expect(getOpsxProposeSkillTemplate().instructions).toContain(OPSX_CLI_QUERY_CONTEXT);
+    expect(getOpsxProposeCommandTemplate().content).toContain(OPSX_CLI_QUERY_CONTEXT);
+    expect(getApplyChangeSkillTemplate().instructions).toContain(OPSX_CLI_QUERY_CONTEXT);
+    expect(getOpsxApplyCommandTemplate().content).toContain(OPSX_CLI_QUERY_CONTEXT);
+
+    for (const template of [
+      getOpsxProposeSkillTemplate().instructions,
+      getOpsxProposeCommandTemplate().content,
+      getApplyChangeSkillTemplate().instructions,
+      getOpsxApplyCommandTemplate().content,
+    ]) {
+      expect(template).not.toContain('read it first for domains');
+      expect(template).not.toContain('Check `openspec/project.opsx.code-map.yaml`');
+      expect(template).not.toContain('Check `openspec/project.opsx.relations.yaml`');
+    }
   });
 
   it('reuses post-propose validation guidance across propose skill and command templates', () => {

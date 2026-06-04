@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.cli.sync
+---
 # Spec: cli-sync
 
 ## Purpose

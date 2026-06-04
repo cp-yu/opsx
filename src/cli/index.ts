@@ -10,6 +10,7 @@ import { ListCommand } from '../core/list.js';
 import { ArchiveCommand } from '../core/archive.js';
 import { ViewCommand } from '../core/view.js';
 import { registerSpecCommand } from '../commands/spec.js';
+import { registerOpsxCommand } from '../commands/opsx.js';
 import { ChangeCommand } from '../commands/change.js';
 import { ValidateCommand } from '../commands/validate.js';
 import { ShowCommand } from '../commands/show.js';
@@ -25,11 +26,13 @@ import {
   bootstrapInstructionsCommand,
   bootstrapValidateCommand,
   bootstrapPromoteCommand,
+  bootstrapBackfillSpecsCommand,
   type BootstrapInitOptions,
   type BootstrapStatusOptions,
   type BootstrapInstructionsOptions,
   type BootstrapValidateOptions,
   type BootstrapPromoteOptions,
+  type BootstrapBackfillOptions,
 } from '../commands/bootstrap.js';
 import {
   statusCommand,
@@ -302,6 +305,7 @@ program
   });
 
 registerSpecCommand(program);
+registerOpsxCommand(program);
 registerConfigCommand(program);
 registerSchemaCommand(program);
 
@@ -599,6 +603,20 @@ bootstrapCmd
   .action(async (options: BootstrapPromoteOptions) => {
     try {
       await bootstrapPromoteCommand(options);
+    } catch (error) {
+      console.log();
+      ora().fail(`Error: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+bootstrapCmd
+  .command('backfill-specs')
+  .description('Backfill spec frontmatter capability mappings')
+  .option('--json', 'Output as JSON')
+  .action(async (options: BootstrapBackfillOptions) => {
+    try {
+      await bootstrapBackfillSpecsCommand(options);
     } catch (error) {
       console.log();
       ora().fail(`Error: ${(error as Error).message}`);

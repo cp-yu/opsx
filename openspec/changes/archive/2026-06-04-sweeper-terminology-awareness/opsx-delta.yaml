@@ -1,0 +1,36 @@
+schema_version: 1
+ADDED:
+  capabilities:
+    - id: cap.ai.sweeper-terminology-extraction
+      type: capability
+      intent: Impact sweeper 在读取相关 specs 时提取与用户 concept 语义相近的术语，记录术语、出现次数和分布 specs
+    - id: cap.ai.sweeper-terminology-reporting
+      type: capability
+      intent: 在 sweeper JSON 报告中通过 terminologyObservations 字段返回术语观察结果，支持向后兼容
+    - id: cap.ai.explore-terminology-decision
+      type: capability
+      intent: Explore master agent 解读 terminologyObservations，根据四态判断逻辑决定是否向用户提示术语不一致
+  relations:
+    - from: cap.ai.sweeper-terminology-extraction
+      to: dom.ai-integration
+      type: contains
+    - from: cap.ai.sweeper-terminology-reporting
+      to: dom.ai-integration
+      type: contains
+    - from: cap.ai.explore-terminology-decision
+      to: dom.ai-integration
+      type: contains
+    - from: cap.ai.sweeper-terminology-extraction
+      to: cap.ai.impact-sweeper
+      type: depends_on
+    - from: cap.ai.sweeper-terminology-reporting
+      to: cap.ai.sweeper-terminology-extraction
+      type: depends_on
+    - from: cap.ai.explore-terminology-decision
+      to: cap.ai.sweeper-terminology-reporting
+      type: depends_on
+
+MODIFIED:
+  capabilities:
+    - id: cap.ai.impact-sweeper
+      intent: 通过 CLI 查询接口获取 OPSX 数据和 cap→spec 映射，生成影响面报告；在读取 specs 时同时执行术语提取步骤，用于检测术语漂移

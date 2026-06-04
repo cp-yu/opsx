@@ -209,7 +209,9 @@ describe('openspec bootstrap lifecycle', () => {
     const promoteResult = await runCLI(['bootstrap', 'promote', '-y'], { cwd: projectDir });
     expect(promoteResult.exitCode).toBe(0);
     await expectFormalBundle(projectDir);
-    await expect(readFile(projectDir, 'openspec/specs/auth/spec.md')).resolves.toBe(originalSpec);
+    const authSpec = await readFile(projectDir, 'openspec/specs/auth/spec.md');
+    expect(authSpec).toContain('capabilities:\n  - cap.auth.login');
+    expect(authSpec.endsWith(originalSpec)).toBe(true);
     await expect(readFile(projectDir, 'openspec/specs/cli/spec.md')).resolves.toContain('### Requirement: Bootstrap workflow');
     expect(await pathExists(projectDir, 'openspec/bootstrap')).toBe(true);
   });

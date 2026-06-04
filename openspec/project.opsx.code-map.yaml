@@ -1,5 +1,5 @@
 schema_version: 1
-generated_at: 2026-06-02T08:33:28.541Z
+generated_at: 2026-06-04T04:12:57.930Z
 nodes:
   - id: cap.ai.agent-docs
     refs:
@@ -11,40 +11,41 @@ nodes:
   - id: cap.ai.command-slugs
     refs:
       - path: src/core/shared/tool-detection.ts
-  - id: cap.ai.skill-generation
-    refs:
-      - path: src/core/shared/skill-generation.ts
-      - path: src/core/init.ts
-  - id: cap.ai.tool-adapters
-    refs:
-      - path: src/core/config.ts
-      - path: src/core/available-tools.ts
-  - id: cap.ai.workflow-templates
-    refs:
-      - path: src/core/templates/workflows/
-      - path: src/core/templates/skill-templates.ts
-      - path: src/core/templates/fragments/opsx-fragments.ts
   - id: cap.ai.impact-sweeper
     refs:
-      - path: src/core/templates/workflows/impact-sweeper.ts
+      - path: openspec/sweeper/.gitignore
       - path: src/core/shared/skill-generation.ts
       - path: src/core/templates/workflows/explore.ts
-      - path: test/core/templates/impact-sweeper-template.test.ts
+      - path: src/core/templates/workflows/impact-sweeper.ts
       - path: test/core/templates/explore-template.test.ts
-      - path: openspec/sweeper/.gitignore
+      - path: test/core/templates/impact-sweeper-template.test.ts
   - id: cap.ai.internal-skill-installation
     refs:
       - path: src/core/shared/skill-generation.ts
       - path: src/core/templates/sync-engine.ts
       - path: src/core/workflow-installation.ts
+      - path: test/core/profile-sync-drift.test.ts
       - path: test/core/shared/skill-generation.test.ts
       - path: test/core/workflow-installation.test.ts
-      - path: test/core/profile-sync-drift.test.ts
-  - id: cap.verify.optimize
+  - id: cap.ai.skill-generation
+    refs:
+      - path: src/core/init.ts
+      - path: src/core/shared/skill-generation.ts
+  - id: cap.ai.tool-adapters
+    refs:
+      - path: src/core/available-tools.ts
+      - path: src/core/config.ts
+  - id: cap.ai.workflow-templates
     refs:
       - path: src/core/templates/fragments/opsx-fragments.ts
-      - path: src/core/templates/workflows/verify-change.ts
-      - path: src/core/templates/workflows/archive-change.ts
+      - path: src/core/templates/skill-templates.ts
+      - path: src/core/templates/workflows/
+  - id: cap.apply.task-decomposition
+    refs:
+      - path: schemas/spec-driven/schema.yaml
+      - path: src/core/templates/workflows/apply-change.ts
+      - path: test/commands/artifact-workflow.test.ts
+      - path: test/core/templates/apply-change.test.ts
   - id: cap.artifact-graph.instruction-loader
     refs:
       - path: src/core/artifact-graph/instruction-loader.ts
@@ -74,122 +75,116 @@ nodes:
       - path: src/utils/change-metadata.ts
   - id: cap.change.specs-sync
     refs:
-      - path: src/core/specs-apply.ts
       - path: src/core/change-sync.ts
+      - path: src/core/specs-apply.ts
   - id: cap.cli.archive
     refs:
-      - path: src/core/archive.ts
       - path: src/cli/index.ts
         line_start: 197
         line_end: 215
+      - path: src/core/archive.ts
   - id: cap.cli.change
     refs:
-      - path: src/commands/change.ts
       - path: src/cli/index.ts
         line_start: 182
         line_end: 195
+      - path: src/commands/change.ts
   - id: cap.cli.completion
     refs:
-      - path: src/commands/completion.ts
       - path: src/cli/index.ts
         line_start: 327
         line_end: 345
+      - path: src/commands/completion.ts
   - id: cap.cli.config
     refs:
-      - path: src/commands/config.ts
       - path: src/cli/index.ts
         line_start: 232
         line_end: 245
+      - path: src/commands/config.ts
   - id: cap.cli.feedback
     refs:
-      - path: src/commands/feedback.ts
       - path: src/cli/index.ts
         line_start: 307
         line_end: 325
+      - path: src/commands/feedback.ts
   - id: cap.cli.init
     refs:
-      - path: src/core/init.ts
       - path: src/cli/index.ts
         line_start: 90
         line_end: 120
+      - path: src/core/init.ts
   - id: cap.cli.instructions
     refs:
-      - path: src/commands/workflow/instructions.ts
       - path: src/cli/index.ts
         line_start: 367
         line_end: 390
-  - id: cap.apply.task-decomposition
-    refs:
-      - path: src/core/templates/workflows/apply-change.ts
-      - path: schemas/spec-driven/schema.yaml
-      - path: test/core/templates/apply-change.test.ts
-      - path: test/commands/artifact-workflow.test.ts
+      - path: src/commands/workflow/instructions.ts
   - id: cap.cli.list
     refs:
-      - path: src/core/list.ts
       - path: src/cli/index.ts
         line_start: 147
         line_end: 165
+      - path: src/core/list.ts
   - id: cap.cli.new-change
     refs:
-      - path: src/commands/workflow/new-change.ts
       - path: src/cli/index.ts
         line_start: 432
         line_end: 455
+      - path: src/commands/workflow/new-change.ts
   - id: cap.cli.schema
     refs:
-      - path: src/commands/schema.ts
       - path: src/cli/index.ts
         line_start: 247
         line_end: 265
+      - path: src/commands/schema.ts
   - id: cap.cli.schemas
     refs:
-      - path: src/commands/workflow/schemas.ts
       - path: src/cli/index.ts
         line_start: 412
         line_end: 430
+      - path: src/commands/workflow/schemas.ts
   - id: cap.cli.show
     refs:
-      - path: src/commands/show.ts
       - path: src/cli/index.ts
         line_start: 287
         line_end: 305
+      - path: src/commands/show.ts
   - id: cap.cli.spec
     refs:
-      - path: src/commands/spec.ts
       - path: src/cli/index.ts
         line_start: 217
         line_end: 230
+      - path: src/commands/spec.ts
   - id: cap.cli.status
     refs:
-      - path: src/commands/workflow/status.ts
       - path: src/cli/index.ts
         line_start: 347
         line_end: 365
+      - path: src/commands/workflow/status.ts
   - id: cap.cli.templates
     refs:
-      - path: src/commands/workflow/templates.ts
       - path: src/cli/index.ts
         line_start: 392
         line_end: 410
+      - path: src/commands/workflow/templates.ts
   - id: cap.cli.update
     refs:
-      - path: src/core/update.ts
       - path: src/cli/index.ts
         line_start: 122
         line_end: 145
+      - path: src/core/update.ts
   - id: cap.cli.validate
     refs:
-      - path: src/commands/validate.ts
       - path: src/cli/index.ts
         line_start: 267
         line_end: 285
+      - path: src/commands/validate.ts
   - id: cap.cli.view
     refs:
-      - path: src/core/view.ts
       - path: src/cli/index.ts
         line_start: 167
         line_end: 180
+      - path: src/core/view.ts
   - id: cap.config.global
     refs:
       - path: src/core/global-config.ts
@@ -198,9 +193,9 @@ nodes:
       - path: src/core/migration.ts
   - id: cap.config.project
     refs:
-      - path: src/core/project-config.ts
       - path: src/core/config-projection.ts
       - path: src/core/config-schema.ts
+      - path: src/core/project-config.ts
   - id: cap.config.schema-validation
     refs:
       - path: src/core/config-schema.ts
@@ -211,8 +206,8 @@ nodes:
         line_end: 350
   - id: cap.opsx.bootstrap
     refs:
-      - path: src/utils/bootstrap-utils.ts
       - path: src/core/templates/workflows/bootstrap-opsx.ts
+      - path: src/utils/bootstrap-utils.ts
   - id: cap.opsx.delta-merge
     refs:
       - path: src/utils/opsx-utils.ts
@@ -257,12 +252,17 @@ nodes:
       - path: src/core/schemas/
   - id: cap.validation.change
     refs:
-      - path: src/core/validation/
       - path: src/commands/validate.ts
+      - path: src/core/validation/
   - id: cap.validation.opsx
     refs:
-      - path: src/utils/opsx-utils.ts
       - path: src/commands/validate.ts
+      - path: src/utils/opsx-utils.ts
   - id: cap.validation.spec
     refs:
       - path: src/core/validation/
+  - id: cap.verify.optimize
+    refs:
+      - path: src/core/templates/fragments/opsx-fragments.ts
+      - path: src/core/templates/workflows/archive-change.ts
+      - path: src/core/templates/workflows/verify-change.ts

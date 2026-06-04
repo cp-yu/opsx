@@ -31,6 +31,19 @@ describe('validateChangeDeltaSpecs cross-check against main spec', () => {
     await fs.writeFile(path.join(dir, 'spec.md'), content);
   }
 
+  async function writeProjectOpsx(capIds: string[]) {
+    const capabilities = capIds.map(id => `  - id: ${id}
+    type: capability
+    intent: Test capability`).join('\n');
+    await fs.writeFile(path.join(testDir, 'openspec', 'project.opsx.yaml'), `schema_version: 1
+project:
+  id: proj.test
+  name: Test
+capabilities:
+${capabilities}
+`);
+  }
+
   const mainSpecWithHeaders = (headers: string[]) => {
     const reqs = headers.map(h => `### Requirement: ${h}\nThe system SHALL do ${h}.\n\n#### Scenario: ${h} works\n- **WHEN** foo\n- **THEN** bar\n`).join('\n');
     return `# Test Spec\n\n## Purpose\nTest spec for cross-check validation.\n\n## Requirements\n\n${reqs}`;
@@ -151,5 +164,53 @@ describe('validateChangeDeltaSpecs cross-check against main spec', () => {
 
     const crossCheckErrors = report.issues.filter(i => i.message.includes('already exists'));
     expect(crossCheckErrors).toHaveLength(0);
+  });
+
+  it('should warn when frontmatter capability does not exist in OPSX', async () => {
+    await writeProjectOpsx(['cap.cli.archive']);
+    await writeMainSpec('foo', `---
+capabilities:
+  - cap.cli.archive
+  - cap.nonexistent
+---
+${mainSpecWithHeaders(['Existing'])}`);
+    await writeChangeSpec('delta', deltaSpec('ADDED', 'Brand New'));
+
+    const report = await new Validator().validateChangeDeltaSpecs(changeDir);
+
+    const warnings = report.issues.filter(i => i.level === 'WARNING');
+    expect(warnings.some(i => i.message.includes('cap.nonexistent') && i.message.includes('foo'))).toBe(true);
+    expect(warnings.some(i => i.message.includes('cap.cli.archive'))).toBe(false);
+  });
+
+  it('should warn when main spec has no frontmatter capabilities', async () => {
+    await writeProjectOpsx(['cap.cli.archive']);
+    await writeMainSpec('foo', mainSpecWithHeaders(['Existing']));
+    await writeMainSpec('empty-caps', `---
+capabilities: []
+---
+${mainSpecWithHeaders(['Existing'])}`);
+    await writeChangeSpec('delta', deltaSpec('ADDED', 'Brand New'));
+
+    const report = await new Validator().validateChangeDeltaSpecs(changeDir);
+
+    const warnings = report.issues.filter(i => i.level === 'WARNING');
+    expect(warnings.some(i => i.message.includes('foo') && i.message.includes('capabilities frontmatter'))).toBe(true);
+    expect(warnings.some(i => i.message.includes('empty-caps') && i.message.includes('capabilities frontmatter'))).toBe(true);
+  });
+
+  it('should skip capability existence check when OPSX file is missing', async () => {
+    await writeMainSpec('foo', `---
+capabilities:
+  - cap.nonexistent
+---
+${mainSpecWithHeaders(['Existing'])}`);
+    await writeMainSpec('legacy', mainSpecWithHeaders(['Existing']));
+    await writeChangeSpec('delta', deltaSpec('ADDED', 'Brand New'));
+
+    const report = await new Validator().validateChangeDeltaSpecs(changeDir);
+
+    expect(report.issues.some(i => i.message.includes('cap.nonexistent'))).toBe(false);
+    expect(report.issues.some(i => i.level === 'WARNING' && i.message.includes('legacy'))).toBe(true);
   });
 });

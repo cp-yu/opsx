@@ -7,10 +7,13 @@ project:
   roots:
     - path: .
 domains:
-  - id: dom.cli
-    intent: 命令行界面，将所有 OpenSpec 操作暴露为可组合的子命令
+  - id: dom.ai-integration
+    intent: 多工具 AI 支持 — 为 25+ AI 工具生成特定工具的技能文件、斜杠命令和面向 Agent 的工作流
     type: domain
-    boundary: 拥有终端 I/O 和命令路由。将所有领域逻辑委托给核心模块。
+    boundary: 拥有工具适配器注册表和技能定义。不拥有核心规约/变更逻辑。
+  - id: dom.apply
+    intent: apply 命令作为编译步骤，集成实现、验证、优化的完整生命周期。确保 apply 输出即验证过的制品
+    type: domain
   - id: dom.artifact-graph
     intent: 制品依赖解析、拓扑排序和指令组装的核心引擎
     type: domain
@@ -19,37 +22,37 @@ domains:
     intent: 管理完整变更生命周期 — 创建、增量规约操作、归档及合并到主规约
     type: domain
     boundary: 拥有变更目录和增量合并逻辑。不拥有规约内容验证规则。
-  - id: dom.schema
-    intent: 定义、解析和管理控制制品类型、依赖关系和构建顺序的工作流 Schema
+  - id: dom.cli
+    intent: 命令行界面，将所有 OpenSpec 操作暴露为可组合的子命令
     type: domain
-    boundary: 拥有 Schema YAML 解析和三层解析逻辑。不拥有制品内容生成。
-  - id: dom.ai-integration
-    intent: 多工具 AI 支持 — 为 25+ AI 工具生成特定工具的技能文件、斜杠命令和面向 Agent 的工作流
-    type: domain
-    boundary: 拥有工具适配器注册表和技能定义。不拥有核心规约/变更逻辑。
+    boundary: 拥有终端 I/O 和命令路由。将所有领域逻辑委托给核心模块。
   - id: dom.config
     intent: 项目级和用户级配置管理，带 Schema 验证
     type: domain
     boundary: 拥有配置加载、验证和合并。不拥有配置 UI 或交互式提示。
-  - id: dom.validation
-    intent: 变更、规约和 OPSX 完整性的验证系统
-    type: domain
-    boundary: 拥有验证规则和错误报告。不拥有修复建议或自动修复。
   - id: dom.opsx
     intent: OPSX 编程基础设施，用于架构追踪，包含 YAML 操作、验证和分片
     type: domain
     boundary: 拥有 OPSX 文件 I/O、Schema 验证和 delta 合并。不拥有 OPSX 内容生成。
+  - id: dom.schema
+    intent: 定义、解析和管理控制制品类型、依赖关系和构建顺序的工作流 Schema
+    type: domain
+    boundary: 拥有 Schema YAML 解析和三层解析逻辑。不拥有制品内容生成。
+  - id: dom.validation
+    intent: 变更、规约和 OPSX 完整性的验证系统
+    type: domain
+    boundary: 拥有验证规则和错误报告。不拥有修复建议或自动修复。
   - id: dom.verify
     intent: 两阶段质量门禁——在一致性检验通过后，对代码进行最优性检验，将代码从"可用"提升到"精良"
     status: active
-    type: domain
-  - id: dom.apply
-    intent: apply 命令作为编译步骤，集成实现、验证、优化的完整生命周期。确保 apply 输出即验证过的制品
     type: domain
 capabilities:
   - id: cap.ai.agent-docs
     intent: 生成面向 Agent 的指令文档，并让所有会生成或回写 artifact 的 workflow surface 共享同一套配置投影合同
     status: active
+    type: capability
+  - id: cap.ai.agent-prompt-guidance
+    intent: 面向 Agent 的 verify gate 提示词指引系统。VERIFY_SIMPLE_CHANGE_FAST_PATH 从"允许 master agent 自主跳过"改为"强制委托 optimizer subagent"语义。共享片段（状态机流程图、JSON schema 速查表、CLI 错误恢复决策树）中 OPTIMIZATION_PROPOSED 行补全 --files 参数，错误恢复增加 FILES_REQUIRED 条目。apply-change 模板 Phase 2 命令模板同步补全 --files
     type: capability
   - id: cap.ai.command-generation
     intent: WorkflowManifestEntry.getCommandTemplate 改为 optional，命令生成管线跳过 skill-only 条目；内部 skill 不暴露为可用命令或出现在补全列表中
@@ -58,9 +61,34 @@ capabilities:
   - id: cap.ai.command-slugs
     intent: 建立内部 workflow ID 到外部用户命令 slug 的映射，使生成、检测、迁移和清理命令制品时都遵循同一套命名契约
     type: capability
+  - id: cap.ai.explore-brainstorming
+    intent: Explore 阶段的 brainstorming 流程，包含 6 步 checklist、一次一问纪律、2-3 方案对比、Design Summary 生成
+    type: capability
+  - id: cap.ai.impact-sweeper
+    intent: 通过 CLI 查询接口获取 OPSX 数据和 cap→spec 映射，生成影响面报告；在读取 specs 时同时执行术语提取步骤，用于检测术语漂移
+    status: active
+    type: capability
+  - id: cap.ai.internal-skill-installation
+    intent: 内部 skill 安装管线安装仍被 workflow 引用的 active internal skills，并显式排除和清理已删除的 openspec-implementer；不生成对应 slash command。
+    type: capability
+  - id: cap.ai.optimizer-skill
+    intent: Phase 2 优化提案 subagent skill。Optimizer 自主从 .verify-result.json 读取 Phase 1 结果和 evidence 列表，Input Contract 从 7 字段 bundle 简化为 3 字段定位信息。Scope 锚定改为 git diff <originalBranch>...HEAD --name-only，并新增一层依赖展开协议（imports/callers/OPSX relations）扩大优化候选；展开候选不进入 affectedFileHashes 也不作为 patch 目标。保留 5类优化原则、Search/Replace 块输出格式和 failedDirections 避重协议
+    type: capability
+  - id: cap.ai.propose-smart-routing
+    intent: Propose 阶段的智能路由，根据输入详细程度决定是否需要 explore
+    type: capability
+  - id: cap.ai.reviewer-cleanliness-dimension
+    intent: Cleanliness 维度的检测逻辑、severity 映射和跨语言工具适配策略，用于检测重构残留、孤儿代码、过时 TODO、半迁移等遗留物
+    type: capability
+  - id: cap.ai.reviewer-skill
+    intent: Phase 1 验证审查 subagent skill。元规则从"不确定时降级"反转为"不确定时升级"，Correctness/Coherence trigger 强化（spec 偏离和设计违背升为 CRITICAL），新增 Cleanliness 维度检测，summary schema 扩展包含 cleanliness 指标
+    type: capability
   - id: cap.ai.skill-generation
     intent: AI 技能文件生成，包含 reviewer、optimizer、impact-sweeper 等仍被 workflow 引用的内部 skill；不生成 openspec-implementer，并通过显式 managed stale skill name 清理旧生成残留。
     status: active
+    type: capability
+  - id: cap.ai.subagent-self-read
+    intent: Reviewer/Optimizer subagent 自主文件读取与测试执行能力定义，包括 Read+Bash 工具权限、安全约束和 L1 测试策略
     type: capability
   - id: cap.ai.template-artifact-pipeline
     intent: "统一的 artifact 生成管线，包含 WorkflowManifest、ToolProfileRegistry、transform 管线和 ArtifactSyncEngine。transform 管线的 scope: 'both' 语义现在对 skill 和 command 两种产出均实际生效——writeSkills 和 writeCommands 均在适配器格式化前调用 runTransforms 执行 preAdapter 阶段变换"
@@ -69,11 +97,30 @@ capabilities:
     intent: 为支持的 AI 工具提供工具元数据与适配器注册；其中 Codex 通过显式工具元数据声明为 skills-only，不再注册 command adapter
     status: active
     type: capability
-  - id: cap.ai.workflow-templates
-    intent: verify/apply/archive/propose 等模板共享面向 Agent 的 workflow guidance；apply-change 模板 Phase 0 明确要求 Master-agent strict TDD checkpoints，同时继续保留 reviewer/optimizer/seal 门禁。
+  - id: cap.ai.tool-invocation-references
+    intent: 基于共享 workflow surface 元数据渲染不同 AI 工具的用户可调用 workflow 引用，其中 Codex 使用精确的 `$openspec-*` skill 名称
     type: capability
-  - id: cap.ai.impact-sweeper
-    intent: 提供可复用的 openspec-impact-sweeper skill，基于 OPSX、specs 和 tracked source search 为项目概念生成轻量影响面 JSON 报告。
+  - id: cap.ai.verify-writeback
+    intent: 验证结果回写 tasks.md（unmark 未真正完成的任务）并生成分类 remediation 清单（code_fix / artifact_fix），同时让 write-back prose 遵守统一 runtime projection
+    status: active
+    type: capability
+  - id: cap.ai.workflow-templates
+    intent: 提供 AI workflow 模板，使用统一 CLI 查询接口（openspec list --specs）
+    type: capability
+  - id: cap.apply.branch-isolation
+    intent: Apply 阶段分支隔离策略由 apply.defaultIsolation 驱动；main/master 上仅 ask 模式询问用户，branch/worktree/none 配置直接执行并持久化 .apply-isolation.json。
+    type: capability
+  - id: cap.apply.subagent-orchestration
+    intent: apply 工作流中严格区分编码角色和判断角色；Master agent 负责严格 TDD 编码执行，reviewer/optimizer subagent 仅用于 clean-context 验证和优化判断，不用于编码执行。
+    type: capability
+  - id: cap.apply.task-decomposition
+    intent: Apply Phase 0 中 Master agent 直接读取 tasks.md、change-local specs、design 与项目代码上下文，但必须按 pending Check 执行严格 TDD。行为/代码 Check 需要 test first、预期失败、最小实现、通过确认后才勾选；非运行时文本制品只需最终证据。继续不生成 .apply-steps，也不 dispatch openspec-implementer。
+    type: capability
+  - id: cap.apply.verify-integration
+    intent: apply 命令内置 Phase 1 一致性验证、Phase 2 优化循环和 Phase 3 seal；Phase 1 或 seal failure 写回 remediation 后进入同一 recovery loop，不因首次失败直接 pause。
+    type: capability
+  - id: cap.archive.branch-merge
+    intent: 归档时按结构化 commit message 把 feature 分支合并回 originalBranch；merge 策略与是否删除分支由 openspec/config.yaml 的 git 节点配置控制；merge message 默认从 proposal/design/tasks 生成，遵循 git-commit-reasons 模板；冲突时 abort 并保留 archive commit
     status: active
     type: capability
   - id: cap.artifact-graph.instruction-loader
@@ -120,6 +167,9 @@ capabilities:
     intent: 管理变更提案，包含创建、列表和操作的子命令
     status: active
     type: capability
+  - id: cap.cli.command-reference-consistency
+    intent: Ensure active documentation, generated Agent instructions, skills, prompts, and workflow templates reference only supported OpenSpec CLI command forms and report historical archive-only stale references separately.
+    type: capability
   - id: cap.cli.completion
     intent: 管理 OpenSpec CLI 的 shell 补全，COMMAND_REGISTRY 现已包含 verify 命令及其子命令 phase1、phase2、seal、status
     type: capability
@@ -135,17 +185,24 @@ capabilities:
     intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品；首次 init 自动生成 OPSX 骨架文件，并创建包含 schema、optimization、apply.defaultIsolation 与 git 功能性默认值的 openspec/config.yaml。
     status: active
     type: capability
+  - id: cap.cli.init-opsx-skeleton
+    intent: init 命令首次运行时自动生成三个最小化 OPSX 骨架文件（project.opsx.yaml、project.opsx.relations.yaml、project.opsx.code-map.yaml），并在成功提示中显式引导用户运行 /opsx:bootstrap 完成架构映射
+    status: active
+    type: capability
   - id: cap.cli.instructions
     intent: 指令生成系统，apply 指令返回任务状态并要求 behavior/code Checks 执行严格 red/green TDD；tasks 指令生成 coarse Task + Checks 结构，不再暗示生成 .apply-steps 或依赖 implementer。
     status: active
     type: capability
   - id: cap.cli.list
-    intent: 列出变更或规约，支持过滤、JSON 输出和 verifyStatus 字段
+    intent: 列出变更或 specs，specs 模式支持 JSON 输出包含 capabilities 字段
     status: active
     type: capability
   - id: cap.cli.new-change
     intent: 创建新的变更目录
     status: active
+    type: capability
+  - id: cap.cli.opsx-query
+    intent: 查询 OPSX 节点信息、关系和 code-map 引用的 CLI 命令
     type: capability
   - id: cap.cli.schema
     intent: 管理工作流 Schema，包含 init、fork 和 which 子命令
@@ -160,11 +217,15 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.spec
-    intent: 使用子命令管理和查看 OpenSpec 规约
+    intent: 使用 show 和 validate 子命令管理和查看 OpenSpec 规约；list 功能已迁移到 openspec list --specs
     status: active
     type: capability
   - id: cap.cli.status
     intent: 显示变更的制品完成状态
+    status: active
+    type: capability
+  - id: cap.cli.sync
+    intent: 顶层 CLI 命令，将 change 中的 delta specs 和 OPSX delta 同步到主文件，不执行归档，并在需要生成正文时消费统一 runtime projection。sync 执行前增加 verify gate 入口校验，失败时输出增强诊断信息和补救操作指引。sync 完成后自动刷新 .verify-result.json evidence fingerprint
     status: active
     type: capability
   - id: cap.cli.templates
@@ -179,8 +240,15 @@ capabilities:
     intent: 验证变更和规约的完整性
     status: active
     type: capability
+  - id: cap.cli.verify-aware-instructions
+    intent: instructions apply 命令在判定 change 完成状态时集成 verify freshness 检查，返回 needs_verify/needs_seal/all_done 三态而非仅基于 task checkbox
+    type: capability
   - id: cap.cli.view
     intent: 显示规约和变更的交互式仪表板，task 全部完成的分类标签改为 "Tasks Done"
+    status: active
+    type: capability
+  - id: cap.config.apply-default-isolation
+    intent: 将 apply.defaultIsolation 作为项目配置的功能性磁盘默认值物化；init 生成配置时写出 ask 默认与允许值注释，update 以 missing-only 方式补齐旧配置且不覆盖用户值。
     status: active
     type: capability
   - id: cap.config.global
@@ -204,7 +272,14 @@ capabilities:
     status: active
     type: capability
   - id: cap.opsx.bootstrap
-    intent: 提供基于现有 CLI 的 bootstrap 工作流，支持 TTY 模式选择、invalid domain-map 诊断、gate 驱动的五阶段生命周期，以及对 retained workspace 的显式 completed/restart 语义；promote 后保留工作区并通过显式 restart 路径开启下一轮 run
+    intent: 提供基于现有 CLI 的 bootstrap 工作流，支持 TTY 模式选择、invalid domain-map 诊断、gate 驱动的五阶段生命周期，以及对 retained workspace 的显式 completed/restart 语义；promote 后自动调用 backfill-specs 补全 spec frontmatter，并保留工作区通过显式 restart 路径开启下一轮 run
+    status: active
+    type: capability
+  - id: cap.opsx.bootstrap-backfill-specs
+    intent: Backfill Engine——通过命名匹配和 LLM 语义推断为无 frontmatter 的 specs 批量补全 capabilities 关联声明
+    type: capability
+  - id: cap.opsx.bootstrap-refresh
+    intent: 为已有 formal OPSX 项目提供显式 refresh 生命周期，基于现有 OPSX、specs 与保留/快照后的 bootstrap 工作区生成可审查增量，并通过 merge/delta 安全更新正式 OPSX
     status: active
     type: capability
   - id: cap.opsx.delta-merge
@@ -239,6 +314,9 @@ capabilities:
     intent: 初始化新的工作流 Schema
     status: active
     type: capability
+  - id: cap.schema.opsx-delta-artifact
+    intent: 将 opsx-delta 注册为 spec-driven schema 中的正式 artifact，提供 template 和 instruction，支持 `openspec instructions opsx-delta` 获取 YAML 结构指引
+    type: capability
   - id: cap.schema.parse
     intent: 解析工作流 Schema YAML 文件，支持三层解析（内置、项目、变更）
     status: active
@@ -246,6 +324,15 @@ capabilities:
   - id: cap.schema.validate
     intent: 验证 Schema 结构和制品依赖关系
     status: active
+    type: capability
+  - id: cap.spec.frontmatter
+    intent: Spec 文件 YAML frontmatter 解析，提取 capabilities 关联声明
+    type: capability
+  - id: cap.spec.registry
+    intent: 运行时 cap↔spec 双向映射注册表，提供 getSpecsForCap、getCapsForSpec、getOrphanedSpecs、getUncoveredCaps 查询 API
+    type: capability
+  - id: cap.sync.evidence-refresh
+    intent: sync 完成后自动刷新 .verify-result.json 中与 sync 输出重叠的 evidence 文件哈希，使 verify freshness 判决不受合法 sync 写入的影响
     type: capability
   - id: cap.validation.change
     intent: 验证变更的完整性和结构，包括 delta spec section-type 与主 spec header 存在性的交叉验证，以及 tasks.md 中 Verifies 字段的确定性结构和 change-local spec 引用校验
@@ -255,107 +342,41 @@ capabilities:
     intent: 验证 OPSX 引用完整性和双向对齐
     status: active
     type: capability
+  - id: cap.validation.opsx-dry-run
+    intent: Validator.validateOpsxDelta() 方法执行 opsx-delta.yaml 的 dry-run merge 校验，检查 Zod schema 解析、引用完整性和 code-map 完整性；validate 命令变更路径 SHALL 并行执行 spec + OPSX 校验
+    type: capability
   - id: cap.validation.spec
     intent: 验证规约的格式和内容
     status: active
     type: capability
-  - id: cap.cli.sync
-    intent: 顶层 CLI 命令，将 change 中的 delta specs 和 OPSX delta 同步到主文件，不执行归档，并在需要生成正文时消费统一 runtime projection。sync 执行前增加 verify gate 入口校验，失败时输出增强诊断信息和补救操作指引。sync 完成后自动刷新 .verify-result.json evidence fingerprint
-    status: active
+  - id: cap.validation.spec-section-type-cross-check
+    intent: 在 change delta spec 验证中增加 section-type 与主 spec header 存在性的交叉验证；新增 frontmatter capabilities 存在性校验（cap 是否在 OPSX 中）和缺失 frontmatter 的 warning
     type: capability
-  - id: cap.ai.verify-writeback
-    intent: 验证结果回写 tasks.md（unmark 未真正完成的任务）并生成分类 remediation 清单（code_fix / artifact_fix），同时让 write-back prose 遵守统一 runtime projection
-    status: active
+  - id: cap.verify.cli-gate
+    intent: 程序化 verify 门禁 CLI 工具。Phase 2 双调用模型保留，但重试上限从硬编码 3 改为读取 config.optimization.optRetries，新增 failedDirections 记录支持
     type: capability
-  - id: cap.verify.optimize
-    intent: 在一致性检验通过后，对代码进行最优性检验。Phase 2 MUST 始终 spawn optimizer subagent 至少一次，master agent MUST NOT 替代 optimizer 做判断。优化循环由 apply 模板主控，每次提案+补丁+验证循环消耗一次 config.optimization.optRetries（默认 2）配额。NO_OPTIMIZATION_NEEDED 仅在 optimizer subagent 明确返回 "No optimization opportunities found" 时允许，且 CLI 要求 summary 非空作为 runtime enforcement
-    type: capability
-  - id: cap.ai.tool-invocation-references
-    intent: 基于共享 workflow surface 元数据渲染不同 AI 工具的用户可调用 workflow 引用，其中 Codex 使用精确的 `$openspec-*` skill 名称
-    type: capability
-  - id: cap.opsx.bootstrap-refresh
-    intent: 为已有 formal OPSX 项目提供显式 refresh 生命周期，基于现有 OPSX、specs 与保留/快照后的 bootstrap 工作区生成可审查增量，并通过 merge/delta 安全更新正式 OPSX
-    status: active
+  - id: cap.verify.enforce-optimizer-invocation
+    intent: 强制 optimizer subagent 调用约束——CLI 层 runtime enforcement（summary 非空校验）+ prompt 层协议约束（VERIFY_SIMPLE_CHANGE_FAST_PATH 重写为强制委托语义），确保 Phase 2 判断权始终归属 optimizer subagent
     type: capability
   - id: cap.verify.execution-model-selection
     intent: 为 verify / archive full verify 按 execution model 选择模板骨架；支持 clean-context subagent 的工具使用 orchestration-only verify skeleton，不支持的工具继续使用 current-agent-reread skeleton
     status: active
     type: capability
-  - id: cap.verify.cli-gate
-    intent: 程序化 verify 门禁 CLI 工具。Phase 2 双调用模型保留，但重试上限从硬编码 3 改为读取 config.optimization.optRetries，新增 failedDirections 记录支持
-    type: capability
   - id: cap.verify.freshness-engine
     intent: 确定性 freshness 判定引擎，用 TypeScript 代码实现 tasksFileHash、evidenceFingerprint 计算和 FRESH/STALE/MISSING 判定。evidenceFingerprint 基于文件内容哈希（而非元数据）计算，消除文件系统触碰导致的误报 STALE。Phase 2 verification PASS 时重算 evidenceFingerprint，使其覆盖优化后的文件状态。STALE 判定时生成增强诊断细节（文件级指纹差异、git HEAD 对比），formatVerifyGateFailure 输出结构化可操作指引。新增 refreshVerifyEvidenceAfterSync 函数支持 sync 后增量刷新 evidence 哈希
     type: capability
-  - id: cap.apply.verify-integration
-    intent: apply 命令内置 Phase 1 一致性验证、Phase 2 优化循环和 Phase 3 seal；Phase 1 或 seal failure 写回 remediation 后进入同一 recovery loop，不因首次失败直接 pause。
-    type: capability
-  - id: cap.apply.subagent-orchestration
-    intent: apply 工作流中严格区分编码角色和判断角色；Master agent 负责严格 TDD 编码执行，reviewer/optimizer subagent 仅用于 clean-context 验证和优化判断，不用于编码执行。
-    type: capability
-  - id: cap.ai.agent-prompt-guidance
-    intent: 面向 Agent 的 verify gate 提示词指引系统。VERIFY_SIMPLE_CHANGE_FAST_PATH 从"允许 master agent 自主跳过"改为"强制委托 optimizer subagent"语义。共享片段（状态机流程图、JSON schema 速查表、CLI 错误恢复决策树）中 OPTIMIZATION_PROPOSED 行补全 --files 参数，错误恢复增加 FILES_REQUIRED 条目。apply-change 模板 Phase 2 命令模板同步补全 --files
-    type: capability
-  - id: cap.cli.init-opsx-skeleton
-    intent: init 命令首次运行时自动生成三个最小化 OPSX 骨架文件（project.opsx.yaml、project.opsx.relations.yaml、project.opsx.code-map.yaml），并在成功提示中显式引导用户运行 /opsx:bootstrap 完成架构映射
-    status: active
-    type: capability
-  - id: cap.ai.reviewer-skill
-    intent: Phase 1 验证审查 subagent skill。元规则从"不确定时降级"反转为"不确定时升级"，Correctness/Coherence trigger 强化（spec 偏离和设计违背升为 CRITICAL），新增 Cleanliness 维度检测，summary schema 扩展包含 cleanliness 指标
-    type: capability
-  - id: cap.ai.optimizer-skill
-    intent: Phase 2 优化提案 subagent skill。Optimizer 自主从 .verify-result.json 读取 Phase 1 结果和 evidence 列表，Input Contract 从 7 字段 bundle 简化为 3 字段定位信息。Scope 锚定改为 git diff <originalBranch>...HEAD --name-only，并新增一层依赖展开协议（imports/callers/OPSX relations）扩大优化候选；展开候选不进入 affectedFileHashes 也不作为 patch 目标。保留 5类优化原则、Search/Replace 块输出格式和 failedDirections 避重协议
-    type: capability
-  - id: cap.ai.internal-skill-installation
-    intent: 内部 skill 安装管线安装仍被 workflow 引用的 active internal skills，并显式排除和清理已删除的 openspec-implementer；不生成对应 slash command。
+  - id: cap.verify.optimize
+    intent: 在一致性检验通过后，对代码进行最优性检验。Phase 2 MUST 始终 spawn optimizer subagent 至少一次，master agent MUST NOT 替代 optimizer 做判断。优化循环由 apply 模板主控，每次提案+补丁+验证循环消耗一次 config.optimization.optRetries（默认 2）配额。NO_OPTIMIZATION_NEEDED 仅在 optimizer subagent 明确返回 "No optimization opportunities found" 时允许，且 CLI 要求 summary 非空作为 runtime enforcement
     type: capability
   - id: cap.verify.prompt-orchestration
     intent: Verification prompt orchestration patterns。Coordinator 的 Evidence 步骤简化为确定路径。Severity philosophy 表述从"prefer lower tier"改为"escalate when uncertain"，删除降级偏见的措辞
     type: capability
-  - id: cap.verify.enforce-optimizer-invocation
-    intent: 强制 optimizer subagent 调用约束——CLI 层 runtime enforcement（summary 非空校验）+ prompt 层协议约束（VERIFY_SIMPLE_CHANGE_FAST_PATH 重写为强制委托语义），确保 Phase 2 判断权始终归属 optimizer subagent
+  - id: cap.ai.sweeper-terminology-extraction
+    intent: Impact sweeper 在读取相关 specs 时提取与用户 concept 语义相近的术语，记录术语、出现次数和分布 specs
     type: capability
-  - id: cap.validation.spec-section-type-cross-check
-    intent: 在 change delta spec 验证中增加 section-type 与主 spec header 存在性的交叉验证，确保 MODIFIED/REMOVED/RENAMED 引用的 header 存在于主 spec，ADDED 的 header 不存在于主 spec
+  - id: cap.ai.sweeper-terminology-reporting
+    intent: 在 sweeper JSON 报告中通过 terminologyObservations 字段返回术语观察结果，支持向后兼容
     type: capability
-  - id: cap.cli.verify-aware-instructions
-    intent: instructions apply 命令在判定 change 完成状态时集成 verify freshness 检查，返回 needs_verify/needs_seal/all_done 三态而非仅基于 task checkbox
-    type: capability
-  - id: cap.sync.evidence-refresh
-    intent: sync 完成后自动刷新 .verify-result.json 中与 sync 输出重叠的 evidence 文件哈希，使 verify freshness 判决不受合法 sync 写入的影响
-    type: capability
-  - id: cap.ai.subagent-self-read
-    intent: Reviewer/Optimizer subagent 自主文件读取与测试执行能力定义，包括 Read+Bash 工具权限、安全约束和 L1 测试策略
-    type: capability
-  - id: cap.ai.explore-brainstorming
-    intent: Explore 阶段的 brainstorming 流程，包含 6 步 checklist、一次一问纪律、2-3 方案对比、Design Summary 生成
-    type: capability
-  - id: cap.apply.task-decomposition
-    intent: Apply Phase 0 中 Master agent 直接读取 tasks.md、change-local specs、design 与项目代码上下文，但必须按 pending Check 执行严格 TDD。行为/代码 Check 需要 test first、预期失败、最小实现、通过确认后才勾选；非运行时文本制品只需最终证据。继续不生成 .apply-steps，也不 dispatch openspec-implementer。
-    type: capability
-  - id: cap.apply.branch-isolation
-    intent: Apply 阶段分支隔离策略由 apply.defaultIsolation 驱动；main/master 上仅 ask 模式询问用户，branch/worktree/none 配置直接执行并持久化 .apply-isolation.json。
-    type: capability
-  - id: cap.ai.propose-smart-routing
-    intent: Propose 阶段的智能路由，根据输入详细程度决定是否需要 explore
-    type: capability
-  - id: cap.archive.branch-merge
-    intent: 归档时按结构化 commit message 把 feature 分支合并回 originalBranch；merge 策略与是否删除分支由 openspec/config.yaml 的 git 节点配置控制；merge message 默认从 proposal/design/tasks 生成，遵循 git-commit-reasons 模板；冲突时 abort 并保留 archive commit
-    status: active
-    type: capability
-  - id: cap.schema.opsx-delta-artifact
-    intent: 将 opsx-delta 注册为 spec-driven schema 中的正式 artifact，提供 template 和 instruction，支持 `openspec instructions opsx-delta` 获取 YAML 结构指引
-    type: capability
-  - id: cap.validation.opsx-dry-run
-    intent: Validator.validateOpsxDelta() 方法执行 opsx-delta.yaml 的 dry-run merge 校验，检查 Zod schema 解析、引用完整性和 code-map 完整性；validate 命令变更路径 SHALL 并行执行 spec + OPSX 校验
-    type: capability
-  - id: cap.cli.command-reference-consistency
-    intent: Ensure active documentation, generated Agent instructions, skills, prompts, and workflow templates reference only supported OpenSpec CLI command forms and report historical archive-only stale references separately.
-    type: capability
-  - id: cap.config.apply-default-isolation
-    intent: 将 apply.defaultIsolation 作为项目配置的功能性磁盘默认值物化；init 生成配置时写出 ask 默认与允许值注释，update 以 missing-only 方式补齐旧配置且不覆盖用户值。
-    status: active
-    type: capability
-  - id: cap.ai.reviewer-cleanliness-dimension
-    intent: Cleanliness 维度的检测逻辑、severity 映射和跨语言工具适配策略，用于检测重构残留、孤儿代码、过时 TODO、半迁移等遗留物
+  - id: cap.ai.explore-terminology-decision
+    intent: Explore master agent 解读 terminologyObservations，根据四态判断逻辑决定是否向用户提示术语不一致
     type: capability

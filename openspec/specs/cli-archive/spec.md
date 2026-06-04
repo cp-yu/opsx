@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.cli.archive
+---
 # CLI Archive Command Specification
 
 ## Purpose

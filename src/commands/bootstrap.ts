@@ -15,6 +15,7 @@ import {
   type BootstrapMode,
   type BootstrapStatus,
 } from '../utils/bootstrap-utils.js';
+import { backfillSpecs } from '../core/backfill-specs.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -39,6 +40,10 @@ export interface BootstrapValidateOptions {
 
 export interface BootstrapPromoteOptions {
   yes?: boolean;
+}
+
+export interface BootstrapBackfillOptions {
+  json?: boolean;
 }
 
 // ─── Init ────────────────────────────────────────────────────────────────────
@@ -511,9 +516,32 @@ export async function bootstrapPromoteCommand(options: BootstrapPromoteOptions):
     console.log('  Written: openspec/project.opsx.yaml');
     console.log('  Written: openspec/project.opsx.relations.yaml');
     console.log('  Written: openspec/project.opsx.code-map.yaml');
+    console.log(`  Backfill specs: written ${result.backfill.written.length}, unmatched ${result.backfill.unmatched.length}`);
     console.log(`  ${result.retainedWorkspaceNotice}`);
   } catch (error) {
     spinner.fail('Failed to promote bootstrap');
+    throw error;
+  }
+}
+
+export async function bootstrapBackfillSpecsCommand(options: BootstrapBackfillOptions): Promise<void> {
+  const projectRoot = process.cwd();
+  const spinner = options.json ? null : ora('Backfilling spec frontmatter...').start();
+
+  try {
+    const result = await backfillSpecs(projectRoot);
+    spinner?.succeed('Backfill specs complete');
+
+    if (options.json) {
+      console.log(JSON.stringify(result, null, 2));
+      return;
+    }
+
+    console.log('Backfill specs complete');
+    console.log(`  Written: ${result.written.length}`);
+    console.log(`  Unmatched: ${result.unmatched.length}`);
+  } catch (error) {
+    spinner?.fail('Failed to backfill specs');
     throw error;
   }
 }

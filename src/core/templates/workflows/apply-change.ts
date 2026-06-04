@@ -7,7 +7,7 @@
 import type { SkillTemplate, CommandTemplate } from '../types.js';
 import {
   ARTIFACT_DOC_LANGUAGE_CONTRACT,
-  OPSX_SHARED_CONTEXT,
+  OPSX_CLI_QUERY_CONTEXT,
   VERIFY_CLI_JSON_SCHEMA_REFERENCE,
   VERIFY_ERROR_RECOVERY_GUIDE,
   VERIFY_SIMPLE_CHANGE_FAST_PATH,
@@ -89,6 +89,7 @@ Before Phase 0 implementation:
 For each pending coarse task:
 - Read Goal, Files, Requirements, and Checks from \`tasks.md\`.
 - Explore project context by reading listed files, nearby existing patterns, related tests, and relevant specs/design.
+- Before implementing a capability, run \`openspec list --specs --json\`, build the cap→spec mapping from each spec's \`capabilities\` string array, read every spec linked to the affected cap, and confirm whether the change-local delta spec must be updated. Specs without frontmatter return \`capabilities: []\`.
 - For behavior or code Checks, add or update the targeted test before implementation.
 - Run the declared Check command or equivalent targeted command and confirm the expected failure before implementation.
 - Make the minimal implementation needed for that Check.
@@ -161,7 +162,7 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
 
 4. **Read context files**
 
-   ${OPSX_SHARED_CONTEXT}
+   ${OPSX_CLI_QUERY_CONTEXT}
 
    Read the files listed in \`contextFiles\` from the apply instructions output.
    The files depend on the schema being used:
@@ -345,7 +346,7 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
 
 4. **Read context files**
 
-   ${OPSX_SHARED_CONTEXT}
+   ${OPSX_CLI_QUERY_CONTEXT}
 
    Read the files listed in \`contextFiles\` from the apply instructions output.
    The files depend on the schema being used:
