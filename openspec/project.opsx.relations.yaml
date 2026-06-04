@@ -480,3 +480,21 @@ relations:
   - from: dom.verify
     type: depends_on
     to: dom.validation
+  - from: cap.ai.sweeper-terminology-extraction
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.sweeper-terminology-reporting
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.explore-terminology-decision
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.sweeper-terminology-extraction
+    type: depends_on
+    to: cap.ai.impact-sweeper
+  - from: cap.ai.sweeper-terminology-reporting
+    type: depends_on
+    to: cap.ai.sweeper-terminology-extraction
+  - from: cap.ai.explore-terminology-decision
+    type: depends_on
+    to: cap.ai.sweeper-terminology-reporting

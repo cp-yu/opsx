@@ -65,7 +65,7 @@ capabilities:
     intent: Explore 阶段的 brainstorming 流程，包含 6 步 checklist、一次一问纪律、2-3 方案对比、Design Summary 生成
     type: capability
   - id: cap.ai.impact-sweeper
-    intent: 通过 CLI 查询接口获取 OPSX 数据和 cap→spec 映射，生成影响面报告
+    intent: 通过 CLI 查询接口获取 OPSX 数据和 cap→spec 映射，生成影响面报告；在读取 specs 时同时执行术语提取步骤，用于检测术语漂移
     status: active
     type: capability
   - id: cap.ai.internal-skill-installation
@@ -370,4 +370,13 @@ capabilities:
     type: capability
   - id: cap.verify.prompt-orchestration
     intent: Verification prompt orchestration patterns。Coordinator 的 Evidence 步骤简化为确定路径。Severity philosophy 表述从"prefer lower tier"改为"escalate when uncertain"，删除降级偏见的措辞
+    type: capability
+  - id: cap.ai.sweeper-terminology-extraction
+    intent: Impact sweeper 在读取相关 specs 时提取与用户 concept 语义相近的术语，记录术语、出现次数和分布 specs
+    type: capability
+  - id: cap.ai.sweeper-terminology-reporting
+    intent: 在 sweeper JSON 报告中通过 terminologyObservations 字段返回术语观察结果，支持向后兼容
+    type: capability
+  - id: cap.ai.explore-terminology-decision
+    intent: Explore master agent 解读 terminologyObservations，根据四态判断逻辑决定是否向用户提示术语不一致
     type: capability

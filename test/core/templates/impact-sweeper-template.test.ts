@@ -21,6 +21,12 @@ describe('impact sweeper template', () => {
     for (const field of [
       '"concept"',
       '"projectRoot"',
+      '"terminologyObservations"',
+      '"userInput"',
+      '"foundInSpecs"',
+      '"term"',
+      '"specs"',
+      '"count"',
       '"termMappings"',
       '"userTerm"',
       '"projectTerms"',
@@ -35,6 +41,15 @@ describe('impact sweeper template', () => {
     ]) {
       expect(instructions).toContain(field);
     }
+  });
+
+  it('documents terminology awareness extraction', () => {
+    expect(instructions).toContain('## Terminology Awareness');
+    expect(instructions).toContain("Identify terms semantically related to user's `concept` input");
+    expect(instructions).toContain("if concept is '流程', extract '工作流', 'workflow', '工作流程' etc.");
+    expect(instructions).toContain('Record in `terminologyObservations` field');
+    expect(instructions).toContain('Report facts only, no judgment or recommendations');
+    expect(instructions).toContain('If terminology extraction fails, omit `terminologyObservations` and keep the report usable');
   });
 
   it('requires CLI-backed OPSX evidence and bounded reverse search', () => {

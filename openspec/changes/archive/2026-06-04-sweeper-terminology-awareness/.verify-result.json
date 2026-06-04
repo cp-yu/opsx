@@ -1,0 +1,255 @@
+{
+  "timestamp": "2026-06-03T19:23:58.058Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "42523ea22bad7c1e4d1c9f0053a1cb2f095598457bf83d119784a8cacb9e436f",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "clean-context-reviewer",
+    "evidenceFiles": [
+      "CLAUDE.md",
+      "openspec/changes/sweeper-terminology-awareness/.apply-isolation.json",
+      "openspec/changes/sweeper-terminology-awareness/design.md",
+      "openspec/changes/sweeper-terminology-awareness/opsx-delta.yaml",
+      "openspec/changes/sweeper-terminology-awareness/proposal.md",
+      "openspec/changes/sweeper-terminology-awareness/specs/ai-impact-sweeper/spec.md",
+      "openspec/changes/sweeper-terminology-awareness/specs/explore-terminology-decision/spec.md",
+      "openspec/changes/sweeper-terminology-awareness/specs/sweeper-terminology-extraction/spec.md",
+      "openspec/changes/sweeper-terminology-awareness/specs/sweeper-terminology-reporting/spec.md",
+      "openspec/changes/sweeper-terminology-awareness/tasks.md",
+      "src/core/ai/terminology-decision.ts",
+      "src/core/ai/terminology-extractor.ts",
+      "src/core/templates/workflows/explore.ts",
+      "src/core/templates/workflows/impact-sweeper.ts",
+      "src/types/sweeper.ts",
+      "test/core/ai/terminology-decision.test.ts",
+      "test/core/ai/terminology-extractor.test.ts",
+      "test/core/templates/explore-template.test.ts",
+      "test/core/templates/impact-sweeper-template.test.ts",
+      "test/integration/explore-terminology.test.ts",
+      "test/types/sweeper.test.ts"
+    ],
+    "evidenceFingerprint": "b707d09802c4172b606b2e0b88290ad7d334858c0c2eeba342fdabd254e4a2f2",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "CLAUDE.md",
+        "hash": "13dde98de4cfb621c04b3e0696c948da9b67aa206bbf94aa0d8df2f566c2588d"
+      },
+      {
+        "path": "openspec/changes/sweeper-terminology-awareness/.apply-isolation.json",
+        "hash": "bf87ddc767ac6c45cff2506b2d9de6b154c08c1a671b108d77ab8c135b33e430"
+      },
+      {
+        "path": "openspec/changes/sweeper-terminology-awareness/design.md",
+        "hash": "0285105936982e551a219334710574e59725c0f60d4e4f1a97db118ece030673"
+      },
+      {
+        "path": "openspec/changes/sweeper-terminology-awareness/opsx-delta.yaml",
+        "hash": "1395ca152460dcb09fba40d9bc463d70bae7a101ce56e756ced7daeda45cd20a"
+      },
+      {
+        "path": "openspec/changes/sweeper-terminology-awareness/proposal.md",
+        "hash": "76a82fce0d49e0ad72b2713e352634ac27681333273b49c878f8c883e58bd293"
+      },
+      {
+        "path": "openspec/changes/sweeper-terminology-awareness/specs/ai-impact-sweeper/spec.md",
+        "hash": "c99c38e8f42d43afdc9ca57c184e419205ec8a1099fafba6f0ce3e6af5bbb8b1"
+      },
+      {
+        "path": "openspec/changes/sweeper-terminology-awareness/specs/explore-terminology-decision/spec.md",
+        "hash": "08c9d53f9513eed9cbd58a461c9097be10c537acfa2ec0bf399820299f6577e5"
+      },
+      {
+        "path": "openspec/changes/sweeper-terminology-awareness/specs/sweeper-terminology-extraction/spec.md",
+        "hash": "20464bfbca66b4df7193355594298cad48af2e165279c5bc96992bc7a894a445"
+      },
+      {
+        "path": "openspec/changes/sweeper-terminology-awareness/specs/sweeper-terminology-reporting/spec.md",
+        "hash": "f861b10d6bd2d44b1d04506a09bfb7559f8ac0a6c5866e939ef5ee68e07bcd2b"
+      },
+      {
+        "path": "openspec/changes/sweeper-terminology-awareness/tasks.md",
+        "hash": "42523ea22bad7c1e4d1c9f0053a1cb2f095598457bf83d119784a8cacb9e436f"
+      },
+      {
+        "path": "src/core/ai/terminology-decision.ts",
+        "hash": "aeeaee69b04e480a0cc206e1a83094cb94ad1af357a76ea23d428d8f978e313e"
+      },
+      {
+        "path": "src/core/ai/terminology-extractor.ts",
+        "hash": "b6e1010ccb4775b2c24a9ca59957938b1638a5f298952d464a70d14b3fc43d33"
+      },
+      {
+        "path": "src/core/templates/workflows/explore.ts",
+        "hash": "f40736874370d499b7163c7ac36a62ae5d7afcab3072b871ad89800310bd8c05"
+      },
+      {
+        "path": "src/core/templates/workflows/impact-sweeper.ts",
+        "hash": "5064ece80b6b285d6d6268bd614ca8a2b0e7483eb6e4255fb2305cb636d46a60"
+      },
+      {
+        "path": "src/types/sweeper.ts",
+        "hash": "1fbb5bdfa37f5040a956b79f144941f402ccaa6267d8d897240e3dac73084433"
+      },
+      {
+        "path": "test/core/ai/terminology-decision.test.ts",
+        "hash": "1b46b40c1051e63121c256880856552da27b8f72b8172fd261167609d664a740"
+      },
+      {
+        "path": "test/core/ai/terminology-extractor.test.ts",
+        "hash": "53016591bb58ef6a7a21b6fd36148dcfc122f09ed81ff0ccad71e99bfbeb4257"
+      },
+      {
+        "path": "test/core/templates/explore-template.test.ts",
+        "hash": "0d6c81a917773f549f4e5547d193ebc0612a4bb1e62f2cb621ae3a9773e965bb"
+      },
+      {
+        "path": "test/core/templates/impact-sweeper-template.test.ts",
+        "hash": "ee203b2d526a9bb190dd17911945456557d3e343fe0de2d4e16eaefee6b5cab6"
+      },
+      {
+        "path": "test/integration/explore-terminology.test.ts",
+        "hash": "e7a06c739636833dd2f87ad42693f5a85577595ff94bafc82d7b8c3b4c6e3706"
+      },
+      {
+        "path": "test/types/sweeper.test.ts",
+        "hash": "81373fd7b654042e8d38c0313faf345626905e3fbee95bc47fcbe9794dc2d539"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "8cddf9be4dac8f8e0274181273696c778464f8b3"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-03T19:25:45.523Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "No optimization opportunities found"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-06-03T19:23:58.058Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "42523ea22bad7c1e4d1c9f0053a1cb2f095598457bf83d119784a8cacb9e436f",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "clean-context-reviewer",
+        "evidenceFiles": [
+          "CLAUDE.md",
+          "openspec/changes/sweeper-terminology-awareness/.apply-isolation.json",
+          "openspec/changes/sweeper-terminology-awareness/design.md",
+          "openspec/changes/sweeper-terminology-awareness/opsx-delta.yaml",
+          "openspec/changes/sweeper-terminology-awareness/proposal.md",
+          "openspec/changes/sweeper-terminology-awareness/specs/ai-impact-sweeper/spec.md",
+          "openspec/changes/sweeper-terminology-awareness/specs/explore-terminology-decision/spec.md",
+          "openspec/changes/sweeper-terminology-awareness/specs/sweeper-terminology-extraction/spec.md",
+          "openspec/changes/sweeper-terminology-awareness/specs/sweeper-terminology-reporting/spec.md",
+          "openspec/changes/sweeper-terminology-awareness/tasks.md",
+          "src/core/ai/terminology-decision.ts",
+          "src/core/ai/terminology-extractor.ts",
+          "src/core/templates/workflows/explore.ts",
+          "src/core/templates/workflows/impact-sweeper.ts",
+          "src/types/sweeper.ts",
+          "test/core/ai/terminology-decision.test.ts",
+          "test/core/ai/terminology-extractor.test.ts",
+          "test/core/templates/explore-template.test.ts",
+          "test/core/templates/impact-sweeper-template.test.ts",
+          "test/integration/explore-terminology.test.ts",
+          "test/types/sweeper.test.ts"
+        ],
+        "evidenceFingerprint": "b707d09802c4172b606b2e0b88290ad7d334858c0c2eeba342fdabd254e4a2f2",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "CLAUDE.md",
+            "hash": "13dde98de4cfb621c04b3e0696c948da9b67aa206bbf94aa0d8df2f566c2588d"
+          },
+          {
+            "path": "openspec/changes/sweeper-terminology-awareness/.apply-isolation.json",
+            "hash": "bf87ddc767ac6c45cff2506b2d9de6b154c08c1a671b108d77ab8c135b33e430"
+          },
+          {
+            "path": "openspec/changes/sweeper-terminology-awareness/design.md",
+            "hash": "0285105936982e551a219334710574e59725c0f60d4e4f1a97db118ece030673"
+          },
+          {
+            "path": "openspec/changes/sweeper-terminology-awareness/opsx-delta.yaml",
+            "hash": "1395ca152460dcb09fba40d9bc463d70bae7a101ce56e756ced7daeda45cd20a"
+          },
+          {
+            "path": "openspec/changes/sweeper-terminology-awareness/proposal.md",
+            "hash": "76a82fce0d49e0ad72b2713e352634ac27681333273b49c878f8c883e58bd293"
+          },
+          {
+            "path": "openspec/changes/sweeper-terminology-awareness/specs/ai-impact-sweeper/spec.md",
+            "hash": "c99c38e8f42d43afdc9ca57c184e419205ec8a1099fafba6f0ce3e6af5bbb8b1"
+          },
+          {
+            "path": "openspec/changes/sweeper-terminology-awareness/specs/explore-terminology-decision/spec.md",
+            "hash": "08c9d53f9513eed9cbd58a461c9097be10c537acfa2ec0bf399820299f6577e5"
+          },
+          {
+            "path": "openspec/changes/sweeper-terminology-awareness/specs/sweeper-terminology-extraction/spec.md",
+            "hash": "20464bfbca66b4df7193355594298cad48af2e165279c5bc96992bc7a894a445"
+          },
+          {
+            "path": "openspec/changes/sweeper-terminology-awareness/specs/sweeper-terminology-reporting/spec.md",
+            "hash": "f861b10d6bd2d44b1d04506a09bfb7559f8ac0a6c5866e939ef5ee68e07bcd2b"
+          },
+          {
+            "path": "openspec/changes/sweeper-terminology-awareness/tasks.md",
+            "hash": "42523ea22bad7c1e4d1c9f0053a1cb2f095598457bf83d119784a8cacb9e436f"
+          },
+          {
+            "path": "src/core/ai/terminology-decision.ts",
+            "hash": "aeeaee69b04e480a0cc206e1a83094cb94ad1af357a76ea23d428d8f978e313e"
+          },
+          {
+            "path": "src/core/ai/terminology-extractor.ts",
+            "hash": "b6e1010ccb4775b2c24a9ca59957938b1638a5f298952d464a70d14b3fc43d33"
+          },
+          {
+            "path": "src/core/templates/workflows/explore.ts",
+            "hash": "f40736874370d499b7163c7ac36a62ae5d7afcab3072b871ad89800310bd8c05"
+          },
+          {
+            "path": "src/core/templates/workflows/impact-sweeper.ts",
+            "hash": "5064ece80b6b285d6d6268bd614ca8a2b0e7483eb6e4255fb2305cb636d46a60"
+          },
+          {
+            "path": "src/types/sweeper.ts",
+            "hash": "1fbb5bdfa37f5040a956b79f144941f402ccaa6267d8d897240e3dac73084433"
+          },
+          {
+            "path": "test/core/ai/terminology-decision.test.ts",
+            "hash": "1b46b40c1051e63121c256880856552da27b8f72b8172fd261167609d664a740"
+          },
+          {
+            "path": "test/core/ai/terminology-extractor.test.ts",
+            "hash": "53016591bb58ef6a7a21b6fd36148dcfc122f09ed81ff0ccad71e99bfbeb4257"
+          },
+          {
+            "path": "test/core/templates/explore-template.test.ts",
+            "hash": "0d6c81a917773f549f4e5547d193ebc0612a4bb1e62f2cb621ae3a9773e965bb"
+          },
+          {
+            "path": "test/core/templates/impact-sweeper-template.test.ts",
+            "hash": "ee203b2d526a9bb190dd17911945456557d3e343fe0de2d4e16eaefee6b5cab6"
+          },
+          {
+            "path": "test/integration/explore-terminology.test.ts",
+            "hash": "e7a06c739636833dd2f87ad42693f5a85577595ff94bafc82d7b8c3b4c6e3706"
+          },
+          {
+            "path": "test/types/sweeper.test.ts",
+            "hash": "81373fd7b654042e8d38c0313faf345626905e3fbee95bc47fcbe9794dc2d539"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "8cddf9be4dac8f8e0274181273696c778464f8b3"
+      }
+    }
+  }
+}

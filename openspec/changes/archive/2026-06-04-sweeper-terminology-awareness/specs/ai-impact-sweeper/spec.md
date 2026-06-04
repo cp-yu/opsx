@@ -1,8 +1,11 @@
 # ai-impact-sweeper Specification
 
 ## Purpose
-此规约记录变更 unify-cli-query-interface 引入的行为，请在后续同步或归档前补全正式 Purpose。
-## Requirements
+
+此规约记录变更 sweeper-terminology-awareness 引入的行为扩展。
+
+## MODIFIED Requirements
+
 ### Requirement: Evidence Protocol 使用 CLI 查询接口
 
 Impact sweeper SHALL 通过 OpenSpec CLI 查询 OPSX 数据和 cap→spec 映射，MUST NOT 直接读取 YAML 文件。在读取 specs 时，SHALL 同时执行术语提取步骤，用于检测术语漂移。
@@ -34,4 +37,3 @@ Impact sweeper SHALL 通过 OpenSpec CLI 查询 OPSX 数据和 cap→spec 映射
 - **THEN** SHALL 在读取每个 spec 时提取与 `concept` 语义相近的术语
 - **AND** SHALL 统计每个术语的出现次数和分布 specs
 - **AND** SHALL 将结果汇总到 JSON 报告的 `terminologyObservations` 字段
-

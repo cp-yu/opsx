@@ -36,6 +36,17 @@ describe('explore template impact sweeps', () => {
     }
   });
 
+  it('handles terminology decisions before impact questions', () => {
+    for (const template of templates) {
+      expect(template).toContain('If the report contains terminology observations, decide before impact questions');
+      expect(template).toContain('When the user confirms the terms mean the same concept, record that term group');
+      expect(template).toContain('When the user chooses a canonical term, record that canonical term');
+      expect(template).toContain('When the user says the terms are different concepts, record the rejected term group');
+      expect(template).toContain('For any recorded same-concept, canonical-term, or rejected term group, do not ask again for that same group');
+      expect(template).toContain('continue the explore flow');
+    }
+  });
+
   it('documents the mandatory six-step brainstorming checklist', () => {
     for (const template of templates) {
       expect(template).toContain('## Brainstorming Checklist');
