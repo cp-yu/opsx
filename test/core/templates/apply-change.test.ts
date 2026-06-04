@@ -71,6 +71,27 @@ describe('apply change workflow template', () => {
     }
   });
 
+  it('documents Pocock TDD checkpoints for apply implementation', () => {
+    for (const template of [
+      getApplyChangeSkillTemplate().instructions,
+      getOpsxApplyCommandTemplate().content,
+    ]) {
+      expect(template).toContain('TDD Checkpoint 1: Interface Design for Testability');
+      expect(template).toContain('dependencies are injected through parameters');
+      expect(template).toContain('returns values or observable results');
+      expect(template).toContain('public interface area is minimal');
+      expect(template).toContain('TDD Checkpoint 2: Test Quality Standards');
+      expect(template).toContain('verifies behavior through public interfaces');
+      expect(template).toContain('avoids mocking internal project collaborators');
+      expect(template).toContain('keeps one logical assertion per test');
+      expect(template).toContain('survives internal refactoring');
+      expect(template).toContain('TDD Checkpoint 3: Mock Boundary Enforcement');
+      expect(template).toContain('mocks are allowed only at system boundaries');
+      expect(template).toContain('internal classes, modules, and project-owned collaborators MUST NOT be mocked');
+      expect(template).toContain('mockable boundaries must be passed through dependency injection');
+    }
+  });
+
   it('documents continuous recovery before user-visible pause', () => {
     for (const template of [
       getApplyChangeSkillTemplate().instructions,

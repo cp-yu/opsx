@@ -72,4 +72,29 @@ describe('openspec optimizer skill content', () => {
     expect(normalizeSelfRead(codex)).toBe(normalizeSelfRead(claude));
     expect(normalizeSelfRead(codex)).toBe(normalizeSelfRead(getOptimizerSkillTemplate().instructions));
   });
+
+  it('documents Pocock optimizer smell dimensions and block annotations', () => {
+    const instructions = getOptimizerSkillTemplate().instructions;
+
+    expect(instructions).toContain('Lower duplication');
+    expect(instructions).toContain('identical logic blocks in two or more locations');
+    expect(instructions).toContain('copy-pasted validation or transformation logic');
+    expect(instructions).toContain('repeated error handling patterns');
+    expect(instructions).toContain('Better locality');
+    expect(instructions).toContain("Feature Envy where a method mainly operates on another class's data");
+    expect(instructions).toContain('getter chains');
+    expect(instructions).toContain('logic placed away from the data owner');
+    expect(instructions).toContain('Break long methods');
+    expect(instructions).toContain('methods longer than 30 lines');
+    expect(instructions).toContain('extracting private helper methods');
+    expect(instructions).toContain('keeping the public method signature, parameters, and return value unchanged');
+    expect(instructions).toContain('Deepen shallow modules');
+    expect(instructions).toContain('method count, parameter complexity, and hidden internal complexity');
+    expect(instructions).toContain('merge related shallow modules');
+    expect(instructions).toContain('Eliminate primitive obsession');
+    expect(instructions).toContain('Email, money/currency, date ranges, identifiers');
+    expect(instructions).toContain('validation is encapsulated once');
+    expect(instructions).toContain('<!-- Code Smell: <Duplication | Long Method | Shallow Module | Feature Envy | Primitive Obsession | Deep Nesting | Dead Code> -->');
+    expect(instructions).toContain('Every block MUST include exactly one preceding `<!-- Code Smell: <type> -->` annotation');
+  });
 });
