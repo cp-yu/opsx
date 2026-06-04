@@ -72,7 +72,7 @@ capabilities:
     intent: 内部 skill 安装管线安装仍被 workflow 引用的 active internal skills，并显式排除和清理已删除的 openspec-implementer；不生成对应 slash command。
     type: capability
   - id: cap.ai.optimizer-skill
-    intent: Phase 2 优化提案 subagent skill。Optimizer 自主从 .verify-result.json 读取 Phase 1 结果和 evidence 列表，Input Contract 从 7 字段 bundle 简化为 3 字段定位信息。Scope 锚定改为 git diff <originalBranch>...HEAD --name-only，并新增一层依赖展开协议（imports/callers/OPSX relations）扩大优化候选；展开候选不进入 affectedFileHashes 也不作为 patch 目标。保留 5类优化原则、Search/Replace 块输出格式和 failedDirections 避重协议
+    intent: Phase 2 优化器 skill，负责行为保持优化和 Pocock 坏味道检测（从 5 维度扩展至 8 维度，每个维度增加具体识别指标、重构模式和行动指南）
     type: capability
   - id: cap.ai.propose-smart-routing
     intent: Propose 阶段的智能路由，根据输入详细程度决定是否需要 explore
@@ -379,4 +379,10 @@ capabilities:
     type: capability
   - id: cap.ai.explore-terminology-decision
     intent: Explore master agent 解读 terminologyObservations，根据四态判断逻辑决定是否向用户提示术语不一致
+    type: capability
+  - id: cap.apply.tdd-checkpoints
+    intent: Apply Phase 0 实现循环中的 3 个 TDD 质量检查点（接口设计可测试性、测试质量标准、Mock 边界约束）
+    type: capability
+  - id: cap.optimizer.tdd-smells
+    intent: Optimizer Phase 2 扫描中的 Pocock 坏味道检测增强（长方法、浅模块、原始类型痴迷及现有维度的具体识别指标）
     type: capability

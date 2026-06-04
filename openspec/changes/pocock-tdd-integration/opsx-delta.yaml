@@ -1,0 +1,23 @@
+schema_version: 1
+ADDED:
+  capabilities:
+    - id: cap.apply.tdd-checkpoints
+      type: capability
+      intent: Apply Phase 0 实现循环中的 3 个 TDD 质量检查点（接口设计可测试性、测试质量标准、Mock 边界约束）
+    - id: cap.optimizer.tdd-smells
+      type: capability
+      intent: Optimizer Phase 2 扫描中的 Pocock 坏味道检测增强（长方法、浅模块、原始类型痴迷及现有维度的具体识别指标）
+  relations:
+    - from: cap.apply.tdd-checkpoints
+      type: contains
+      to: dom.apply
+    - from: cap.optimizer.tdd-smells
+      type: contains
+      to: dom.ai-integration
+
+MODIFIED:
+  capabilities:
+    - id: cap.ai.optimizer-skill
+      intent: Phase 2 优化器 skill，负责行为保持优化和 Pocock 坏味道检测（从 5 维度扩展至 8 维度，每个维度增加具体识别指标、重构模式和行动指南）
+
+REMOVED: {}

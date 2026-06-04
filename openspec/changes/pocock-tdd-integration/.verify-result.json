@@ -1,0 +1,235 @@
+{
+  "timestamp": "2026-06-04T14:29:57.822Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "5a6b8ecb30e15db6d9585f0ed03f4faa293c377b67d43d1c069ccb683045da99",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent",
+    "evidenceFiles": [
+      ".claude/skills/openspec-apply-change/SKILL.md",
+      ".claude/skills/openspec-optimizer/SKILL.md",
+      ".codex/skills/openspec-apply-change/SKILL.md",
+      ".codex/skills/openspec-optimizer/SKILL.md",
+      "openspec/changes/pocock-tdd-integration/.apply-isolation.json",
+      "openspec/changes/pocock-tdd-integration/design.md",
+      "openspec/changes/pocock-tdd-integration/opsx-delta.yaml",
+      "openspec/changes/pocock-tdd-integration/proposal.md",
+      "openspec/changes/pocock-tdd-integration/specs/tdd-apply-checkpoints/spec.md",
+      "openspec/changes/pocock-tdd-integration/specs/tdd-optimizer-smells/spec.md",
+      "openspec/changes/pocock-tdd-integration/tasks.md",
+      "openspec/project.opsx.code-map.yaml",
+      "openspec/project.opsx.relations.yaml",
+      "openspec/project.opsx.yaml",
+      "package.json",
+      "src/core/templates/workflows/apply-change.ts",
+      "src/core/templates/workflows/optimizer.ts",
+      "test/core/templates/apply-change.test.ts",
+      "test/skills/optimizer-skill-content.test.ts"
+    ],
+    "evidenceFingerprint": "8a87666a771fe5b251511e245a0a5c0a2b208718c5c99049acce955edc131e1b",
+    "evidenceFingerprintEntries": [
+      {
+        "path": ".claude/skills/openspec-apply-change/SKILL.md",
+        "hash": "e3532603a3030e4082cf73aedf992e4490b58ec46643c829f003eb2e8b5467c7"
+      },
+      {
+        "path": ".claude/skills/openspec-optimizer/SKILL.md",
+        "hash": "7849d7af934342dd1db2e0b9e8c661e896aa2684de4b2f2625237fee0419cc08"
+      },
+      {
+        "path": ".codex/skills/openspec-apply-change/SKILL.md",
+        "hash": "b7285539299d503faa6d4ee95c4010f35950e6819c623d5b10e01f29c5835d08"
+      },
+      {
+        "path": ".codex/skills/openspec-optimizer/SKILL.md",
+        "hash": "7849d7af934342dd1db2e0b9e8c661e896aa2684de4b2f2625237fee0419cc08"
+      },
+      {
+        "path": "openspec/changes/pocock-tdd-integration/.apply-isolation.json",
+        "hash": "85308f9be563d1cff55a1feb858dbda2da2b446bdd21a9c883ad8622c8169a2a"
+      },
+      {
+        "path": "openspec/changes/pocock-tdd-integration/design.md",
+        "hash": "dcbb7a8d7d9b70c2f4b42c5842fca5935978b4156c437b54cdd80b53eedea122"
+      },
+      {
+        "path": "openspec/changes/pocock-tdd-integration/opsx-delta.yaml",
+        "hash": "8f173beed20f13f516e216f96ad4e5ac54a518639f4dd9d6ed225f4c34a798ab"
+      },
+      {
+        "path": "openspec/changes/pocock-tdd-integration/proposal.md",
+        "hash": "dfe2cfcceb608579f593d1ed78fc242c41c99ef739764a0c58de0738d9d56a2a"
+      },
+      {
+        "path": "openspec/changes/pocock-tdd-integration/specs/tdd-apply-checkpoints/spec.md",
+        "hash": "6dcc44e816d8a7a6caf50d16768b75e350b299af7484571bf2a457b76f85eeaa"
+      },
+      {
+        "path": "openspec/changes/pocock-tdd-integration/specs/tdd-optimizer-smells/spec.md",
+        "hash": "fcc4748a2a37cc7caa9c3e86e944cc53d460595a59ef11f6078204e60539a6fd"
+      },
+      {
+        "path": "openspec/changes/pocock-tdd-integration/tasks.md",
+        "hash": "5a6b8ecb30e15db6d9585f0ed03f4faa293c377b67d43d1c069ccb683045da99"
+      },
+      {
+        "path": "openspec/project.opsx.code-map.yaml",
+        "hash": "d7a91e3ec69f0b31ab17d492819a6a7e3ec8e28836a5724186df909e7c7ccc30"
+      },
+      {
+        "path": "openspec/project.opsx.relations.yaml",
+        "hash": "9b6bbf8f842d0544f675af66f9e6b48331919467b515a4cdbdfb18f635458c55"
+      },
+      {
+        "path": "openspec/project.opsx.yaml",
+        "hash": "e7300f5b2437c7b9a9aab10516f2968cba7acec603a26afdb0e97660875ff398"
+      },
+      {
+        "path": "package.json",
+        "hash": "b6bc49503586b7918213a95b60dfad9a981535544b9d9789630467474f3effd8"
+      },
+      {
+        "path": "src/core/templates/workflows/apply-change.ts",
+        "hash": "62bf774148b203b847d707cfcb847153cf45e565e5396ba415e071d0a3ab3f3a"
+      },
+      {
+        "path": "src/core/templates/workflows/optimizer.ts",
+        "hash": "524f1b63ad6d91fd35ab4cb5b3a0c94ac4a5c792960102d0aaabc3271145a0c0"
+      },
+      {
+        "path": "test/core/templates/apply-change.test.ts",
+        "hash": "54a84c930abb551af0d77d2195ea7aef46a323ee342c5e9cc4b00766a62bb3f5"
+      },
+      {
+        "path": "test/skills/optimizer-skill-content.test.ts",
+        "hash": "4e591993a3e50aa7ff462a2ae3fae9d920c153502d40f1f558fd8d87bbcb43ef"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "4f2e1911aa8a787406174144f4dd0847fffb7c9e"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-04T14:32:18.342Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "No optimization opportunities found"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-06-04T14:29:57.822Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "5a6b8ecb30e15db6d9585f0ed03f4faa293c377b67d43d1c069ccb683045da99",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent",
+        "evidenceFiles": [
+          ".claude/skills/openspec-apply-change/SKILL.md",
+          ".claude/skills/openspec-optimizer/SKILL.md",
+          ".codex/skills/openspec-apply-change/SKILL.md",
+          ".codex/skills/openspec-optimizer/SKILL.md",
+          "openspec/changes/pocock-tdd-integration/.apply-isolation.json",
+          "openspec/changes/pocock-tdd-integration/design.md",
+          "openspec/changes/pocock-tdd-integration/opsx-delta.yaml",
+          "openspec/changes/pocock-tdd-integration/proposal.md",
+          "openspec/changes/pocock-tdd-integration/specs/tdd-apply-checkpoints/spec.md",
+          "openspec/changes/pocock-tdd-integration/specs/tdd-optimizer-smells/spec.md",
+          "openspec/changes/pocock-tdd-integration/tasks.md",
+          "openspec/project.opsx.code-map.yaml",
+          "openspec/project.opsx.relations.yaml",
+          "openspec/project.opsx.yaml",
+          "package.json",
+          "src/core/templates/workflows/apply-change.ts",
+          "src/core/templates/workflows/optimizer.ts",
+          "test/core/templates/apply-change.test.ts",
+          "test/skills/optimizer-skill-content.test.ts"
+        ],
+        "evidenceFingerprint": "ddac483934445fb59dc27c346082df5461a03a8a2e7faa19bceb44fb84866332",
+        "evidenceFingerprintEntries": [
+          {
+            "path": ".claude/skills/openspec-apply-change/SKILL.md",
+            "hash": "e3532603a3030e4082cf73aedf992e4490b58ec46643c829f003eb2e8b5467c7"
+          },
+          {
+            "path": ".claude/skills/openspec-optimizer/SKILL.md",
+            "hash": "7849d7af934342dd1db2e0b9e8c661e896aa2684de4b2f2625237fee0419cc08"
+          },
+          {
+            "path": ".codex/skills/openspec-apply-change/SKILL.md",
+            "hash": "b7285539299d503faa6d4ee95c4010f35950e6819c623d5b10e01f29c5835d08"
+          },
+          {
+            "path": ".codex/skills/openspec-optimizer/SKILL.md",
+            "hash": "7849d7af934342dd1db2e0b9e8c661e896aa2684de4b2f2625237fee0419cc08"
+          },
+          {
+            "path": "openspec/changes/pocock-tdd-integration/.apply-isolation.json",
+            "hash": "85308f9be563d1cff55a1feb858dbda2da2b446bdd21a9c883ad8622c8169a2a"
+          },
+          {
+            "path": "openspec/changes/pocock-tdd-integration/design.md",
+            "hash": "dcbb7a8d7d9b70c2f4b42c5842fca5935978b4156c437b54cdd80b53eedea122"
+          },
+          {
+            "path": "openspec/changes/pocock-tdd-integration/opsx-delta.yaml",
+            "hash": "8f173beed20f13f516e216f96ad4e5ac54a518639f4dd9d6ed225f4c34a798ab"
+          },
+          {
+            "path": "openspec/changes/pocock-tdd-integration/proposal.md",
+            "hash": "dfe2cfcceb608579f593d1ed78fc242c41c99ef739764a0c58de0738d9d56a2a"
+          },
+          {
+            "path": "openspec/changes/pocock-tdd-integration/specs/tdd-apply-checkpoints/spec.md",
+            "hash": "6dcc44e816d8a7a6caf50d16768b75e350b299af7484571bf2a457b76f85eeaa"
+          },
+          {
+            "path": "openspec/changes/pocock-tdd-integration/specs/tdd-optimizer-smells/spec.md",
+            "hash": "fcc4748a2a37cc7caa9c3e86e944cc53d460595a59ef11f6078204e60539a6fd"
+          },
+          {
+            "path": "openspec/changes/pocock-tdd-integration/tasks.md",
+            "hash": "5a6b8ecb30e15db6d9585f0ed03f4faa293c377b67d43d1c069ccb683045da99"
+          },
+          {
+            "path": "openspec/project.opsx.code-map.yaml",
+            "hash": "a972966c0c9f4b3fe6b7efa00e52d8cf2c0fd785b1d79db67764171ecd0de7c1"
+          },
+          {
+            "path": "openspec/project.opsx.relations.yaml",
+            "hash": "aa3f156d589e8cdf488554381298647a1dbed5a102ec356ff4ae16d79339f32c"
+          },
+          {
+            "path": "openspec/project.opsx.yaml",
+            "hash": "6126a1b8984a125fb500b4a95a550094d3b39e69ba62eb60219e51003aa3f244"
+          },
+          {
+            "path": "package.json",
+            "hash": "b6bc49503586b7918213a95b60dfad9a981535544b9d9789630467474f3effd8"
+          },
+          {
+            "path": "src/core/templates/workflows/apply-change.ts",
+            "hash": "62bf774148b203b847d707cfcb847153cf45e565e5396ba415e071d0a3ab3f3a"
+          },
+          {
+            "path": "src/core/templates/workflows/optimizer.ts",
+            "hash": "524f1b63ad6d91fd35ab4cb5b3a0c94ac4a5c792960102d0aaabc3271145a0c0"
+          },
+          {
+            "path": "test/core/templates/apply-change.test.ts",
+            "hash": "54a84c930abb551af0d77d2195ea7aef46a323ee342c5e9cc4b00766a62bb3f5"
+          },
+          {
+            "path": "test/skills/optimizer-skill-content.test.ts",
+            "hash": "4e591993a3e50aa7ff462a2ae3fae9d920c153502d40f1f558fd8d87bbcb43ef"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "4f2e1911aa8a787406174144f4dd0847fffb7c9e"
+      }
+    }
+  }
+}

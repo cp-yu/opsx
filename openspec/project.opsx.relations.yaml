@@ -498,3 +498,9 @@ relations:
   - from: cap.ai.explore-terminology-decision
     type: depends_on
     to: cap.ai.sweeper-terminology-reporting
+  - from: cap.apply.tdd-checkpoints
+    type: contains
+    to: dom.apply
+  - from: cap.optimizer.tdd-smells
+    type: contains
+    to: dom.ai-integration
