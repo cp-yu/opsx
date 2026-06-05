@@ -64,6 +64,13 @@ export function getExploreSkillTemplate(): SkillTemplate {
     description: 'Enter explore mode - a thinking partner for exploring ideas, investigating problems, and clarifying requirements. Use when the user wants to think through something before or during a change.',
     instructions: `Enter explore mode: investigate, clarify, compare, and help the user think before implementation.
 
+## Skill Delegation Protocol
+
+**Internal Skills** — The following skills are subagent-only and MUST NOT be read directly by this agent:
+- \`openspec-impact-sweeper\` — Invoke via Agent tool, subagent loads via Skill tool
+
+**Never** use the Read tool on \`.claude/skills/openspec-impact-sweeper/SKILL.md\`.
+
 ## Hard Rules
 
 - Do not implement application code. Creating or revising OpenSpec artifacts is allowed only when the user asks.

@@ -301,3 +301,47 @@ Apply-change 模板 SHALL 使用 `openspec list --specs --json` 替代 deprecate
 - **AND** MUST NOT 引用 `openspec spec list --json`
 - **AND** SHALL 指示 LLM 确认是否需要同步更新 delta spec
 
+### Requirement: Workflow Skills 声明 Internal Skills 约束
+
+Workflow skill 模板（`openspec-explore` 和 `openspec-apply-change`）SHALL 在其 instructions 开头包含 "Skill Delegation Protocol" 部分，明确声明哪些 skills 是 subagent-only，master agent 不得直接读取。
+
+#### Scenario: Explore skill 声明 internal skills 约束
+
+- **WHEN** `getExploreSkillTemplate()` 生成 explore skill instructions
+- **THEN** instructions SHALL 包含 "Skill Delegation Protocol" 部分
+- **AND** SHALL 至少列出 `openspec-impact-sweeper` 为 subagent-only
+- **AND** MAY 列出 `openspec-reviewer` 和 `openspec-optimizer`（如果 explore 需要避免读取它们）
+- **AND** SHALL 包含明确的禁止指令："**Never** use the Read tool on `.claude/skills/openspec-impact-sweeper/SKILL.md`"
+
+#### Scenario: Apply skill 声明所有 internal skills 约束
+
+- **WHEN** `getApplyChangeSkillTemplate()` 生成 apply skill instructions
+- **THEN** instructions SHALL 包含 "Skill Delegation Protocol" 部分
+- **AND** SHALL 列出所有三个 internal skills：
+  - `openspec-impact-sweeper`
+  - `openspec-reviewer`
+  - `openspec-optimizer`
+- **AND** SHALL 包含明确的禁止指令："**Never** use the Read tool on `.claude/skills/openspec-impact-sweeper/SKILL.md`, `.claude/skills/openspec-reviewer/SKILL.md`, or `.claude/skills/openspec-optimizer/SKILL.md`"
+
+#### Scenario: 约束格式一致
+
+- **WHEN** workflow skill 包含 Skill Delegation Protocol
+- **THEN** 格式 SHALL 为：
+  ```markdown
+  ## Skill Delegation Protocol
+
+  **Internal Skills** — The following skills are subagent-only and MUST NOT be read directly by this agent:
+  - `skill-name` — Invoke via Agent tool, subagent loads via Skill tool
+
+  **Never** use the Read tool on `.claude/skills/skill-name/SKILL.md`.
+  ```
+- **AND** SHALL 位于 instructions 开头，在首个 "Hard Rules" 或 "Flow" 部分之前
+
+#### Scenario: 约束在模板源代码中定义
+
+- **WHEN** 开发者需要修改 skill delegation 约束
+- **THEN** 应修改以下文件：
+  - `src/core/templates/workflows/explore.ts` 中的 `getExploreSkillTemplate()`
+  - `src/core/templates/workflows/apply-change.ts` 中的 `getApplyChangeSkillTemplate()`
+- **AND** 运行 `openspec update` 重新生成 `.claude/skills/` 下的技能文件
+
