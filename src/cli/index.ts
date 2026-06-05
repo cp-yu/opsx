@@ -292,8 +292,8 @@ program
   .option('-y, --yes', 'Skip confirmation prompts')
   .option('--skip-specs', 'Skip all archive-time sync writes, including main specs and OPSX updates')
   .option('--no-validate', 'Skip validation (not recommended, requires confirmation)')
-  .option('--no-verify', 'Skip verify and sync gates (not recommended)')
-  .action(async (changeName?: string, options?: { yes?: boolean; skipSpecs?: boolean; noValidate?: boolean; validate?: boolean; verify?: boolean }) => {
+  .option('--no-verify', 'Skip unified full verify gate (requires explicit user authorization, not recommended)')
+  .action(async (changeName?: string, options?: { yes?: boolean; skipSpecs?: boolean; noValidate?: boolean; validate?: boolean; noVerify?: boolean; verify?: boolean }) => {
     try {
       const archiveCommand = new ArchiveCommand();
       await archiveCommand.execute(changeName, options);

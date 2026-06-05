@@ -327,6 +327,10 @@ async function runArchiveMerge(
 }
 
 export class ArchiveCommand {
+  /**
+   * Archive a completed change. Enforces unified full verify gate by default.
+   * Use --no-verify to bypass (requires explicit user authorization).
+   */
   async execute(
     changeName?: string,
     options: { yes?: boolean; skipSpecs?: boolean; noValidate?: boolean; validate?: boolean; noVerify?: boolean; verify?: boolean } = {}
@@ -388,6 +392,26 @@ export class ArchiveCommand {
 
     const skipValidation = options.validate === false || options.noValidate === true;
     const skipVerify = options.verify === false || options.noVerify === true;
+
+    // --no-verify bypass requires explicit user authorization
+    if (skipVerify && !options.yes) {
+      const { confirm } = await import('@inquirer/prompts');
+      const proceed = await confirm({
+        message: chalk.yellow(
+          '⚠️  WARNING: Skipping unified full verify gate bypasses critical quality checks.\n' +
+          '   This may archive unverified implementations with correctness, completeness, or coherence issues.\n' +
+          '   Continue with --no-verify? (y/N)'
+        ),
+        default: false
+      });
+      if (!proceed) {
+        console.log('Archive cancelled. Run without --no-verify to use the standard verify gate.');
+        return;
+      }
+      console.log(chalk.yellow('[AUTHORIZED] User explicitly authorized --no-verify bypass.'));
+    }
+
+    // Execute unified full verify gate
     if (!skipVerify) {
       const freshness = await checkFreshness(changeDir, targetPath);
       const compatibility = freshness.verifyResult

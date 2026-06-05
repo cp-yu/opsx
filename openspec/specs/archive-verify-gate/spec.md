@@ -93,7 +93,7 @@
 
 ### Requirement: Archive Verify + Sync Dual Gate
 
-`openspec archive` 命令 SHALL 在执行归档前校验 verify 和 sync 状态。
+`openspec archive` 命令 SHALL 在执行归档前校验 verify 和 sync 状态。默认强制执行，`--no-verify` 标志提供显式用户授权绕过通道。
 
 #### Scenario: 双重门禁通过，继续 archive
 
@@ -109,3 +109,23 @@
 - **THEN** 系统 SHALL 输出两个门禁的合并状态
 - **AND** SHALL 以 exit 1 退出
 - **AND** agent SHALL 向用户展示合并选项：先运行 verify+sync / 仅 sync / 强制继续 / 放弃
+
+#### Scenario: 用户显式授权绕过门禁
+
+- **WHEN** agent 执行 `openspec archive <change-name> --no-verify`
+- **AND** 用户未同时使用 `--yes` 标志
+- **THEN** 系统 SHALL 显示风险警告并要求交互式确认
+- **AND** SHALL 说明绕过 verify gate 可能导致归档未验证的实现
+- **WHEN** 用户拒绝确认
+- **THEN** archive SHALL 取消并提示使用标准 verify gate
+- **WHEN** 用户确认授权
+- **THEN** 系统 SHALL 记录 `[AUTHORIZED]` 审计日志
+- **AND** SHALL 跳过 verify 和 sync 门禁检查
+- **AND** SHALL 继续执行 archive 逻辑
+
+#### Scenario: --yes 模式下的 --no-verify 静默绕过
+
+- **WHEN** agent 执行 `openspec archive <change-name> --no-verify --yes`
+- **THEN** 系统 SHALL 跳过交互式确认
+- **AND** SHALL 记录 `[AUTHORIZED]` 审计日志
+- **AND** SHALL 直接跳过 verify 和 sync 门禁检查
