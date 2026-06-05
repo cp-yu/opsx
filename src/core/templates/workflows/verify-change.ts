@@ -541,18 +541,48 @@ function buildVerifyInstructions(
   return buildRereadVerifyInstructions(text);
 }
 
+function buildVerifySkillInstructions(executionModel: VerifyExecutionModel): string {
+  const executionMode =
+    executionModel === SUBAGENT_VERIFY_EXECUTION_MODEL
+      ? "executionMode: 'subagent-orchestrated'"
+      : "executionMode: 'current-agent-reread'";
+
+  return `${VERIFY_COORDINATOR_ROLE}
+
+Verify that a change implementation is complete, correct, coherent, and clean before archive.
+
+## Input
+
+Optionally specify a change name and \`--skip-optimization\`. If no clear change is provided, run \`openspec list --json\` and ask; do not guess.
+
+## Protocol
+
+1. Run \`openspec status --change "<name>" --json\` and \`openspec instructions apply --change "<name>" --json\`; read all contextFiles.
+2. Stop early with "没有可供 verify 的任务" when \`tasks.md\` is missing or has no checkbox tasks.
+3. Use clean-context verification with \`${executionMode}\`.
+4. In current-agent mode, re-read artifacts, git evidence, prior \`.verify-result.json\`, and final candidate file contents before judging.
+5. In subagent mode, pass only \`changeName\`, absolute \`changeDir\`, and absolute \`projectRoot\` to a reviewer subagent invoking \`openspec-reviewer\`; the coordinator MUST NOT substitute completeness/correctness/coherence judgment.
+6. Validate reviewer/current payload shape: result, issues with severity/recommendation/evidence citations, evidenceFiles, gitDiffSummary, and writeBackPlan targeting \`tasks.md\` only.
+7. Classify strictly: when uncertain, escalate to CRITICAL to enforce the 'clean slate' principle. CRITICAL writes remediation; WARNING/SUGGESTION do not.
+8. Persist Phase 1 with \`openspec verify phase1 "<change-name>" --input '<json>' --json\`.
+9. Phase 2: unless skipped by user/config, create a checkpoint, invoke \`openspec-optimizer\`, record optimization proposal hashes before applying Search/Replace blocks, then run speculative reviewer verification. Restore checkpoint on failure and record phase2 optimization/verification through CLI.
+10. Run \`openspec verify seal "<change-name>" --json\`; preserve diagnostics if seal fails.
+
+## Evidence Rules
+
+- Final file contents are authoritative; git diff is navigation only.
+- Check completeness, correctness, coherence, cleanliness, and OPSX alignment when artifacts exist.
+- Use \`git diff <originalBranch>...HEAD --name-only\` for branch-aware scope when available.
+- Cite concrete file paths and line ranges for every issue.
+- Use \`openspec/config.yaml\` only through the compiled prompt projection; preserve canonical artifact tokens during write-back.`;
+}
+
 function createVerifySkillTemplate(executionModel: VerifyExecutionModel): SkillTemplate {
   return {
     name: 'openspec-verify-change',
     description:
       'Verify implementation matches change artifacts. Use when the user wants to validate that implementation is complete, correct, and coherent before archiving.',
-    instructions: buildVerifyInstructions(
-      {
-        input:
-          'Optionally specify a change name and optionally request `--skip-optimization`. If omitted, you MUST prompt for available changes.',
-      },
-      executionModel
-    ),
+    instructions: buildVerifySkillInstructions(executionModel),
     license: 'MIT',
     compatibility: 'Requires openspec CLI.',
     metadata: { author: 'openspec', version: '1.0' },

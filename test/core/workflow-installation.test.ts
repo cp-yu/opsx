@@ -7,6 +7,7 @@ import {
   createToolWorkflowArtifactPlan,
   createWorkflowArtifactPlan,
   getManagedCommandFiles,
+  getPlannedToolArtifacts,
   MANAGED_STALE_INTERNAL_SKILL_DIR_NAMES,
   resolveEffectiveWorkflows,
 } from '../../src/core/workflow-installation.js';
@@ -75,6 +76,21 @@ describe('workflow installation planning', () => {
     expect(plan.expectedSkillDirNames).not.toContain('openspec-implementer');
   });
 
+  it('includes skill reference files in planned artifacts', () => {
+    const plan = createToolWorkflowArtifactPlan('claude', ['sync'], 'skills', testDir);
+    const artifacts = getPlannedToolArtifacts(testDir, 'claude', plan);
+
+    expect(artifacts.skillFiles).toContain(
+      path.join(testDir, '.claude', 'skills', 'openspec-sync-specs', 'SKILL.md')
+    );
+    expect(artifacts.skillFiles).toContain(
+      path.join(testDir, '.claude', 'skills', 'openspec-sync-specs', 'references', 'merge-rules.md')
+    );
+    expect(artifacts.skillFiles).toContain(
+      path.join(testDir, '.claude', 'skills', 'openspec-optimizer', 'references', 'output-protocol.md')
+    );
+  });
+
   it('removes only explicitly managed stale implementer skill directories during sync', async () => {
     const skillsDir = path.join(testDir, '.claude', 'skills');
     await fs.mkdir(path.join(skillsDir, 'openspec-implementer'), { recursive: true });
@@ -95,6 +111,23 @@ describe('workflow installation planning', () => {
     await expect(fs.stat(path.join(skillsDir, 'openspec-implementer'))).rejects.toThrow();
     await expect(fs.stat(path.join(skillsDir, 'user-skill', 'SKILL.md'))).resolves.toBeDefined();
     await expect(fs.stat(path.join(skillsDir, 'openspec-reviewer', 'SKILL.md'))).resolves.toBeDefined();
+  });
+
+  it('writes skill reference files during sync', async () => {
+    const result = await ArtifactSyncEngine.syncOne({
+      toolId: 'claude',
+      projectPath: testDir,
+      workflows: ['sync'],
+      delivery: 'skills',
+      version: 'test',
+    });
+
+    expect(result.error).toBeUndefined();
+    const reference = await fs.readFile(
+      path.join(testDir, '.claude', 'skills', 'openspec-sync-specs', 'references', 'merge-rules.md'),
+      'utf-8'
+    );
+    expect(reference).toContain('Key Principle: Intelligent Merging');
   });
 
   it('resolves legacy codex command files via explicit paths', () => {

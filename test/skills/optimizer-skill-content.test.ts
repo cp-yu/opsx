@@ -10,9 +10,16 @@ function readSkill(relativePath: string): string {
   return readFileSync(join(projectRoot, relativePath), 'utf-8');
 }
 
+function readReference(name: string): string {
+  const template = getOptimizerSkillTemplate();
+  const reference = template.referenceFiles?.find((file) => file.path === name);
+  expect(reference).toBeDefined();
+  return reference!.content;
+}
+
 function normalizeSelfRead(content: string): string {
-  const start = content.indexOf('## Self-Read Protocol');
-  const end = content.indexOf('## Optimization Principles');
+  const start = content.indexOf('# Optimizer Self-Read Protocol');
+  const end = content.indexOf('## Dependency Expansion (One Hop)');
   expect(start).toBeGreaterThanOrEqual(0);
   expect(end).toBeGreaterThan(start);
   return content
@@ -24,7 +31,7 @@ function normalizeSelfRead(content: string): string {
 
 describe('openspec optimizer skill content', () => {
   it('uses original branch name-only scope and avoids diff hunk evidence', () => {
-    const instructions = getOptimizerSkillTemplate().instructions;
+    const instructions = readReference('references/self-read-protocol.md');
 
     expect(instructions).toContain('git diff <originalBranch>...HEAD --name-only');
     expect(instructions).toContain('base scope');
@@ -34,7 +41,7 @@ describe('openspec optimizer skill content', () => {
   });
 
   it('documents one-hop dependency expansion through imports callers and OPSX relations', () => {
-    const instructions = getOptimizerSkillTemplate().instructions;
+    const instructions = readReference('references/self-read-protocol.md');
 
     expect(instructions).toContain('## Dependency Expansion (One Hop)');
     expect(instructions).toContain('imports');
@@ -44,7 +51,7 @@ describe('openspec optimizer skill content', () => {
   });
 
   it('limits patches and affected hashes to base scope files', () => {
-    const instructions = getOptimizerSkillTemplate().instructions;
+    const instructions = readReference('references/self-read-protocol.md');
 
     expect(instructions).toContain('Expansion candidates MUST NOT be patch targets');
     expect(instructions).toContain('Search/Replace PATH');
@@ -53,7 +60,7 @@ describe('openspec optimizer skill content', () => {
   });
 
   it('documents expansion filtering and relations fallback', () => {
-    const instructions = getOptimizerSkillTemplate().instructions;
+    const instructions = readReference('references/self-read-protocol.md');
 
     expect(instructions).toContain('path.relative');
     expect(instructions).toContain('gitignore');
@@ -66,15 +73,18 @@ describe('openspec optimizer skill content', () => {
   });
 
   it('keeps codex and claude optimizer skill self-read sections equivalent', () => {
-    const codex = readSkill('.codex/skills/openspec-optimizer/SKILL.md');
-    const claude = readSkill('.claude/skills/openspec-optimizer/SKILL.md');
+    const codex = readSkill('.codex/skills/openspec-optimizer/references/self-read-protocol.md');
+    const claude = readSkill('.claude/skills/openspec-optimizer/references/self-read-protocol.md');
 
     expect(normalizeSelfRead(codex)).toBe(normalizeSelfRead(claude));
-    expect(normalizeSelfRead(codex)).toBe(normalizeSelfRead(getOptimizerSkillTemplate().instructions));
+    expect(normalizeSelfRead(codex)).toBe(normalizeSelfRead(readReference('references/self-read-protocol.md')));
   });
 
   it('documents Pocock optimizer smell dimensions and block annotations', () => {
-    const instructions = getOptimizerSkillTemplate().instructions;
+    const instructions = [
+      readReference('references/decision-rules.md'),
+      readReference('references/output-protocol.md'),
+    ].join('\n');
 
     expect(instructions).toContain('Lower duplication');
     expect(instructions).toContain('identical logic blocks in two or more locations');

@@ -172,6 +172,19 @@ async function writeSkills(
   for (const entry of entries) {
     const skillDir = path.join(baseDir, entry.dirName);
     const skillFile = path.join(skillDir, 'SKILL.md');
+    const referencesDir = path.join(skillDir, 'references');
+    const referenceFiles = (entry.template.referenceFiles ?? []).map((referenceFile) => {
+      const referencePath = path.normalize(referenceFile.path);
+      if (
+        path.isAbsolute(referencePath) ||
+        referencePath.startsWith('..') ||
+        !referencePath.startsWith(`references${path.sep}`)
+      ) {
+        throw new Error(`Invalid skill reference path: ${referenceFile.path}`);
+      }
+
+      return { ...referenceFile, path: referencePath };
+    });
 
     const skillContent = generateSkillContent(entry.template, version, (instructions) =>
       runTransforms(instructions, {
@@ -182,6 +195,20 @@ async function writeSkills(
     );
 
     await FileSystemUtils.writeFile(skillFile, skillContent);
+    await fs.promises.rm(referencesDir, { recursive: true, force: true });
+
+    if (referenceFiles.length > 0) {
+      for (const referenceFile of referenceFiles) {
+        await FileSystemUtils.writeFile(
+          path.join(skillDir, referenceFile.path),
+          runTransforms(referenceFile.content, {
+            toolId,
+            workflowId: entry.workflowId,
+            artifactType: 'skill',
+          })
+        );
+      }
+    }
     written++;
   }
 

@@ -504,3 +504,6 @@ relations:
   - from: cap.optimizer.tdd-smells
     type: contains
     to: dom.ai-integration
+  - from: cap.validation.skill-template-length
+    type: contains
+    to: dom.validation

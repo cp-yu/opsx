@@ -1,0 +1,475 @@
+{
+  "timestamp": "2026-06-04T17:42:09.296Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "ecb607d785af8157bf181818b9f4d1da98e36005dc681fa8d2716e6e4ed27c24",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      ".claude/skills/openspec-impact-sweeper/SKILL.md",
+      ".claude/skills/openspec-impact-sweeper/references/evidence-protocol.md",
+      ".claude/skills/openspec-impact-sweeper/references/report-schema.md",
+      ".claude/skills/openspec-impact-sweeper/references/terminology-awareness.md",
+      ".claude/skills/openspec-optimizer/SKILL.md",
+      ".claude/skills/openspec-optimizer/references/decision-rules.md",
+      ".claude/skills/openspec-optimizer/references/output-protocol.md",
+      ".claude/skills/openspec-optimizer/references/self-read-protocol.md",
+      ".codex/skills/openspec-impact-sweeper/SKILL.md",
+      ".codex/skills/openspec-optimizer/SKILL.md",
+      ".github/skills/openspec-impact-sweeper/SKILL.md",
+      ".github/skills/openspec-optimizer/SKILL.md",
+      "openspec/changes/skill-length-validation/.apply-isolation.json",
+      "openspec/changes/skill-length-validation/design.md",
+      "openspec/changes/skill-length-validation/opsx-delta.yaml",
+      "openspec/changes/skill-length-validation/proposal.md",
+      "openspec/changes/skill-length-validation/specs/skill-template-length-check/spec.md",
+      "openspec/changes/skill-length-validation/tasks.md",
+      "src/core/templates/sync-engine.ts",
+      "src/core/templates/types.ts",
+      "src/core/templates/workflows/apply-change.ts",
+      "src/core/templates/workflows/archive-change.ts",
+      "src/core/templates/workflows/bulk-archive-change.ts",
+      "src/core/templates/workflows/explore.ts",
+      "src/core/templates/workflows/impact-sweeper.ts",
+      "src/core/templates/workflows/onboard.ts",
+      "src/core/templates/workflows/optimizer.ts",
+      "src/core/templates/workflows/propose.ts",
+      "src/core/templates/workflows/reviewer.ts",
+      "src/core/templates/workflows/sync-specs.ts",
+      "src/core/templates/workflows/verify-change.ts",
+      "src/core/workflow-installation.ts",
+      "test/core/shared/skill-generation.test.ts",
+      "test/core/templates/apply-change.test.ts",
+      "test/core/templates/explore-template.test.ts",
+      "test/core/templates/impact-sweeper-template.test.ts",
+      "test/core/templates/propose-template.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts",
+      "test/core/workflow-installation.test.ts",
+      "test/skills/archive-skill-content.test.ts",
+      "test/skills/optimizer-skill-content.test.ts",
+      "test/skills/reviewer-skill-content.test.ts",
+      "test/skills/skill-template-length-validation.test.ts"
+    ],
+    "evidenceFingerprint": "28dc47d83a7980ec88f6e1a1ae592893b6780b1ab0cc3e5def55c0848b67ebf3",
+    "evidenceFingerprintEntries": [
+      {
+        "path": ".claude/skills/openspec-impact-sweeper/references/evidence-protocol.md",
+        "hash": "11ccd546de7044eac31b68074646ec2b392fbbe3e39325dfaf211b71ebb9389b"
+      },
+      {
+        "path": ".claude/skills/openspec-impact-sweeper/references/report-schema.md",
+        "hash": "69f5f24ede68b7ace86a45d2ab6b5b58cfa127031f34c66ded42fd92c5923f86"
+      },
+      {
+        "path": ".claude/skills/openspec-impact-sweeper/references/terminology-awareness.md",
+        "hash": "1ded45748236c0905ad65b1878ba28b5dc0eb96160105a424b8f8087710d6e67"
+      },
+      {
+        "path": ".claude/skills/openspec-impact-sweeper/SKILL.md",
+        "hash": "17d09bf08399cd5ab84140234e1bcbf704b39a4d5b206f1e4c82aed4de6ce708"
+      },
+      {
+        "path": ".claude/skills/openspec-optimizer/references/decision-rules.md",
+        "hash": "6cd2cc7b490ef40e274a3f5a8a77d7ace08d03cd028f5faf8a2d47bedf08c292"
+      },
+      {
+        "path": ".claude/skills/openspec-optimizer/references/output-protocol.md",
+        "hash": "74b8615bee53fb17d180428c7a84a5e6aa68af22cb009d0b585118cb1d11756e"
+      },
+      {
+        "path": ".claude/skills/openspec-optimizer/references/self-read-protocol.md",
+        "hash": "611297320e45e60bf66a6690af2e0da93187c1d49acc00ab0908201f2ae1b105"
+      },
+      {
+        "path": ".claude/skills/openspec-optimizer/SKILL.md",
+        "hash": "44fb478539fe1d35fce8fa75fa235c2816a03f11401dc17d7b7037738e0928a6"
+      },
+      {
+        "path": ".codex/skills/openspec-impact-sweeper/SKILL.md",
+        "hash": "17d09bf08399cd5ab84140234e1bcbf704b39a4d5b206f1e4c82aed4de6ce708"
+      },
+      {
+        "path": ".codex/skills/openspec-optimizer/SKILL.md",
+        "hash": "44fb478539fe1d35fce8fa75fa235c2816a03f11401dc17d7b7037738e0928a6"
+      },
+      {
+        "path": ".github/skills/openspec-impact-sweeper/SKILL.md",
+        "hash": "17d09bf08399cd5ab84140234e1bcbf704b39a4d5b206f1e4c82aed4de6ce708"
+      },
+      {
+        "path": ".github/skills/openspec-optimizer/SKILL.md",
+        "hash": "44fb478539fe1d35fce8fa75fa235c2816a03f11401dc17d7b7037738e0928a6"
+      },
+      {
+        "path": "openspec/changes/skill-length-validation/.apply-isolation.json",
+        "hash": "cba29d3a32ee848a34b036ec0868801c8a8292df831a755874325d1d201b9164"
+      },
+      {
+        "path": "openspec/changes/skill-length-validation/design.md",
+        "hash": "629daea291d56c7dcdb2ada619958c8c56d3f15fccda3cc73fe6e1c977c4f4bb"
+      },
+      {
+        "path": "openspec/changes/skill-length-validation/opsx-delta.yaml",
+        "hash": "90886dd00d01f4ceff7e3985a48a433326d4e63ff30c54bf3ace1a140709f932"
+      },
+      {
+        "path": "openspec/changes/skill-length-validation/proposal.md",
+        "hash": "4ca62c616d0bcbbd9ecdd612ceeea048b9a7b35d33b4384861d2976c86c4ffcf"
+      },
+      {
+        "path": "openspec/changes/skill-length-validation/specs/skill-template-length-check/spec.md",
+        "hash": "bad13dd9190580d4bc2fc1c91d677018ee17c657ad5f760ead099989d413b1af"
+      },
+      {
+        "path": "openspec/changes/skill-length-validation/tasks.md",
+        "hash": "ecb607d785af8157bf181818b9f4d1da98e36005dc681fa8d2716e6e4ed27c24"
+      },
+      {
+        "path": "src/core/templates/sync-engine.ts",
+        "hash": "10f7602f6ca507991d2a0eee5fdcf9210ecce0f7c5bd593fdca9a99e813f7722"
+      },
+      {
+        "path": "src/core/templates/types.ts",
+        "hash": "49705396cd08554133666e52a21dc951c95cf6dcf007e9cefdd1e56eeeec8ba0"
+      },
+      {
+        "path": "src/core/templates/workflows/apply-change.ts",
+        "hash": "b761beab4c0637f51db53c64b0710327ea91132e6809eadb84958d4f7426776b"
+      },
+      {
+        "path": "src/core/templates/workflows/archive-change.ts",
+        "hash": "1895fa9d560cd4dbbe4b0ff13999d8056a51a634a09a62dccef158cd2ec18996"
+      },
+      {
+        "path": "src/core/templates/workflows/bulk-archive-change.ts",
+        "hash": "89abaf2724fa448378598189ba7fa9a8ee2194f97c661d6302f36b5791e1e821"
+      },
+      {
+        "path": "src/core/templates/workflows/explore.ts",
+        "hash": "594f98a2af874ade18e7574165ce9ee21ce138c04bff3254d7b03d5a8959d4c6"
+      },
+      {
+        "path": "src/core/templates/workflows/impact-sweeper.ts",
+        "hash": "35b5a4629db83182b9e4c1c8887d110ef9824ea2662494863ec5365ab85815f8"
+      },
+      {
+        "path": "src/core/templates/workflows/onboard.ts",
+        "hash": "985a7593d547ebc741a52905ce253bd60a8aa58dadd2d1abc69b2b5aa3829b84"
+      },
+      {
+        "path": "src/core/templates/workflows/optimizer.ts",
+        "hash": "d315bc63096a56f3984e76503fd308254d37f17fd1e88df840ae75bbf19e7865"
+      },
+      {
+        "path": "src/core/templates/workflows/propose.ts",
+        "hash": "f8719e48424eafd52f0f01263e62f4ef34c87565367b4eea81c0eda8f45d45c1"
+      },
+      {
+        "path": "src/core/templates/workflows/reviewer.ts",
+        "hash": "11bafa4c3febd64c4fac5a5e932f370f19f7c413ad022909bc2b3e9d7d881283"
+      },
+      {
+        "path": "src/core/templates/workflows/sync-specs.ts",
+        "hash": "151fa1c5b85ee49eb5e9c76b83ed9ecfbb3a1a53bb338a39cb4e1c55e05abb46"
+      },
+      {
+        "path": "src/core/templates/workflows/verify-change.ts",
+        "hash": "94a4ce98e4ef87e9538027f32292fdadd678ece4c913af372b70c3da5b257701"
+      },
+      {
+        "path": "src/core/workflow-installation.ts",
+        "hash": "707863ee71ae626f1e68f8972639be34cd34ef9b3c0c477a81d6e0d1c989ca36"
+      },
+      {
+        "path": "test/core/shared/skill-generation.test.ts",
+        "hash": "d3e5677fe33ffce177f037dcc1ae225f4bdcd46c3f5ee4192122f49b179d74ba"
+      },
+      {
+        "path": "test/core/templates/apply-change.test.ts",
+        "hash": "54a84c930abb551af0d77d2195ea7aef46a323ee342c5e9cc4b00766a62bb3f5"
+      },
+      {
+        "path": "test/core/templates/explore-template.test.ts",
+        "hash": "0d6c81a917773f549f4e5547d193ebc0612a4bb1e62f2cb621ae3a9773e965bb"
+      },
+      {
+        "path": "test/core/templates/impact-sweeper-template.test.ts",
+        "hash": "3759319a0f2869884610f4e88a1283636a234b412759205b6f3cdfdd5cc22663"
+      },
+      {
+        "path": "test/core/templates/propose-template.test.ts",
+        "hash": "7bfc7e583954227b8ddd90f2b937d86084e4059ffe5e13dab34411c717b6e81e"
+      },
+      {
+        "path": "test/core/templates/skill-templates-parity.test.ts",
+        "hash": "7a973abce97bf0ea4a1d5ed916286cca4f24b85ffce233245c0ade40ba1a0588"
+      },
+      {
+        "path": "test/core/workflow-installation.test.ts",
+        "hash": "73deb90f1cb8c0e667cbbb1126f7a8534a132976996a6292ad55c427d13162f2"
+      },
+      {
+        "path": "test/skills/archive-skill-content.test.ts",
+        "hash": "4bf8f049f7be93fd88b179abd1c51675419c2e5223192f2c151235f138cca2a8"
+      },
+      {
+        "path": "test/skills/optimizer-skill-content.test.ts",
+        "hash": "78af1b1e2c8b934384121608edccd647e54700170f3598e09d603a4cb74b2f82"
+      },
+      {
+        "path": "test/skills/reviewer-skill-content.test.ts",
+        "hash": "1df4be37b6c00fac7c327dc3852750a6f466ea51e18cb7b03ba0c6c84d3d8d51"
+      },
+      {
+        "path": "test/skills/skill-template-length-validation.test.ts",
+        "hash": "6f1398e7892a97adf7b0524813b4e336264ebe5b06629d3734b9d92351398679"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "e19bbbb9c80c3f429dfdbd52e97a9bbd315f14d7"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-04T17:45:24.542Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "Optimizer subagent returned No optimization opportunities found after reading the refreshed Phase 1 baseline, referenceFiles support, split skill templates, and scoped implementation files."
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-06-04T17:42:09.296Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "ecb607d785af8157bf181818b9f4d1da98e36005dc681fa8d2716e6e4ed27c24",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          ".claude/skills/openspec-impact-sweeper/SKILL.md",
+          ".claude/skills/openspec-impact-sweeper/references/evidence-protocol.md",
+          ".claude/skills/openspec-impact-sweeper/references/report-schema.md",
+          ".claude/skills/openspec-impact-sweeper/references/terminology-awareness.md",
+          ".claude/skills/openspec-optimizer/SKILL.md",
+          ".claude/skills/openspec-optimizer/references/decision-rules.md",
+          ".claude/skills/openspec-optimizer/references/output-protocol.md",
+          ".claude/skills/openspec-optimizer/references/self-read-protocol.md",
+          ".codex/skills/openspec-impact-sweeper/SKILL.md",
+          ".codex/skills/openspec-optimizer/SKILL.md",
+          ".github/skills/openspec-impact-sweeper/SKILL.md",
+          ".github/skills/openspec-optimizer/SKILL.md",
+          "openspec/changes/skill-length-validation/.apply-isolation.json",
+          "openspec/changes/skill-length-validation/design.md",
+          "openspec/changes/skill-length-validation/opsx-delta.yaml",
+          "openspec/changes/skill-length-validation/proposal.md",
+          "openspec/changes/skill-length-validation/specs/skill-template-length-check/spec.md",
+          "openspec/changes/skill-length-validation/tasks.md",
+          "src/core/templates/sync-engine.ts",
+          "src/core/templates/types.ts",
+          "src/core/templates/workflows/apply-change.ts",
+          "src/core/templates/workflows/archive-change.ts",
+          "src/core/templates/workflows/bulk-archive-change.ts",
+          "src/core/templates/workflows/explore.ts",
+          "src/core/templates/workflows/impact-sweeper.ts",
+          "src/core/templates/workflows/onboard.ts",
+          "src/core/templates/workflows/optimizer.ts",
+          "src/core/templates/workflows/propose.ts",
+          "src/core/templates/workflows/reviewer.ts",
+          "src/core/templates/workflows/sync-specs.ts",
+          "src/core/templates/workflows/verify-change.ts",
+          "src/core/workflow-installation.ts",
+          "test/core/shared/skill-generation.test.ts",
+          "test/core/templates/apply-change.test.ts",
+          "test/core/templates/explore-template.test.ts",
+          "test/core/templates/impact-sweeper-template.test.ts",
+          "test/core/templates/propose-template.test.ts",
+          "test/core/templates/skill-templates-parity.test.ts",
+          "test/core/workflow-installation.test.ts",
+          "test/skills/archive-skill-content.test.ts",
+          "test/skills/optimizer-skill-content.test.ts",
+          "test/skills/reviewer-skill-content.test.ts",
+          "test/skills/skill-template-length-validation.test.ts"
+        ],
+        "evidenceFingerprint": "28dc47d83a7980ec88f6e1a1ae592893b6780b1ab0cc3e5def55c0848b67ebf3",
+        "evidenceFingerprintEntries": [
+          {
+            "path": ".claude/skills/openspec-impact-sweeper/references/evidence-protocol.md",
+            "hash": "11ccd546de7044eac31b68074646ec2b392fbbe3e39325dfaf211b71ebb9389b"
+          },
+          {
+            "path": ".claude/skills/openspec-impact-sweeper/references/report-schema.md",
+            "hash": "69f5f24ede68b7ace86a45d2ab6b5b58cfa127031f34c66ded42fd92c5923f86"
+          },
+          {
+            "path": ".claude/skills/openspec-impact-sweeper/references/terminology-awareness.md",
+            "hash": "1ded45748236c0905ad65b1878ba28b5dc0eb96160105a424b8f8087710d6e67"
+          },
+          {
+            "path": ".claude/skills/openspec-impact-sweeper/SKILL.md",
+            "hash": "17d09bf08399cd5ab84140234e1bcbf704b39a4d5b206f1e4c82aed4de6ce708"
+          },
+          {
+            "path": ".claude/skills/openspec-optimizer/references/decision-rules.md",
+            "hash": "6cd2cc7b490ef40e274a3f5a8a77d7ace08d03cd028f5faf8a2d47bedf08c292"
+          },
+          {
+            "path": ".claude/skills/openspec-optimizer/references/output-protocol.md",
+            "hash": "74b8615bee53fb17d180428c7a84a5e6aa68af22cb009d0b585118cb1d11756e"
+          },
+          {
+            "path": ".claude/skills/openspec-optimizer/references/self-read-protocol.md",
+            "hash": "611297320e45e60bf66a6690af2e0da93187c1d49acc00ab0908201f2ae1b105"
+          },
+          {
+            "path": ".claude/skills/openspec-optimizer/SKILL.md",
+            "hash": "44fb478539fe1d35fce8fa75fa235c2816a03f11401dc17d7b7037738e0928a6"
+          },
+          {
+            "path": ".codex/skills/openspec-impact-sweeper/SKILL.md",
+            "hash": "17d09bf08399cd5ab84140234e1bcbf704b39a4d5b206f1e4c82aed4de6ce708"
+          },
+          {
+            "path": ".codex/skills/openspec-optimizer/SKILL.md",
+            "hash": "44fb478539fe1d35fce8fa75fa235c2816a03f11401dc17d7b7037738e0928a6"
+          },
+          {
+            "path": ".github/skills/openspec-impact-sweeper/SKILL.md",
+            "hash": "17d09bf08399cd5ab84140234e1bcbf704b39a4d5b206f1e4c82aed4de6ce708"
+          },
+          {
+            "path": ".github/skills/openspec-optimizer/SKILL.md",
+            "hash": "44fb478539fe1d35fce8fa75fa235c2816a03f11401dc17d7b7037738e0928a6"
+          },
+          {
+            "path": "openspec/changes/skill-length-validation/.apply-isolation.json",
+            "hash": "cba29d3a32ee848a34b036ec0868801c8a8292df831a755874325d1d201b9164"
+          },
+          {
+            "path": "openspec/changes/skill-length-validation/design.md",
+            "hash": "629daea291d56c7dcdb2ada619958c8c56d3f15fccda3cc73fe6e1c977c4f4bb"
+          },
+          {
+            "path": "openspec/changes/skill-length-validation/opsx-delta.yaml",
+            "hash": "90886dd00d01f4ceff7e3985a48a433326d4e63ff30c54bf3ace1a140709f932"
+          },
+          {
+            "path": "openspec/changes/skill-length-validation/proposal.md",
+            "hash": "4ca62c616d0bcbbd9ecdd612ceeea048b9a7b35d33b4384861d2976c86c4ffcf"
+          },
+          {
+            "path": "openspec/changes/skill-length-validation/specs/skill-template-length-check/spec.md",
+            "hash": "bad13dd9190580d4bc2fc1c91d677018ee17c657ad5f760ead099989d413b1af"
+          },
+          {
+            "path": "openspec/changes/skill-length-validation/tasks.md",
+            "hash": "ecb607d785af8157bf181818b9f4d1da98e36005dc681fa8d2716e6e4ed27c24"
+          },
+          {
+            "path": "src/core/templates/sync-engine.ts",
+            "hash": "10f7602f6ca507991d2a0eee5fdcf9210ecce0f7c5bd593fdca9a99e813f7722"
+          },
+          {
+            "path": "src/core/templates/types.ts",
+            "hash": "49705396cd08554133666e52a21dc951c95cf6dcf007e9cefdd1e56eeeec8ba0"
+          },
+          {
+            "path": "src/core/templates/workflows/apply-change.ts",
+            "hash": "b761beab4c0637f51db53c64b0710327ea91132e6809eadb84958d4f7426776b"
+          },
+          {
+            "path": "src/core/templates/workflows/archive-change.ts",
+            "hash": "1895fa9d560cd4dbbe4b0ff13999d8056a51a634a09a62dccef158cd2ec18996"
+          },
+          {
+            "path": "src/core/templates/workflows/bulk-archive-change.ts",
+            "hash": "89abaf2724fa448378598189ba7fa9a8ee2194f97c661d6302f36b5791e1e821"
+          },
+          {
+            "path": "src/core/templates/workflows/explore.ts",
+            "hash": "594f98a2af874ade18e7574165ce9ee21ce138c04bff3254d7b03d5a8959d4c6"
+          },
+          {
+            "path": "src/core/templates/workflows/impact-sweeper.ts",
+            "hash": "35b5a4629db83182b9e4c1c8887d110ef9824ea2662494863ec5365ab85815f8"
+          },
+          {
+            "path": "src/core/templates/workflows/onboard.ts",
+            "hash": "985a7593d547ebc741a52905ce253bd60a8aa58dadd2d1abc69b2b5aa3829b84"
+          },
+          {
+            "path": "src/core/templates/workflows/optimizer.ts",
+            "hash": "d315bc63096a56f3984e76503fd308254d37f17fd1e88df840ae75bbf19e7865"
+          },
+          {
+            "path": "src/core/templates/workflows/propose.ts",
+            "hash": "f8719e48424eafd52f0f01263e62f4ef34c87565367b4eea81c0eda8f45d45c1"
+          },
+          {
+            "path": "src/core/templates/workflows/reviewer.ts",
+            "hash": "11bafa4c3febd64c4fac5a5e932f370f19f7c413ad022909bc2b3e9d7d881283"
+          },
+          {
+            "path": "src/core/templates/workflows/sync-specs.ts",
+            "hash": "151fa1c5b85ee49eb5e9c76b83ed9ecfbb3a1a53bb338a39cb4e1c55e05abb46"
+          },
+          {
+            "path": "src/core/templates/workflows/verify-change.ts",
+            "hash": "94a4ce98e4ef87e9538027f32292fdadd678ece4c913af372b70c3da5b257701"
+          },
+          {
+            "path": "src/core/workflow-installation.ts",
+            "hash": "707863ee71ae626f1e68f8972639be34cd34ef9b3c0c477a81d6e0d1c989ca36"
+          },
+          {
+            "path": "test/core/shared/skill-generation.test.ts",
+            "hash": "d3e5677fe33ffce177f037dcc1ae225f4bdcd46c3f5ee4192122f49b179d74ba"
+          },
+          {
+            "path": "test/core/templates/apply-change.test.ts",
+            "hash": "54a84c930abb551af0d77d2195ea7aef46a323ee342c5e9cc4b00766a62bb3f5"
+          },
+          {
+            "path": "test/core/templates/explore-template.test.ts",
+            "hash": "0d6c81a917773f549f4e5547d193ebc0612a4bb1e62f2cb621ae3a9773e965bb"
+          },
+          {
+            "path": "test/core/templates/impact-sweeper-template.test.ts",
+            "hash": "3759319a0f2869884610f4e88a1283636a234b412759205b6f3cdfdd5cc22663"
+          },
+          {
+            "path": "test/core/templates/propose-template.test.ts",
+            "hash": "7bfc7e583954227b8ddd90f2b937d86084e4059ffe5e13dab34411c717b6e81e"
+          },
+          {
+            "path": "test/core/templates/skill-templates-parity.test.ts",
+            "hash": "7a973abce97bf0ea4a1d5ed916286cca4f24b85ffce233245c0ade40ba1a0588"
+          },
+          {
+            "path": "test/core/workflow-installation.test.ts",
+            "hash": "73deb90f1cb8c0e667cbbb1126f7a8534a132976996a6292ad55c427d13162f2"
+          },
+          {
+            "path": "test/skills/archive-skill-content.test.ts",
+            "hash": "4bf8f049f7be93fd88b179abd1c51675419c2e5223192f2c151235f138cca2a8"
+          },
+          {
+            "path": "test/skills/optimizer-skill-content.test.ts",
+            "hash": "78af1b1e2c8b934384121608edccd647e54700170f3598e09d603a4cb74b2f82"
+          },
+          {
+            "path": "test/skills/reviewer-skill-content.test.ts",
+            "hash": "1df4be37b6c00fac7c327dc3852750a6f466ea51e18cb7b03ba0c6c84d3d8d51"
+          },
+          {
+            "path": "test/skills/skill-template-length-validation.test.ts",
+            "hash": "6f1398e7892a97adf7b0524813b4e336264ebe5b06629d3734b9d92351398679"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "e19bbbb9c80c3f429dfdbd52e97a9bbd315f14d7"
+      }
+    }
+  }
+}

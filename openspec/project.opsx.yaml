@@ -386,3 +386,6 @@ capabilities:
   - id: cap.optimizer.tdd-smells
     intent: Optimizer Phase 2 扫描中的 Pocock 坏味道检测增强（长方法、浅模块、原始类型痴迷及现有维度的具体识别指标）
     type: capability
+  - id: cap.validation.skill-template-length
+    intent: 验证所有生成的 skill 模板 instructions 不超过 200 行
+    type: capability

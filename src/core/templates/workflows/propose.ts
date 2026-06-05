@@ -42,127 +42,26 @@ export function getOpsxProposeSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-propose',
     description: 'Propose a new change with all artifacts generated in one step. Use when the user wants to quickly describe what they want to build and get a complete proposal with design, specs, and tasks ready for implementation.',
-    instructions: `Propose a new change - create the change and generate all artifacts in one step.
+    instructions: `Propose a new change and generate all artifacts needed for implementation.
 
-I'll create a change with artifacts:
-- proposal.md (what & why)
-- design.md (how)
-- tasks.md (implementation steps)
-- opsx-delta.yaml (project OPSX delta, generated after specs are clear)
+## Flow
 
-When ready to implement, run /opsx:apply
+1. Input must identify a kebab-case change name or enough description to derive one. If unclear, ask what to build or fix.
+2. Apply smart routing before creating files: inspect the current conversation for an explore-generated \`Design Summary\`; if no summary exists, respect \`propose.smartRouting: false\` and \`propose.requireExplore: false\`, otherwise score the user's input across 5 dimensions. Detect multi-subsystem scope. Outcomes include: "Design Summary found: proceed and show that Design Summary is being used", "输入足够详细，跳过 explore，直接生成制品。", and "这个需求涉及多个独立子系统，建议先运行 \`/opsx:explore\` 进行拆解。". Show input length, detail score, multi-subsystem result, and final decision.
+3. Run \`openspec new change "<name>"\`, then \`openspec status --change "<name>" --json\` to read \`applyRequires\`, artifact order, dependencies, and schema.
+4. Before specs, run \`openspec list --specs --json\`; compare proposed capabilities to each spec's \`capabilities\` string array. Specs without frontmatter return \`capabilities: []\`. Reuse or modify existing coverage instead of duplicating specs.
+5. Use CLI-backed OPSX navigation: \`openspec list --specs --json\` and \`openspec opsx query <node-id> --json\` for known affected nodes.
+6. For each ready artifact, run \`openspec instructions <artifact-id> --change "<name>" --json\`, read dependencies, follow \`template\`, \`instruction\`, and \`outputPath\` exactly, and do not copy \`context\` or \`rules\` into artifact files.
+7. Continue until all \`applyRequires\` artifacts are \`done\`. If an artifact is unclear, ask one focused question and continue.
+8. After spec-driven specs are complete, generate \`opsx-delta.yaml\` from \`openspec instructions opsx-delta --change "<name>" --json\`; use \`schema_version: 1\`, \`ADDED:\`, \`MODIFIED:\`, and \`REMOVED:\` YAML keys and query existing nodes when needed.
+9. Run warning-only post-propose validation: This validation is warning-only. Do NOT turn \`/opsx:propose\` into a blocking gate. Prefer \`openspec validate "<name>" --type change --json\`; align with \`Validator.validateChangeDeltaSpecs()\`, SHALL/MUST requirement text, required \`#### Scenario:\` blocks, \`Validator.validateOpsxDelta()\`, \`applyOpsxDelta()\`, referential integrity, and code-map integrity. Do NOT run \`openspec sync\`; report when validation skips this check. For structure checks, read \`openspec instructions proposal --change "<name>" --json\`, \`openspec instructions design --change "<name>" --json\`, and \`openspec instructions tasks --change "<name>" --json\`; use \`validateTaskStructure\`, support Actions and coarse \`### Task N:\` with Goal, Files, Requirements, Checks, Covers:, Verifies:, change-local \`Verifies:\` spec paths, Requirement/Scenario references, Command:, Evidence:, and Expect:. Do NOT invent semantic lint rules beyond the current templates. Do NOT judge whether a check is semantically sufficient. If warnings appear, do exactly one repair pass, re-check once, and summarize remaining warnings.
+10. Finish with \`openspec status --change "<name>"\` and report artifacts created plus readiness for \`/opsx:apply\`.
 
----
-
-**Input**: The user's request should include a change name (kebab-case) OR a description of what they want to build.
-
-**Steps**
-
-1. **If no clear input provided, ask what they want to build**
-
-   Use the **AskUserQuestion tool** (open-ended, no preset options) to ask:
-   > "What change do you want to work on? Describe what you want to build or fix."
-
-   From their description, derive a kebab-case name (e.g., "add user authentication" → \`add-user-auth\`).
-
-   **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
-
-${SMART_ROUTING_GUIDANCE}
-
-2. **Create the change directory**
-   \`\`\`bash
-   openspec new change "<name>"
-   \`\`\`
-   This creates a scaffolded change at \`openspec/changes/<name>/\` with \`.openspec.yaml\`.
-
-3. **Get the artifact build order**
-   \`\`\`bash
-   openspec status --change "<name>" --json
-   \`\`\`
-   Parse the JSON to get:
-   - \`applyRequires\`: array of artifact IDs needed before implementation (e.g., \`["tasks"]\`)
-   - \`artifacts\`: list of all artifacts with their status and dependencies
-
-${OPSX_CLI_QUERY_CONTEXT}
-
-4. **Create artifacts in sequence until apply-ready**
-
-   Before creating specs, run:
-   \`\`\`bash
-   openspec list --specs --json
-   \`\`\`
-   Use each spec's \`capabilities\` string array to compare proposed capabilities against existing specs. Specs without frontmatter return \`capabilities: []\`. Reuse or modify the matching spec when it already covers the capability instead of creating a redundant spec.
-
-   Use the **TodoWrite tool** to track progress through the artifacts.
-
-   Loop through artifacts in dependency order (artifacts with no pending dependencies first):
-
-   a. **For each artifact that is \`ready\` (dependencies satisfied)**:
-      - Get instructions:
-        \`\`\`bash
-        openspec instructions <artifact-id> --change "<name>" --json
-        \`\`\`
-      - The instructions JSON includes:
-        - \`context\`: Project background (constraints for you - do NOT include in output)
-        - \`rules\`: Artifact-specific rules (constraints for you - do NOT include in output)
-        - \`template\`: The structure to use for your output file
-        - \`instruction\`: Schema-specific guidance for this artifact type
-        - \`outputPath\`: Where to write the artifact
-        - \`dependencies\`: Completed artifacts to read for context
-      - Read any completed dependency files for context
-      - Create the artifact file using \`template\` as the structure
-      - Apply \`context\` and \`rules\` as constraints - but do NOT copy them into the file
-      - Show brief progress: "Created <artifact-id>"
-
-   b. **Continue until all \`applyRequires\` artifacts are complete**
-      - After creating each artifact, re-run \`openspec status --change "<name>" --json\`
-      - Check if every artifact ID in \`applyRequires\` has \`status: "done"\` in the artifacts array
-      - Stop when all \`applyRequires\` artifacts are done
-
-   c. **If an artifact requires user input** (unclear context):
-      - Use **AskUserQuestion tool** to clarify
-      - Then continue with creation
-
-   d. **After the \`specs\` artifact is complete in a spec-driven change, generate \`opsx-delta.yaml\`**
-      ${OPSX_GENERATE_DELTA}
-
-5. **Run post-propose validation before the final summary**
-
-   ${OPSX_POST_PROPOSE_VALIDATION}
-
-6. **Show final status**
-   \`\`\`bash
-   openspec status --change "<name>"
-   \`\`\`
-
-**Output**
-
-After completing all artifacts, summarize:
-- Change name and location
-- List of artifacts created with brief descriptions
-- Validation summary with fixed warnings, remaining warnings, and skipped checks
-- What's ready: "All artifacts created! Ready for implementation."
-- Prompt: "Run \`/opsx:apply\` or ask me to implement to start working on the tasks."
-
-**Artifact Creation Guidelines**
-
-- Follow the \`instruction\` field from \`openspec instructions\` for each artifact type
-- The schema defines what each artifact should contain - follow it
-- Read dependency artifacts for context before creating new ones
-- Use \`template\` as the structure for your output file - fill in its sections
+## Artifact Contract
 
 ${ARTIFACT_DOC_LANGUAGE_CONTRACT}
 
-- **IMPORTANT**: \`context\` and \`rules\` are constraints for YOU, not content for the file
-  - Do NOT copy \`<context>\`, \`<rules>\`, \`<project_context>\` blocks into the artifact
-  - These guide what you write, but should never appear in the output
-
-**Guardrails**
-- Create ALL artifacts needed for implementation (as defined by schema's \`apply.requires\`)
-- Always read dependency artifacts before creating a new one
-- If context is critically unclear, ask the user - but prefer making reasonable decisions to keep momentum
-- If a change with that name already exists, ask if user wants to continue it or create a new one
-- Verify each artifact file exists after writing before proceeding to next`,
+Keep generated tasks coarse: \`### Task N:\`, \`Goal\`, \`Files\`, \`Requirements\`, and nested Checks. Keep each task to at most 5 Requirements. Preserve template structure, canonical headings, IDs, schema keys, paths, commands, BDD keywords, and code identifiers.`,
     license: 'MIT',
     compatibility: 'Requires openspec CLI.',
     metadata: { author: 'openspec', version: '1.0' },

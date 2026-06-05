@@ -122,176 +122,46 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
     description: 'Implement tasks from an OpenSpec change. Use when the user wants to start implementing, continue implementation, or work through tasks.',
     instructions: `Implement tasks from an OpenSpec change.
 
-**Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+## Flow
 
-**Steps**
+1. Select the change. If no clear name is provided, infer only from explicit context; otherwise run \`openspec list --json\` and ask. Always announce "Using change: <name>".
+2. Run \`openspec status --change "<name>" --json\` and \`openspec instructions apply --change "<name>" --json\`. Handle \`state: "needs_verify"\` by skip back to Phase 1 and \`state: "needs_seal"\` by continue with Phase 2/3.
+3. Read every context file listed by the CLI. Inspect \`changeDir/.verify-result.json\` and \`## Remediation\`; unresolved CRITICAL/code_fix/artifact_fix items take priority.
+4. Use OPSX context: \`openspec list --specs --json\`, each spec's \`capabilities\` string array, \`capabilities: []\`, and \`openspec opsx query <node-id> --json\`.
 
-1. **Select the change**
+### Branch Isolation Preflight
 
-   If a name is provided, use it. Otherwise:
-   - Infer from conversation context if the user mentioned a change
-   - Auto-select if only one active change exists
-   - If ambiguous, run \`openspec list --json\` to get available changes and use the **AskUserQuestion tool** to let the user select
+Run \`git branch --show-current\`. On main/master ask whether to Create branch \`<change-name>\`, Create worktree at \`.worktrees/<change-name>\`, or continue; config branch/worktree/none use that as the default choice without prompting; only \`ask\` is interactive and means prompt. Persist \`path.join(changeDir, '.apply-isolation.json')\`; use using-git-worktrees when present.
 
-   Always announce: "Using change: <name>" and how to override (e.g., \`/opsx:apply <other>\`).
+### Master Agent Strict TDD Implementation
 
-2. **Check status to understand the schema**
-   \`\`\`bash
-   openspec status --change "<name>" --json
-   \`\`\`
-   Parse the JSON to understand:
-   - \`schemaName\`: The workflow being used (e.g., "spec-driven")
-   - Which artifact contains the tasks (typically "tasks" for spec-driven, check status for others)
+For each pending task, read Goal, Files, Requirements, and Checks. For behavior or code Checks, add or update the targeted test before implementation. Run the declared Check command or equivalent targeted command and confirm the expected failure before implementation. Make the minimal implementation needed for that Check. Rerun the same or equivalent Check command and confirm pass before updating task or remediation checkboxes. Non-runtime text or artifact Checks do not require artificial red failures. Config, schema, template, workflow template, and agent instruction template Checks default to behavior/code Checks. Mark the task's nested Checks complete in \`tasks.md\` only after red/green evidence or final non-runtime evidence passes.
 
-3. **Get apply instructions**
+TDD Checkpoint 1: Interface Design for Testability — dependencies are injected through parameters, behavior returns values or observable results, and public interface area is minimal. TDD Checkpoint 2: Test Quality Standards — verifies behavior through public interfaces, avoids mocking internal project collaborators, keeps one logical assertion per test, and survives internal refactoring. TDD Checkpoint 3: Mock Boundary Enforcement — mocks are allowed only at system boundaries; internal classes, modules, and project-owned collaborators MUST NOT be mocked; mockable boundaries must be passed through dependency injection.
 
-   \`\`\`bash
-   openspec instructions apply --change "<name>" --json
-   \`\`\`
+### Continuous Recovery Protocol
 
-   This returns:
-   - Context file paths (varies by schema - could be proposal/specs/design/tasks or spec/tests/implementation/docs)
-   - Progress (total, complete, remaining)
-   - Task list with status
-   - Dynamic instruction based on current state
+Failures are recovery feedback. Normalize as \`task + check + command + failure kind\`; pause only after two consecutive failures for the same task and same normalized error signature. A changed normalized error signature is progress. If a task Goal or Requirements is ambiguous, enrich context from proposal, design, change-local specs, tasks.md, OPSX code-map, related specs, and project search. If project context is missing, convert the gap into verifiable exploration or check steps in the current task and continue execution. Phase 1 failures enter the same recovery loop. User interrupt remains an immediate stop condition.
 
-   **Handle states:**
-   - If \`state: "blocked"\` (missing artifacts): show message, suggest using openspec-continue-change
-   - If \`state: "needs_verify"\`: skip back to Phase 1 and run canonical verification
-   - If \`state: "needs_seal"\`: skip implementation and continue with Phase 2/3
-   - If \`state: "all_done"\`: congratulate, suggest archive
-   - Otherwise: proceed to implementation
+### Phase 1: Run canonical verification
 
-4. **Read context files**
+Invoke reviewer subagent, persist \`openspec verify phase1 "<change-name>" --input '<json>' --json\`, and write back only CRITICAL remediation.
 
-   ${OPSX_CLI_QUERY_CONTEXT}
+### Phase 2: Optimize under checkpoint protection
 
-   Read the files listed in \`contextFiles\` from the apply instructions output.
-   The files depend on the schema being used:
-   - **spec-driven**: proposal, specs, design, tasks
-   - Other schemas: follow the contextFiles from CLI output
-   - Build \`path.join(changeDir, '.verify-result.json')\` and check whether the previous verify result exists
-   - Read \`.verify-result.json\` defensively: newer results may include an \`optimization\` object in addition to \`result\`, \`issues\`, and \`verificationContext\`
-   - If the file exists and \`result === 'FAIL_NEEDS_REMEDIATION'\`:
-     - Read the persisted \`issues\` array
-     - Keep only CRITICAL issues as mandatory remediation context
-   - If \`optimization.status\` is \`DEGRADED\` or \`ABORTED_UNSAFE\`, treat it as advisory context only; do NOT let it override the canonical Phase 1 remediation signal
-   - If \`tasks.md\` contains a \`## Remediation\` section:
-     - Parse each checkbox item
-     - Track whether the item is tagged \`[code_fix]\` or \`[artifact_fix]\`
-     - Treat unchecked remediation items as priority work
+Respect \`--skip-optimization\`; read \`optimization.optRetries\`; create \`apply-opt-checkpoint-r0\`; invoke Optimizer subagent; use \`openspec verify phase2\`; record each failed direction.
 
-${ARTIFACT_DOC_LANGUAGE_CONTRACT}
+### Phase 3: Seal final result
 
-5. **Show current progress**
+Run \`openspec verify seal "<change-name>" --json\`. If seal fails, preserve diagnostics, convert them into remediation context, map the remediation to the affected task, and return to Phase 0 recovery. Do not pause on the first seal failure.
 
-   Display:
-   - Schema being used
-   - Progress: "N/M tasks complete"
-   - Remaining tasks overview
-   - Summary of prior CRITICAL verify issues when \`.verify-result.json\` reports \`FAIL_NEEDS_REMEDIATION\`
-   - Summary of open remediation items grouped by \`[code_fix]\` and \`[artifact_fix]\`
-   - Dynamic instruction from CLI
+${VERIFY_CLI_JSON_SCHEMA_REFERENCE}
+${VERIFY_ERROR_RECOVERY_GUIDE}
+${VERIFY_STATE_MACHINE_DIAGRAM}
 
-6. **Phase 0: Implement tasks (loop until done or blocked)**
+## Output
 
-${APPLY_STRICT_TDD_IMPLEMENTATION}
-
-   For each pending task:
-   - Show which task is being implemented
-   - If the task was unmarked by verify, inject the matching CRITICAL issue and remediation item into the working context before editing files
-   - Prioritize unchecked remediation entries before unrelated polish work
-   - For \`[code_fix]\` remediation items, update code/tests until the missing behavior is implemented
-   - For \`[artifact_fix]\` remediation items, update the affected spec/design/tasks artifact instead of forcing code changes
-   - Keep changes minimal and focused
-   - Mark task nested checks complete in the tasks file after implementation evidence passes
-   - Mark resolved remediation items complete in the \`## Remediation\` section
-   - Continue to next task
-
-   **Pause if:**
-   - Task remains unclear after reading proposal, design, change-local specs, tasks, OPSX code-map, related specs, and nearby project files
-   - Implementation reveals a requirements scope change that cannot be represented as local artifact or task remediation
-   - The same task and same normalized error signature reaches the Continuous Recovery Protocol pause threshold
-   - User interrupts
-
-${APPLY_VERIFY_PHASES}
-
-10. **On completion or pause, show status**
-
-   Display:
-   - Tasks completed this session
-   - Overall progress: "N/M tasks complete"
-   - If remediation items were resolved, report that Phase 1 must pass before archive
-   - If all done: suggest archive
-   - If paused: explain why and wait for guidance
-
-**Output During Implementation**
-
-\`\`\`
-## Implementing: <change-name> (schema: <schema-name>)
-
-Working on task 3/7: <task description>
-[...implementation happening...]
-✓ Task complete
-
-Working on task 4/7: <task description>
-[...implementation happening...]
-✓ Task complete
-\`\`\`
-
-**Output On Completion**
-
-\`\`\`
-## Implementation Complete
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Progress:** 7/7 tasks complete ✓
-
-### Completed This Session
-- [x] Task 1
-- [x] Task 2
-...
-
-All tasks complete and sealed. Ready to archive this change.
-\`\`\`
-
-**Output On Pause (Issue Encountered)**
-
-\`\`\`
-## Implementation Paused
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Progress:** 4/7 tasks complete
-
-### Issue Encountered
-<description of the issue>
-
-**Options:**
-1. <option 1>
-2. <option 2>
-3. Other approach
-
-What would you like to do?
-\`\`\`
-
-**Guardrails**
-- Keep going through tasks until done or blocked
-- Always read context files before starting (from the apply instructions output)
-- If task is ambiguous, enrich context before asking
-- If implementation reveals issues, first attempt scoped artifact, test, or implementation remediation
-- Keep code changes minimal and scoped to each task
-- Update task checkbox immediately after completing each task
-- Pause on user interrupt, requirements scope changes, or repeated identical task error signatures after remediation
-- Use contextFiles from CLI output, don't assume specific file names
-
-**Fluid Workflow Integration**
-
-This skill supports the "actions on a change" model:
-
-- **Can be invoked anytime**: Before all artifacts are done (if tasks exist), after partial implementation, interleaved with other actions
-- **Allows artifact updates**: If implementation reveals design issues, suggest updating artifacts - not phase-locked, work fluidly`,
+Report schema, progress, current task, completed tasks this session, and final sealed/archive-ready status. Keep edits minimal, use Node path handling for generated paths, update task checkboxes only after evidence passes, and preserve canonical artifact headings/tokens and configured document language projection.`,
     license: 'MIT',
     compatibility: 'Requires openspec CLI.',
     metadata: { author: 'openspec', version: '1.0' },

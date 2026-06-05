@@ -360,6 +360,25 @@ describe('skill-generation', () => {
       expect(content).not.toContain('PLACEHOLDER');
     });
 
+    it('does not inline reference files into SKILL.md content', () => {
+      const template = {
+        name: 'reference-test',
+        description: 'Test references',
+        instructions: 'Read references/details.md when needed.',
+        referenceFiles: [
+          {
+            path: 'references/details.md',
+            content: 'Detailed protocol',
+          },
+        ],
+      };
+
+      const content = generateSkillContent(template, '0.23.0');
+
+      expect(content).toContain('Read references/details.md when needed.');
+      expect(content).not.toContain('Detailed protocol');
+    });
+
     it('should transform workflow references to precise codex skill names', () => {
       const template = {
         name: 'codex-transform',

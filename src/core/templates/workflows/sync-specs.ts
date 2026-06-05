@@ -7,6 +7,96 @@
 import type { SkillTemplate, CommandTemplate } from '../types.js';
 import { OPSX_SYNC_DELTA } from '../fragments/opsx-fragments.js';
 
+const SYNC_DELTA_FORMAT_REFERENCE = `# Delta Spec Format Reference
+
+\`\`\`markdown
+## ADDED Requirements
+
+### Requirement: New Feature
+The system SHALL do something new.
+
+#### Scenario: Basic case
+- **WHEN** user does X
+- **THEN** system does Y
+
+## MODIFIED Requirements
+
+### Requirement: Existing Feature
+#### Scenario: New scenario to add
+- **WHEN** user does A
+- **THEN** system does B
+
+## REMOVED Requirements
+
+### Requirement: Deprecated Feature
+
+## RENAMED Requirements
+
+- FROM: \`### Requirement: Old Name\`
+- TO: \`### Requirement: New Name\`
+\`\`\``;
+
+const SYNC_MERGE_RULES_REFERENCE = `# Sync Merge Rules
+
+## Key Principle: Intelligent Merging
+
+Unlike programmatic merging, you can apply **partial updates**:
+- To add a scenario, just include that scenario under MODIFIED - don't copy existing scenarios
+- The delta represents *intent*, not a wholesale replacement
+- Use your judgment to merge changes sensibly
+
+## Requirement Actions
+
+**ADDED Requirements:**
+- If requirement doesn't exist in main spec, add it
+- If requirement already exists, update it to match and treat as implicit MODIFIED
+
+**MODIFIED Requirements:**
+- Find the requirement in main spec
+- Apply the changes, including adding new scenarios, modifying existing scenarios, or changing the requirement description
+- Preserve scenarios/content not mentioned in the delta
+
+**REMOVED Requirements:**
+- Remove the entire requirement block from main spec
+
+**RENAMED Requirements:**
+- Find the FROM requirement, rename to TO
+
+**New main spec:**
+- Create \`openspec/specs/<capability>/spec.md\`
+- Add a brief Purpose section, mark as TBD when needed
+- Add Requirements with the ADDED requirements
+
+## Guardrails
+
+- Read both delta and main specs before making changes
+- Preserve existing content not mentioned in delta
+- If something is unclear, ask for clarification
+- Show what you're changing as you go
+- The operation should be idempotent - running twice should give same result`;
+
+const SYNC_OUTPUT_REFERENCE = `# Sync Output Example
+
+\`\`\`
+## Specs Synced: <change-name>
+
+Updated main specs:
+
+**<capability-1>**:
+- Added requirement: "New Feature"
+- Modified requirement: "Existing Feature" (added 1 scenario)
+
+**<capability-2>**:
+- Created new spec file
+- Added requirement: "Another Feature"
+
+OPSX delta synced:
+- Nodes: X added, Y modified, Z removed
+- Relations: X added, Y modified, Z removed
+
+Main specs are now updated. The change remains active - archive when implementation is complete.
+\`\`\``;
+
 export function getSyncSpecsSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-sync-specs',
@@ -52,36 +142,9 @@ Treat \`openspec/config.yaml\` as the compact source of truth and follow the sha
 
 3. **For each delta spec, apply changes to main specs**
 
-   For each capability with a delta spec at \`openspec/changes/<name>/specs/<capability>/spec.md\`:
+   For each capability with a delta spec at \`openspec/changes/<name>/specs/<capability>/spec.md\`, read the delta spec and the main spec at \`openspec/specs/<capability>/spec.md\` if it exists.
 
-   a. **Read the delta spec** to understand the intended changes
-
-   b. **Read the main spec** at \`openspec/specs/<capability>/spec.md\` (may not exist yet)
-
-   c. **Apply changes intelligently**:
-
-      **ADDED Requirements:**
-      - If requirement doesn't exist in main spec → add it
-      - If requirement already exists → update it to match (treat as implicit MODIFIED)
-
-      **MODIFIED Requirements:**
-      - Find the requirement in main spec
-      - Apply the changes - this can be:
-        - Adding new scenarios (don't need to copy existing ones)
-        - Modifying existing scenarios
-        - Changing the requirement description
-      - Preserve scenarios/content not mentioned in the delta
-
-      **REMOVED Requirements:**
-      - Remove the entire requirement block from main spec
-
-      **RENAMED Requirements:**
-      - Find the FROM requirement, rename to TO
-
-   d. **Create new main spec** if capability doesn't exist yet:
-      - Create \`openspec/specs/<capability>/spec.md\`
-      - Add Purpose section (can be brief, mark as TBD)
-      - Add Requirements section with the ADDED requirements
+   Follow references/merge-rules.md for ADDED, MODIFIED, REMOVED, RENAMED, and new main spec handling.
 
 4. **Sync OPSX delta**
 
@@ -96,70 +159,27 @@ ${OPSX_SYNC_DELTA}
    - What changes were made (requirements added/modified/removed/renamed)
    - OPSX delta sync results (if applicable): nodes added/modified/removed, relations added/modified/removed
 
-**Delta Spec Format Reference**
+**Required References**
 
-\`\`\`markdown
-## ADDED Requirements
+Read these before editing specs:
 
-### Requirement: New Feature
-The system SHALL do something new.
-
-#### Scenario: Basic case
-- **WHEN** user does X
-- **THEN** system does Y
-
-## MODIFIED Requirements
-
-### Requirement: Existing Feature
-#### Scenario: New scenario to add
-- **WHEN** user does A
-- **THEN** system does B
-
-## REMOVED Requirements
-
-### Requirement: Deprecated Feature
-
-## RENAMED Requirements
-
-- FROM: \`### Requirement: Old Name\`
-- TO: \`### Requirement: New Name\`
-\`\`\`
-
-**Key Principle: Intelligent Merging**
-
-Unlike programmatic merging, you can apply **partial updates**:
-- To add a scenario, just include that scenario under MODIFIED - don't copy existing scenarios
-- The delta represents *intent*, not a wholesale replacement
-- Use your judgment to merge changes sensibly
-
-**Output On Success**
-
-\`\`\`
-## Specs Synced: <change-name>
-
-Updated main specs:
-
-**<capability-1>**:
-- Added requirement: "New Feature"
-- Modified requirement: "Existing Feature" (added 1 scenario)
-
-**<capability-2>**:
-- Created new spec file
-- Added requirement: "Another Feature"
-
-OPSX delta synced:
-- Nodes: X added, Y modified, Z removed
-- Relations: X added, Y modified, Z removed
-
-Main specs are now updated. The change remains active - archive when implementation is complete.
-\`\`\`
-
-**Guardrails**
-- Read both delta and main specs before making changes
-- Preserve existing content not mentioned in delta
-- If something is unclear, ask for clarification
-- Show what you're changing as you go
-- The operation should be idempotent - running twice should give same result`,
+- references/delta-format.md
+- references/merge-rules.md
+- references/output-example.md`,
+    referenceFiles: [
+      {
+        path: 'references/delta-format.md',
+        content: SYNC_DELTA_FORMAT_REFERENCE,
+      },
+      {
+        path: 'references/merge-rules.md',
+        content: SYNC_MERGE_RULES_REFERENCE,
+      },
+      {
+        path: 'references/output-example.md',
+        content: SYNC_OUTPUT_REFERENCE,
+      },
+    ],
     license: 'MIT',
     compatibility: 'Requires openspec CLI.',
     metadata: { author: 'openspec', version: '1.0' },

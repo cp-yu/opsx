@@ -198,9 +198,15 @@ export function getPlannedToolArtifacts(
   }
 
   const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
-  const skillFiles = plan.expectedSkillDirNames.map((dirName) =>
-    path.join(skillsDir, dirName, 'SKILL.md')
-  );
+  const skillFiles = plan.skillTemplates.flatMap((entry) => {
+    const skillDir = path.join(skillsDir, entry.dirName);
+    return [
+      path.join(skillDir, 'SKILL.md'),
+      ...(entry.template.referenceFiles ?? []).map((referenceFile) =>
+        path.join(skillDir, referenceFile.path)
+      ),
+    ];
+  });
 
   if (!toolSupportsCommandGeneration(toolId)) {
     return { skillFiles, commandFiles: [] };

@@ -1,0 +1,10 @@
+schema_version: 1
+ADDED:
+  capabilities:
+    - id: cap.validation.skill-template-length
+      type: capability
+      intent: 验证所有生成的 skill 模板 instructions 不超过 200 行
+  relations:
+    - from: cap.validation.skill-template-length
+      type: contains
+      to: dom.validation
