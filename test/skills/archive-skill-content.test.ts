@@ -42,10 +42,11 @@ describe('openspec archive skill content', () => {
     expect(instructions).toContain('Feature Branch');
   });
 
-  it('states archive consumes git policy from compiled prompt projection', () => {
+  it('states archive consumes git policy from project config command output', () => {
     const instructions = getArchiveChangeSkillTemplate().instructions;
 
-    expect(instructions).toContain('compiled prompt projection');
+    expect(instructions).toContain('openspec config project --json');
+    expect(instructions).toContain('normalized project config');
     expect(instructions).toContain('git.merge.strategy');
     expect(instructions).toContain('git.merge.messageFrom');
     expect(instructions).toContain('git.branch.deleteAfterArchive');

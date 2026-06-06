@@ -122,7 +122,7 @@ export class InitCommand {
     // The resolved value is consumed later when generation reads effective config.
     this.resolveProfileOverride();
 
-    const docLanguage = await this.promptForDocLanguage(projectPath);
+    const proseLanguage = await this.promptForProseLanguage(projectPath);
 
     // Get tool states before processing
     const toolStates = getToolStates(projectPath);
@@ -145,10 +145,10 @@ export class InitCommand {
     const results = await this.generateSkillsAndCommands(projectPath, validatedTools);
 
     // Create config.yaml if needed
-    const configStatus = await this.createConfig(openspecPath, docLanguage);
+    const configStatus = await this.createConfig(openspecPath, proseLanguage);
 
     // Display success message
-    this.displaySuccessMessage(projectPath, validatedTools, results, configStatus, extendMode, docLanguage);
+    this.displaySuccessMessage(projectPath, validatedTools, results, configStatus, extendMode, proseLanguage);
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -639,16 +639,16 @@ nodes: []
   // CONFIG FILE
   // ═══════════════════════════════════════════════════════════
 
-  private async promptForDocLanguage(projectPath: string): Promise<string | undefined> {
+  private async promptForProseLanguage(projectPath: string): Promise<string | undefined> {
     if (!this.canPromptInteractively()) {
       return undefined;
     }
 
-    const currentDocLanguage = readProjectConfig(projectPath)?.docLanguage;
+    const currentProseLanguage = readProjectConfig(projectPath)?.proseLanguage;
     const { input } = await import('@inquirer/prompts');
     const response = await input({
       message: 'OpenSpec document language (optional, e.g. en, zh-CN, pt-BR)',
-      default: currentDocLanguage ?? '',
+      default: currentProseLanguage ?? '',
       validate: (value: string) => {
         if (value.trim().length === 0) {
           return true;
@@ -661,9 +661,9 @@ nodes: []
     return normalized.length > 0 ? normalized : undefined;
   }
 
-  private async writeDocLanguage(
+  private async writeProseLanguage(
     configPath: string,
-    docLanguage: string
+    proseLanguage: string
   ): Promise<void> {
     const content = await fs.promises.readFile(configPath, 'utf-8');
     const document = parseDocument(content);
@@ -676,13 +676,13 @@ nodes: []
       throw new Error(`${path.basename(configPath)} must contain a YAML object`);
     }
 
-    document.set('docLanguage', docLanguage);
+    document.set('proseLanguage', proseLanguage);
     await FileSystemUtils.writeFile(configPath, String(document));
   }
 
   private async createConfig(
     openspecPath: string,
-    docLanguage?: string
+    proseLanguage?: string
   ): Promise<'created' | 'updated' | 'exists' | 'skipped'> {
     const configPath = path.join(openspecPath, 'config.yaml');
     const configYmlPath = path.join(openspecPath, 'config.yml');
@@ -691,10 +691,10 @@ nodes: []
     const existingConfigPath = configYamlExists ? configPath : configYmlExists ? configYmlPath : null;
 
     if (existingConfigPath) {
-      if (!docLanguage) {
+      if (!proseLanguage) {
         return 'exists';
       }
-      await this.writeDocLanguage(existingConfigPath, docLanguage);
+      await this.writeProseLanguage(existingConfigPath, proseLanguage);
       return 'updated';
     }
 
@@ -704,7 +704,7 @@ nodes: []
     }
 
     try {
-      const yamlContent = serializeConfig({ schema: DEFAULT_SCHEMA, docLanguage });
+      const yamlContent = serializeConfig({ schema: DEFAULT_SCHEMA, proseLanguage });
       await FileSystemUtils.writeFile(configPath, yamlContent);
       return 'created';
     } catch {
@@ -731,7 +731,7 @@ nodes: []
     },
     configStatus: 'created' | 'updated' | 'exists' | 'skipped',
     extendMode: boolean,
-    docLanguage?: string
+    proseLanguage?: string
   ): void {
     console.log();
     console.log(chalk.bold('OpenSpec Setup Complete'));
@@ -778,10 +778,10 @@ nodes: []
 
     // Config status
     if (configStatus === 'created') {
-      const details = docLanguage ? `schema: ${DEFAULT_SCHEMA}, docLanguage: ${docLanguage}` : `schema: ${DEFAULT_SCHEMA}`;
+      const details = proseLanguage ? `schema: ${DEFAULT_SCHEMA}, proseLanguage: ${proseLanguage}` : `schema: ${DEFAULT_SCHEMA}`;
       console.log(`Config: openspec/config.yaml (${details})`);
     } else if (configStatus === 'updated') {
-      console.log(`Config: openspec/config.yaml (updated docLanguage: ${docLanguage})`);
+      console.log(`Config: openspec/config.yaml (updated proseLanguage: ${proseLanguage})`);
     } else if (configStatus === 'exists') {
       // Show actual filename (config.yaml or config.yml)
       const configYaml = path.join(projectPath, OPENSPEC_DIR_NAME, 'config.yaml');

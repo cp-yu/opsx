@@ -22,6 +22,8 @@ import {
   type ApplyInstructions,
 } from './shared.js';
 import { checkArchiveCompatibility, checkFreshness } from '../../core/verify/freshness.js';
+import { readProjectConfig } from '../../core/project-config.js';
+import { buildConfigProjectionBundle } from '../../core/config-projection.js';
 
 // -----------------------------------------------------------------------------
 // Types
@@ -346,6 +348,9 @@ export async function generateApplyInstructions(
   // loadChangeContext will auto-detect schema from metadata if not provided
   const context = loadChangeContext(projectRoot, changeName, schemaName);
   const changeDir = context.changeDir;
+  const configProjection = buildConfigProjectionBundle(readProjectConfig(projectRoot), {
+    surface: 'apply',
+  });
 
   // Get the full schema to access the apply phase configuration
   const schema = resolveSchema(context.schemaName, projectRoot);
@@ -425,6 +430,7 @@ export async function generateApplyInstructions(
     changeDir,
     schemaName: context.schemaName,
     contextFiles,
+    configProjection,
     progress: { total, complete, remaining },
     tasks,
     state,
@@ -463,7 +469,7 @@ export async function applyInstructionsCommand(options: ApplyInstructionsOptions
 }
 
 export function printApplyInstructionsText(instructions: ApplyInstructions): void {
-  const { changeName, schemaName, contextFiles, progress, tasks, state, missingArtifacts, instruction } = instructions;
+  const { changeName, schemaName, contextFiles, configProjection, progress, tasks, state, missingArtifacts, instruction } = instructions;
 
   console.log(`## Apply: ${changeName}`);
   console.log(`Schema: ${schemaName}`);
@@ -497,6 +503,20 @@ export function printApplyInstructionsText(instructions: ApplyInstructions): voi
         console.log(`- ${artifactId}: ${filePath}`);
       }
     }
+    console.log();
+  }
+
+  if (configProjection.prompt.compiledLines.length > 0) {
+    console.log('<config_projection>');
+    console.log('<!-- This is the compiled config contract. Do NOT copy it into implementation artifacts. -->');
+    for (const fragment of configProjection.prompt.fragments) {
+      console.log(`<fragment key="${fragment.key}" scope="${fragment.scope}">`);
+      for (const line of fragment.lines) {
+        console.log(line);
+      }
+      console.log('</fragment>');
+    }
+    console.log('</config_projection>');
     console.log();
   }
 

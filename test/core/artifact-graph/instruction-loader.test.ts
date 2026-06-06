@@ -444,13 +444,13 @@ rules:
         expect(instructions.template).toContain('## Why');
       });
 
-      it('should expose docLanguage through the compiled projection bundle', () => {
+      it('should expose proseLanguage through the compiled projection bundle', () => {
         const configDir = path.join(tempDir, 'openspec');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
           `schema: spec-driven
-docLanguage: 中文
+proseLanguage: 中文
 rules:
   proposal:
     - Keep rationale concise

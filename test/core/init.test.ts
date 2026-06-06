@@ -111,7 +111,7 @@ describe('InitCommand', () => {
       expect(parsed).not.toHaveProperty('docLanguage');
     });
 
-    it('should write docLanguage to config.yaml during interactive init', async () => {
+    it('should write proseLanguage to config.yaml during interactive init', async () => {
       const initCommand = new InitCommand({ force: true });
       vi.spyOn(initCommand as any, 'canPromptInteractively').mockReturnValue(true);
       vi.spyOn(initCommand as any, 'getSelectedTools').mockResolvedValue(['claude']);
@@ -122,7 +122,7 @@ describe('InitCommand', () => {
       const configPath = path.join(testDir, 'openspec', 'config.yaml');
       const content = await fs.readFile(configPath, 'utf-8');
       expect(content).toContain('schema: spec-driven');
-      expect(content).toContain('docLanguage: zh-CN');
+      expect(content).toContain('proseLanguage: zh-CN');
     });
 
     it('should create core profile skills for Claude Code by default', async () => {
@@ -378,7 +378,7 @@ describe('InitCommand', () => {
       expect(await fileExists(cursorSkill)).toBe(true);
     });
 
-    it('should update existing config.yaml with docLanguage in extend mode', async () => {
+    it('should update existing config.yaml with proseLanguage in extend mode', async () => {
       const openspecDir = path.join(testDir, 'openspec');
       await fs.mkdir(openspecDir, { recursive: true });
       await fs.writeFile(
@@ -397,7 +397,7 @@ context: |
       await initCommand.execute(testDir);
 
       const content = await fs.readFile(path.join(openspecDir, 'config.yaml'), 'utf-8');
-      expect(content).toContain('docLanguage: ja');
+      expect(content).toContain('proseLanguage: ja');
       expect(content).toContain('Existing project context');
     });
 

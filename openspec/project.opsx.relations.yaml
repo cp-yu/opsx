@@ -507,3 +507,12 @@ relations:
   - from: cap.validation.skill-template-length
     type: contains
     to: dom.validation
+  - from: cap.cli.config.project
+    type: contains
+    to: dom.cli
+  - from: cap.cli.config.project
+    type: depends_on
+    to: cap.cli.config
+  - from: cap.config.apply-projection
+    type: contains
+    to: dom.config

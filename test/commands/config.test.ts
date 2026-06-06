@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
+import { Command } from 'commander';
 
 describe('config command integration', () => {
   // These tests use real file system operations with XDG_CONFIG_HOME override
@@ -113,6 +114,7 @@ describe('config command shell completion registry', () => {
     expect(subcommandNames).toContain('unset');
     expect(subcommandNames).toContain('reset');
     expect(subcommandNames).toContain('edit');
+    expect(subcommandNames).toContain('project');
   });
 
   it('should have --json flag on list subcommand', async () => {
@@ -154,6 +156,118 @@ describe('config command shell completion registry', () => {
     const flagNames = configCmd?.flags?.map((f) => f.name) ?? [];
 
     expect(flagNames).toContain('scope');
+  });
+});
+
+describe('config project command', () => {
+  let tempDir: string;
+  let originalCwd: string;
+  let consoleLogSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    tempDir = path.join(os.tmpdir(), `openspec-project-config-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    fs.mkdirSync(tempDir, { recursive: true });
+    originalCwd = process.cwd();
+    process.chdir(tempDir);
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    process.chdir(originalCwd);
+    fs.rmSync(tempDir, { recursive: true, force: true });
+    consoleLogSpy.mockRestore();
+    vi.resetModules();
+  });
+
+  async function runProjectCommand(args: string[]): Promise<void> {
+    const { registerConfigCommand } = await import('../../src/commands/config.js');
+    const program = new Command();
+    registerConfigCommand(program);
+    await program.parseAsync(['node', 'openspec', 'config', 'project', ...args]);
+  }
+
+  it('prints normalized project config as JSON', async () => {
+    fs.mkdirSync(path.join(tempDir, 'openspec'), { recursive: true });
+    fs.writeFileSync(
+      path.join(tempDir, 'openspec', 'config.yaml'),
+      `schema: spec-driven
+proseLanguage: 中文
+context: Project context
+optimization:
+  enabled: false
+  optRetries: 1
+propose:
+  smartRouting: false
+apply:
+  defaultIsolation: branch
+git:
+  merge:
+    strategy: squash
+    messageFrom: manual
+  branch:
+    deleteAfterArchive: true
+rules:
+  proposal:
+    - Keep it short
+`,
+      'utf-8'
+    );
+
+    await runProjectCommand(['--json']);
+
+    const output = JSON.parse(consoleLogSpy.mock.calls[0][0]);
+    expect(output).toEqual({
+      schema: 'spec-driven',
+      proseLanguage: '中文',
+      context: 'Project context',
+      optimization: {
+        enabled: false,
+        optRetries: 1,
+      },
+      propose: {
+        smartRouting: false,
+      },
+      apply: {
+        defaultIsolation: 'branch',
+      },
+      git: {
+        merge: {
+          strategy: 'squash',
+          messageFrom: 'manual',
+        },
+        branch: {
+          deleteAfterArchive: true,
+        },
+      },
+      rules: {
+        proposal: ['Keep it short'],
+      },
+    });
+  });
+
+  it('prints minimal JSON when config.yaml is missing', async () => {
+    await runProjectCommand(['--json']);
+
+    expect(JSON.parse(consoleLogSpy.mock.calls[0][0])).toEqual({ rules: {} });
+  });
+
+  it('prints YAML-like text without --json', async () => {
+    fs.mkdirSync(path.join(tempDir, 'openspec'), { recursive: true });
+    fs.writeFileSync(
+      path.join(tempDir, 'openspec', 'config.yaml'),
+      `schema: spec-driven
+proseLanguage: 中文
+rules: {}
+`,
+      'utf-8'
+    );
+
+    await runProjectCommand([]);
+
+    const output = consoleLogSpy.mock.calls[0][0];
+    expect(output).toContain('schema: spec-driven');
+    expect(output).toContain('proseLanguage: 中文');
+    expect(output).toContain('rules: {}');
   });
 });
 

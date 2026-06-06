@@ -1,0 +1,24 @@
+schema_version: 1
+ADDED:
+  capabilities:
+    - id: cap.cli.config.project
+      type: capability
+      intent: 通过 CLI 查询归一化项目配置（openspec config project --json），供 skill agent 获取配置投影
+    - id: cap.config.apply-projection
+      type: capability
+      intent: openspec instructions apply 命令输出包含 configProjection，使 apply skill 能读取项目级配置
+  relations:
+    - from: cap.cli.config.project
+      type: contains
+      to: dom.cli
+    - from: cap.cli.config.project
+      type: depends_on
+      to: cap.cli.config
+    - from: cap.config.apply-projection
+      type: contains
+      to: dom.config
+
+MODIFIED:
+  capabilities:
+    - id: cap.cli.config
+      intent: 查看和修改全局 OpenSpec 配置，查询归一化项目配置

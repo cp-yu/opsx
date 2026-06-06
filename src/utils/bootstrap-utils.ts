@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { FileSystemUtils } from './file-system.js';
 import {
   getRuntimeFingerprintInput,
-  isChineseDocLanguage,
+  isChineseProseLanguage,
   projectConfigForRuntime,
   type RuntimeProjection,
 } from '../core/config-projection.js';
@@ -1990,7 +1990,7 @@ function localizeBootstrapText(
   projection: RuntimeProjection,
   text: { en: string; zh: string }
 ): string {
-  return isChineseDocLanguage(projection.proseLanguage) ? text.zh : text.en;
+  return isChineseProseLanguage(projection.proseLanguage) ? text.zh : text.en;
 }
 
 async function writeBootstrapMetadata(projectRoot: string, metadata: BootstrapMetadata): Promise<void> {

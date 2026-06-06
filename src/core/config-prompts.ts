@@ -14,7 +14,7 @@ export function serializeConfig(config: Partial<ProjectConfig>): string {
   const materialized = config.schema
     ? materializeProjectConfigDefaults({
         schema: config.schema,
-        docLanguage: config.docLanguage,
+        proseLanguage: config.proseLanguage,
       })
     : config;
 
@@ -27,9 +27,9 @@ export function serializeConfig(config: Partial<ProjectConfig>): string {
   lines.push('# Applies only to natural-language body text in artifacts.');
   lines.push('# Keep template headings, IDs, schema keys, commands, and code tokens unchanged.');
   lines.push('# Example:');
-  lines.push('#   docLanguage: zh-CN');
-  if (materialized.docLanguage) {
-    lines.push(`docLanguage: ${materialized.docLanguage}`);
+  lines.push('#   proseLanguage: zh-CN');
+  if (materialized.proseLanguage) {
+    lines.push(`proseLanguage: ${materialized.proseLanguage}`);
   }
   lines.push('');
 

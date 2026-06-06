@@ -192,7 +192,7 @@ describe('OPSX shared context fragments', () => {
       getVerifyChangeSkillTemplate().instructions,
       getOnboardSkillTemplate().instructions,
     ]) {
-      expect(template).toMatch(/projection|canonical/i);
+      expect(template).toMatch(/projection|canonical|config project/i);
     }
   });
 });

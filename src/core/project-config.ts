@@ -62,11 +62,16 @@ export const ProjectConfigSchema = z.object({
     .describe('The workflow schema to use (e.g., "spec-driven")'),
 
   // Optional: natural-language prose language for OpenSpec artifacts
-  docLanguage: z
+  proseLanguage: z
     .string()
     .min(1)
     .optional()
     .describe('Language for natural-language prose in OpenSpec artifacts'),
+  docLanguage: z
+    .string()
+    .min(1)
+    .optional()
+    .describe('Deprecated alias for proseLanguage'),
 
   // Optional: project context (injected into all artifact instructions)
   // Max size: 50KB (enforced during parsing)
@@ -136,7 +141,7 @@ export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
 const MAX_CONTEXT_SIZE = 50 * 1024; // 50KB hard limit
 
 type MaterializedProjectConfigDefaults = Pick<ProjectConfig, 'schema'> &
-  Partial<Pick<ProjectConfig, 'docLanguage'>> & {
+  Partial<Pick<ProjectConfig, 'proseLanguage'>> & {
     optimization: typeof PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.optimization;
     apply: typeof PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.apply;
     git: typeof PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git;
@@ -162,11 +167,11 @@ function cloneFunctionalDefaults() {
 }
 
 export function materializeProjectConfigDefaults(
-  config: Pick<ProjectConfig, 'schema'> & Partial<Pick<ProjectConfig, 'docLanguage'>>
+  config: Pick<ProjectConfig, 'schema'> & Partial<Pick<ProjectConfig, 'proseLanguage'>>
 ): MaterializedProjectConfigDefaults {
   const defaults = cloneFunctionalDefaults();
-  return config.docLanguage
-    ? { schema: config.schema, docLanguage: config.docLanguage, ...defaults }
+  return config.proseLanguage
+    ? { schema: config.schema, proseLanguage: config.proseLanguage, ...defaults }
     : { schema: config.schema, ...defaults };
 }
 
@@ -293,13 +298,22 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
       console.warn(`Invalid 'schema' field in config (must be non-empty string)`);
     }
 
-    // Parse docLanguage field using Zod
-    if (raw.docLanguage !== undefined) {
-      const docLanguageField = z.string().min(1);
-      const docLanguageResult = docLanguageField.safeParse(raw.docLanguage);
+    // Parse proseLanguage field using Zod, with docLanguage as a legacy fallback.
+    if (raw.proseLanguage !== undefined) {
+      const proseLanguageField = z.string().min(1);
+      const proseLanguageResult = proseLanguageField.safeParse(raw.proseLanguage);
 
-      if (docLanguageResult.success) {
-        config.docLanguage = docLanguageResult.data;
+      if (proseLanguageResult.success) {
+        config.proseLanguage = proseLanguageResult.data;
+      } else {
+        console.warn(`Invalid 'proseLanguage' field in config (must be non-empty string)`);
+      }
+    } else if (raw.docLanguage !== undefined) {
+      const proseLanguageField = z.string().min(1);
+      const proseLanguageResult = proseLanguageField.safeParse(raw.docLanguage);
+
+      if (proseLanguageResult.success) {
+        config.proseLanguage = proseLanguageResult.data;
       } else {
         console.warn(`Invalid 'docLanguage' field in config (must be non-empty string)`);
       }

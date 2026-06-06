@@ -343,6 +343,13 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         ],
       },
       {
+        name: 'project',
+        description: 'Show normalized project-level configuration',
+        flags: [
+          COMMON_FLAGS.json,
+        ],
+      },
+      {
         name: 'get',
         description: 'Get a specific value (raw, scriptable)',
         acceptsPositional: true,

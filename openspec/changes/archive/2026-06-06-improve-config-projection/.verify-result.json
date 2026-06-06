@@ -1,0 +1,283 @@
+{
+  "timestamp": "2026-06-06T13:09:34.601Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "acd5f81708d385b33f78546ca0bab4b1338d0809526f2c75d7044884a6333dfa",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-openspec-reviewer",
+    "evidenceFiles": [
+      "openspec/changes/improve-config-projection/design.md",
+      "openspec/changes/improve-config-projection/opsx-delta.yaml",
+      "openspec/changes/improve-config-projection/proposal.md",
+      "openspec/changes/improve-config-projection/specs/config-apply-projection/spec.md",
+      "openspec/changes/improve-config-projection/specs/config-loading/spec.md",
+      "openspec/changes/improve-config-projection/specs/config-project-query/spec.md",
+      "openspec/changes/improve-config-projection/tasks.md",
+      "openspec/config.yaml",
+      "src/commands/config.ts",
+      "src/commands/workflow/instructions.ts",
+      "src/core/artifact-graph/instruction-loader.ts",
+      "src/core/config-projection.ts",
+      "src/core/project-config.ts",
+      "src/core/specs-apply.ts",
+      "src/core/templates/workflows/apply-change.ts",
+      "src/core/templates/workflows/archive-change.ts",
+      "src/core/templates/workflows/propose.ts",
+      "src/utils/bootstrap-utils.ts",
+      "test/commands/artifact-workflow.test.ts",
+      "test/commands/config.test.ts",
+      "test/core/artifact-graph/instruction-loader.test.ts",
+      "test/core/project-config.test.ts"
+    ],
+    "evidenceFingerprint": "4b2041e9ca3fb5beeaa52a4e5cbf6f68dcfa71ee52d53264b0f7431a55c26cd3",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/improve-config-projection/design.md",
+        "hash": "a220d5c76f3ec7a3510390f7bf701c95a882b13dc807ad3fdc91701a5ccb106b"
+      },
+      {
+        "path": "openspec/changes/improve-config-projection/opsx-delta.yaml",
+        "hash": "1afbd6d4561c73105a5dccb2e31e63a0effb98350464af0c5fea941799e7b055"
+      },
+      {
+        "path": "openspec/changes/improve-config-projection/proposal.md",
+        "hash": "c9d7bdc9dd7f7d956ab68849d47a2dd9475fb0e283b272930d57d90374a1c026"
+      },
+      {
+        "path": "openspec/changes/improve-config-projection/specs/config-apply-projection/spec.md",
+        "hash": "5f85256172412d12ac1a0f829787c6da6b68ac092c3a2fde287d9dbb20496267"
+      },
+      {
+        "path": "openspec/changes/improve-config-projection/specs/config-loading/spec.md",
+        "hash": "fe820af5818017db1e658245a8aa4639569b96be182317c04cb72dbd8162ed33"
+      },
+      {
+        "path": "openspec/changes/improve-config-projection/specs/config-project-query/spec.md",
+        "hash": "94201ef932d2fdfac9a32267b26355abc70f0c4c1844d44e933e1e134243720a"
+      },
+      {
+        "path": "openspec/changes/improve-config-projection/tasks.md",
+        "hash": "acd5f81708d385b33f78546ca0bab4b1338d0809526f2c75d7044884a6333dfa"
+      },
+      {
+        "path": "openspec/config.yaml",
+        "hash": "a71b5c2b29c2f9c493ba09958b91db9c5cb8df0c6fb1b6fcc0db3061c9f15050"
+      },
+      {
+        "path": "src/commands/config.ts",
+        "hash": "82fd6a597d1e80277e8280e1ac72eed4a0365a5000511d9481c753573873c00a"
+      },
+      {
+        "path": "src/commands/workflow/instructions.ts",
+        "hash": "f1ea2f39d71365f8996637f1623142ca1db01a46ab1a02375be90687400f23bb"
+      },
+      {
+        "path": "src/core/artifact-graph/instruction-loader.ts",
+        "hash": "376537958646d775b4b4c56fd061b2de686de755fab7befbb45228dfd0f0f2c7"
+      },
+      {
+        "path": "src/core/config-projection.ts",
+        "hash": "f209f28204599e489687429bdf57b198c28dd5b33e40d4333dd4a78af6c82403"
+      },
+      {
+        "path": "src/core/project-config.ts",
+        "hash": "8f7b0494abeb8cb52e59531bb87b1ff421f872c5c4197d300006789dd5bdc800"
+      },
+      {
+        "path": "src/core/specs-apply.ts",
+        "hash": "80f882f733723d8f2425a97dc7bca61d1ec9972ef5791d7ce2739abcf9447385"
+      },
+      {
+        "path": "src/core/templates/workflows/apply-change.ts",
+        "hash": "4995c93987c521d11032d87fc80db3235a5f0ce7b9ed3d68add6f62d46f46d5d"
+      },
+      {
+        "path": "src/core/templates/workflows/archive-change.ts",
+        "hash": "870240804616ae63fb79abf374845df97a0390648493420d0fd216186263fce8"
+      },
+      {
+        "path": "src/core/templates/workflows/propose.ts",
+        "hash": "083cbdd71d2f2f2bb9e4bdc2c784a86b384086c606506ceb3e5b2a1512b6f07d"
+      },
+      {
+        "path": "src/utils/bootstrap-utils.ts",
+        "hash": "b72e5e11e4e23be87f65165b87ca283051e4b2357725bbad9c1a57d75680c9d2"
+      },
+      {
+        "path": "test/commands/artifact-workflow.test.ts",
+        "hash": "80e998f92b0aa3fa134a1bb5d99fe585d6ef9272e6c4ac712e8bed4a999dddf5"
+      },
+      {
+        "path": "test/commands/config.test.ts",
+        "hash": "03bd7f9a78679bd0ee828a3736537c90f3d7868ee56bc59379dd64797e7e3a58"
+      },
+      {
+        "path": "test/core/artifact-graph/instruction-loader.test.ts",
+        "hash": "3cba37e0f300e83edb1b427653ae9a81abc4bd83f8da1e19cd151ee0215dfd6c"
+      },
+      {
+        "path": "test/core/project-config.test.ts",
+        "hash": "138f4eac4a7273886f0ea13d7521b0f39b8b01f44ec261acb7e742029c59a0c1"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "d77e0fc397a63d319df2e8ccfbefca47485c7d59"
+  },
+  "optimization": {
+    "status": "IMPROVED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-06T13:10:05.584Z",
+        "type": "optimization",
+        "status": "OPTIMIZATION_PROPOSED",
+        "summary": "Extract shared artifact-rules projection fragment construction in src/core/config-projection.ts; behavior-preserving helper extraction proposed by optimizer subagent.",
+        "files": [
+          "src/core/config-projection.ts"
+        ]
+      },
+      {
+        "timestamp": "2026-06-06T13:11:17.752Z",
+        "type": "verification",
+        "result": "PASS",
+        "summary": "Build passed; focused projection/config/workflow suites passed; full suite previously passed with this exact helper extraction.",
+        "behaviorRetryCounter": 1
+      }
+    ],
+    "affectedFileHashes": {
+      "src/core/config-projection.ts": "4d84d84a94745987640a56cba569fd11df162fe042a1946c716090f465656c01"
+    },
+    "baseline": {
+      "timestamp": "2026-06-06T13:09:34.601Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "acd5f81708d385b33f78546ca0bab4b1338d0809526f2c75d7044884a6333dfa",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-openspec-reviewer",
+        "evidenceFiles": [
+          "openspec/changes/improve-config-projection/design.md",
+          "openspec/changes/improve-config-projection/opsx-delta.yaml",
+          "openspec/changes/improve-config-projection/proposal.md",
+          "openspec/changes/improve-config-projection/specs/config-apply-projection/spec.md",
+          "openspec/changes/improve-config-projection/specs/config-loading/spec.md",
+          "openspec/changes/improve-config-projection/specs/config-project-query/spec.md",
+          "openspec/changes/improve-config-projection/tasks.md",
+          "openspec/config.yaml",
+          "src/commands/config.ts",
+          "src/commands/workflow/instructions.ts",
+          "src/core/artifact-graph/instruction-loader.ts",
+          "src/core/config-projection.ts",
+          "src/core/project-config.ts",
+          "src/core/specs-apply.ts",
+          "src/core/templates/workflows/apply-change.ts",
+          "src/core/templates/workflows/archive-change.ts",
+          "src/core/templates/workflows/propose.ts",
+          "src/utils/bootstrap-utils.ts",
+          "test/commands/artifact-workflow.test.ts",
+          "test/commands/config.test.ts",
+          "test/core/artifact-graph/instruction-loader.test.ts",
+          "test/core/project-config.test.ts"
+        ],
+        "evidenceFingerprint": "6baed9d08a655bd48658ba22cc95e706ed389d7aae1bf586d1a76fbdce7ac8eb",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/improve-config-projection/design.md",
+            "hash": "a220d5c76f3ec7a3510390f7bf701c95a882b13dc807ad3fdc91701a5ccb106b"
+          },
+          {
+            "path": "openspec/changes/improve-config-projection/opsx-delta.yaml",
+            "hash": "1afbd6d4561c73105a5dccb2e31e63a0effb98350464af0c5fea941799e7b055"
+          },
+          {
+            "path": "openspec/changes/improve-config-projection/proposal.md",
+            "hash": "c9d7bdc9dd7f7d956ab68849d47a2dd9475fb0e283b272930d57d90374a1c026"
+          },
+          {
+            "path": "openspec/changes/improve-config-projection/specs/config-apply-projection/spec.md",
+            "hash": "5f85256172412d12ac1a0f829787c6da6b68ac092c3a2fde287d9dbb20496267"
+          },
+          {
+            "path": "openspec/changes/improve-config-projection/specs/config-loading/spec.md",
+            "hash": "fe820af5818017db1e658245a8aa4639569b96be182317c04cb72dbd8162ed33"
+          },
+          {
+            "path": "openspec/changes/improve-config-projection/specs/config-project-query/spec.md",
+            "hash": "94201ef932d2fdfac9a32267b26355abc70f0c4c1844d44e933e1e134243720a"
+          },
+          {
+            "path": "openspec/changes/improve-config-projection/tasks.md",
+            "hash": "acd5f81708d385b33f78546ca0bab4b1338d0809526f2c75d7044884a6333dfa"
+          },
+          {
+            "path": "openspec/config.yaml",
+            "hash": "a71b5c2b29c2f9c493ba09958b91db9c5cb8df0c6fb1b6fcc0db3061c9f15050"
+          },
+          {
+            "path": "src/commands/config.ts",
+            "hash": "82fd6a597d1e80277e8280e1ac72eed4a0365a5000511d9481c753573873c00a"
+          },
+          {
+            "path": "src/commands/workflow/instructions.ts",
+            "hash": "f1ea2f39d71365f8996637f1623142ca1db01a46ab1a02375be90687400f23bb"
+          },
+          {
+            "path": "src/core/artifact-graph/instruction-loader.ts",
+            "hash": "376537958646d775b4b4c56fd061b2de686de755fab7befbb45228dfd0f0f2c7"
+          },
+          {
+            "path": "src/core/config-projection.ts",
+            "hash": "4d84d84a94745987640a56cba569fd11df162fe042a1946c716090f465656c01"
+          },
+          {
+            "path": "src/core/project-config.ts",
+            "hash": "8f7b0494abeb8cb52e59531bb87b1ff421f872c5c4197d300006789dd5bdc800"
+          },
+          {
+            "path": "src/core/specs-apply.ts",
+            "hash": "80f882f733723d8f2425a97dc7bca61d1ec9972ef5791d7ce2739abcf9447385"
+          },
+          {
+            "path": "src/core/templates/workflows/apply-change.ts",
+            "hash": "4995c93987c521d11032d87fc80db3235a5f0ce7b9ed3d68add6f62d46f46d5d"
+          },
+          {
+            "path": "src/core/templates/workflows/archive-change.ts",
+            "hash": "870240804616ae63fb79abf374845df97a0390648493420d0fd216186263fce8"
+          },
+          {
+            "path": "src/core/templates/workflows/propose.ts",
+            "hash": "083cbdd71d2f2f2bb9e4bdc2c784a86b384086c606506ceb3e5b2a1512b6f07d"
+          },
+          {
+            "path": "src/utils/bootstrap-utils.ts",
+            "hash": "b72e5e11e4e23be87f65165b87ca283051e4b2357725bbad9c1a57d75680c9d2"
+          },
+          {
+            "path": "test/commands/artifact-workflow.test.ts",
+            "hash": "80e998f92b0aa3fa134a1bb5d99fe585d6ef9272e6c4ac712e8bed4a999dddf5"
+          },
+          {
+            "path": "test/commands/config.test.ts",
+            "hash": "03bd7f9a78679bd0ee828a3736537c90f3d7868ee56bc59379dd64797e7e3a58"
+          },
+          {
+            "path": "test/core/artifact-graph/instruction-loader.test.ts",
+            "hash": "3cba37e0f300e83edb1b427653ae9a81abc4bd83f8da1e19cd151ee0215dfd6c"
+          },
+          {
+            "path": "test/core/project-config.test.ts",
+            "hash": "138f4eac4a7273886f0ea13d7521b0f39b8b01f44ec261acb7e742029c59a0c1"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "d77e0fc397a63d319df2e8ccfbefca47485c7d59"
+      }
+    },
+    "final": {
+      "result": "PASS",
+      "issues": [],
+      "summary": "Build passed; focused projection/config/workflow suites passed; full suite previously passed with this exact helper extraction."
+    }
+  }
+}
