@@ -489,6 +489,22 @@ describe('artifact-workflow CLI commands', () => {
 
     it('outputs JSON for apply instructions', async () => {
       await createTestChange('json-apply', ['proposal', 'design', 'specs', 'tasks']);
+      await fs.writeFile(
+        path.join(tempDir, 'openspec', 'config.yaml'),
+        `schema: spec-driven
+proseLanguage: 中文
+apply:
+  defaultIsolation: branch
+git:
+  merge:
+    strategy: no-ff
+    messageFrom: artifacts
+  branch:
+    deleteAfterArchive: false
+rules: {}
+`,
+        'utf-8'
+      );
 
       const result = await runCLI(
         ['instructions', 'apply', '--change', 'json-apply', '--json'],
@@ -509,6 +525,36 @@ describe('artifact-workflow CLI commands', () => {
       expect(typeof json.contextFiles).toBe('object');
       expect(json.contextFiles.proposal).toEqual([expectedProposalPath]);
       expect(json.contextFiles.specs).toEqual([expectedSpecPath]);
+      expect(json.configProjection.normalized.proseLanguage).toBe('中文');
+      expect(json.configProjection.normalized.apply).toEqual({ defaultIsolation: 'branch' });
+      expect(json.configProjection.prompt.fragments).toEqual([
+        expect.objectContaining({ key: 'proseLanguage', scope: 'global' }),
+        expect.objectContaining({ key: 'apply', scope: 'global' }),
+      ]);
+    });
+
+    it('prints config projection in text apply instructions', async () => {
+      await createTestChange('text-apply-projection', ['proposal', 'design', 'specs', 'tasks']);
+      await fs.writeFile(
+        path.join(tempDir, 'openspec', 'config.yaml'),
+        `schema: spec-driven
+proseLanguage: 中文
+apply:
+  defaultIsolation: worktree
+rules: {}
+`,
+        'utf-8'
+      );
+
+      const result = await runCLI(['instructions', 'apply', '--change', 'text-apply-projection'], {
+        cwd: tempDir,
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain('<config_projection>');
+      expect(result.stdout).toContain('<fragment key="proseLanguage" scope="global">');
+      expect(result.stdout).toContain('Use 中文 for natural-language prose');
+      expect(result.stdout).toContain('apply.defaultIsolation: worktree');
     });
 
     it('parses coarse tasks as apply progress and task items', async () => {

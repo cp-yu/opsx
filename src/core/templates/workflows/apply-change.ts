@@ -134,7 +134,7 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
 ## Flow
 
 1. Select the change. If no clear name is provided, infer only from explicit context; otherwise run \`openspec list --json\` and ask. Always announce "Using change: <name>".
-2. Run \`openspec status --change "<name>" --json\` and \`openspec instructions apply --change "<name>" --json\`. Handle \`state: "needs_verify"\` by skip back to Phase 1 and \`state: "needs_seal"\` by continue with Phase 2/3.
+2. Run \`openspec status --change "<name>" --json\` and \`openspec instructions apply --change "<name>" --json\`. Read \`configProjection.prompt.fragments\` for \`proseLanguage\` and \`apply.defaultIsolation\`. Handle \`state: "needs_verify"\` by skip back to Phase 1 and \`state: "needs_seal"\` by continue with Phase 2/3.
 3. Read every context file listed by the CLI. Inspect \`changeDir/.verify-result.json\` and \`## Remediation\`; unresolved CRITICAL/code_fix/artifact_fix items take priority.
 4. Use OPSX context: \`openspec list --specs --json\`, each spec's \`capabilities\` string array, \`capabilities: []\`, and \`openspec opsx query <node-id> --json\`.
 

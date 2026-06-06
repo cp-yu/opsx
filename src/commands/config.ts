@@ -28,6 +28,8 @@ import {
 import { OPENSPEC_DIR_NAME } from '../core/config.js';
 import { hasProjectConfigDrift } from '../core/profile-sync-drift.js';
 import { getWorkflowPromptMeta, normalizeWorkflowIds } from '../core/shared/index.js';
+import { readProjectConfig } from '../core/project-config.js';
+import { normalizeProjectConfig } from '../core/config-projection.js';
 
 type ProfileAction = 'both' | 'delivery' | 'workflows' | 'keep';
 
@@ -230,6 +232,22 @@ export function registerConfigCommand(program: Command): void {
           console.log(`  workflows: (none)`);
         }
       }
+    });
+
+  // config project
+  configCmd
+    .command('project')
+    .description('Show normalized project-level configuration')
+    .option('--json', 'Output as JSON')
+    .action((options: { json?: boolean }) => {
+      const normalized = normalizeProjectConfig(readProjectConfig(process.cwd()));
+
+      if (options.json) {
+        console.log(JSON.stringify(normalized, null, 2));
+        return;
+      }
+
+      console.log(formatValueYaml(normalized));
     });
 
   // config get

@@ -174,7 +174,7 @@ capabilities:
     intent: 管理 OpenSpec CLI 的 shell 补全，COMMAND_REGISTRY 现已包含 verify 命令及其子命令 phase1、phase2、seal、status
     type: capability
   - id: cap.cli.config
-    intent: 查看和修改全局 OpenSpec 配置
+    intent: 查看和修改全局 OpenSpec 配置，查询归一化项目配置
     status: active
     type: capability
   - id: cap.cli.feedback
@@ -388,4 +388,10 @@ capabilities:
     type: capability
   - id: cap.validation.skill-template-length
     intent: 验证所有生成的 skill 模板 instructions 不超过 200 行
+    type: capability
+  - id: cap.cli.config.project
+    intent: 通过 CLI 查询归一化项目配置（openspec config project --json），供 skill agent 获取配置投影
+    type: capability
+  - id: cap.config.apply-projection
+    intent: openspec instructions apply 命令输出包含 configProjection，使 apply skill 能读取项目级配置
     type: capability

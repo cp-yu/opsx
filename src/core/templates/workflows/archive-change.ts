@@ -42,7 +42,7 @@ function buildArchiveInstructions(
 
 **Input**: ${inputLine}
 
-Treat \`openspec/config.yaml\` as the compact source of truth and consume git policy from the compiled prompt projection: \`git.merge.strategy\`, \`git.merge.messageFrom\`, and \`git.branch.deleteAfterArchive\`; do not parse raw YAML inside the skill.
+Before archiving, run \`openspec config project --json\` and consume git policy from its normalized project config: \`git.merge.strategy\`, \`git.merge.messageFrom\`, and \`git.branch.deleteAfterArchive\`; do not parse raw YAML inside the skill.
 
 **Steps**
 

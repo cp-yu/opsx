@@ -54,19 +54,19 @@ describe('project-config', () => {
           },
         },
       });
-      expect(defaults).not.toHaveProperty('docLanguage');
+      expect(defaults).not.toHaveProperty('proseLanguage');
       expect(defaults).not.toHaveProperty('context');
       expect(defaults).not.toHaveProperty('rules');
       expect(defaults).not.toHaveProperty('propose');
     });
 
-    it('should preserve explicit docLanguage without adding other optional fields', () => {
+    it('should preserve explicit proseLanguage without adding other optional fields', () => {
       const defaults = materializeProjectConfigDefaults({
         schema: 'spec-driven',
-        docLanguage: 'zh-CN',
+        proseLanguage: 'zh-CN',
       });
 
-      expect(defaults.docLanguage).toBe('zh-CN');
+      expect(defaults.proseLanguage).toBe('zh-CN');
       expect(defaults).not.toHaveProperty('context');
       expect(defaults).not.toHaveProperty('rules');
       expect(defaults).not.toHaveProperty('propose');
@@ -293,7 +293,7 @@ git: disabled
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
           `schema: spec-driven
-docLanguage: zh-CN
+proseLanguage: zh-CN
 context: |
   Tech stack: TypeScript, React
   API style: RESTful
@@ -310,7 +310,7 @@ rules:
 
         expect(config).toEqual({
           schema: 'spec-driven',
-          docLanguage: 'zh-CN',
+          proseLanguage: 'zh-CN',
           context: 'Tech stack: TypeScript, React\nAPI style: RESTful\n',
           git: {
             merge: {
@@ -326,6 +326,41 @@ rules:
             specs: ['Use Given/When/Then format'],
           },
         });
+        expect(consoleWarnSpy).not.toHaveBeenCalled();
+      });
+
+      it('should migrate legacy docLanguage when proseLanguage is absent', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+docLanguage: zh-CN
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config?.proseLanguage).toBe('zh-CN');
+        expect(config).not.toHaveProperty('docLanguage');
+        expect(consoleWarnSpy).not.toHaveBeenCalled();
+      });
+
+      it('should prefer proseLanguage over legacy docLanguage', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: spec-driven
+proseLanguage: 中文
+docLanguage: zh-CN
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config?.proseLanguage).toBe('中文');
+        expect(config).not.toHaveProperty('docLanguage');
         expect(consoleWarnSpy).not.toHaveBeenCalled();
       });
 
@@ -603,13 +638,13 @@ rules:
         );
       });
 
-      it('should return partial config when docLanguage is invalid', () => {
+      it('should return partial config when proseLanguage is invalid', () => {
         const configDir = path.join(tempDir, 'openspec');
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
           `schema: spec-driven
-docLanguage: 123
+proseLanguage: 123
 context: Valid context
 `
         );
@@ -630,7 +665,7 @@ context: Valid context
           },
         });
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining("Invalid 'docLanguage' field")
+          expect.stringContaining("Invalid 'proseLanguage' field")
         );
       });
 
@@ -1140,7 +1175,7 @@ rules:
     it('normalizes whitespace while preserving whitelist fields', () => {
       const normalized = normalizeProjectConfig({
         schema: ' spec-driven ',
-        docLanguage: ' 中文 ',
+        proseLanguage: ' 中文 ',
         context: '  Team context  ',
         optimization: {
           enabled: false,
@@ -1170,7 +1205,7 @@ rules:
 
       expect(normalized).toEqual({
         schema: 'spec-driven',
-        docLanguage: '中文',
+        proseLanguage: '中文',
         context: 'Team context',
         optimization: {
           enabled: false,
@@ -1202,7 +1237,7 @@ rules:
       const bundle = buildConfigProjectionBundle(
         {
           schema: 'spec-driven',
-          docLanguage: '中文',
+          proseLanguage: '中文',
           context: 'Tech stack: TypeScript',
           rules: {
             proposal: ['Include rollback plan'],
@@ -1217,7 +1252,7 @@ rules:
         specs: ['Use Given/When/Then'],
       });
       expect(bundle.prompt.fragments).toEqual([
-        expect.objectContaining({ key: 'docLanguage', scope: 'global' }),
+        expect.objectContaining({ key: 'proseLanguage', scope: 'global' }),
         expect.objectContaining({ key: 'context', scope: 'global' }),
         expect.objectContaining({ key: 'rules', scope: 'artifact', lines: ['Include rollback plan'] }),
       ]);
@@ -1338,11 +1373,11 @@ rules:
       ]);
     });
 
-    it('omits invalid or missing fields from runtime projection and marks docLanguage as fingerprint-affecting', () => {
+    it('omits invalid or missing fields from runtime projection and marks proseLanguage as fingerprint-affecting', () => {
       const runtimeProjection = projectConfigForRuntime(
         {
           schema: 'spec-driven',
-          docLanguage: '中文',
+          proseLanguage: '中文',
           rules: {},
         },
         { consumer: 'bootstrap-review' }
@@ -1352,7 +1387,7 @@ rules:
       expect(runtimeProjection.affectsFingerprint).toBe(true);
       expect(runtimeProjection.forbidHardcodedEnglishBoilerplate).toBe(true);
       expect(runtimeProjection.fragments).toEqual([
-        expect.objectContaining({ key: 'docLanguage' }),
+        expect.objectContaining({ key: 'proseLanguage' }),
       ]);
     });
   });

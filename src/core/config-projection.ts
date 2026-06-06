@@ -2,7 +2,7 @@ import type { ProjectConfig } from './project-config.js';
 
 export interface NormalizedProjectConfig {
   schema?: string;
-  docLanguage?: string;
+  proseLanguage?: string;
   context?: string;
   optimization?: {
     enabled: boolean;
@@ -45,7 +45,7 @@ export interface ProjectionScope {
 }
 
 export interface ProjectionFragment {
-  key: 'docLanguage' | 'context' | 'rules' | 'git';
+  key: 'proseLanguage' | 'context' | 'rules' | 'git' | 'apply';
   scope: 'global' | 'artifact';
   lines: string[];
 }
@@ -116,7 +116,7 @@ export function normalizeProjectConfig(config: ProjectConfig | null): Normalized
 
   return {
     schema: normalizeString(config.schema),
-    docLanguage: normalizeString(config.docLanguage),
+    proseLanguage: normalizeString(config.proseLanguage),
     context: normalizeString(config.context),
     optimization: config.optimization
       ? {
@@ -150,40 +150,60 @@ export function normalizeProjectConfig(config: ProjectConfig | null): Normalized
   };
 }
 
-function buildDocLanguageLines(docLanguage: string): string[] {
+function buildProseLanguageLines(proseLanguage: string): string[] {
   return [
-    `Use ${docLanguage} for natural-language prose that you newly write or revise.`,
+    `Use ${proseLanguage} for natural-language prose that you newly write or revise.`,
     'Preserve canonical tokens unchanged: SHALL, MUST, section headers, scenario headers, BDD keywords, IDs, schema keys, paths, commands, and code identifiers.',
   ];
 }
 
+function buildArtifactRulesFragment(
+  config: NormalizedProjectConfig,
+  scope: ProjectionScope
+): ProjectionFragment | null {
+  if (!scope.artifactId) {
+    return null;
+  }
+
+  const rules = config.rules[scope.artifactId];
+  if (!rules || rules.length === 0) {
+    return null;
+  }
+
+  return {
+    key: 'rules',
+    scope: 'artifact',
+    lines: rules,
+  };
+}
+
 const projectionRules: ProjectionRule[] = [
   {
-    key: 'docLanguage',
+    key: 'proseLanguage',
     buildPrompt(config) {
-      if (!config.docLanguage) {
+      if (!config.proseLanguage) {
         return null;
       }
 
       return {
-        key: 'docLanguage',
+        key: 'proseLanguage',
         scope: 'global',
-        lines: buildDocLanguageLines(config.docLanguage),
+        lines: buildProseLanguageLines(config.proseLanguage),
       };
     },
     buildRuntime(config) {
-      if (!config.docLanguage) {
+      if (!config.proseLanguage) {
         return null;
       }
 
       return {
-        key: 'docLanguage',
+        key: 'proseLanguage',
         scope: 'global',
-        lines: buildDocLanguageLines(config.docLanguage),
+        lines: buildProseLanguageLines(config.proseLanguage),
       };
     },
     affectsFingerprint(config) {
-      return Boolean(config.docLanguage);
+      return Boolean(config.proseLanguage);
     },
   },
   {
@@ -217,36 +237,10 @@ const projectionRules: ProjectionRule[] = [
   {
     key: 'rules',
     buildPrompt(config, scope) {
-      if (!scope.artifactId) {
-        return null;
-      }
-
-      const rules = config.rules[scope.artifactId];
-      if (!rules || rules.length === 0) {
-        return null;
-      }
-
-      return {
-        key: 'rules',
-        scope: 'artifact',
-        lines: rules,
-      };
+      return buildArtifactRulesFragment(config, scope);
     },
     buildRuntime(config, scope) {
-      if (!scope.artifactId) {
-        return null;
-      }
-
-      const rules = config.rules[scope.artifactId];
-      if (!rules || rules.length === 0) {
-        return null;
-      }
-
-      return {
-        key: 'rules',
-        scope: 'artifact',
-        lines: rules,
-      };
+      return buildArtifactRulesFragment(config, scope);
     },
     affectsFingerprint() {
       return false;
@@ -283,6 +277,28 @@ const projectionRules: ProjectionRule[] = [
           `git.branch.deleteAfterArchive: ${config.git.branch.deleteAfterArchive}`,
         ],
       };
+    },
+    affectsFingerprint() {
+      return false;
+    },
+  },
+  {
+    key: 'apply',
+    buildPrompt(config, scope) {
+      if (scope.surface !== 'apply' || !config.apply) {
+        return null;
+      }
+
+      return {
+        key: 'apply',
+        scope: 'global',
+        lines: [
+          `apply.defaultIsolation: ${config.apply.defaultIsolation}`,
+        ],
+      };
+    },
+    buildRuntime() {
+      return null;
     },
     affectsFingerprint() {
       return false;
@@ -327,9 +343,9 @@ export function projectConfigForRuntime(
     artifactId: scope.artifactId,
     fragments,
     git: scope.consumer === 'archive' ? normalized.git : undefined,
-    proseLanguage: normalized.docLanguage,
+    proseLanguage: normalized.proseLanguage,
     preserveCanonicalTokens: true,
-    forbidHardcodedEnglishBoilerplate: Boolean(normalized.docLanguage),
+    forbidHardcodedEnglishBoilerplate: Boolean(normalized.proseLanguage),
     affectsFingerprint: projectionRules.some((rule) => rule.affectsFingerprint(normalized, runtimeScope)),
     canonicalTokenPolicy: CANONICAL_TOKEN_POLICY,
   };
@@ -345,12 +361,12 @@ export function buildConfigProjectionBundle(
   };
 }
 
-export function isChineseDocLanguage(docLanguage: string | undefined): boolean {
-  if (!docLanguage) {
+export function isChineseProseLanguage(proseLanguage: string | undefined): boolean {
+  if (!proseLanguage) {
     return false;
   }
 
-  const normalized = docLanguage.trim().toLowerCase();
+  const normalized = proseLanguage.trim().toLowerCase();
   return normalized === 'zh'
     || normalized === 'zh-cn'
     || normalized === 'zh-hans'
