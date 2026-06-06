@@ -25,6 +25,155 @@ import {
   type VerifyExecutionModel,
 } from './verify-execution-model.js';
 
+const PHASE2_CHECKPOINT_PROTOCOL_REFERENCE = `# Phase 2 Checkpoint Protocol
+
+Phase 2 is only eligible when the canonical Phase 1 \`result\` is \`PASS\` or \`PASS_WITH_WARNINGS\`.
+
+## Configuration
+
+- Read \`optimization.enabled\` from \`openspec/config.yaml\`; default it to \`true\` when the field is absent
+- Read \`optimization.optRetries\` from \`openspec/config.yaml\`; default it to \`2\` when the field is absent
+- Respect a user-provided \`--skip-optimization\` flag if the workflow surface supports flags
+
+## Skip Optimization
+
+If the user passed \`--skip-optimization\` or config disables optimization:
+- Call \`openspec verify phase2 "<change-name>" --type=optimization --input '{"status":"SKIPPED"}' --json\`
+- Keep the canonical Phase 1 \`result\` unchanged
+
+## Checkpoint State Machine
+
+For all changes including pure deletions, renames, or parameter removals, the optimizer subagent MUST be spawned; the master agent MUST NOT self-determine that no optimization is needed.
+
+Run an explicit checkpoint state machine:
+
+| State | Trigger condition | Git operation |
+| --- | --- | --- |
+| \`CREATED\` | Before applying any optimization edits | \`git stash push -u -m "verify-phase2-checkpoint"\`; record the exact stash entry or hash |
+| \`BASELINE_RESTORED_FOR_RETRY\` | Retry after speculative reverify failure | \`git stash apply <checkpointRef>\`; restore the canonical Phase 1 baseline while preserving the checkpoint |
+| \`TERMINAL_ACCEPTED\` | Optimized result is accepted | \`git stash drop <checkpointRef>\`; consume the checkpoint after acceptance |
+| \`TERMINAL_RESTORED\` | Final rollback succeeds | \`git stash pop <checkpointRef>\` or equivalent restore-then-drop sequence; restore baseline and consume the checkpoint |
+
+## Hard Rules
+
+- Record the exact stash entry or hash before applying any optimization edits
+- Immediately restore the canonical Phase 1 baseline into the worktree while keeping the checkpoint available, for example with \`git stash apply <checkpointRef>\`
+- If checkpoint creation or baseline restoration fails:
+  - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
+  - Preserve the stash entry whenever manual recovery still depends on it
+  - Report that the canonical Phase 1 result was preserved but checkpoint recovery is required
+  - Stop before applying any optimization edits
+- Treat \`git stash apply <checkpointRef>\` as the retry-only restore path
+- Treat \`git stash pop <checkpointRef>\` as the preferred terminal restore path once no further retries are allowed
+- Any branch that still outputs manual recovery instructions MUST NOT run \`git stash drop <checkpointRef>\` first
+
+## Optimizer Integration
+
+Use the **Agent tool** to spawn a clean-context optimizer subagent that invokes the \`openspec-optimizer\` skill.
+The coordinator MUST NOT use external wrapper scripts or binaries.
+
+Pass the following location inputs in the subagent prompt:
+- \`changeName\`: the selected change name
+- \`changeDir\`: absolute path to the change directory
+- \`projectRoot\`: absolute path to the project root
+
+The \`openspec-optimizer\` skill defines: role and hard constraints, input contract,
+self-read protocol for \`.verify-result.json\`, prioritized optimization principles
+(5 categories + prohibition list), Search/Replace block output format, and failed
+directions avoidance protocol.
+
+The optimizer subagent MUST return only Search/Replace blocks or exactly
+\`No optimization opportunities found\`; it MUST NOT edit files directly or through Bash.
+It reads Phase 1 result, evidence files, config, and failedDirections itself from disk.
+The coordinator MUST wait for the complete optimizer payload before applying blocks
+or recording NO_OPTIMIZATION_NEEDED.
+
+## Main-Agent Application Contract
+
+- Parse every Search/Replace block before touching the filesystem
+- Resolve target paths with \`path.join()\`, \`path.resolve()\`, and \`path.normalize()\`
+- Use \`path.join()\` for any checkpoint-adjacent bookkeeping paths; never hardcode path separators
+- Reject blocks that create, delete, rename, or target untracked files
+- Pre-validate all blocks, then apply them atomically
+- If the subagent returns \`No optimization opportunities found\`, call:
+  \`\`\`bash
+  openspec verify phase2 "<change-name>" --type=optimization --input '{"status":"NO_OPTIMIZATION_NEEDED"}' --json
+  \`\`\`
+  The CLI records terminal \`optimization.status = NOT_NEEDED\`
+- If an optimization is proposed and applied to files, call:
+  \`\`\`bash
+  openspec verify phase2 "<change-name>" --type=optimization --files "path/to/file.ts" --input '{"status":"OPTIMIZATION_PROPOSED","summary":"..."}' --json
+  \`\`\`
+- The CLI stores \`optimization.status = PENDING_VERIFICATION\`, appends \`optimization.attempts\`, and records \`optimization.affectedFileHashes\`
+
+## Speculative Re-verification
+
+After applying Search/Replace blocks, re-run the same verification contract in \`P1_SPECULATIVE_FENCE\` mode:
+
+- Use the **Agent tool** to spawn the reviewer subagent that invokes \`openspec-reviewer\` with \`changeName\`, \`changeDir\`, and \`projectRoot\` in the prompt
+- Specify that this is P1_SPECULATIVE_FENCE mode and the reviewer must not write back to tasks.md or rewrite .verify-result.json
+- Wait for the complete reviewer payload before deciding whether the optimization passed or failed
+- \`P1_SPECULATIVE_FENCE\` MUST reuse the same completeness/correctness/coherence checks but MUST NOT:
+  - write back to \`tasks.md\`
+  - rewrite the canonical \`.verify-result.json\`
+
+### On Speculative PASS or PASS_WITH_WARNINGS
+
+- Finalize the optimized files
+- Consume the checkpoint with \`git stash drop <checkpointRef>\` only after the optimized result is accepted
+- Transition the checkpoint state to \`TERMINAL_ACCEPTED\`
+- Call \`openspec verify phase2 "<change-name>" --type=verification --input '{"result":"PASS","issues":[]}' --json\` so the CLI sets \`optimization.status\` to \`IMPROVED\`
+
+### On Speculative FAIL_NEEDS_REMEDIATION
+
+- Discard speculative edits completely
+- Restore the exact canonical Phase 1 baseline from the checkpoint, for example with \`git reset --hard HEAD\`, \`git clean -fd\`, then \`git stash apply <checkpointRef>\`
+- Keep the checkpoint for the next retry and transition back to \`BASELINE_RESTORED_FOR_RETRY\`
+- Increment the behavior retry counter
+- Request a materially different optimization strategy
+- Call \`openspec verify phase2 "<change-name>" --type=verification --input '{"result":"FAIL_NEEDS_REMEDIATION","issues":[...],"behaviorRetryCounter":N}' --json\` before retrying optimization
+
+## Retry Budget
+
+\`config.optimization.optRetries\` is the only retry budget for complete proposal + patch + re-verify cycles.
+
+Format and match problems stay in the main agent:
+- malformed Search/Replace blocks must be fixed before any file write
+- zero-match or multi-match SEARCH anchors must be repaired before speculative verification
+- these local repairs do not consume \`optRetries\`
+
+If a format or match defect cannot be repaired safely:
+- Restore the exact canonical Phase 1 baseline from the checkpoint if any speculative edits were applied
+- Finish the workflow with a terminal restore: prefer \`git stash pop <checkpointRef>\`, or use an equivalent restore-success-then-drop sequence
+- If terminal restore succeeds:
+  - Transition the checkpoint state to \`TERMINAL_RESTORED\`
+  - Resolve the run as a warning-only, non-\`ABORTED_UNSAFE\` terminal outcome because the baseline was safely restored
+  - Keep the canonical Phase 1 \`result\` or widen it to \`PASS_WITH_WARNINGS\` only when the final report needs to disclose degraded optimization coverage
+- If terminal restore fails:
+  - Preserve the stash entry for manual recovery
+  - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
+  - Output cross-platform recovery instructions using \`git reset --hard HEAD\`, \`git clean -fd\`, and \`git stash apply <checkpointRef>\`
+
+If behavior failures reach \`config.optimization.optRetries\`:
+- Discard speculative edits and restore the exact canonical Phase 1 baseline from the checkpoint
+- Consume the checkpoint only after baseline restoration succeeds, preferably with \`git stash pop <checkpointRef>\`
+- Transition the checkpoint state to \`TERMINAL_RESTORED\`
+- Report: \`Phase 1 PASS. N optimization attempts safely reverted.\`
+- Set \`optimization.status\` to \`DEGRADED\`
+- Set top-level \`result\` to \`PASS_WITH_WARNINGS\`
+
+If the optimization subagent times out or internal safety is uncertain:
+- Restore the exact canonical Phase 1 baseline from the checkpoint if any speculative edits were applied
+- Attempt terminal recovery without consuming the checkpoint until restore success is confirmed
+- If recovery succeeds:
+  - Transition the checkpoint state to \`TERMINAL_RESTORED\`
+  - Report a warning-only outcome because optimization stopped early but the canonical baseline was safely restored
+  - Keep the canonical Phase 1 \`result\` or widen it to \`PASS_WITH_WARNINGS\` if the final report needs to disclose degraded optimization coverage
+- If recovery fails:
+  - Preserve the stash entry for manual recovery
+  - Set \`optimization.status\` to \`ABORTED_UNSAFE\`
+  - Keep the canonical Phase 1 \`result\``;
+
 interface VerifyTemplateText {
   input: string;
   commandPrefix?: string;
@@ -565,8 +714,13 @@ Optionally specify a change name and \`--skip-optimization\`. If no clear change
 6. Validate reviewer/current payload shape: result, issues with severity/recommendation/evidence citations, evidenceFiles, gitDiffSummary, and writeBackPlan targeting \`tasks.md\` only.
 7. Classify strictly: when uncertain, escalate to CRITICAL to enforce the 'clean slate' principle. CRITICAL writes remediation; WARNING/SUGGESTION do not.
 8. Persist Phase 1 with \`openspec verify phase1 "<change-name>" --input '<json>' --json\`.
-9. Phase 2: unless skipped by user/config, create a checkpoint, use **Agent tool** to invoke \`openspec-optimizer\`, record optimization proposal hashes before applying Search/Replace blocks, then run speculative reviewer verification with **Agent tool**. Restore checkpoint on failure and record phase2 optimization/verification through CLI.
+9. Phase 2: unless skipped by user/config, follow the checkpoint protocol in references/phase2-checkpoint-protocol.md. This includes creating a git stash checkpoint, using **Agent tool** to invoke \`openspec-optimizer\`, recording optimization proposal hashes before applying Search/Replace blocks, then running speculative reviewer verification with **Agent tool**. Restore checkpoint on failure and record phase2 optimization/verification through CLI.
 10. Run \`openspec verify seal "<change-name>" --json\`; preserve diagnostics if seal fails.
+
+## Required References
+
+Read the detailed Phase 2 protocol before executing optimization:
+- references/phase2-checkpoint-protocol.md
 
 ## Evidence Rules
 
@@ -583,6 +737,12 @@ function createVerifySkillTemplate(executionModel: VerifyExecutionModel): SkillT
     description:
       'Verify implementation matches change artifacts. Use when the user wants to validate that implementation is complete, correct, and coherent before archiving.',
     instructions: buildVerifySkillInstructions(executionModel),
+    referenceFiles: [
+      {
+        path: 'references/phase2-checkpoint-protocol.md',
+        content: PHASE2_CHECKPOINT_PROTOCOL_REFERENCE,
+      },
+    ],
     license: 'MIT',
     compatibility: 'Requires openspec CLI.',
     metadata: { author: 'openspec', version: '1.0' },
