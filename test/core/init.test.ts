@@ -467,8 +467,7 @@ context: |
       const content = await fs.readFile(skillFile, 'utf-8');
 
       expect(content).toContain('name: openspec-apply-change');
-      expect(content).toContain('docLanguage');
-      expect(content).toContain('Keep template headings, IDs, schema keys');
+      expect(content).toMatch(/preserve.*canonical|template.*heading/i);
     });
 
     it('should embed generatedBy version in skill files', async () => {

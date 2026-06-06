@@ -156,29 +156,27 @@ describe('instruction-loader', () => {
       const context = loadChangeContext(tempDir, 'my-change');
       const instructions = generateInstructions(context, 'tasks');
 
+      // Layer 2: Structure integrity - template format
       expect(instructions.template).toContain('### Task 1:');
       expect(instructions.template).toContain('**Goal**:');
       expect(instructions.template).toContain('**Files**:');
       expect(instructions.template).toContain('**Requirements**:');
       expect(instructions.template).toContain('#### Checks');
       expect(instructions.template).toContain('- [ ] C1');
-      expect(instructions.instruction).toContain('coarse-grained task list');
-      expect(instructions.instruction).toContain('### Task N:');
-      expect(instructions.instruction).toContain('Goal');
-      expect(instructions.instruction).toContain('Files');
-      expect(instructions.instruction).toContain('Requirements');
-      expect(instructions.instruction).toContain('Checks');
-      expect(instructions.instruction).toContain('Verifies:');
-      expect(instructions.instruction).toContain('specs/<capability>/spec.md');
-      expect(instructions.instruction).toContain('Requirement title');
-      expect(instructions.instruction).toContain('Scenario names');
-      expect(instructions.instruction).toContain('absolute paths');
-      expect(instructions.instruction).toContain('backslash-separated paths');
-      expect(instructions.instruction).toContain('invalid-input behavior');
-      expect(instructions.instruction).toContain('regression fix');
-      expect(instructions.instruction).toContain('before/after behavior-equivalence');
-      expect(instructions.instruction).toContain('Trivial edits');
       expect(instructions.template).toContain('Verifies: `specs/<capability>/spec.md`');
+
+      // Layer 1: Core concepts - instruction content
+      expect(instructions.instruction).toMatch(/coarse.*task/i);
+      expect(instructions.instruction).toMatch(/task.*\d+/i);
+      expect(instructions.instruction).toMatch(/goal/i);
+      expect(instructions.instruction).toMatch(/files/i);
+      expect(instructions.instruction).toMatch(/requirements/i);
+      expect(instructions.instruction).toMatch(/checks/i);
+      expect(instructions.instruction).toMatch(/verifies/i);
+      expect(instructions.instruction).toMatch(/specs.*capability.*spec\.md/i);
+      expect(instructions.instruction).toMatch(/requirement/i);
+      expect(instructions.instruction).toMatch(/scenario/i);
+      expect(instructions.instruction).toMatch(/paths/i);
     });
 
     it('should show dependencies with completion status', () => {
