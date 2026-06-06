@@ -33,6 +33,12 @@
 ### Requirement: apply Phase 0 由 Master agent 直接执行
 `openspec-apply-change` workflow SHALL make the Master agent execute pending `tasks.md` Checks through strict TDD during Phase 0. The workflow SHALL NOT generate `.apply-steps`, SHALL NOT read `.apply-steps`, and SHALL NOT dispatch `openspec-implementer` for coding execution.
 
+#### Scenario: Master agent 串行执行任务
+- **WHEN** `openspec instructions apply --change "<name>" --json` returns multiple pending tasks
+- **THEN** the apply workflow SHALL instruct the Master agent to execute tasks sequentially
+- **AND** the Master agent SHALL complete the current task's all Checks before proceeding to the next task
+- **AND** the Master agent SHALL NOT process multiple tasks in parallel
+
 #### Scenario: Master agent 严格 TDD 实现 pending Check
 - **WHEN** `openspec instructions apply --change "<name>" --json` returns implementation work to perform
 - **THEN** the apply workflow SHALL instruct the Master agent to read `tasks.md`, change-local specs, design, related project files, and tests

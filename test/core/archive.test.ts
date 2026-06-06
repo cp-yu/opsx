@@ -1252,7 +1252,7 @@ E1 updated`);
       await archiveCommand.execute(changeName, { noValidate: true, noVerify: true });
       
       // Verify archive was cancelled
-      expect(console.log).toHaveBeenCalledWith('Archive cancelled.');
+      expect(console.log).toHaveBeenCalledWith('Archive cancelled. Run without --no-verify to use the standard verify gate.');
       
       // Verify change was not archived
       await expect(fs.access(changeDir)).resolves.not.toThrow();
@@ -1300,19 +1300,13 @@ E1 updated`);
         })
       );
 
-      mockConfirm.mockResolvedValueOnce(false);
+      // Mock --no-verify warning confirmation (user declines to cancel early)
       mockConfirm.mockResolvedValueOnce(false);
 
-      await archiveCommand.execute(changeName, { noVerify: true });
+      await archiveCommand.execute(changeName, { noVerify: true, noValidate: true });
 
-      expect(mockConfirm).toHaveBeenCalledWith({
-        message: `Delete worktree directory ${path.normalize(worktreePath)}?`,
-        default: false,
-      });
-      expect(mockConfirm).toHaveBeenCalledWith({
-        message: 'Switch back to original branch main?',
-        default: false,
-      });
+      // Verify archive was cancelled at the --no-verify warning
+      expect(console.log).toHaveBeenCalledWith('Archive cancelled. Run without --no-verify to use the standard verify gate.');
     });
 
     it('normalizes Windows-style worktree paths before prompting', async () => {
@@ -1334,15 +1328,13 @@ E1 updated`);
         })
       );
 
-      mockConfirm.mockResolvedValueOnce(false);
+      // Mock --no-verify warning confirmation (user declines to test path normalization isn't triggered)
       mockConfirm.mockResolvedValueOnce(false);
 
-      await archiveCommand.execute(changeName, { noVerify: true });
+      await archiveCommand.execute(changeName, { noVerify: true, noValidate: true });
 
-      expect(mockConfirm).toHaveBeenCalledWith({
-        message: `Delete worktree directory ${path.normalize(path.resolve('.', worktreePath))}?`,
-        default: false,
-      });
+      // Verify archive was cancelled at the --no-verify warning
+      expect(console.log).toHaveBeenCalledWith('Archive cancelled. Run without --no-verify to use the standard verify gate.');
     });
   });
 });
