@@ -67,4 +67,16 @@ describe('explore template impact sweeps', () => {
       expect(template).toContain('Produce a `Design Summary` in the conversation, not in a file');
     }
   });
+
+  it('routes only observable behavior into specs', () => {
+    for (const template of templates) {
+      expect(template).toContain('Observable behavior requirement');
+      expect(template).toContain('Observable behavior changed');
+      expect(template).toContain('Refactor rationale or rejected path');
+      expect(template).toContain('Implementation strategy');
+      expect(template).toContain('OPSX graph intent changed');
+      expect(template).toContain('This is observable behavior. Add it to specs?');
+      expect(template).not.toContain('New requirement discovered | `specs/<capability>/spec.md`');
+    }
+  });
 });

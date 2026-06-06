@@ -58,6 +58,26 @@ Explore MUST run this sequence before saying a proposal is ready:
    - Include: architecture, core components, data flow, technology stack, testing strategy, risks and trade-offs.
    - End with: "设计总结已完成。请审查上述设计。如果确认无误，请调用 \`/opsx:propose <change-name>\` 生成制品。"`;
 
+const ACTIVE_CHANGE_CAPTURE_GUIDANCE = `### Capture Boundary for Existing Changes
+
+When exploring an active change, read proposal/design/specs/tasks, reference them naturally, and offer precise artifact updates. The user decides whether to capture them.
+
+| Insight Type                         | Where to Capture               |
+|--------------------------------------|--------------------------------|
+| Observable behavior requirement      | \`specs/<capability>/spec.md\` |
+| Observable behavior changed          | \`specs/<capability>/spec.md\` |
+| Refactor rationale or rejected path  | \`design.md\`                  |
+| Implementation strategy              | \`design.md\`                  |
+| Scope changed                        | \`proposal.md\`                |
+| New work or verification identified  | \`tasks.md\`                   |
+| OPSX graph intent changed            | \`opsx-delta.yaml\`            |
+| Assumption invalidated               | Relevant artifact              |
+
+Example offers:
+- "That's a design decision. Capture it in design.md?"
+- "This is observable behavior. Add it to specs?"
+- "This changes scope. Update the proposal?"`;
+
 export function getExploreSkillTemplate(): SkillTemplate {
   return {
     name: 'openspec-explore',
@@ -116,7 +136,7 @@ Explore MUST run this sequence before saying a proposal is ready:
 
 ## Existing Changes
 
-When exploring an active change, read proposal/design/specs/tasks, reference them naturally, and offer precise artifact updates for new requirements, changed requirements, design decisions, scope changes, new tasks, or invalid assumptions. The user decides whether to capture them.`,
+${ACTIVE_CHANGE_CAPTURE_GUIDANCE}`,
     license: 'MIT',
     compatibility: 'Requires openspec CLI.',
     metadata: { author: 'openspec', version: '1.0' },
@@ -251,19 +271,7 @@ If the user mentions a change or you detect one is relevant:
 
 3. **Offer to capture when decisions are made**
 
-    | Insight Type               | Where to Capture               |
-    |----------------------------|--------------------------------|
-    | New requirement discovered | \`specs/<capability>/spec.md\` |
-    | Requirement changed        | \`specs/<capability>/spec.md\` |
-    | Design decision made       | \`design.md\`                  |
-    | Scope changed              | \`proposal.md\`                |
-    | New work identified        | \`tasks.md\`                   |
-    | Assumption invalidated     | Relevant artifact              |
-
-   Example offers:
-   - "That's a design decision. Capture it in design.md?"
-   - "This is a new requirement. Add it to specs?"
-   - "This changes scope. Update the proposal?"
+${ACTIVE_CHANGE_CAPTURE_GUIDANCE}
 
 4. **The user decides** - Offer and move on. Don't pressure. Don't auto-capture.
 

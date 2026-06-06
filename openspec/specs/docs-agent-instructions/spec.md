@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.ai.agent-docs
+---
 # docs-agent-instructions Specification
 
 ## Purpose
@@ -51,16 +55,19 @@ The documentation SHALL separate beginner essentials from advanced topics so new
 - **AND** provide anchor links from the quick-reference to those advanced sections
 
 ### Requirement: Behavior-First Spec Authoring Guidance
-Agent instruction docs SHALL explicitly teach that specs capture observable behavior contracts, while implementation details belong in design/tasks.
+Agent instruction docs SHALL explicitly teach that specs capture WHAT-only observable behavior contracts, while implementation, refactor, and process details belong outside specs.
 
 #### Scenario: Distinguishing spec vs implementation content
 - **WHEN** `openspec/AGENTS.md` explains how to write `spec.md`
 - **THEN** it SHALL instruct agents to include externally verifiable behavior, inputs/outputs, errors, and constraints
-- **AND** it SHALL instruct agents to avoid internal library/framework choices and class/function-level implementation details in specs
+- **AND** it SHALL instruct agents to avoid internal library/framework choices, class/function-level implementation details, call paths, refactor rationale, rejected approaches, and exploration notes in specs
 
 #### Scenario: Routing detail to the right artifact
-- **WHEN** implementation detail is necessary
-- **THEN** instructions SHALL direct the agent to place it in `design.md` or `tasks.md`, not in the behavioral requirements section of `spec.md`
+- **WHEN** implementation, refactor, or decision detail is necessary
+- **THEN** instructions SHALL direct the agent to place technical decisions, refactor rationale, rejected approaches, and implementation strategy in `design.md`
+- **AND** concrete implementation steps or verification work SHALL go in `tasks.md`
+- **AND** motivation and scope SHALL go in `proposal.md`
+- **AND** architecture graph intent changes SHALL go in `opsx-delta.yaml`
 
 ### Requirement: Lightweight-by-Default Guidance
 Agent instruction docs SHALL promote minimal ceremony and proportional rigor for spec authoring.
@@ -86,4 +93,3 @@ All workflow and skill surfaces that create or rewrite OpenSpec artifacts SHALL 
 - **WHEN** config defines `docLanguage`
 - **THEN** the projection contract SHALL render it as explicit authoring guidance for natural-language prose
 - **AND** SHALL NOT rely on the agent inferring behavior from a raw YAML key/value dump alone
-

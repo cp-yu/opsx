@@ -1,3 +1,8 @@
+---
+capabilities:
+  - cap.ai.propose-smart-routing
+  - cap.ai.workflow-templates
+---
 ## Purpose
 
 The propose workflow SHALL combine change creation and artifact generation into a single command, reducing friction for new users while teaching them the OpenSpec workflow through embedded guidance.
@@ -40,3 +45,16 @@ The `propose` workflow SHALL perform the same operations as running `new` follow
 - **THEN** the result SHALL be functionally equivalent to invoking `/opsx:new "feature-name"` followed by `/opsx:ff feature-name`
 - **THEN** the same directory structure and artifacts SHALL be created
 - **THEN** console output MAY differ (propose includes onboarding explanations)
+
+### Requirement: Propose applies spec content boundary
+The `propose` workflow SHALL apply the schema-provided `Spec content boundary` when generating `specs` artifacts.
+
+#### Scenario: Specs generation routes non-behavior content
+- **WHEN** `/opsx:propose` creates the `specs` artifact
+- **THEN** the prompt SHALL instruct the agent to apply the returned `Spec content boundary`
+- **AND** non-behavior content SHALL be routed to `design.md`, `tasks.md`, `proposal.md`, or `opsx-delta.yaml` instead of requirements
+
+#### Scenario: Propose does not duplicate boundary rules
+- **WHEN** `/opsx:propose` references the spec content boundary
+- **THEN** it SHALL rely on the boundary returned by `openspec instructions specs --change "<name>" --json`
+- **AND** it SHALL NOT define a separate conflicting classification table in the propose workflow template

@@ -37,9 +37,20 @@ nodes:
       - path: src/core/config.ts
   - id: cap.ai.workflow-templates
     refs:
+      - path: schemas/spec-driven/schema.yaml
       - path: src/core/templates/fragments/opsx-fragments.ts
       - path: src/core/templates/skill-templates.ts
       - path: src/core/templates/workflows/
+      - path: test/core/templates/propose-template.test.ts
+      - path: test/core/templates/explore-template.test.ts
+  - id: cap.ai.explore-brainstorming
+    refs:
+      - path: src/core/templates/workflows/explore.ts
+      - path: test/core/templates/explore-template.test.ts
+  - id: cap.ai.propose-smart-routing
+    refs:
+      - path: src/core/templates/workflows/propose.ts
+      - path: test/core/templates/propose-template.test.ts
   - id: cap.apply.task-decomposition
     refs:
       - path: schemas/spec-driven/schema.yaml

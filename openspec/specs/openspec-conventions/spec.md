@@ -1,3 +1,7 @@
+---
+capabilities:
+  - cap.ai.workflow-templates
+---
 # OpenSpec Conventions Specification
 
 ## Purpose
@@ -14,7 +18,7 @@ OpenSpec conventions SHALL mandate a structured spec format with clear requireme
 - **THEN** authors SHALL use `### Requirement: ...` followed by at least one `#### Scenario: ...` section
 
 ### Requirement: Behavior-First Specification Boundary
-OpenSpec specifications SHALL capture verifiable behavior contracts and avoid internal implementation detail.
+OpenSpec specifications SHALL capture verifiable WHAT-only behavior contracts and avoid implementation, refactor, and process detail.
 
 #### Scenario: Writing behavior requirements
 - **WHEN** documenting a capability in `spec.md`
@@ -22,8 +26,13 @@ OpenSpec specifications SHALL capture verifiable behavior contracts and avoid in
 - **AND** scenarios remain testable or explicitly verifiable
 
 #### Scenario: Avoiding implementation leakage
-- **WHEN** details involve concrete library choices, class/function structure, or execution mechanics
+- **WHEN** details involve concrete library choices, class/function structure, execution mechanics, call paths, refactor rationale, rejected approaches, or exploration notes
 - **THEN** those details SHALL be documented in `design.md` or `tasks.md` instead of behavioral requirements
+
+#### Scenario: Routing non-behavior content
+- **WHEN** a candidate spec statement explains why an implementation path was chosen, why an old path is not used, or how code should be organized
+- **THEN** authors SHALL move that statement to `design.md`
+- **AND** specs SHALL express only the preserved or changed observable behavior
 
 ### Requirement: Progressive Rigor
 OpenSpec conventions SHALL keep specs lightweight by default and scale rigor only when risk or coordination complexity demands it.
@@ -48,16 +57,16 @@ openspec/
 ├── AGENTS.md               # AI assistant instructions
 ├── specs/                  # Current deployed capabilities
 │   └── [capability]/       # Single, focused capability
-│       ├── spec.md         # WHAT and WHY
+│       ├── spec.md         # WHAT: behavior contract
 │       └── design.md       # HOW (optional, for established patterns)
 └── changes/                # Proposed changes
     ├── [change-name]/      # Descriptive change identifier
     │   ├── proposal.md     # Why, what, and impact
     │   ├── tasks.md        # Implementation checklist
     │   ├── design.md       # Technical decisions (optional)
-    │   └── specs/          # Complete future state
+    │   └── specs/          # Delta requirements
     │       └── [capability]/
-    │           └── spec.md # Clean markdown (no diff syntax)
+    │           └── spec.md # ADDED/MODIFIED/REMOVED/RENAMED requirements
     └── archive/            # Completed changes
         └── YYYY-MM-DD-[name]/
 ```
@@ -269,16 +278,16 @@ openspec/
 ├── AGENTS.md               # AI assistant instructions
 ├── specs/                  # Current deployed capabilities
 │   └── [capability]/       # Single, focused capability
-│       ├── spec.md         # WHAT and WHY
+│       ├── spec.md         # WHAT: behavior contract
 │       └── design.md       # HOW (optional, for established patterns)
 └── changes/                # Proposed changes
     ├── [change-name]/      # Descriptive change identifier
     │   ├── proposal.md     # Why, what, and impact
     │   ├── tasks.md        # Implementation checklist
     │   ├── design.md       # Technical decisions (optional)
-    │   └── specs/          # Complete future state
+    │   └── specs/          # Delta requirements
     │       └── [capability]/
-    │           └── spec.md # Clean markdown (no diff syntax)
+    │           └── spec.md # ADDED/MODIFIED/REMOVED/RENAMED requirements
     └── archive/            # Completed changes
         └── YYYY-MM-DD-[name]/
 ```

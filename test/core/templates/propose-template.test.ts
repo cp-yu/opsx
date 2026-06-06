@@ -94,4 +94,11 @@ describe('propose template post-validation flow', () => {
       expect(body).not.toContain('openspec spec list');
     }
   });
+
+  it('applies the schema-provided spec content boundary when creating specs', () => {
+    for (const body of getProposeBodies()) {
+      expect(body).toContain('When creating `specs`, apply the returned `Spec content boundary`');
+      expect(body).toContain('route non-behavior content to design/tasks/proposal/opsx-delta instead of requirements');
+    }
+  });
 });

@@ -62,7 +62,7 @@ capabilities:
     intent: 建立内部 workflow ID 到外部用户命令 slug 的映射，使生成、检测、迁移和清理命令制品时都遵循同一套命名契约
     type: capability
   - id: cap.ai.explore-brainstorming
-    intent: Explore 阶段的 brainstorming 流程，包含 6 步 checklist、一次一问纪律、2-3 方案对比、Design Summary 生成
+    intent: Explore 阶段的 brainstorming 流程，包含 6 步 checklist、一次一问纪律、2-3 方案对比、Design Summary 生成；在已有 change 上捕获 insight 时仅将可观察行为路由到 specs，将重构理由、拒绝路径和实现策略路由到 design.md
     type: capability
   - id: cap.ai.impact-sweeper
     intent: 通过 CLI 查询接口获取 OPSX 数据和 cap→spec 映射，生成影响面报告；在读取 specs 时同时执行术语提取步骤，用于检测术语漂移
@@ -75,7 +75,7 @@ capabilities:
     intent: Phase 2 优化器 skill，负责行为保持优化和 Pocock 坏味道检测（从 5 维度扩展至 8 维度，每个维度增加具体识别指标、重构模式和行动指南）
     type: capability
   - id: cap.ai.propose-smart-routing
-    intent: Propose 阶段的智能路由，根据输入详细程度决定是否需要 explore
+    intent: Propose 阶段的智能路由，根据输入详细程度决定是否需要 explore；生成 specs 时应用 schema 返回的 Spec content boundary，将非行为内容路由到 design/tasks/proposal/opsx-delta 而非 requirement
     type: capability
   - id: cap.ai.reviewer-cleanliness-dimension
     intent: Cleanliness 维度的检测逻辑、severity 映射和跨语言工具适配策略，用于检测重构残留、孤儿代码、过时 TODO、半迁移等遗留物
@@ -105,7 +105,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 提供 AI workflow 模板，使用统一 CLI 查询接口（openspec list --specs）
+    intent: 提供 AI workflow 模板，使用统一 CLI 查询接口（openspec list --specs），并在 propose/explore/spec-driven artifact instructions 中维护 specs=WHAT、design=WHY/HOW 的内容边界提示
     type: capability
   - id: cap.apply.branch-isolation
     intent: Apply 阶段分支隔离策略由 apply.defaultIsolation 驱动；main/master 上仅 ask 模式询问用户，branch/worktree/none 配置直接执行并持久化 .apply-isolation.json。

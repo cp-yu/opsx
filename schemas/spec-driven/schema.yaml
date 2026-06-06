@@ -34,6 +34,16 @@ artifacts:
     instruction: |
       Create specification files that define WHAT the system should do.
 
+      Spec content boundary:
+      - Allowed in specs: externally observable behavior, CLI/API inputs and outputs, errors, validation, permissions, persistence, compatibility, and testable constraints.
+      - Forbidden in specs: implementation path or call graph, refactor rationale, rejected approaches, exploration/process notes, code organization, helper/library choices, and agent reasoning.
+      - Route forbidden content to the right artifact: technical decisions and refactor rationale go in `design.md`; concrete implementation steps and checks go in `tasks.md`; motivation and scope go in `proposal.md`; architecture graph intent changes go in `opsx-delta.yaml`.
+      - If "do not call/use the old path" is not externally observable, write it in `design.md`, not in a requirement. In specs, express the preserved or changed observable behavior instead.
+
+      Before writing or modifying a requirement, classify each candidate statement:
+      - Observable behavior or constraint -> keep in specs.
+      - Why this approach, why not the old approach, or how to implement it -> move to design/tasks/proposal/opsx-delta.
+
       Create one spec file per capability listed in the proposal's Capabilities section.
       - New capabilities: use the exact kebab-case name from the proposal (specs/<capability>/spec.md).
       - Modified capabilities: use the existing spec folder name from openspec/specs/<capability>/ when creating the delta spec at specs/<capability>/spec.md.
@@ -131,6 +141,7 @@ artifacts:
     template: design.md
     instruction: |
       Create the design document that explains HOW to implement the change.
+      Use design.md for technical decisions, refactor rationale, rejected approaches, exploration decisions, implementation strategy, and why an old path should not be used. These belong here instead of specs unless they change externally observable behavior.
 
       When to include design.md (create only if any apply):
       - Cross-cutting change (multiple services/modules) or new architectural pattern

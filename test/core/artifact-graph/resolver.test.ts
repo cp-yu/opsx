@@ -80,6 +80,21 @@ describe('artifact-graph/resolver', () => {
       expect(schema.artifacts.length).toBeGreaterThan(0);
     });
 
+    it('should define a clear spec content boundary in built-in instructions', () => {
+      const schema = resolveSchema('spec-driven');
+      const specs = schema.artifacts.find((artifact) => artifact.id === 'specs');
+      const design = schema.artifacts.find((artifact) => artifact.id === 'design');
+
+      expect(specs?.instruction).toContain('Spec content boundary');
+      expect(specs?.instruction).toContain('Allowed in specs');
+      expect(specs?.instruction).toContain('Forbidden in specs');
+      expect(specs?.instruction).toContain('Route forbidden content to the right artifact');
+      expect(specs?.instruction).toContain('If "do not call/use the old path" is not externally observable');
+      expect(specs?.instruction).toContain('Observable behavior or constraint -> keep in specs');
+      expect(design?.instruction).toContain('refactor rationale');
+      expect(design?.instruction).toContain('why an old path should not be used');
+    });
+
     it('should strip .yaml extension from name', () => {
       const schema1 = resolveSchema('spec-driven');
       const schema2 = resolveSchema('spec-driven.yaml');
