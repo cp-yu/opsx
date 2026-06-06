@@ -27,7 +27,7 @@
       "test/core/templates/apply-change.test.ts",
       "test/skills/optimizer-skill-content.test.ts"
     ],
-    "evidenceFingerprint": "8a87666a771fe5b251511e245a0a5c0a2b208718c5c99049acce955edc131e1b",
+    "evidenceFingerprint": "c8c405eeb4b98c006c24411183a9d5c889823d4daafebb46b128610b043f4f76",
     "evidenceFingerprintEntries": [
       {
         "path": ".claude/skills/openspec-apply-change/SKILL.md",
@@ -75,15 +75,15 @@
       },
       {
         "path": "openspec/project.opsx.code-map.yaml",
-        "hash": "d7a91e3ec69f0b31ab17d492819a6a7e3ec8e28836a5724186df909e7c7ccc30"
+        "hash": "fe00cb7d4db24386ca05db53c6eca1920f2f970fc2ad1c894c953aa31f33185b"
       },
       {
         "path": "openspec/project.opsx.relations.yaml",
-        "hash": "9b6bbf8f842d0544f675af66f9e6b48331919467b515a4cdbdfb18f635458c55"
+        "hash": "c9b0adfd9abdb4f098c6d0777c0542a5ececf0e97b1129c9bfc7cdec1cc82af4"
       },
       {
         "path": "openspec/project.opsx.yaml",
-        "hash": "e7300f5b2437c7b9a9aab10516f2968cba7acec603a26afdb0e97660875ff398"
+        "hash": "1073c34f31ae19511df95b8865d41eb4aeada9e101a8ed5976c764303e0141fe"
       },
       {
         "path": "package.json",
