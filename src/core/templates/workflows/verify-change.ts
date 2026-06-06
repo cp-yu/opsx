@@ -160,19 +160,18 @@ ${VERIFY_ERROR_RECOVERY_GUIDE}
 
 **[Mode: Optimize] Phase 2 Optimization Protocol**:
 
-   Delegate to a clean-context optimizer subagent with Read and Bash tool capability.
-   The coordinator MUST pass only the location input contract below and instruct the subagent
-   to invoke the \`openspec-optimizer\` skill.
+   Use the **Agent tool** to spawn a clean-context optimizer subagent that invokes the \`openspec-optimizer\` skill.
+   The coordinator MUST NOT use external wrapper scripts or binaries.
+
+   Pass the following location inputs in the subagent prompt:
+   - \`changeName\`: the selected change name
+   - \`changeDir\`: absolute path to the change directory
+   - \`projectRoot\`: absolute path to the project root
 
    The \`openspec-optimizer\` skill defines: role and hard constraints, input contract,
    self-read protocol for \`.verify-result.json\`, prioritized optimization principles
    (5 categories + prohibition list), Search/Replace block output format, and failed
    directions avoidance protocol.
-
-   **Inputs to pass to the optimizer subagent**:
-   - \`changeName\`: the selected change name
-   - \`changeDir\`: absolute path to the change directory
-   - \`projectRoot\`: absolute path to the project root
 
    The optimizer subagent MUST return only Search/Replace blocks or exactly
    \`No optimization opportunities found\`; it MUST NOT edit files directly or through Bash.
@@ -211,7 +210,8 @@ function buildReverifyStep(stepNumber: number, speculativeFenceContract: string)
 
    - Re-run the same verification contract in \`P1_SPECULATIVE_FENCE\` mode after applying candidate Search/Replace blocks
 ${speculativeFenceContract}
-   - For subagent-orchestrated speculative verification, delegate to a clean-context reviewer subagent with Read and Bash tool capability, instruct it to invoke the \`openspec-reviewer\` skill, and pass only \`changeName\`, \`changeDir\`, and \`projectRoot\`
+   - For subagent-orchestrated speculative verification, use the **Agent tool** to spawn the reviewer subagent that invokes \`openspec-reviewer\` with \`changeName\`, \`changeDir\`, and \`projectRoot\` in the prompt
+   - Specify that this is P1_SPECULATIVE_FENCE mode and the reviewer must not write back to tasks.md or rewrite .verify-result.json
    - Wait for the complete reviewer payload before deciding whether the optimization passed or failed
 ${VERIFY_SUBAGENT_TIMEOUT_RULES}
    - \`P1_SPECULATIVE_FENCE\` MUST reuse the same completeness/correctness/coherence checks but MUST NOT:
@@ -466,19 +466,19 @@ function buildSubagentVerifyInstructions(text: VerifyTemplateText): string {
 
 5. [Mode: Delegate Review] **Run the Reviewer Subagent for Canonical Phase 1**
 
-   Delegate to a clean-context reviewer subagent with Read and Bash tool capability.
-   The coordinator MUST instruct the subagent to invoke the \`openspec-reviewer\` skill.
+   Use the **Agent tool** to spawn a clean-context reviewer subagent that invokes the \`openspec-reviewer\` skill.
+   The coordinator MUST NOT use external wrapper scripts or binaries.
+
+   Pass the following location inputs in the subagent prompt:
+   - \`changeName\`: the selected change name
+   - \`changeDir\`: absolute path to the change directory
+   - \`projectRoot\`: absolute path to the project root
 
    The \`openspec-reviewer\` skill loads the full reviewer contract: role definition, hard constraints,
    location input validation, self-read protocol, L1 test strategy, 6-step verification protocol,
    severity thresholds and evidence standards, three-dimension coverage (completeness,
    correctness, coherence), OPSX alignment rules, structured JSON output schema with
    writeBackPlan semantics, and graceful degradation rules.
-
-   Pass only these location strings alongside the skill invoke:
-   - \`changeName\`: the selected change name
-   - \`changeDir\`: absolute path to the change directory
-   - \`projectRoot\`: absolute path to the project root
 
    The reviewer subagent reads change artifacts, prior \`.verify-result.json\`,
    git evidence, implementation files, tests, and OPSX context itself.
@@ -561,11 +561,11 @@ Optionally specify a change name and \`--skip-optimization\`. If no clear change
 2. Stop early with "没有可供 verify 的任务" when \`tasks.md\` is missing or has no checkbox tasks.
 3. Use clean-context verification with \`${executionMode}\`.
 4. In current-agent mode, re-read artifacts, git evidence, prior \`.verify-result.json\`, and final candidate file contents before judging.
-5. In subagent mode, pass only \`changeName\`, absolute \`changeDir\`, and absolute \`projectRoot\` to a reviewer subagent invoking \`openspec-reviewer\`; the coordinator MUST NOT substitute completeness/correctness/coherence judgment.
+5. In subagent mode, use the **Agent tool** to spawn a reviewer subagent invoking \`openspec-reviewer\`; pass \`changeName\`, absolute \`changeDir\`, and absolute \`projectRoot\` in the prompt; the coordinator MUST NOT substitute completeness/correctness/coherence judgment.
 6. Validate reviewer/current payload shape: result, issues with severity/recommendation/evidence citations, evidenceFiles, gitDiffSummary, and writeBackPlan targeting \`tasks.md\` only.
 7. Classify strictly: when uncertain, escalate to CRITICAL to enforce the 'clean slate' principle. CRITICAL writes remediation; WARNING/SUGGESTION do not.
 8. Persist Phase 1 with \`openspec verify phase1 "<change-name>" --input '<json>' --json\`.
-9. Phase 2: unless skipped by user/config, create a checkpoint, invoke \`openspec-optimizer\`, record optimization proposal hashes before applying Search/Replace blocks, then run speculative reviewer verification. Restore checkpoint on failure and record phase2 optimization/verification through CLI.
+9. Phase 2: unless skipped by user/config, create a checkpoint, use **Agent tool** to invoke \`openspec-optimizer\`, record optimization proposal hashes before applying Search/Replace blocks, then run speculative reviewer verification with **Agent tool**. Restore checkpoint on failure and record phase2 optimization/verification through CLI.
 10. Run \`openspec verify seal "<change-name>" --json\`; preserve diagnostics if seal fails.
 
 ## Evidence Rules
