@@ -125,9 +125,9 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
 ## Skill Delegation Protocol
 
 **Internal Skills** — The following skills are subagent-only and MUST NOT be read directly by this agent:
-- \`openspec-impact-sweeper\` — Invoke via Agent tool, subagent loads via Skill tool
-- \`openspec-reviewer\` — Invoke via Agent tool, subagent loads via Skill tool
-- \`openspec-optimizer\` — Invoke via Agent tool, subagent loads via Skill tool
+- \`openspec-impact-sweeper\` — Use a subagent, not direct reading
+- \`openspec-reviewer\` — Use a subagent, not direct reading
+- \`openspec-optimizer\` — Use a subagent, not direct reading
 
 **Never** use the Read tool on \`.claude/skills/openspec-impact-sweeper/SKILL.md\`, \`.claude/skills/openspec-reviewer/SKILL.md\`, or \`.claude/skills/openspec-optimizer/SKILL.md\`.
 

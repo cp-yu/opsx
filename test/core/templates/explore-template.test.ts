@@ -13,7 +13,7 @@ describe('explore template impact sweeps', () => {
       expect(template).toContain('Invoke `openspec-impact-sweeper`');
       expect(template).toContain('preparing to say the discussion is ready for proposal/change artifacts');
       expect(template).toContain('After the subagent returns the JSON report path');
-      expect(template).toContain('use the Read tool to load the JSON file content');
+      expect(template).toContain('read that JSON report and interpret the findings in the explore conversation');
       expect(template).toContain('Do not claim proposal readiness until those scope-affecting questions are resolved or explicitly deferred by the user');
     }
   });
@@ -21,7 +21,8 @@ describe('explore template impact sweeps', () => {
   it('supports repeated independent concept sweeps', () => {
     for (const template of templates) {
       expect(template).toContain('the user introduces a new module, workflow, command, configuration key, project concept, or unfamiliar domain term');
-      expect(template).toContain('Use the Agent tool to spawn a subagent with a prompt instructing it to use the Skill tool');
+      expect(template).toContain('Use a subagent, not direct reading, for `openspec-impact-sweeper`');
+      expect(template).toContain('Do not read `openspec-impact-sweeper/SKILL.md` directly in the main agent');
       expect(template).toContain('Treat each new concept as an independent sweep');
       expect(template).toContain('even if another concept was already swept earlier in the conversation');
     }
