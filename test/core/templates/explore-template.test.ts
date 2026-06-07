@@ -68,15 +68,48 @@ describe('explore template impact sweeps', () => {
     }
   });
 
-  it('routes only observable behavior into specs', () => {
+  it('states the main explore agent is read-only', () => {
     for (const template of templates) {
+      expect(template).toContain('Explore is read-only for the main agent');
+      expect(template).toContain('Do not create, edit, delete, format, regenerate, or patch any project file or OpenSpec artifact');
+      expect(template).toContain('produce a conversation-only `Design Summary`');
+      expect(template).toContain('instruct the user to call `$openspec-propose <change-name>`');
+    }
+  });
+
+  it('routes command-template artifact actions to non-explore workflows', () => {
+    const commandTemplate = getOpsxExploreCommandTemplate().content;
+
+    expect(commandTemplate).toContain('Call `$openspec-propose <change-name>` to create artifacts from the Design Summary');
+    expect(commandTemplate).toContain('route artifact writes to `$openspec-propose <change-name>` or the appropriate non-explore workflow');
+  });
+
+  it('treats design confirmation as direction only', () => {
+    for (const template of templates) {
+      expect(template).toContain('User selection of an option, confirmation of a design section, or statements such as "可以", "就这样", "选 2", or "拆成多个文件" confirm design direction only');
+      expect(template).toContain('They are not authorization to modify files');
+    }
+  });
+
+  it('keeps the sweeper report as the only explore write exception', () => {
+    for (const template of templates) {
+      expect(template).toContain('Only the `openspec-impact-sweeper` subagent may write its JSON report under `openspec/sweeper/`');
+      expect(template).toContain('the main explore agent may only read and interpret that report');
+      expect(template).toContain('The sweeper report write is an internal subagent exception and does not grant the main explore agent permission to create or modify project files or OpenSpec artifacts');
+    }
+  });
+
+  it('routes active-change insights to future capture targets', () => {
+    for (const template of templates) {
+      expect(template).toContain('Future Capture Target');
       expect(template).toContain('Observable behavior requirement');
       expect(template).toContain('Observable behavior changed');
       expect(template).toContain('Refactor rationale or rejected path');
       expect(template).toContain('Implementation strategy');
       expect(template).toContain('OPSX graph intent changed');
-      expect(template).toContain('This is observable behavior. Add it to specs?');
-      expect(template).not.toContain('New requirement discovered | `specs/<capability>/spec.md`');
+      expect(template).toContain('This is observable behavior for `specs/<capability>/spec.md`; include it in the Design Summary');
+      expect(template).toContain('That is a design decision for `design.md`; include it in the Design Summary');
+      expect(template).toContain('This changes scope for `proposal.md`; include it in the Design Summary');
     }
   });
 });

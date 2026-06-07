@@ -1,0 +1,9 @@
+schema_version: 1
+ADDED: {}
+MODIFIED:
+  capabilities:
+    - id: cap.ai.explore-brainstorming
+      intent: Explore 阶段的 brainstorming 流程，包含 6 步 checklist、一次一问纪律、2-3 方案对比、Design Summary 生成；main explore agent 严格 read-only，用户设计确认不构成文件写入授权；已有 change 的 insight 仅分类为 future capture target，不在 explore 中更新 artifacts
+    - id: cap.ai.workflow-templates
+      intent: 提供 AI workflow 模板，使用统一 CLI 查询接口（openspec list --specs），并在 propose/explore/spec-driven artifact instructions 中维护 specs=WHAT、design=WHY/HOW 的内容边界提示；explore 模板将 impact-sweeper 作为内部 subagent JSON report 写例外，但不赋予 main explore agent artifact 写入权限；apply skill 的 Phase 2 优化协议通过 `references/apply-phase2-optimization.md` 暴露完整 stash checkpoint 语义，主 `SKILL.md` 只保留强入口。
+REMOVED: {}

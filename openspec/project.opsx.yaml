@@ -62,7 +62,7 @@ capabilities:
     intent: 建立内部 workflow ID 到外部用户命令 slug 的映射，使生成、检测、迁移和清理命令制品时都遵循同一套命名契约
     type: capability
   - id: cap.ai.explore-brainstorming
-    intent: Explore 阶段的 brainstorming 流程，包含 6 步 checklist、一次一问纪律、2-3 方案对比、Design Summary 生成；在已有 change 上捕获 insight 时仅将可观察行为路由到 specs，将重构理由、拒绝路径和实现策略路由到 design.md
+    intent: Explore 阶段的 brainstorming 流程，包含 6 步 checklist、一次一问纪律、2-3 方案对比、Design Summary 生成；main explore agent 严格 read-only，用户设计确认不构成文件写入授权；已有 change 的 insight 仅分类为 future capture target，不在 explore 中更新 artifacts
     type: capability
   - id: cap.ai.impact-sweeper
     intent: 通过 CLI 查询接口获取 OPSX 数据和 cap→spec 映射，生成影响面报告；在读取 specs 时同时执行术语提取步骤，用于检测术语漂移
@@ -105,7 +105,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 提供 AI workflow 模板，使用统一 CLI 查询接口（openspec list --specs），并在 propose/explore/spec-driven artifact instructions 中维护 specs=WHAT、design=WHY/HOW 的内容边界提示；apply skill 的 Phase 2 优化协议通过 `references/apply-phase2-optimization.md` 暴露完整 stash checkpoint 语义，主 `SKILL.md` 只保留强入口。
+    intent: 提供 AI workflow 模板，使用统一 CLI 查询接口（openspec list --specs），并在 propose/explore/spec-driven artifact instructions 中维护 specs=WHAT、design=WHY/HOW 的内容边界提示；explore 模板将 impact-sweeper 作为内部 subagent JSON report 写例外，但不赋予 main explore agent artifact 写入权限；apply skill 的 Phase 2 优化协议通过 `references/apply-phase2-optimization.md` 暴露完整 stash checkpoint 语义，主 `SKILL.md` 只保留强入口。
     type: capability
   - id: cap.apply.branch-isolation
     intent: Apply 阶段分支隔离策略由 apply.defaultIsolation 驱动；main/master 上仅 ask 模式询问用户，branch/worktree/none 配置直接执行并持久化 .apply-isolation.json。
