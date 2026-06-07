@@ -49,6 +49,9 @@ describe('apply change workflow template', () => {
       expect(template).toContain('Create worktree at `.worktrees/<change-name>`');
       expect(template).toContain('use that as the default choice without prompting; only `ask` is interactive and means prompt');
       expect(template).toContain("path.join(changeDir, '.apply-isolation.json')");
+      expect(template).toContain('method');
+      expect(template).toContain('branchName');
+      expect(template).toContain('originalBranch');
       expect(template).toContain('using-git-worktrees');
       expect(template).toContain('Master Agent Strict TDD Implementation');
       expect(template).toContain('For behavior or code Checks, add or update the targeted test before implementation.');

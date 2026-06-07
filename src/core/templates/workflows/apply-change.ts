@@ -82,6 +82,7 @@ Before Phase 0 implementation:
     "originalBranch": "<original-branch-name>"
   }
   \`\`\`
+- Do not use \`type\`/\`name\` or \`originBranch\` as aliases for those fields.
 - For worktrees, first check \`.claude/skills/using-git-worktrees/\` and \`skills/using-git-worktrees/\`. Use that skill when present; otherwise use \`git worktree add\` with paths built through \`path.join()\`.
 
 ### Master Agent Strict TDD Implementation
@@ -140,7 +141,7 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
 
 ### Branch Isolation Preflight
 
-Run \`git branch --show-current\`. On main/master ask whether to Create branch \`<change-name>\`, Create worktree at \`.worktrees/<change-name>\`, or continue; config branch/worktree/none use that as the default choice without prompting; only \`ask\` is interactive and means prompt. Persist \`path.join(changeDir, '.apply-isolation.json')\`; use using-git-worktrees when present.
+Run \`git branch --show-current\`. On main/master ask whether to Create branch \`<change-name>\`, Create worktree at \`.worktrees/<change-name>\`, or continue; config branch/worktree/none use that as the default choice without prompting; only \`ask\` is interactive and means prompt. Persist \`path.join(changeDir, '.apply-isolation.json')\` with \`method\`, \`branchName\`, optional \`worktreePath\`, and \`originalBranch\`. Use using-git-worktrees when present.
 
 ### Master Agent Strict TDD Implementation
 
