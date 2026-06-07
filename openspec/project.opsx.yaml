@@ -48,7 +48,7 @@ domains:
     type: domain
 capabilities:
   - id: cap.ai.agent-docs
-    intent: 生成面向 Agent 的指令文档，并让所有会生成或回写 artifact 的 workflow surface 共享同一套配置投影合同
+    intent: 生成面向 Agent 的指令文档，并让所有会生成或回写 artifact 的 workflow surface 共享同一套 config projection contract；contract 明确 prose 字段、canonical token 例外和英文术语保留边界。
     status: active
     type: capability
   - id: cap.ai.agent-prompt-guidance
@@ -75,7 +75,7 @@ capabilities:
     intent: Phase 2 优化器 skill，负责行为保持优化和 Pocock 坏味道检测（从 5 维度扩展至 8 维度，每个维度增加具体识别指标、重构模式和行动指南）
     type: capability
   - id: cap.ai.propose-smart-routing
-    intent: Propose 阶段的智能路由，根据输入详细程度决定是否需要 explore；生成 specs 时应用 schema 返回的 Spec content boundary，将非行为内容路由到 design/tasks/proposal/opsx-delta 而非 requirement
+    intent: Propose 阶段的智能路由与 artifact 生成 guidance；生成 specs 时应用 schema content boundary，并消费共享 artifact language contract 而不增加额外 per-artifact language scan。
     type: capability
   - id: cap.ai.reviewer-cleanliness-dimension
     intent: Cleanliness 维度的检测逻辑、severity 映射和跨语言工具适配策略，用于检测重构残留、孤儿代码、过时 TODO、半迁移等遗留物
@@ -105,7 +105,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 提供 AI workflow 模板，使用统一 CLI 查询接口（openspec list --specs），并在 propose/explore/spec-driven artifact instructions 中维护 specs=WHAT、design=WHY/HOW 的内容边界提示；explore 模板将 impact-sweeper 作为内部 subagent JSON report 写例外，但不赋予 main explore agent artifact 写入权限；apply skill 的 Phase 2 优化协议通过 `references/apply-phase2-optimization.md` 暴露完整 stash checkpoint 语义，主 `SKILL.md` 只保留强入口。
+    intent: 提供 AI workflow 模板和 spec-driven artifact instructions；共享 `Document Language Contract` 与 schema instructions 明确 artifact prose 跟随 `proseLanguage`，结构 token 保持 canonical。
     type: capability
   - id: cap.apply.branch-isolation
     intent: Apply 阶段分支隔离策略由 apply.defaultIsolation 驱动；main/master 上仅 ask 模式询问用户，branch/worktree/none 配置直接执行并持久化 .apply-isolation.json。
@@ -124,7 +124,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.artifact-graph.instruction-loader
-    intent: 加载 Schema 模板，并按 workflow surface 与 artifact 编译项目配置投影；spec-driven tasks instruction 将要求 Checks 通过 Verifies 字段锚定 change-local spec requirement/scenario
+    intent: 加载 Schema 模板，并按 workflow surface 与 artifact 编译项目配置投影；`proseLanguage` projection 明确新写或改写 prose 的字段范围与 canonical token 保留边界。
     status: active
     type: capability
   - id: cap.artifact-graph.parse

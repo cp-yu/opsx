@@ -1,0 +1,12 @@
+schema_version: 1
+MODIFIED:
+  capabilities:
+    - id: cap.ai.agent-docs
+      intent: 生成面向 Agent 的指令文档，并让所有会生成或回写 artifact 的 workflow surface 共享同一套 config projection contract；contract 明确 prose 字段、canonical token 例外和英文术语保留边界。
+    - id: cap.artifact-graph.instruction-loader
+      intent: 加载 Schema 模板，并按 workflow surface 与 artifact 编译项目配置投影；`proseLanguage` projection 明确新写或改写 prose 的字段范围与 canonical token 保留边界。
+    - id: cap.ai.workflow-templates
+      intent: 提供 AI workflow 模板和 spec-driven artifact instructions；共享 `Document Language Contract` 与 schema instructions 明确 artifact prose 跟随 `proseLanguage`，结构 token 保持 canonical。
+    - id: cap.ai.propose-smart-routing
+      intent: Propose 阶段的智能路由与 artifact 生成 guidance；生成 specs 时应用 schema content boundary，并消费共享 artifact language contract 而不增加额外 per-artifact language scan。
+

@@ -177,6 +177,19 @@ describe('instruction-loader', () => {
       expect(instructions.instruction).toMatch(/requirement/i);
       expect(instructions.instruction).toMatch(/scenario/i);
       expect(instructions.instruction).toMatch(/paths/i);
+      expect(instructions.instruction).toContain('Task titles, check names');
+      expect(instructions.instruction).toContain('Evidence:/Expect:');
+      expect(instructions.instruction).toContain('proseLanguage');
+    });
+
+    it('should expose prose language boundaries for specs', () => {
+      const context = loadChangeContext(tempDir, 'my-change');
+      const instructions = generateInstructions(context, 'specs');
+
+      expect(instructions.instruction).toContain('`### Requirement:` and `#### Scenario:`');
+      expect(instructions.instruction).toContain('New Requirement titles and new Scenario titles');
+      expect(instructions.instruction).toContain('MODIFIED Requirements');
+      expect(instructions.instruction).toContain('proseLanguage');
     });
 
     it('should show dependencies with completion status', () => {
@@ -462,6 +475,12 @@ rules:
 
         expect(instructions.configProjection.prompt.compiledLines.join('\n')).toContain(
           'Use 中文 for natural-language prose that you newly write or revise.'
+        );
+        expect(instructions.configProjection.prompt.compiledLines.join('\n')).toContain(
+          'task titles, check names, Requirement titles, Scenario titles'
+        );
+        expect(instructions.configProjection.prompt.compiledLines.join('\n')).toContain(
+          'English project terminology may remain embedded'
         );
         expect(instructions.configProjection.prompt.compiledLines.join('\n')).toContain(
           'Keep rationale concise'

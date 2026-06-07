@@ -101,4 +101,22 @@ describe('propose template post-validation flow', () => {
       expect(body).toContain('route non-behavior content to design/tasks/proposal/opsx-delta instead of requirements');
     }
   });
+
+  it('uses the shared document language contract for proseLanguage boundaries', () => {
+    for (const body of getProposeBodies()) {
+      expect(body).toContain('Document Language Contract');
+      expect(body).toContain('task titles, check names, Requirement titles, Scenario titles');
+      expect(body).toContain('Expect/Evidence descriptions');
+      expect(body).toContain('English project terminology may remain embedded');
+      expect(body).toContain('ordinary English sentences');
+    }
+  });
+
+  it('does not require per-artifact language self-checks', () => {
+    for (const body of getProposeBodies()) {
+      expect(body).not.toContain('non-canonical English prose scan');
+      expect(body).not.toContain('ordinary English prose scan');
+      expect(body).not.toContain('per-artifact self-check');
+    }
+  });
 });

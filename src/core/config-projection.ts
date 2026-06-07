@@ -153,7 +153,10 @@ export function normalizeProjectConfig(config: ProjectConfig | null): Normalized
 function buildProseLanguageLines(proseLanguage: string): string[] {
   return [
     `Use ${proseLanguage} for natural-language prose that you newly write or revise.`,
-    'Preserve canonical tokens unchanged: SHALL, MUST, section headers, scenario headers, BDD keywords, IDs, schema keys, paths, commands, and code identifiers.',
+    'Natural-language prose includes task titles, check names, Requirement titles, Scenario titles, bullet descriptions, Expect/Evidence descriptions, rationale, goals, risks, and summaries.',
+    'Preserve canonical tokens unchanged: SHALL, MUST, template headings, section headers, scenario headers, BDD keywords, IDs, schema keys, relation types, paths, commands, and code identifiers.',
+    'Preserve exact existing Requirement titles required for MODIFIED matching.',
+    'English project terminology may remain embedded in prose, but ordinary English sentences and titles still follow proseLanguage.',
   ];
 }
 

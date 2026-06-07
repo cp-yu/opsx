@@ -60,6 +60,9 @@ artifacts:
       - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
       - **CRITICAL**: Scenarios MUST use exactly 4 hashtags (`####`). Using 3 hashtags or bullets will fail silently.
       - Every requirement MUST have at least one scenario.
+      - `### Requirement:` and `#### Scenario:` markers remain canonical.
+      - New Requirement titles and new Scenario titles follow `proseLanguage` when configured.
+      - Existing Requirement titles under `MODIFIED Requirements` remain exact for matching.
 
       MODIFIED requirements workflow:
       1. Locate the existing requirement in openspec/specs/<capability>/spec.md
@@ -88,6 +91,7 @@ artifacts:
       **Migration**: Use new export endpoint at /api/v2/export
       ```
 
+      Examples show structure only. When `proseLanguage` is configured, do not carry over ordinary English example prose into generated artifacts.
       Specs should be testable - each scenario is a potential test case.
     requires:
       - proposal
@@ -187,6 +191,9 @@ artifacts:
       - `Verifies:` MUST NOT use `openspec/specs/...`, project-root-relative paths, archived/main spec paths, absolute paths, parent traversal, or backslash-separated paths
 
       Conversion rules:
+      - Task titles, check names, requirements bullet prose, and Evidence:/Expect: descriptions follow `proseLanguage` when configured.
+      - Structural labels such as `### Task N:`, `Goal`, `Files`, `Requirements`, `Checks`, `Verifies:`, `Command:`, `Evidence:`, and `Expect:` remain canonical.
+      - Examples show structure only. When `proseLanguage` is configured, do not carry over ordinary English example prose into generated artifacts.
       - Generate one task from each major component in the design or Design Summary
       - Put technical stack constraints and boundary conditions under Requirements, not free-form prose
       - Validation work maps to checks for invalid-input behavior

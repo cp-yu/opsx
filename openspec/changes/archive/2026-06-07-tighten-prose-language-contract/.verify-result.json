@@ -1,0 +1,279 @@
+{
+  "timestamp": "2026-06-07T11:53:02.074Z",
+  "result": "PASS_WITH_WARNINGS",
+  "issues": [
+    {
+      "severity": "WARNING",
+      "requirement": "workspace cleanliness",
+      "message": "Untracked issue note still proposes a per-artifact language self-check that the final design/spec explicitly exclude.",
+      "recommendation": "Do not include that note in the change, or update it to match the final no-self-check contract before committing docs."
+    }
+  ],
+  "tasksFileHash": "9a02c5b4ef1fe77ad3dfe9a163829281eebaade067b49cb142f3c13e523b3f31",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      "CLAUDE.md",
+      "openspec/changes/tighten-prose-language-contract/.apply-isolation.json",
+      "openspec/changes/tighten-prose-language-contract/design.md",
+      "openspec/changes/tighten-prose-language-contract/opsx-delta.yaml",
+      "openspec/changes/tighten-prose-language-contract/proposal.md",
+      "openspec/changes/tighten-prose-language-contract/specs/docs-agent-instructions/spec.md",
+      "openspec/changes/tighten-prose-language-contract/specs/instruction-loader/spec.md",
+      "openspec/changes/tighten-prose-language-contract/specs/openspec-conventions/spec.md",
+      "openspec/changes/tighten-prose-language-contract/specs/propose-workflow/spec.md",
+      "openspec/changes/tighten-prose-language-contract/tasks.md",
+      "openspec/docs/propose-language-contract-issue.md",
+      "openspec/project.opsx.code-map.yaml",
+      "openspec/project.opsx.yaml",
+      "package.json",
+      "schemas/spec-driven/schema.yaml",
+      "src/core/config-projection.ts",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "src/core/templates/workflows/propose.ts",
+      "test/core/artifact-graph/instruction-loader.test.ts",
+      "test/core/project-config.test.ts",
+      "test/core/templates/propose-template.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts"
+    ],
+    "evidenceFingerprint": "1839b5c3456b443901b0d54d13db778ad45eae2f56237b3c96d34696e4469842",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "CLAUDE.md",
+        "hash": "13dde98de4cfb621c04b3e0696c948da9b67aa206bbf94aa0d8df2f566c2588d"
+      },
+      {
+        "path": "openspec/changes/tighten-prose-language-contract/.apply-isolation.json",
+        "hash": "7bd81f4ba31a23b79a377a50cf3bae176533f660a12b3fee76ad205b328c20a6"
+      },
+      {
+        "path": "openspec/changes/tighten-prose-language-contract/design.md",
+        "hash": "e96da011ebb4059acd430ea31732b774cc4d7a21f69b2984fec4ecf06e173fe3"
+      },
+      {
+        "path": "openspec/changes/tighten-prose-language-contract/opsx-delta.yaml",
+        "hash": "0859127d8a69562e9435ab088d19d1508225a3150850650f7825804c3801f42b"
+      },
+      {
+        "path": "openspec/changes/tighten-prose-language-contract/proposal.md",
+        "hash": "268b7278f9465842603dc388b1bd8c2fa73a196c8520a707eb691c5784518363"
+      },
+      {
+        "path": "openspec/changes/tighten-prose-language-contract/specs/docs-agent-instructions/spec.md",
+        "hash": "d771dbd66c8ccdf23d0453226e61dc8b15dac47628c8318a6aea890e5988bb2a"
+      },
+      {
+        "path": "openspec/changes/tighten-prose-language-contract/specs/instruction-loader/spec.md",
+        "hash": "921bd264516e0a5d4b79b0dd0e1228b03c3383ccebb91823bef6ef9a0718840e"
+      },
+      {
+        "path": "openspec/changes/tighten-prose-language-contract/specs/openspec-conventions/spec.md",
+        "hash": "d14c8b1defc2d1032d6b6b65cda6429238a476b8a60fc018da36c559a6d9fee8"
+      },
+      {
+        "path": "openspec/changes/tighten-prose-language-contract/specs/propose-workflow/spec.md",
+        "hash": "6e8ff6d6b489a6cb678673afa264aedafd4f9b76d8f9b2cad318b3139c5d5b25"
+      },
+      {
+        "path": "openspec/changes/tighten-prose-language-contract/tasks.md",
+        "hash": "9a02c5b4ef1fe77ad3dfe9a163829281eebaade067b49cb142f3c13e523b3f31"
+      },
+      {
+        "path": "openspec/docs/propose-language-contract-issue.md",
+        "hash": "946bcdcf621d930150e812fce13ebcdc2a28dabc58acd0908297413d1a054c27"
+      },
+      {
+        "path": "openspec/project.opsx.code-map.yaml",
+        "hash": "132dd36d7c3d3173cf1f94bd363c066e6b43056832368835f7495da36145449c"
+      },
+      {
+        "path": "openspec/project.opsx.yaml",
+        "hash": "16b8569136b0a99679c08395f0967c717bb7f4d93a27c172ccde593bcdde0311"
+      },
+      {
+        "path": "package.json",
+        "hash": "b6bc49503586b7918213a95b60dfad9a981535544b9d9789630467474f3effd8"
+      },
+      {
+        "path": "schemas/spec-driven/schema.yaml",
+        "hash": "8fffc5643bcbccfbc47a8cd7a00fbc2cf920acc60203b5ab4875480ac756c8d3"
+      },
+      {
+        "path": "src/core/config-projection.ts",
+        "hash": "e56ff3efa482972b8e75b7620127773b47c8a95a4df6348a70bfff6635a625a4"
+      },
+      {
+        "path": "src/core/templates/fragments/opsx-fragments.ts",
+        "hash": "b0e0163df965373b44332c6f733af6a20ace53abb1ce7a88df320a22fc4f5b5e"
+      },
+      {
+        "path": "src/core/templates/workflows/propose.ts",
+        "hash": "d8c0fbc22b76581a38b93beb7b53eb1cd0d76e33d6c96992b6e37536e830637e"
+      },
+      {
+        "path": "test/core/artifact-graph/instruction-loader.test.ts",
+        "hash": "d3b2fd6f9d0e429e8eb6dc2d89e1570d39f9990adbe93dddc725e5ce3073e684"
+      },
+      {
+        "path": "test/core/project-config.test.ts",
+        "hash": "dc4164bf519062346e7620229da77ced2dc891e19a985b67678718283dca3c59"
+      },
+      {
+        "path": "test/core/templates/propose-template.test.ts",
+        "hash": "45a8a4bc9a622126ca5cd06a62c7d5e52ae8a85c91101767a246c1b7849725f3"
+      },
+      {
+        "path": "test/core/templates/skill-templates-parity.test.ts",
+        "hash": "311e6a2f92ccdb8e566289ff6068505f634ff30a3c16c6213aa85ab75cf5e4c2"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "c33142af39b042bb967b501cb6bffc6576a0a93d"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-07T11:56:21.441Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "Optimizer found no behavior-preserving simplifications worth applying."
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-06-07T11:53:02.074Z",
+      "result": "PASS_WITH_WARNINGS",
+      "issues": [
+        {
+          "severity": "WARNING",
+          "requirement": "workspace cleanliness",
+          "message": "Untracked issue note still proposes a per-artifact language self-check that the final design/spec explicitly exclude.",
+          "recommendation": "Do not include that note in the change, or update it to match the final no-self-check contract before committing docs."
+        }
+      ],
+      "tasksFileHash": "9a02c5b4ef1fe77ad3dfe9a163829281eebaade067b49cb142f3c13e523b3f31",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          "CLAUDE.md",
+          "openspec/changes/tighten-prose-language-contract/.apply-isolation.json",
+          "openspec/changes/tighten-prose-language-contract/design.md",
+          "openspec/changes/tighten-prose-language-contract/opsx-delta.yaml",
+          "openspec/changes/tighten-prose-language-contract/proposal.md",
+          "openspec/changes/tighten-prose-language-contract/specs/docs-agent-instructions/spec.md",
+          "openspec/changes/tighten-prose-language-contract/specs/instruction-loader/spec.md",
+          "openspec/changes/tighten-prose-language-contract/specs/openspec-conventions/spec.md",
+          "openspec/changes/tighten-prose-language-contract/specs/propose-workflow/spec.md",
+          "openspec/changes/tighten-prose-language-contract/tasks.md",
+          "openspec/docs/propose-language-contract-issue.md",
+          "openspec/project.opsx.code-map.yaml",
+          "openspec/project.opsx.yaml",
+          "package.json",
+          "schemas/spec-driven/schema.yaml",
+          "src/core/config-projection.ts",
+          "src/core/templates/fragments/opsx-fragments.ts",
+          "src/core/templates/workflows/propose.ts",
+          "test/core/artifact-graph/instruction-loader.test.ts",
+          "test/core/project-config.test.ts",
+          "test/core/templates/propose-template.test.ts",
+          "test/core/templates/skill-templates-parity.test.ts"
+        ],
+        "evidenceFingerprint": "08fb7e872a19844f2c2e21bf56edbbeaffdddf3ec85bdf8d9f8098958e226981",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "CLAUDE.md",
+            "hash": "13dde98de4cfb621c04b3e0696c948da9b67aa206bbf94aa0d8df2f566c2588d"
+          },
+          {
+            "path": "openspec/changes/tighten-prose-language-contract/.apply-isolation.json",
+            "hash": "7bd81f4ba31a23b79a377a50cf3bae176533f660a12b3fee76ad205b328c20a6"
+          },
+          {
+            "path": "openspec/changes/tighten-prose-language-contract/design.md",
+            "hash": "e96da011ebb4059acd430ea31732b774cc4d7a21f69b2984fec4ecf06e173fe3"
+          },
+          {
+            "path": "openspec/changes/tighten-prose-language-contract/opsx-delta.yaml",
+            "hash": "0859127d8a69562e9435ab088d19d1508225a3150850650f7825804c3801f42b"
+          },
+          {
+            "path": "openspec/changes/tighten-prose-language-contract/proposal.md",
+            "hash": "268b7278f9465842603dc388b1bd8c2fa73a196c8520a707eb691c5784518363"
+          },
+          {
+            "path": "openspec/changes/tighten-prose-language-contract/specs/docs-agent-instructions/spec.md",
+            "hash": "d771dbd66c8ccdf23d0453226e61dc8b15dac47628c8318a6aea890e5988bb2a"
+          },
+          {
+            "path": "openspec/changes/tighten-prose-language-contract/specs/instruction-loader/spec.md",
+            "hash": "921bd264516e0a5d4b79b0dd0e1228b03c3383ccebb91823bef6ef9a0718840e"
+          },
+          {
+            "path": "openspec/changes/tighten-prose-language-contract/specs/openspec-conventions/spec.md",
+            "hash": "d14c8b1defc2d1032d6b6b65cda6429238a476b8a60fc018da36c559a6d9fee8"
+          },
+          {
+            "path": "openspec/changes/tighten-prose-language-contract/specs/propose-workflow/spec.md",
+            "hash": "6e8ff6d6b489a6cb678673afa264aedafd4f9b76d8f9b2cad318b3139c5d5b25"
+          },
+          {
+            "path": "openspec/changes/tighten-prose-language-contract/tasks.md",
+            "hash": "9a02c5b4ef1fe77ad3dfe9a163829281eebaade067b49cb142f3c13e523b3f31"
+          },
+          {
+            "path": "openspec/docs/propose-language-contract-issue.md",
+            "hash": "946bcdcf621d930150e812fce13ebcdc2a28dabc58acd0908297413d1a054c27"
+          },
+          {
+            "path": "openspec/project.opsx.code-map.yaml",
+            "hash": "d7e0b2e1c4e8ebde83de9edc2cbee62b072c62caf9be7663e856ea839a09b236"
+          },
+          {
+            "path": "openspec/project.opsx.yaml",
+            "hash": "4e62831203c1d5667868e57be4c3c3020a8c4a8b48b9e12a064c501bf0d95e90"
+          },
+          {
+            "path": "package.json",
+            "hash": "b6bc49503586b7918213a95b60dfad9a981535544b9d9789630467474f3effd8"
+          },
+          {
+            "path": "schemas/spec-driven/schema.yaml",
+            "hash": "8fffc5643bcbccfbc47a8cd7a00fbc2cf920acc60203b5ab4875480ac756c8d3"
+          },
+          {
+            "path": "src/core/config-projection.ts",
+            "hash": "e56ff3efa482972b8e75b7620127773b47c8a95a4df6348a70bfff6635a625a4"
+          },
+          {
+            "path": "src/core/templates/fragments/opsx-fragments.ts",
+            "hash": "b0e0163df965373b44332c6f733af6a20ace53abb1ce7a88df320a22fc4f5b5e"
+          },
+          {
+            "path": "src/core/templates/workflows/propose.ts",
+            "hash": "d8c0fbc22b76581a38b93beb7b53eb1cd0d76e33d6c96992b6e37536e830637e"
+          },
+          {
+            "path": "test/core/artifact-graph/instruction-loader.test.ts",
+            "hash": "d3b2fd6f9d0e429e8eb6dc2d89e1570d39f9990adbe93dddc725e5ce3073e684"
+          },
+          {
+            "path": "test/core/project-config.test.ts",
+            "hash": "dc4164bf519062346e7620229da77ced2dc891e19a985b67678718283dca3c59"
+          },
+          {
+            "path": "test/core/templates/propose-template.test.ts",
+            "hash": "45a8a4bc9a622126ca5cd06a62c7d5e52ae8a85c91101767a246c1b7849725f3"
+          },
+          {
+            "path": "test/core/templates/skill-templates-parity.test.ts",
+            "hash": "311e6a2f92ccdb8e566289ff6068505f634ff30a3c16c6213aa85ab75cf5e4c2"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "c33142af39b042bb967b501cb6bffc6576a0a93d"
+      }
+    }
+  }
+}
