@@ -63,6 +63,38 @@ ${VERIFY_STATE_MACHINE_DIAGRAM}
    If seal passes, report apply as complete with verified and optimized status. If seal fails, preserve diagnostics, convert them into remediation context, map the remediation to the affected task, and return to Phase 0 recovery. Do not pause on the first seal failure.
 `.trim();
 
+const APPLY_PHASE2_OPTIMIZATION_REFERENCE = `
+## Apply Phase 2 Optimization Protocol
+
+The checkpoint is a git stash entry, not a git tag. Do not create tag checkpoints for apply optimization.
+
+1. Skip Phase 2 only when the user requested \`--skip-optimization\` or \`optimization.enabled: false\`; record \`SKIPPED\` through \`openspec verify phase2\`.
+2. Read \`optimization.optRetries\` from \`openspec/config.yaml\`; default to \`2\`.
+3. Before the first optimization attempt, save the Phase 1 baseline:
+   \`\`\`bash
+   git stash push -u -m "apply-opt-checkpoint-r0"
+   \`\`\`
+4. Spawn the optimizer subagent and instruct it to invoke the \`openspec-optimizer\` skill. The optimizer proposes Search/Replace blocks only; it MUST NOT edit files.
+5. For each proposed optimization, record pre-patch hashes before editing:
+   \`\`\`bash
+   openspec verify phase2 "<change-name>" --type=optimization --files "<affected-files>" --input '<json>' --json
+   \`\`\`
+6. Apply Search/Replace blocks atomically, then spawn the reviewer subagent for speculative Phase 1 re-verification.
+7. On speculative PASS, record verification PASS. If another retry remains, save the new successful state:
+   \`\`\`bash
+   git stash push -u -m "apply-opt-checkpoint-r<N>"
+   \`\`\`
+8. On speculative FAIL, restore the latest checkpoint:
+   \`\`\`bash
+   git reset --hard HEAD
+   git clean -fd
+   git stash apply stash@{0}
+   \`\`\`
+   Record the failed direction in \`.verify-result.json\`; the checkpoint is not consumed.
+9. Each complete proposal + patch + reviewer re-verify loop consumes one \`optRetries\` budget, whether it passes or fails. Format or Search/Replace matching problems are handled by the main agent and do not consume retry budget.
+10. When all attempts finish, consume all \`apply-opt-checkpoint-*\` stash entries only after the final safe workspace state is confirmed.
+`.trim();
+
 const APPLY_STRICT_TDD_IMPLEMENTATION = `
 ### Branch Isolation Preflight
 
@@ -159,7 +191,7 @@ Invoke reviewer subagent, persist \`openspec verify phase1 "<change-name>" --inp
 
 ### Phase 2: Optimize under checkpoint protection
 
-Respect \`--skip-optimization\`; read \`optimization.optRetries\`; create \`apply-opt-checkpoint-r0\`; invoke Optimizer subagent; use \`openspec verify phase2\`; record each failed direction.
+You MUST read \`references/apply-phase2-optimization.md\` before Phase 2. Checkpoints are git stash entries, not git tags. Respect \`--skip-optimization\`; read \`optimization.optRetries\`; create the initial stash checkpoint \`apply-opt-checkpoint-r0\` with git stash; invoke Optimizer subagent; use \`openspec verify phase2\`; record each failed direction.
 
 ### Phase 3: Seal final result
 
@@ -175,6 +207,12 @@ Report schema, progress, current task, completed tasks this session, and final s
     license: 'MIT',
     compatibility: 'Requires openspec CLI.',
     metadata: { author: 'openspec', version: '1.0' },
+    referenceFiles: [
+      {
+        path: 'references/apply-phase2-optimization.md',
+        content: APPLY_PHASE2_OPTIMIZATION_REFERENCE,
+      },
+    ],
   };
 }
 

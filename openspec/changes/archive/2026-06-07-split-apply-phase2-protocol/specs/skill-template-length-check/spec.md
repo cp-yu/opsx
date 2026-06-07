@@ -1,8 +1,5 @@
-# skill-template-length-check Specification
+## MODIFIED Requirements
 
-## Purpose
-此规约记录变更 skill-length-validation 引入的行为，请在后续同步或归档前补全正式 Purpose。
-## Requirements
 ### Requirement: 测试验证所有生成 skill 文件行数限制
 
 测试 MUST 调用 `getSkillTemplates()` 获取所有 skill 模板（包括 default、claude、codex 三种 tool 变体），并验证每个生成的 `SKILL.md` 文件不超过 200 行、每个 `template.referenceFiles[]` 文件不超过 500 行。`SKILL.md` MUST 使用 `generateSkillContent(template, version).split('\n').length` 计算，`template.referenceFiles[]` MUST 按每个 reference 文件各自的 `content.split('\n').length` 计算。测试 MUST NOT 汇总同一 skill 目录下所有文件的总行数。
@@ -48,20 +45,6 @@
 - **WHEN** `openspec-optimizer/SKILL.md` 为 180 行且 `openspec-optimizer/references/output-protocol.md` 为 501 行
 - **THEN** 错误信息 MUST 只报告 `openspec-optimizer/references/output-protocol.md`
 - **AND** 测试 MUST NOT 将两个文件相加后报告 `openspec-optimizer` 超标
-
-### Requirement: 测试覆盖所有 tool 变体
-
-测试 MUST 通过调用 `getSkillTemplates(undefined, undefined)`、`getSkillTemplates(undefined, 'claude')`、`getSkillTemplates(undefined, 'codex')` 三次来获取所有可能的模板变体，确保每个 tool 特定的实现都被验证。
-
-#### Scenario: 获取所有变体
-
-- **WHEN** 调用 `getSkillTemplates` 三次分别传入 undefined、'claude'、'codex' 作为 toolId 参数
-- **THEN** 返回的模板列表 MUST 包含所有已定义的 skill 变体
-
-#### Scenario: 验证变体独立性
-
-- **WHEN** 某个 skill（如 openspec-verify）针对不同 tool 有不同的生成文件内容
-- **THEN** 测试 MUST 分别验证每个变体的行数，而不是只验证默认变体
 
 ### Requirement: 现有超标 skill 模板必须拆分或精简
 

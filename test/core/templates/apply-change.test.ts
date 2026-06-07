@@ -11,6 +11,31 @@ import {
 } from '../../../src/core/templates/workflows/apply-change.js';
 
 describe('apply change workflow template', () => {
+  it('references the apply Phase 2 optimization protocol from the skill surface', () => {
+    const template = getApplyChangeSkillTemplate();
+
+    expect(template.referenceFiles).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: 'references/apply-phase2-optimization.md',
+        }),
+      ])
+    );
+    expect(template.instructions).toContain('read `references/apply-phase2-optimization.md` before Phase 2');
+  });
+
+  it('keeps apply Phase 2 checkpoint commands in a stash-only reference', () => {
+    const template = getApplyChangeSkillTemplate();
+    const reference = template.referenceFiles?.find(
+      (file) => file.path === 'references/apply-phase2-optimization.md'
+    );
+
+    expect(reference?.content).toContain('git stash push -u -m "apply-opt-checkpoint-r0"');
+    expect(reference?.content).toContain('git stash push -u -m "apply-opt-checkpoint-r<N>"');
+    expect(reference?.content).toContain('git stash apply stash@{0}');
+    expect(reference?.content).not.toContain('git tag apply-opt-checkpoint');
+  });
+
   it('documents the Phase 0-3 apply + verify workflow in both surfaces', () => {
     for (const template of [
       getApplyChangeSkillTemplate().instructions,

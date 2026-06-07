@@ -1,0 +1,105 @@
+{
+  "timestamp": "2026-06-07T10:09:16.351Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "70f8b13b229eac7ac7be4653d934a85e952b9abab1cc5781e4f51f302dc6d3f1",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-reviewer",
+    "evidenceFiles": [
+      "openspec/changes/split-apply-phase2-protocol/tasks.md",
+      "openspec/specs/skill-template-length-check/spec.md",
+      "src/core/templates/workflows/apply-change.ts",
+      "test/core/templates/apply-change.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts",
+      "test/skills/skill-template-length-validation.test.ts"
+    ],
+    "evidenceFingerprint": "e53a4652dc8406f34f71112b9f3aa530c6db3013b6a4ac2585c19938dfd79e71",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/split-apply-phase2-protocol/tasks.md",
+        "hash": "70f8b13b229eac7ac7be4653d934a85e952b9abab1cc5781e4f51f302dc6d3f1"
+      },
+      {
+        "path": "openspec/specs/skill-template-length-check/spec.md",
+        "hash": "d1f1ed337f27fa0ccdf9c0d891feee7a24be9f6753e67c21d7810980a9221a44"
+      },
+      {
+        "path": "src/core/templates/workflows/apply-change.ts",
+        "hash": "27d7110830047f84b99c053ce0415d9b4aab4e4659d5208943d39b1133e252bd"
+      },
+      {
+        "path": "test/core/templates/apply-change.test.ts",
+        "hash": "e820520565dfaeefdf7a4c8e7d099a074b920bcd7bf4b6042f5fc5b41bf4c2a5"
+      },
+      {
+        "path": "test/core/templates/skill-templates-parity.test.ts",
+        "hash": "b8af4980a2ab816d08f6f1b81c302a2a4a427bd6f0844bed7d70bd2c6b21fd49"
+      },
+      {
+        "path": "test/skills/skill-template-length-validation.test.ts",
+        "hash": "8fd52579ff4d63dd63456e8dfd9cdfd7c38984511db9b732ef3c8fd5fdc87c2c"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "34a47a1b67a2f54497948afb03351c871b94c0fd"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-07T10:11:22.157Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "Optimizer subagent found no behavior-preserving optimization worth applying; visible duplication is intentional contract coverage or parity surface."
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-06-07T10:09:16.351Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "70f8b13b229eac7ac7be4653d934a85e952b9abab1cc5781e4f51f302dc6d3f1",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-reviewer",
+        "evidenceFiles": [
+          "openspec/changes/split-apply-phase2-protocol/tasks.md",
+          "openspec/specs/skill-template-length-check/spec.md",
+          "src/core/templates/workflows/apply-change.ts",
+          "test/core/templates/apply-change.test.ts",
+          "test/core/templates/skill-templates-parity.test.ts",
+          "test/skills/skill-template-length-validation.test.ts"
+        ],
+        "evidenceFingerprint": "e53a4652dc8406f34f71112b9f3aa530c6db3013b6a4ac2585c19938dfd79e71",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/split-apply-phase2-protocol/tasks.md",
+            "hash": "70f8b13b229eac7ac7be4653d934a85e952b9abab1cc5781e4f51f302dc6d3f1"
+          },
+          {
+            "path": "openspec/specs/skill-template-length-check/spec.md",
+            "hash": "d1f1ed337f27fa0ccdf9c0d891feee7a24be9f6753e67c21d7810980a9221a44"
+          },
+          {
+            "path": "src/core/templates/workflows/apply-change.ts",
+            "hash": "27d7110830047f84b99c053ce0415d9b4aab4e4659d5208943d39b1133e252bd"
+          },
+          {
+            "path": "test/core/templates/apply-change.test.ts",
+            "hash": "e820520565dfaeefdf7a4c8e7d099a074b920bcd7bf4b6042f5fc5b41bf4c2a5"
+          },
+          {
+            "path": "test/core/templates/skill-templates-parity.test.ts",
+            "hash": "b8af4980a2ab816d08f6f1b81c302a2a4a427bd6f0844bed7d70bd2c6b21fd49"
+          },
+          {
+            "path": "test/skills/skill-template-length-validation.test.ts",
+            "hash": "8fd52579ff4d63dd63456e8dfd9cdfd7c38984511db9b732ef3c8fd5fdc87c2c"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "34a47a1b67a2f54497948afb03351c871b94c0fd"
+      }
+    }
+  }
+}

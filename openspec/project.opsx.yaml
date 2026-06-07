@@ -105,7 +105,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 提供 AI workflow 模板，使用统一 CLI 查询接口（openspec list --specs），并在 propose/explore/spec-driven artifact instructions 中维护 specs=WHAT、design=WHY/HOW 的内容边界提示
+    intent: 提供 AI workflow 模板，使用统一 CLI 查询接口（openspec list --specs），并在 propose/explore/spec-driven artifact instructions 中维护 specs=WHAT、design=WHY/HOW 的内容边界提示；apply skill 的 Phase 2 优化协议通过 `references/apply-phase2-optimization.md` 暴露完整 stash checkpoint 语义，主 `SKILL.md` 只保留强入口。
     type: capability
   - id: cap.apply.branch-isolation
     intent: Apply 阶段分支隔离策略由 apply.defaultIsolation 驱动；main/master 上仅 ask 模式询问用户，branch/worktree/none 配置直接执行并持久化 .apply-isolation.json。
@@ -387,7 +387,7 @@ capabilities:
     intent: Optimizer Phase 2 扫描中的 Pocock 坏味道检测增强（长方法、浅模块、原始类型痴迷及现有维度的具体识别指标）
     type: capability
   - id: cap.validation.skill-template-length
-    intent: 验证所有生成的 skill 模板 instructions 不超过 200 行
+    intent: 验证所有生成的 `SKILL.md` 模板 instructions 不超过 200 行，并验证所有 `template.referenceFiles[]` 文件不超过 500 行。
     type: capability
   - id: cap.cli.config.project
     intent: 通过 CLI 查询归一化项目配置（openspec config project --json），供 skill agent 获取配置投影

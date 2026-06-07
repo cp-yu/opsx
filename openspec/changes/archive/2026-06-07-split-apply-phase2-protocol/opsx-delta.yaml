@@ -1,0 +1,11 @@
+schema_version: 1
+ADDED:
+  relations: []
+MODIFIED:
+  capabilities:
+    - id: cap.ai.workflow-templates
+      intent: 提供 AI workflow 模板，使用统一 CLI 查询接口（openspec list --specs），并在 propose/explore/spec-driven artifact instructions 中维护 specs=WHAT、design=WHY/HOW 的内容边界提示；apply skill 的 Phase 2 优化协议通过 `references/apply-phase2-optimization.md` 暴露完整 stash checkpoint 语义，主 `SKILL.md` 只保留强入口。
+    - id: cap.validation.skill-template-length
+      intent: 验证所有生成的 `SKILL.md` 模板 instructions 不超过 200 行，并验证所有 `template.referenceFiles[]` 文件不超过 500 行。
+REMOVED:
+  relations: []
