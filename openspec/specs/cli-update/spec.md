@@ -361,7 +361,7 @@ The update command SHALL remove workflow files that are no longer selected in th
 
 ### Requirement: Migrate project config defaults
 
-`openspec update` SHALL migrate project configuration defaults for existing OpenSpec projects by materializing missing functional defaults in `openspec/config.yaml` or `openspec/config.yml` without overwriting user-authored values.
+`openspec update` SHALL migrate project configuration defaults for existing OpenSpec projects by materializing missing functional defaults in `openspec/config.yaml` or `openspec/config.yml` without overwriting user-authored values, except it SHALL remove the obsolete `git.merge.messageFrom` field.
 
 #### Scenario: Create config when missing
 
@@ -373,9 +373,12 @@ The update command SHALL remove workflow files that are no longer selected in th
 - **AND** the created file SHALL include `optimization.enabled: true`
 - **AND** the created file SHALL include `optimization.optRetries: 2`
 - **AND** the created file SHALL include `apply.defaultIsolation: ask`
+- **AND** the created file SHALL include `git.autoCommit: auto`
+- **AND** the created file SHALL include `git.archive.commitMessage.convention: openspec-archive`
 - **AND** the created file SHALL include `git.merge.strategy: no-ff`
-- **AND** the created file SHALL include `git.merge.messageFrom: artifacts`
+- **AND** the created file SHALL include `git.merge.commitMessage.convention: openspec-merge-summary`
 - **AND** the created file SHALL include `git.branch.deleteAfterArchive: false`
+- **AND** the created file SHALL NOT include `git.merge.messageFrom`
 
 #### Scenario: Add missing top-level defaults
 
@@ -391,15 +394,27 @@ The update command SHALL remove workflow files that are no longer selected in th
 
 - **WHEN** `openspec/config.yaml` contains `optimization.enabled: false`
 - **AND** contains `apply.defaultIsolation: worktree`
+- **AND** contains `git.autoCommit: manual`
 - **AND** contains `git.merge.strategy: squash`
-- **AND** lacks `optimization.optRetries`, `git.merge.messageFrom`, and `git.branch.deleteAfterArchive`
+- **AND** lacks `optimization.optRetries`, `git.archive.commitMessage.convention`, `git.merge.commitMessage.convention`, and `git.branch.deleteAfterArchive`
 - **AND** the user runs `openspec update`
 - **THEN** the command SHALL keep `optimization.enabled: false`
 - **AND** the command SHALL keep `apply.defaultIsolation: worktree`
+- **AND** the command SHALL keep `git.autoCommit: manual`
 - **AND** the command SHALL keep `git.merge.strategy: squash`
 - **AND** the command SHALL add `optimization.optRetries: 2`
-- **AND** the command SHALL add `git.merge.messageFrom: artifacts`
+- **AND** the command SHALL add `git.archive.commitMessage.convention: openspec-archive`
+- **AND** the command SHALL add `git.merge.commitMessage.convention: openspec-merge-summary`
 - **AND** the command SHALL add `git.branch.deleteAfterArchive: false`
+
+#### Scenario: Remove obsolete messageFrom
+
+- **WHEN** `openspec/config.yaml` contains `git.merge.messageFrom`
+- **AND** the user runs `openspec update`
+- **THEN** the command SHALL remove the `git.merge.messageFrom` field
+- **AND** SHALL NOT map its value to any new field
+- **AND** SHALL materialize missing new git defaults
+- **AND** SHALL preserve other user-authored `git` fields
 
 #### Scenario: Migrate config.yml alias
 
@@ -419,9 +434,9 @@ The update command SHALL remove workflow files that are no longer selected in th
 
 #### Scenario: Migrate project config paths on Windows
 
-- **WHEN** `openspec update` runs on Windows
-- **THEN** the command SHALL locate `config.yaml` and `config.yml` using Node.js path utilities
-- **AND** SHALL apply the same migration rules as on Unix systems
+- **WHEN** `openspec update` migrates `openspec/config.yaml` or `openspec/config.yml` on Windows
+- **THEN** the command SHALL build config paths with Node.js path utilities
+- **AND** SHALL remove `git.merge.messageFrom` and add new defaults with the same behavior as Unix systems
 
 ## Edge Cases
 

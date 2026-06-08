@@ -42,9 +42,12 @@ openspec/
 - **AND** the generated config SHALL include `optimization.optRetries: 2`
 - **AND** the generated config SHALL include `apply.defaultIsolation: ask`
 - **AND** the generated config SHALL render the apply default line as `defaultIsolation: ask  # ask / branch / worktree / none`
+- **AND** the generated config SHALL include `git.autoCommit: auto`
+- **AND** the generated config SHALL include `git.archive.commitMessage.convention: openspec-archive`
 - **AND** the generated config SHALL include `git.merge.strategy: no-ff`
-- **AND** the generated config SHALL include `git.merge.messageFrom: artifacts`
+- **AND** the generated config SHALL include `git.merge.commitMessage.convention: openspec-merge-summary`
 - **AND** the generated config SHALL include `git.branch.deleteAfterArchive: false`
+- **AND** the generated config SHALL NOT include `git.merge.messageFrom`
 
 #### Scenario: Creating OpenSpec structure on Windows
 

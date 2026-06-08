@@ -180,16 +180,21 @@ The system SHALL continue operation with default values when config loading or p
 
 ### Requirement: 加载 git 配置节点
 
-`openspec/config.yaml` 的项目配置加载器 SHALL 解析顶层 `git` 节点，并支持 `merge.strategy`、`merge.messageFrom`、`branch.deleteAfterArchive` 三个字段。
+`openspec/config.yaml` 的项目配置加载器 SHALL 解析顶层 `git` 节点，并支持 `autoCommit`、`archive.commitMessage.convention`、`merge.strategy`、`merge.commitMessage.convention`、`branch.deleteAfterArchive` 五个字段。
 
 #### Scenario: 完整 git 节点
 
 - **WHEN** config 包含：
   ```yaml
   git:
+    autoCommit: auto
+    archive:
+      commitMessage:
+        convention: openspec-archive
     merge:
       strategy: no-ff
-      messageFrom: artifacts
+      commitMessage:
+        convention: openspec-merge-summary
     branch:
       deleteAfterArchive: false
   ```
@@ -198,8 +203,10 @@ The system SHALL continue operation with default values when config loading or p
 #### Scenario: git 节点缺失时填默认值
 
 - **WHEN** config 不含 `git` 节点
-- **THEN** 加载器 SHALL 把 `git.merge.strategy` 默认为 `no-ff`
-- **AND** SHALL 把 `git.merge.messageFrom` 默认为 `artifacts`
+- **THEN** 加载器 SHALL 把 `git.autoCommit` 默认为 `auto`
+- **AND** SHALL 把 `git.archive.commitMessage.convention` 默认为 `openspec-archive`
+- **AND** SHALL 把 `git.merge.strategy` 默认为 `no-ff`
+- **AND** SHALL 把 `git.merge.commitMessage.convention` 默认为 `openspec-merge-summary`
 - **AND** SHALL 把 `git.branch.deleteAfterArchive` 默认为 `false`
 - **AND** SHALL NOT 输出警告
 
@@ -207,12 +214,37 @@ The system SHALL continue operation with default values when config loading or p
 
 - **WHEN** config 仅含 `git: { merge: { strategy: ff-only } }`
 - **THEN** 加载器 SHALL 保留 `merge.strategy: ff-only`
-- **AND** SHALL 把 `merge.messageFrom` 默认为 `artifacts`
+- **AND** SHALL 把 `git.autoCommit` 默认为 `auto`
+- **AND** SHALL 把 `archive.commitMessage.convention` 默认为 `openspec-archive`
+- **AND** SHALL 把 `merge.commitMessage.convention` 默认为 `openspec-merge-summary`
 - **AND** SHALL 把 `branch.deleteAfterArchive` 默认为 `false`
+
+#### Scenario: 陈旧 messageFrom 字段被忽略
+
+- **WHEN** config 包含 `git.merge.messageFrom`
+- **THEN** 加载器 SHALL NOT 将 `messageFrom` 暴露到 ProjectConfig
+- **AND** SHALL 使用 `git.merge.commitMessage.convention` 的有效值或默认值
 
 ### Requirement: git 配置字段 Zod schema 校验
 
 加载器 SHALL 通过 Zod schema 校验 `git` 节点字段类型与枚举值，并对非法值输出 warning 后丢弃该字段、回退默认值。
+
+#### Scenario: autoCommit 合法值
+
+- **WHEN** `git.autoCommit` 为 `auto` 或 `manual`
+- **THEN** schema SHALL 接受该值
+
+#### Scenario: autoCommit 非法值
+
+- **WHEN** `git.autoCommit` 为 `archive-only`（不在枚举中）
+- **THEN** 加载器 SHALL 输出 warning "git.autoCommit must be one of: auto, manual"
+- **AND** SHALL 把 `git.autoCommit` 回退为默认 `auto`
+- **AND** SHALL 保留 config 中其他合法字段
+
+#### Scenario: archive commit convention 合法值
+
+- **WHEN** `git.archive.commitMessage.convention` 为 `openspec-archive`
+- **THEN** schema SHALL 接受该值
 
 #### Scenario: merge.strategy 合法值
 
@@ -222,25 +254,19 @@ The system SHALL continue operation with default values when config loading or p
 #### Scenario: merge.strategy 非法值
 
 - **WHEN** `git.merge.strategy` 为 `rebase`（不在枚举中）
-- **THEN** 加载器 SHALL 输出警告 "git.merge.strategy must be one of: no-ff, ff-only, squash"
+- **THEN** 加载器 SHALL 输出 warning "git.merge.strategy must be one of: no-ff, ff-only, squash"
 - **AND** SHALL 把 `merge.strategy` 回退为默认 `no-ff`
 - **AND** SHALL 保留 config 中其他合法字段
 
-#### Scenario: messageFrom 合法值
+#### Scenario: merge commit convention 合法值
 
-- **WHEN** `git.merge.messageFrom` 为 `artifacts` 或 `manual`
+- **WHEN** `git.merge.commitMessage.convention` 为 `openspec-merge-summary`
 - **THEN** schema SHALL 接受该值
-
-#### Scenario: messageFrom 非法值
-
-- **WHEN** `git.merge.messageFrom` 为 `auto`（不在枚举中）
-- **THEN** 加载器 SHALL 输出警告
-- **AND** SHALL 回退为默认 `artifacts`
 
 #### Scenario: deleteAfterArchive 类型校验
 
 - **WHEN** `git.branch.deleteAfterArchive` 为 `"true"` 字符串而非布尔
-- **THEN** 加载器 SHALL 输出警告 "git.branch.deleteAfterArchive must be boolean"
+- **THEN** 加载器 SHALL 输出 warning "git.branch.deleteAfterArchive must be boolean"
 - **AND** SHALL 回退为默认 `false`
 
 ### Requirement: git 配置暴露给 projection 消费者
@@ -250,7 +276,8 @@ The system SHALL continue operation with default values when config loading or p
 #### Scenario: projection 输入包含 git 节点
 
 - **WHEN** 项目配置加载完成
-- **THEN** projection 输入 SHALL 包含完整的 `git.merge.strategy`、`git.merge.messageFrom`、`git.branch.deleteAfterArchive` 三个字段
+- **THEN** projection 输入 SHALL 包含完整的 `git.autoCommit`、`git.archive.commitMessage.convention`、`git.merge.strategy`、`git.merge.commitMessage.convention`、`git.branch.deleteAfterArchive` 五个字段
+- **AND** projection 输入 SHALL NOT 包含 `git.merge.messageFrom`
 - **AND** 字段值 SHALL 与 schema 校验后的值一致
 
 #### Scenario: archive prompt projection 投出 git 段
@@ -279,9 +306,12 @@ The project config layer SHALL expose a shared default materialization contract 
 - **THEN** the materialized defaults SHALL include `optimization.enabled: true`
 - **AND** SHALL include `optimization.optRetries: 2`
 - **AND** SHALL include `apply.defaultIsolation: ask`
+- **AND** SHALL include `git.autoCommit: auto`
+- **AND** SHALL include `git.archive.commitMessage.convention: openspec-archive`
 - **AND** SHALL include `git.merge.strategy: no-ff`
-- **AND** SHALL include `git.merge.messageFrom: artifacts`
+- **AND** SHALL include `git.merge.commitMessage.convention: openspec-merge-summary`
 - **AND** SHALL include `git.branch.deleteAfterArchive: false`
+- **AND** SHALL NOT include `git.merge.messageFrom`
 
 #### Scenario: Default materialization excludes non-functional optional fields
 

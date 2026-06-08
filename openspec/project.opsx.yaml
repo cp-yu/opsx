@@ -105,7 +105,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 提供 AI workflow 模板和 spec-driven artifact instructions；共享 `Document Language Contract` 与 schema instructions 明确 artifact prose 跟随 `proseLanguage`，结构 token 保持 canonical。
+    intent: 提供 AI workflow 模板和 spec-driven artifact instructions；archive workflow 模板通过 runtime projection 消费新 git.autoCommit 与 commitMessage convention，结构 token 保持 canonical。
     type: capability
   - id: cap.apply.branch-isolation
     intent: Apply 阶段分支隔离策略由 apply.defaultIsolation 驱动；main/master 上仅 ask 模式询问用户，branch/worktree/none 配置直接执行并持久化 .apply-isolation.json。
@@ -120,7 +120,7 @@ capabilities:
     intent: apply 命令内置 Phase 1 一致性验证、Phase 2 优化循环和 Phase 3 seal；Phase 1 或 seal failure 写回 remediation 后进入同一 recovery loop，不因首次失败直接 pause。
     type: capability
   - id: cap.archive.branch-merge
-    intent: 归档时按结构化 commit message 把 feature 分支合并回 originalBranch；merge 策略与是否删除分支由 openspec/config.yaml 的 git 节点配置控制；merge message 默认从 proposal/design/tasks 生成，遵循 git-commit-reasons 模板；冲突时 abort 并保留 archive commit
+    intent: 归档时由 git.autoCommit 控制是否自动创建 archive commit 并合并回 originalBranch；archive/merge commit message 分别使用 openspec-archive 与 openspec-merge-summary convention，遵循 git-commit-reasons 模板；merge 策略与 branch cleanup 仍由 git 配置节点约束；冲突时 abort 并保留 archive commit
     status: active
     type: capability
   - id: cap.artifact-graph.instruction-loader
@@ -140,7 +140,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.change.archive
-    intent: 归档已完成的变更，将规约合并到主目录并移动变更到 archive；归档末尾追加 archive commit、merge to originalBranch、可选 branch cleanup 三步，行为受 git 配置节点约束。archive 入口校验从 AI 文本指令迁移为 CLI 工具调用（openspec verify status），增加 verify + sync 双重门禁联合校验。不通过时合并询问用户如何操作
+    intent: 归档已完成的变更，将规约合并到主目录并移动变更到 archive；auto 模式追加 archive commit、merge to originalBranch、可选 branch cleanup，manual 模式只归档并保留未提交工作树；archive 入口执行 verify + sync 双重门禁
     status: active
     type: capability
   - id: cap.change.create
@@ -174,7 +174,7 @@ capabilities:
     intent: 管理 OpenSpec CLI 的 shell 补全，COMMAND_REGISTRY 现已包含 verify 命令及其子命令 phase1、phase2、seal、status
     type: capability
   - id: cap.cli.config
-    intent: 查看和修改全局 OpenSpec 配置，查询归一化项目配置
+    intent: 查看和修改全局 OpenSpec 配置，查询包含新 git.autoCommit 与 commitMessage convention 结构的归一化项目配置
     status: active
     type: capability
   - id: cap.cli.feedback
@@ -182,7 +182,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.init
-    intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品；首次 init 自动生成 OPSX 骨架文件，并创建包含 schema、optimization、apply.defaultIsolation 与 git 功能性默认值的 openspec/config.yaml。
+    intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品；首次 init 自动生成 OPSX 骨架文件，并创建包含 schema、optimization、apply.defaultIsolation 与新 git.autoCommit/commitMessage convention 功能性默认值的 openspec/config.yaml。
     status: active
     type: capability
   - id: cap.cli.init-opsx-skeleton
@@ -233,7 +233,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.update
-    intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品；同时对 openspec/config.yaml 或 config.yml 执行非覆盖项目配置默认值迁移，补齐 optimization、apply.defaultIsolation 与 git 功能性默认节点。
+    intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品；同时对 openspec/config.yaml 或 config.yml 执行项目配置默认值迁移，删除陈旧 git.merge.messageFrom 并补齐新 git 自动提交功能性默认节点。
     status: active
     type: capability
   - id: cap.cli.validate
@@ -256,11 +256,11 @@ capabilities:
     status: active
     type: capability
   - id: cap.config.migration
-    intent: 处理配置格式迁移和向后兼容，包括全局 profile 迁移与项目 config.yaml/config.yml 的非覆盖默认值补齐。
+    intent: 处理配置格式迁移和破坏性字段清理，包括全局 profile 迁移与项目 config.yaml/config.yml 的默认值补齐；更新时删除陈旧 git.merge.messageFrom 并写入新的 git 自动提交配置结构
     status: active
     type: capability
   - id: cap.config.project
-    intent: 加载、验证、合并并物化项目级配置 openspec/config.yaml；将有效字段暴露为 prompt/runtime projection 的统一输入，并为 init/update 提供 optimization、apply.defaultIsolation 与 git 的共享磁盘默认值。
+    intent: 加载、验证、合并并物化项目级配置 openspec/config.yaml；将 git.autoCommit、archive/merge commitMessage convention、merge strategy 与 branch cleanup 暴露为 prompt/runtime projection 的统一输入，并为 init/update 提供共享磁盘默认值
     status: active
     type: capability
   - id: cap.config.schema-validation

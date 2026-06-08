@@ -1,0 +1,19 @@
+schema_version: 1
+MODIFIED:
+  capabilities:
+    - id: cap.archive.branch-merge
+      intent: 归档时由 git.autoCommit 控制是否自动创建 archive commit 并合并回 originalBranch；archive/merge commit message 分别使用 openspec-archive 与 openspec-merge-summary convention，遵循 git-commit-reasons 模板；merge 策略与 branch cleanup 仍由 git 配置节点约束；冲突时 abort 并保留 archive commit
+    - id: cap.change.archive
+      intent: 归档已完成的变更，将规约合并到主目录并移动变更到 archive；auto 模式追加 archive commit、merge to originalBranch、可选 branch cleanup，manual 模式只归档并保留未提交工作树；archive 入口执行 verify + sync 双重门禁
+    - id: cap.config.project
+      intent: 加载、验证、合并并物化项目级配置 openspec/config.yaml；将 git.autoCommit、archive/merge commitMessage convention、merge strategy 与 branch cleanup 暴露为 prompt/runtime projection 的统一输入，并为 init/update 提供共享磁盘默认值
+    - id: cap.config.migration
+      intent: 处理配置格式迁移和破坏性字段清理，包括全局 profile 迁移与项目 config.yaml/config.yml 的默认值补齐；更新时删除陈旧 git.merge.messageFrom 并写入新的 git 自动提交配置结构
+    - id: cap.cli.init
+      intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品；首次 init 自动生成 OPSX 骨架文件，并创建包含 schema、optimization、apply.defaultIsolation 与新 git.autoCommit/commitMessage convention 功能性默认值的 openspec/config.yaml。
+    - id: cap.cli.update
+      intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品；同时对 openspec/config.yaml 或 config.yml 执行项目配置默认值迁移，删除陈旧 git.merge.messageFrom 并补齐新 git 自动提交功能性默认节点。
+    - id: cap.cli.config
+      intent: 查看和修改全局 OpenSpec 配置，查询包含新 git.autoCommit 与 commitMessage convention 结构的归一化项目配置
+    - id: cap.ai.workflow-templates
+      intent: 提供 AI workflow 模板和 spec-driven artifact instructions；archive workflow 模板通过 runtime projection 消费新 git.autoCommit 与 commitMessage convention，结构 token 保持 canonical。
