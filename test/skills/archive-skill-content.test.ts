@@ -47,9 +47,13 @@ describe('openspec archive skill content', () => {
 
     expect(instructions).toContain('openspec config project --json');
     expect(instructions).toContain('normalized project config');
+    expect(instructions).toContain('git.autoCommit');
+    expect(instructions).toContain('git.archive.commitMessage.convention');
     expect(instructions).toContain('git.merge.strategy');
-    expect(instructions).toContain('git.merge.messageFrom');
+    expect(instructions).toContain('git.merge.commitMessage.convention');
     expect(instructions).toContain('git.branch.deleteAfterArchive');
+    expect(instructions).toContain('skip archive commit, merge, and cleanup');
+    expect(instructions).not.toContain('git.merge.messageFrom');
     expect(instructions).toContain('do not parse raw YAML inside the skill');
   });
 

@@ -2,6 +2,10 @@
 
 **Goal**: 读取归档合并配置并提供默认值。
 
+**Files**:
+- Modify: `src/core/project-config.ts`
+- Test: `test/core/project-config.test.ts`
+
 #### Checks
 
 - [x] C1 配置加载
@@ -9,6 +13,10 @@
 ### Task 2: 执行 archive merge
 
 **Goal**: 在归档完成后生成 archive commit 并合并回原分支。
+
+**Files**:
+- Modify: `src/core/archive.ts`
+- Test: `test/core/archive-branch-merge.test.ts`
 
 #### Checks
 

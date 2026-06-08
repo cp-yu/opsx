@@ -19,7 +19,7 @@ import {
 import { selectActiveChange } from './change-utils.js';
 import { readProjectConfig } from './project-config.js';
 import { projectConfigForRuntime, type RuntimeProjection } from './config-projection.js';
-import { generateMergeMessage, writeManualMergeMessageDraft } from './archive/merge-message.js';
+import { generateMergeMessage } from './archive/merge-message.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -224,6 +224,9 @@ async function runArchiveCommit(
 
   const message = `docs(${changeName}): 归档变更制品
 
+## Why
+归档 \`${changeName}\` 的 OpenSpec change artifacts，记录 sync 与目录移动。
+
 ## Changes
 - ${archiveRelativePath}/: 移动 change 目录到归档区
 - openspec/specs/: 同步 delta spec
@@ -263,16 +266,13 @@ async function runArchiveMerge(
   branchContext: ArchiveBranchContext,
   projection: RuntimeProjection
 ): Promise<void> {
-  const mergeConfig = projection.git?.merge ?? { strategy: 'no-ff' as const, messageFrom: 'artifacts' as const };
+  const mergeConfig = projection.git?.merge ?? {
+    strategy: 'no-ff' as const,
+    commitMessage: { convention: 'openspec-merge-summary' as const },
+  };
   const branchConfig = projection.git?.branch ?? { deleteAfterArchive: false };
   const { featureBranch, originalBranch } = branchContext;
   if (!featureBranch || !originalBranch || featureBranch === originalBranch) {
-    return;
-  }
-
-  if (mergeConfig?.messageFrom === 'manual') {
-    const draftPath = await writeManualMergeMessageDraft(archivePath);
-    console.log(`Manual merge message draft written to ${draftPath}`);
     return;
   }
 
@@ -610,10 +610,14 @@ export class ArchiveCommand {
     }
 
     const branchContext = await resolveArchiveBranchContext(projectRoot, archivePath, isolation);
+    const projection = projectConfigForRuntime(readProjectConfig(projectRoot), { consumer: 'archive' });
+    if (projection.git?.autoCommit === 'manual') {
+      console.log('Git archive automation skipped: git.autoCommit is manual.');
+      return false;
+    }
     if (createArchiveCommit) {
       await runArchiveCommit(projectRoot, changeName, archivePath, syncedFiles);
     }
-    const projection = projectConfigForRuntime(readProjectConfig(projectRoot), { consumer: 'archive' });
     await runArchiveMerge(projectRoot, archivePath, branchContext, projection);
     return Boolean(branchContext.originalBranch);
   }

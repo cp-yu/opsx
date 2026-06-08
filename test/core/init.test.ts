@@ -97,11 +97,16 @@ describe('InitCommand', () => {
       expect(content).toContain('apply:');
       expect(content).toContain('  defaultIsolation: ask  # ask / branch / worktree / none');
       expect(content).toContain('git:');
+      expect(content).toContain('  autoCommit: auto');
+      expect(content).toContain('  archive:');
+      expect(content).toContain('    commitMessage:');
+      expect(content).toContain('      convention: openspec-archive');
       expect(content).toContain('  merge:');
       expect(content).toContain('    strategy: no-ff');
-      expect(content).toContain('    messageFrom: artifacts');
+      expect(content).toContain('      convention: openspec-merge-summary');
       expect(content).toContain('  branch:');
       expect(content).toContain('    deleteAfterArchive: false');
+      expect(content).not.toContain('messageFrom');
       expect(parsed).not.toHaveProperty('propose');
       expect(parsed.apply).toEqual({
         defaultIsolation: 'ask',

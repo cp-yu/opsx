@@ -16,9 +16,17 @@ export interface NormalizedProjectConfig {
     defaultIsolation: 'ask' | 'branch' | 'worktree' | 'none';
   };
   git?: {
+    autoCommit: 'auto' | 'manual';
+    archive: {
+      commitMessage: {
+        convention: 'openspec-archive';
+      };
+    };
     merge: {
       strategy: 'no-ff' | 'ff-only' | 'squash';
-      messageFrom: 'artifacts' | 'manual';
+      commitMessage: {
+        convention: 'openspec-merge-summary';
+      };
     };
     branch: {
       deleteAfterArchive: boolean;
@@ -137,9 +145,17 @@ export function normalizeProjectConfig(config: ProjectConfig | null): Normalized
       : undefined,
     git: config.git
       ? {
+          autoCommit: config.git.autoCommit,
+          archive: {
+            commitMessage: {
+              convention: config.git.archive.commitMessage.convention,
+            },
+          },
           merge: {
             strategy: config.git.merge.strategy,
-            messageFrom: config.git.merge.messageFrom,
+            commitMessage: {
+              convention: config.git.merge.commitMessage.convention,
+            },
           },
           branch: {
             deleteAfterArchive: config.git.branch.deleteAfterArchive,
@@ -260,8 +276,10 @@ const projectionRules: ProjectionRule[] = [
         key: 'git',
         scope: 'global',
         lines: [
+          `git.autoCommit: ${config.git.autoCommit}`,
+          `git.archive.commitMessage.convention: ${config.git.archive.commitMessage.convention}`,
           `git.merge.strategy: ${config.git.merge.strategy}`,
-          `git.merge.messageFrom: ${config.git.merge.messageFrom}`,
+          `git.merge.commitMessage.convention: ${config.git.merge.commitMessage.convention}`,
           `git.branch.deleteAfterArchive: ${config.git.branch.deleteAfterArchive}`,
         ],
       };
@@ -275,8 +293,10 @@ const projectionRules: ProjectionRule[] = [
         key: 'git',
         scope: 'global',
         lines: [
+          `git.autoCommit: ${config.git.autoCommit}`,
+          `git.archive.commitMessage.convention: ${config.git.archive.commitMessage.convention}`,
           `git.merge.strategy: ${config.git.merge.strategy}`,
-          `git.merge.messageFrom: ${config.git.merge.messageFrom}`,
+          `git.merge.commitMessage.convention: ${config.git.merge.commitMessage.convention}`,
           `git.branch.deleteAfterArchive: ${config.git.branch.deleteAfterArchive}`,
         ],
       };

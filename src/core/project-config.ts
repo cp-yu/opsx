@@ -19,9 +19,17 @@ export const PROJECT_CONFIG_FUNCTIONAL_DEFAULTS = {
     defaultIsolation: 'ask' as const,
   },
   git: {
+    autoCommit: 'auto' as const,
+    archive: {
+      commitMessage: {
+        convention: 'openspec-archive' as const,
+      },
+    },
     merge: {
       strategy: 'no-ff' as const,
-      messageFrom: 'artifacts' as const,
+      commitMessage: {
+        convention: 'openspec-merge-summary' as const,
+      },
     },
     branch: {
       deleteAfterArchive: false,
@@ -38,7 +46,9 @@ export type ProjectConfigDefaultsMigrationResult =
   | { status: 'skipped'; path: string; reason: 'invalid-yaml' | 'non-object' };
 
 const gitMergeStrategyField = z.enum(['no-ff', 'ff-only', 'squash']);
-const gitMergeMessageFromField = z.enum(['artifacts', 'manual']);
+const gitAutoCommitField = z.enum(['auto', 'manual']);
+const gitArchiveCommitConventionField = z.enum(['openspec-archive']);
+const gitMergeCommitConventionField = z.enum(['openspec-merge-summary']);
 const gitDeleteAfterArchiveField = z.boolean();
 
 /**
@@ -109,13 +119,30 @@ export const ProjectConfigSchema = z.object({
   // Optional: git archive/merge policy
   git: z
     .object({
+      autoCommit: z.enum(['auto', 'manual']).optional().default('auto'),
+      archive: z
+        .object({
+          commitMessage: z
+            .object({
+              convention: z.enum(['openspec-archive']).optional().default('openspec-archive'),
+            })
+            .optional()
+            .default({ convention: 'openspec-archive' }),
+        })
+        .optional()
+        .default({ commitMessage: { convention: 'openspec-archive' } }),
       merge: z
         .object({
           strategy: z.enum(['no-ff', 'ff-only', 'squash']).optional().default('no-ff'),
-          messageFrom: z.enum(['artifacts', 'manual']).optional().default('artifacts'),
+          commitMessage: z
+            .object({
+              convention: z.enum(['openspec-merge-summary']).optional().default('openspec-merge-summary'),
+            })
+            .optional()
+            .default({ convention: 'openspec-merge-summary' }),
         })
         .optional()
-        .default({ strategy: 'no-ff', messageFrom: 'artifacts' }),
+        .default({ strategy: 'no-ff', commitMessage: { convention: 'openspec-merge-summary' } }),
       branch: z
         .object({
           deleteAfterArchive: z.boolean().optional().default(false),
@@ -156,8 +183,17 @@ function cloneFunctionalDefaults() {
       ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.apply,
     },
     git: {
+      autoCommit: PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.autoCommit,
+      archive: {
+        commitMessage: {
+          ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.archive.commitMessage,
+        },
+      },
       merge: {
         ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.merge,
+        commitMessage: {
+          ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.merge.commitMessage,
+        },
       },
       branch: {
         ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.branch,
@@ -214,6 +250,28 @@ function setMissingPath(document: Document, keys: readonly string[], value: unkn
   return true;
 }
 
+function deletePath(document: Document, keys: readonly string[]): boolean {
+  let current: Node | null | undefined = document.contents;
+  for (const key of keys.slice(0, -1)) {
+    if (!current || !isMap(current)) {
+      return false;
+    }
+    current = current.get(key, true);
+  }
+
+  if (!current || !isMap(current)) {
+    return false;
+  }
+
+  const leaf = keys[keys.length - 1];
+  if (!current.has(leaf)) {
+    return false;
+  }
+
+  current.delete(leaf);
+  return true;
+}
+
 export function migrateProjectConfigDefaults(projectRoot: string): ProjectConfigDefaultsMigrationResult {
   const configPath = findProjectConfigPath(projectRoot);
   if (!configPath.exists) {
@@ -237,8 +295,11 @@ export function migrateProjectConfigDefaults(projectRoot: string): ProjectConfig
   changed = setMissingPath(document, ['optimization', 'enabled'], defaults.optimization.enabled) || changed;
   changed = setMissingPath(document, ['optimization', 'optRetries'], defaults.optimization.optRetries) || changed;
   changed = setMissingPath(document, ['apply', 'defaultIsolation'], defaults.apply.defaultIsolation) || changed;
+  changed = setMissingPath(document, ['git', 'autoCommit'], defaults.git.autoCommit) || changed;
+  changed = setMissingPath(document, ['git', 'archive', 'commitMessage', 'convention'], defaults.git.archive.commitMessage.convention) || changed;
   changed = setMissingPath(document, ['git', 'merge', 'strategy'], defaults.git.merge.strategy) || changed;
-  changed = setMissingPath(document, ['git', 'merge', 'messageFrom'], defaults.git.merge.messageFrom) || changed;
+  changed = deletePath(document, ['git', 'merge', 'messageFrom']) || changed;
+  changed = setMissingPath(document, ['git', 'merge', 'commitMessage', 'convention'], defaults.git.merge.commitMessage.convention) || changed;
   changed = setMissingPath(document, ['git', 'branch', 'deleteAfterArchive'], defaults.git.branch.deleteAfterArchive) || changed;
 
   if (!changed) {
@@ -391,6 +452,36 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
       } else {
         const rawGit = raw.git as Record<string, unknown>;
 
+        if (rawGit.autoCommit !== undefined) {
+          const autoCommitResult = gitAutoCommitField.safeParse(rawGit.autoCommit);
+          if (autoCommitResult.success) {
+            gitConfig.autoCommit = autoCommitResult.data;
+          } else {
+            console.warn('git.autoCommit must be one of: auto, manual');
+          }
+        }
+
+        if (rawGit.archive !== undefined) {
+          if (typeof rawGit.archive === 'object' && rawGit.archive !== null && !Array.isArray(rawGit.archive)) {
+            const rawArchive = rawGit.archive as Record<string, unknown>;
+            const rawCommitMessage = rawArchive.commitMessage;
+            if (rawCommitMessage !== undefined) {
+              if (typeof rawCommitMessage === 'object' && rawCommitMessage !== null && !Array.isArray(rawCommitMessage)) {
+                const conventionResult = gitArchiveCommitConventionField.safeParse((rawCommitMessage as Record<string, unknown>).convention);
+                if (conventionResult.success) {
+                  gitConfig.archive.commitMessage.convention = conventionResult.data;
+                } else if ((rawCommitMessage as Record<string, unknown>).convention !== undefined) {
+                  console.warn('git.archive.commitMessage.convention must be one of: openspec-archive');
+                }
+              } else {
+                console.warn(`Invalid 'git.archive.commitMessage' field in config (must be an object)`);
+              }
+            }
+          } else {
+            console.warn(`Invalid 'git.archive' field in config (must be an object)`);
+          }
+        }
+
         if (rawGit.merge !== undefined) {
           if (typeof rawGit.merge === 'object' && rawGit.merge !== null && !Array.isArray(rawGit.merge)) {
             const rawMerge = rawGit.merge as Record<string, unknown>;
@@ -404,12 +495,17 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
               }
             }
 
-            if (rawMerge.messageFrom !== undefined) {
-              const messageFromResult = gitMergeMessageFromField.safeParse(rawMerge.messageFrom);
-              if (messageFromResult.success) {
-                gitConfig.merge.messageFrom = messageFromResult.data;
+            const rawCommitMessage = rawMerge.commitMessage;
+            if (rawCommitMessage !== undefined) {
+              if (typeof rawCommitMessage === 'object' && rawCommitMessage !== null && !Array.isArray(rawCommitMessage)) {
+                const conventionResult = gitMergeCommitConventionField.safeParse((rawCommitMessage as Record<string, unknown>).convention);
+                if (conventionResult.success) {
+                  gitConfig.merge.commitMessage.convention = conventionResult.data;
+                } else if ((rawCommitMessage as Record<string, unknown>).convention !== undefined) {
+                  console.warn('git.merge.commitMessage.convention must be one of: openspec-merge-summary');
+                }
               } else {
-                console.warn('git.merge.messageFrom must be one of: artifacts, manual');
+                console.warn(`Invalid 'git.merge.commitMessage' field in config (must be an object)`);
               }
             }
           } else {

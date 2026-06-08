@@ -346,6 +346,20 @@ domains:
       expect(result.bundle.capabilities[0].domain).toBe('dom.cli');
     });
 
+    it('should not report already applied partial MODIFIED capability as changed', () => {
+      const bundle = mkBundle({
+        capabilities: [{ id: 'cap.cli.init', type: 'capability', intent: '已同步描述', status: 'active' as const, domain: 'dom.cli' }],
+      });
+
+      const result = applyOpsxDelta(bundle, {
+        MODIFIED: { capabilities: [{ id: 'cap.cli.init', intent: '已同步描述' }] },
+      });
+
+      expect(result.changed).toBe(false);
+      expect(result.counts.modified.capabilities).toBe(0);
+      expect(result.bundle.capabilities[0]).toEqual(bundle.capabilities[0]);
+    });
+
     it('should shallow merge MODIFIED domain (only boundary)', () => {
       const bundle = mkBundle({
         domains: [{ id: 'dom.cli', type: 'domain', intent: 'CLI domain', boundary: 'old boundary' }],

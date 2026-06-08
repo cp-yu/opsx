@@ -75,16 +75,26 @@ export function serializeConfig(config: Partial<ProjectConfig>): string {
   lines.push('# Git archive and merge policy (optional)');
   lines.push('# Example:');
   lines.push('#   git:');
+  lines.push('#     autoCommit: auto  # auto / manual');
+  lines.push('#     archive:');
+  lines.push('#       commitMessage:');
+  lines.push('#         convention: openspec-archive');
   lines.push('#     merge:');
   lines.push('#       strategy: no-ff');
-  lines.push('#       messageFrom: artifacts');
+  lines.push('#       commitMessage:');
+  lines.push('#         convention: openspec-merge-summary');
   lines.push('#     branch:');
   lines.push('#       deleteAfterArchive: false');
   if (materialized.git) {
     lines.push('git:');
+    lines.push(`  autoCommit: ${materialized.git.autoCommit}`);
+    lines.push('  archive:');
+    lines.push('    commitMessage:');
+    lines.push(`      convention: ${materialized.git.archive.commitMessage.convention}`);
     lines.push('  merge:');
     lines.push(`    strategy: ${materialized.git.merge.strategy}`);
-    lines.push(`    messageFrom: ${materialized.git.merge.messageFrom}`);
+    lines.push('    commitMessage:');
+    lines.push(`      convention: ${materialized.git.merge.commitMessage.convention}`);
     lines.push('  branch:');
     lines.push(`    deleteAfterArchive: ${materialized.git.branch.deleteAfterArchive}`);
   }

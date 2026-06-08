@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
-export type MergeMessageType = 'feat' | 'fix' | 'refactor' | 'chore';
+export type MergeMessageType = 'feat' | 'fix' | 'refactor' | 'perf' | 'chore';
 
 export interface MergeMessage {
   subject: string;
@@ -56,6 +56,9 @@ export function inferMergeMessageType(whatChanges: string): MergeMessageType {
   }
   if (whatChanges.includes('重构') || whatChanges.includes('删除')) {
     return 'refactor';
+  }
+  if (whatChanges.includes('性能') || whatChanges.toLowerCase().includes('perf')) {
+    return 'perf';
   }
   return 'chore';
 }
@@ -151,11 +154,26 @@ function completedTaskSummaries(markdown: string): string[] {
     const title = taskMatch[1].trim();
     let goal = '';
     let completed = false;
+    const files: string[] = [];
+    let inFiles = false;
 
     for (let j = i + 1; j < lines.length && !/^###\s+Task\s+\d+:/.test(lines[j]); j++) {
       const goalMatch = lines[j].match(/^\*\*Goal\*\*:\s*(.+)$/);
       if (goalMatch) {
         goal = goalMatch[1].trim();
+      }
+      if (/^\*\*Files\*\*:\s*$/.test(lines[j])) {
+        inFiles = true;
+        continue;
+      }
+      if (inFiles && /^\*\*[^*]+\*\*:/.test(lines[j])) {
+        inFiles = false;
+      }
+      if (inFiles) {
+        const fileMatch = lines[j].match(/^\s*-\s+[^:]+:\s+`([^`]+)`/);
+        if (fileMatch?.[1]) {
+          files.push(fileMatch[1]);
+        }
       }
       if (/^\s*-\s+\[[xX]\]/.test(lines[j])) {
         completed = true;
@@ -163,7 +181,11 @@ function completedTaskSummaries(markdown: string): string[] {
     }
 
     if (completed) {
-      summaries.push(`- \`${title}\`: ${goal || '完成任务。'}`);
+      const reason = goal || title || '完成任务。';
+      const targets = files.length > 0 ? files : ['archive'];
+      for (const filePath of targets) {
+        summaries.push(`- \`${filePath}\`: ${reason}`);
+      }
     }
   }
 

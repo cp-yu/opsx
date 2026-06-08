@@ -201,9 +201,14 @@ propose:
 apply:
   defaultIsolation: branch
 git:
+  autoCommit: manual
+  archive:
+    commitMessage:
+      convention: openspec-archive
   merge:
     strategy: squash
-    messageFrom: manual
+    commitMessage:
+      convention: openspec-merge-summary
   branch:
     deleteAfterArchive: true
 rules:
@@ -231,9 +236,17 @@ rules:
         defaultIsolation: 'branch',
       },
       git: {
+        autoCommit: 'manual',
+        archive: {
+          commitMessage: {
+            convention: 'openspec-archive',
+          },
+        },
         merge: {
           strategy: 'squash',
-          messageFrom: 'manual',
+          commitMessage: {
+            convention: 'openspec-merge-summary',
+          },
         },
         branch: {
           deleteAfterArchive: true,

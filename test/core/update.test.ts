@@ -113,8 +113,10 @@ describe('UpdateCommand', () => {
       expect(config.optimization.enabled).toBe(true);
       expect(config.optimization.optRetries).toBe(2);
       expect(config.apply.defaultIsolation).toBe('ask');
+      expect(config.git.autoCommit).toBe('auto');
+      expect(config.git.archive.commitMessage.convention).toBe('openspec-archive');
       expect(config.git.merge.strategy).toBe('no-ff');
-      expect(config.git.merge.messageFrom).toBe('artifacts');
+      expect(config.git.merge.commitMessage.convention).toBe('openspec-merge-summary');
       expect(config.git.branch.deleteAfterArchive).toBe(false);
 
       consoleSpy.mockRestore();
@@ -143,8 +145,10 @@ rules:
       expect(config.optimization.enabled).toBe(true);
       expect(config.optimization.optRetries).toBe(2);
       expect(config.apply.defaultIsolation).toBe('ask');
+      expect(config.git.autoCommit).toBe('auto');
+      expect(config.git.archive.commitMessage.convention).toBe('openspec-archive');
       expect(config.git.merge.strategy).toBe('no-ff');
-      expect(config.git.merge.messageFrom).toBe('artifacts');
+      expect(config.git.merge.commitMessage.convention).toBe('openspec-merge-summary');
       expect(config.git.branch.deleteAfterArchive).toBe(false);
       expect(config).not.toHaveProperty('propose');
       expect(config.apply).toEqual({
@@ -174,8 +178,34 @@ git:
       expect(config.optimization.enabled).toBe(false);
       expect(config.optimization.optRetries).toBe(2);
       expect(config.apply.defaultIsolation).toBe('worktree');
+      expect(config.git.autoCommit).toBe('auto');
+      expect(config.git.archive.commitMessage.convention).toBe('openspec-archive');
       expect(config.git.merge.strategy).toBe('squash');
-      expect(config.git.merge.messageFrom).toBe('artifacts');
+      expect(config.git.merge.commitMessage.convention).toBe('openspec-merge-summary');
+      expect(config.git.branch.deleteAfterArchive).toBe(false);
+    });
+
+    it('should remove obsolete git merge messageFrom while adding new defaults', async () => {
+      const configPath = path.join(testDir, 'openspec', 'config.yaml');
+      await fs.writeFile(
+        configPath,
+        `schema: custom-schema
+git:
+  autoCommit: manual
+  merge:
+    strategy: squash
+    messageFrom: manual
+`
+      );
+
+      await updateCommand.execute(testDir);
+
+      const config = parseYaml(await fs.readFile(configPath, 'utf-8'));
+      expect(config.git.autoCommit).toBe('manual');
+      expect(config.git.merge.strategy).toBe('squash');
+      expect(config.git.merge).not.toHaveProperty('messageFrom');
+      expect(config.git.archive.commitMessage.convention).toBe('openspec-archive');
+      expect(config.git.merge.commitMessage.convention).toBe('openspec-merge-summary');
       expect(config.git.branch.deleteAfterArchive).toBe(false);
     });
 

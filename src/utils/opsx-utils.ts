@@ -539,7 +539,7 @@ export function applyOpsxDelta(bundle: ProjectOpsxBundle, delta: OpsxDelta): Ops
     if (index === -1) {
       throw new Error(`OPSX MODIFIED failed for domain '${domain.id}' - not found`);
     }
-    if (stableStringify(next.domains[index]) === stableStringify(domain)) continue;
+    if (isPatchAlreadyApplied(next.domains[index], domain)) continue;
     next.domains[index] = { ...next.domains[index], ...domain };
     counts.modified.domains += 1;
   }
@@ -548,7 +548,7 @@ export function applyOpsxDelta(bundle: ProjectOpsxBundle, delta: OpsxDelta): Ops
     if (index === -1) {
       throw new Error(`OPSX MODIFIED failed for capability '${capability.id}' - not found`);
     }
-    if (stableStringify(next.capabilities[index]) === stableStringify(capability)) continue;
+    if (isPatchAlreadyApplied(next.capabilities[index], capability)) continue;
     next.capabilities[index] = { ...next.capabilities[index], ...capability };
     counts.modified.capabilities += 1;
   }
@@ -558,7 +558,7 @@ export function applyOpsxDelta(bundle: ProjectOpsxBundle, delta: OpsxDelta): Ops
     if (index === -1) {
       throw new Error(`OPSX MODIFIED failed for relation '${relation.from}' -> '${relation.to}' - not found`);
     }
-    if (stableStringify(next.relations[index]) === stableStringify(relation)) continue;
+    if (isPatchAlreadyApplied(next.relations[index], relation)) continue;
     next.relations[index] = { ...next.relations[index], ...relation };
     counts.modified.relations += 1;
   }
@@ -622,6 +622,10 @@ function stableStringify(value: unknown): string {
       .join(',')}}`;
   }
   return JSON.stringify(value);
+}
+
+function isPatchAlreadyApplied(current: Record<string, unknown>, patch: Record<string, unknown>): boolean {
+  return Object.entries(patch).every(([key, value]) => stableStringify(current[key]) === stableStringify(value));
 }
 
 /**

@@ -2,13 +2,30 @@ import { z } from 'zod';
 
 const GitConfigSchema = z
   .object({
+    autoCommit: z.enum(['auto', 'manual']).optional().default('auto'),
+    archive: z
+      .object({
+        commitMessage: z
+          .object({
+            convention: z.enum(['openspec-archive']).optional().default('openspec-archive'),
+          })
+          .optional()
+          .default({ convention: 'openspec-archive' }),
+      })
+      .optional()
+      .default({ commitMessage: { convention: 'openspec-archive' } }),
     merge: z
       .object({
         strategy: z.enum(['no-ff', 'ff-only', 'squash']).optional().default('no-ff'),
-        messageFrom: z.enum(['artifacts', 'manual']).optional().default('artifacts'),
+        commitMessage: z
+          .object({
+            convention: z.enum(['openspec-merge-summary']).optional().default('openspec-merge-summary'),
+          })
+          .optional()
+          .default({ convention: 'openspec-merge-summary' }),
       })
       .optional()
-      .default({ strategy: 'no-ff', messageFrom: 'artifacts' }),
+      .default({ strategy: 'no-ff', commitMessage: { convention: 'openspec-merge-summary' } }),
     branch: z
       .object({
         deleteAfterArchive: z.boolean().optional().default(false),
@@ -18,7 +35,9 @@ const GitConfigSchema = z
   })
   .optional()
   .default({
-    merge: { strategy: 'no-ff', messageFrom: 'artifacts' },
+    autoCommit: 'auto',
+    archive: { commitMessage: { convention: 'openspec-archive' } },
+    merge: { strategy: 'no-ff', commitMessage: { convention: 'openspec-merge-summary' } },
     branch: { deleteAfterArchive: false },
   });
 
@@ -85,9 +104,17 @@ export const DEFAULT_CONFIG: GlobalConfigType = {
     defaultIsolation: 'ask',
   },
   git: {
+    autoCommit: 'auto',
+    archive: {
+      commitMessage: {
+        convention: 'openspec-archive',
+      },
+    },
     merge: {
       strategy: 'no-ff',
-      messageFrom: 'artifacts',
+      commitMessage: {
+        convention: 'openspec-merge-summary',
+      },
     },
     branch: {
       deleteAfterArchive: false,
@@ -165,10 +192,19 @@ export function validateConfigKeyPath(path: string): { valid: boolean; reason?: 
     if (rawKeys.length === 1) {
       return { valid: true };
     }
-    if (rawKeys.length === 2 && (rawKeys[1] === 'merge' || rawKeys[1] === 'branch')) {
+    if (rawKeys.length === 2 && (rawKeys[1] === 'autoCommit' || rawKeys[1] === 'archive' || rawKeys[1] === 'merge' || rawKeys[1] === 'branch')) {
       return { valid: true };
     }
-    if (rawKeys.length === 3 && rawKeys[1] === 'merge' && (rawKeys[2] === 'strategy' || rawKeys[2] === 'messageFrom')) {
+    if (rawKeys.length === 3 && rawKeys[1] === 'archive' && rawKeys[2] === 'commitMessage') {
+      return { valid: true };
+    }
+    if (rawKeys.length === 4 && rawKeys[1] === 'archive' && rawKeys[2] === 'commitMessage' && rawKeys[3] === 'convention') {
+      return { valid: true };
+    }
+    if (rawKeys.length === 3 && rawKeys[1] === 'merge' && (rawKeys[2] === 'strategy' || rawKeys[2] === 'commitMessage')) {
+      return { valid: true };
+    }
+    if (rawKeys.length === 4 && rawKeys[1] === 'merge' && rawKeys[2] === 'commitMessage' && rawKeys[3] === 'convention') {
       return { valid: true };
     }
     if (rawKeys.length === 3 && rawKeys[1] === 'branch' && rawKeys[2] === 'deleteAfterArchive') {
@@ -176,7 +212,7 @@ export function validateConfigKeyPath(path: string): { valid: boolean; reason?: 
     }
     return {
       valid: false,
-      reason: 'git only supports the nested keys "merge.strategy", "merge.messageFrom", and "branch.deleteAfterArchive"',
+      reason: 'git only supports the nested keys "autoCommit", "archive.commitMessage.convention", "merge.strategy", "merge.commitMessage.convention", and "branch.deleteAfterArchive"',
     };
   }
 

@@ -31,9 +31,14 @@ async function setupRepo(): Promise<string> {
   await fs.mkdir(path.join(projectRoot, 'openspec', 'changes', 'archive'), { recursive: true });
   await writeFile(projectRoot, 'openspec/config.yaml', `schema: spec-driven
 git:
+  autoCommit: auto
+  archive:
+    commitMessage:
+      convention: openspec-archive
   merge:
     strategy: no-ff
-    messageFrom: artifacts
+    commitMessage:
+      convention: openspec-merge-summary
   branch:
     deleteAfterArchive: false
 `);
@@ -164,6 +169,9 @@ ADDED:
     const archiveCommitSubject = await git(projectRoot, ['log', '-1', '--pretty=%s']);
     expect(archiveCommitSubject).toBe('docs(feature-archive): 归档变更制品');
     const archiveCommitMessage = await git(projectRoot, ['log', '-1', '--pretty=%B']);
+    expect(archiveCommitMessage).toContain('## Why');
+    expect(archiveCommitMessage).toContain(`归档 \`feature-archive\` 的 OpenSpec change artifacts`);
+    expect(archiveCommitMessage).toContain('## Changes');
     expect(archiveCommitMessage).toContain('openspec/changes/archive/');
     expect(archiveCommitMessage).toContain('openspec/specs/: 同步 delta spec');
     expect(archiveCommitMessage).toContain('openspec/project.opsx.*.yaml: 应用 OPSX delta');
@@ -173,6 +181,21 @@ ADDED:
     expect(archiveCommitFiles).toContain('openspec/project.opsx.relations.yaml');
     expect(archiveCommitFiles).toContain('openspec/project.opsx.code-map.yaml');
     expect(archiveCommitFiles).not.toContain('openspec/specs/unrelated/spec.md');
+  });
+
+  it('keeps unrelated dirty files out of the archive commit', async () => {
+    projectRoot = await setupRepo();
+    await writeChange(projectRoot);
+    await writeFile(projectRoot, 'scratch.txt', 'do not commit\n');
+    process.chdir(projectRoot);
+
+    await new ArchiveCommand().execute('feature-archive', { yes: true, noVerify: true, noValidate: true });
+
+    await git(projectRoot, ['checkout', 'feature-archive']);
+    const archiveCommitFiles = await git(projectRoot, ['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD']);
+    expect(archiveCommitFiles).not.toContain('scratch.txt');
+    const status = await git(projectRoot, ['status', '--short', '--', 'scratch.txt']);
+    expect(status).toBe('?? scratch.txt');
   });
 
   it('aborts merge conflict and keeps the feature archive commit and branch', async () => {
@@ -210,9 +233,14 @@ ADDED:
     projectRoot = await setupRepo();
     await writeFile(projectRoot, 'openspec/config.yaml', `schema: spec-driven
 git:
+  autoCommit: auto
+  archive:
+    commitMessage:
+      convention: openspec-archive
   merge:
     strategy: no-ff
-    messageFrom: artifacts
+    commitMessage:
+      convention: openspec-merge-summary
   branch:
     deleteAfterArchive: true
 `);
@@ -223,6 +251,37 @@ git:
 
     const featureBranch = await git(projectRoot, ['branch', '--list', 'feature-archive']);
     expect(featureBranch).toBe('');
+  });
+
+  it('archives files without git automation when autoCommit is manual', async () => {
+    projectRoot = await setupRepo();
+    await writeFile(projectRoot, 'openspec/config.yaml', `schema: spec-driven
+git:
+  autoCommit: manual
+  archive:
+    commitMessage:
+      convention: openspec-archive
+  merge:
+    strategy: no-ff
+    commitMessage:
+      convention: openspec-merge-summary
+  branch:
+    deleteAfterArchive: true
+`);
+    await writeChange(projectRoot);
+    const beforeHead = await git(projectRoot, ['rev-parse', 'HEAD']);
+    process.chdir(projectRoot);
+
+    await new ArchiveCommand().execute('feature-archive', { yes: true, noVerify: true, noValidate: true });
+
+    const currentBranch = await git(projectRoot, ['branch', '--show-current']);
+    expect(currentBranch).toBe('feature-archive');
+    expect(await git(projectRoot, ['rev-parse', 'HEAD'])).toBe(beforeHead);
+    const archives = await fs.readdir(path.join(projectRoot, 'openspec', 'changes', 'archive'));
+    expect(archives.some((entry) => entry.endsWith('-feature-archive'))).toBe(true);
+    const status = await git(projectRoot, ['status', '--short']);
+    expect(status).toContain('?? openspec/changes/');
+    expect(await git(projectRoot, ['diff', '--cached', '--name-only'])).toBe('');
   });
 
   it('prompts for originalBranch when isolation and remote default branch are missing', async () => {

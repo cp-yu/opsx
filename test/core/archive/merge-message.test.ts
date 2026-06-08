@@ -32,8 +32,10 @@ describe('archive merge message generator', () => {
 [技术决策] 使用 no-ff merge commit
 
 ## Changes
-- \`加载 git 配置\`: 读取归档合并配置并提供默认值。
-- \`执行 archive merge\`: 在归档完成后生成 archive commit 并合并回原分支。`);
+- \`src/core/project-config.ts\`: 读取归档合并配置并提供默认值。
+- \`test/core/project-config.test.ts\`: 读取归档合并配置并提供默认值。
+- \`src/core/archive.ts\`: 在归档完成后生成 archive commit 并合并回原分支。
+- \`test/core/archive-branch-merge.test.ts\`: 在归档完成后生成 archive commit 并合并回原分支。`);
       expect(message.toString()).toBe(`${message.subject}
 
 ${message.body}
@@ -49,6 +51,8 @@ ${message.body}
     ['修复错误', 'fix'],
     ['重构结构', 'refactor'],
     ['删除旧字段', 'refactor'],
+    ['性能优化', 'perf'],
+    ['perf tuning', 'perf'],
     ['调整文档', 'chore'],
   ] as const)('infers %s as %s', (text, expected) => {
     expect(inferMergeMessageType(text)).toBe(expected);
