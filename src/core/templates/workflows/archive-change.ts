@@ -16,6 +16,72 @@ import {
   type VerifyExecutionModel,
 } from './verify-execution-model.js';
 
+const ARCHIVE_COMMIT_MESSAGE_REFERENCE_PATH = 'references/archive-commit-message.md';
+const MERGE_SUMMARY_MESSAGE_REFERENCE_PATH = 'references/merge-summary-message.md';
+
+const ARCHIVE_COMMIT_MESSAGE_REFERENCE = `
+# Archive Commit Message Convention
+
+Use this format when \`git.archive.commitMessage.convention\` is \`openspec-archive\`.
+
+\`\`\`yaml
+convention: openspec-archive
+\`\`\`
+
+Subject:
+
+\`\`\`text
+docs(<change-name>): 归档变更制品
+\`\`\`
+
+Body:
+
+\`\`\`text
+## Why
+[业务背景] <why this archive commit is needed>
+
+## Changes
+- \`<file-path>\`: <why this archived/synced path must be committed>
+\`\`\`
+
+Rules:
+- Include only archive/synced paths selected for the archive commit.
+- Keep non-archive dirty changes out of the commit.
+- Pass the message through \`git commit -F -\`.
+`.trim();
+
+const MERGE_SUMMARY_MESSAGE_REFERENCE = `
+# Merge Summary Message Convention
+
+Use this format when \`git.merge.commitMessage.convention\` is \`openspec-merge-summary\`.
+
+\`\`\`yaml
+convention: openspec-merge-summary
+\`\`\`
+
+Subject:
+
+\`\`\`text
+<type>(<scope>): <中文标题>
+\`\`\`
+
+Body:
+
+\`\`\`text
+## Why
+[业务背景] <why from proposal.md>
+[技术决策] <decision from design.md when present>
+
+## Changes
+- \`<file-path>\`: <why this file changed>
+\`\`\`
+
+Rules:
+- Build the summary from the archived \`proposal.md\`, \`design.md\`, \`tasks.md\`, and \`opsx-delta.yaml\`.
+- Use \`git commit -F -\` for no-ff merge commits and squash commits that require a message.
+- Do not generate this message for \`ff-only\` merges.
+`.trim();
+
 function buildArchiveFullVerifyContract(executionModel: VerifyExecutionModel): string {
   if (executionModel === SUBAGENT_VERIFY_EXECUTION_MODEL) {
     return `   When the verify result is missing or stale, execute the same verify contract as \`/opsx:verify\` using the \`${SUBAGENT_VERIFY_EXECUTION_MODEL}\` skeleton:
@@ -70,10 +136,10 @@ ${buildArchiveFullVerifyContract(executionModel)}
    Create \`openspec/changes/archive\`, fail if \`YYYY-MM-DD-<change-name>\` exists, then move the change directory there. Preserve \`.openspec.yaml\`.
 
 7. **Create archive commit**
-   If \`git.autoCommit: manual\`, skip archive commit, merge, and cleanup; report manual status and leave the moved/synced files in the worktree. Otherwise add only the archive/synced paths and run \`git commit -F -\` with the fixed docs-style archive message using \`git.archive.commitMessage.convention\`. Record \`git rev-parse HEAD\`.
+   If \`git.autoCommit: manual\`, skip archive commit, merge, and cleanup; report manual status and leave the moved/synced files in the worktree. Otherwise read \`${ARCHIVE_COMMIT_MESSAGE_REFERENCE_PATH}\` before creating the archive commit, add only the archive/synced paths, and run \`git commit -F -\` with the fixed docs-style archive message using \`git.archive.commitMessage.convention\`. Record \`git rev-parse HEAD\`.
 
 8. **Merge archived branch**
-   After Step 7, apply the compiled merge strategy: \`git merge --no-ff --no-commit\` then \`git commit -F -\`, or \`git merge --ff-only\`, or \`git merge --squash\` then \`git commit -F -\`. Use \`git.merge.commitMessage.convention\` for merge/squash commit messages. On conflicts run \`git merge --abort\`, preserve the archive commit, and report recovery. Record merge SHA/status.
+   After Step 7, apply the compiled merge strategy: \`git merge --no-ff --no-commit\` then \`git commit -F -\`, or \`git merge --ff-only\`, or \`git merge --squash\` then \`git commit -F -\`. Read \`${MERGE_SUMMARY_MESSAGE_REFERENCE_PATH}\` before creating a merge or squash commit message, and use \`git.merge.commitMessage.convention\` for that message. On conflicts run \`git merge --abort\`, preserve the archive commit, and report recovery. Record merge SHA/status.
 
 9. **Cleanup feature branch and worktree**
    Read archived \`.apply-isolation.json\`. Resolve missing \`originalBranch\` with \`git symbolic-ref refs/remotes/origin/HEAD --short\` or ask. Never silently remove worktrees or switch branches. If deletion is enabled and non-squash, confirm merged with \`git branch --merged\` before branch deletion. Build paths with \`path.join()\`, \`path.resolve()\`, and \`path.normalize()\`.
@@ -122,6 +188,16 @@ export function createArchiveChangeSkillTemplateForExecutionModel(
     license: 'MIT',
     compatibility: 'Requires openspec CLI.',
     metadata: { author: 'openspec', version: '1.0' },
+    referenceFiles: [
+      {
+        path: ARCHIVE_COMMIT_MESSAGE_REFERENCE_PATH,
+        content: ARCHIVE_COMMIT_MESSAGE_REFERENCE,
+      },
+      {
+        path: MERGE_SUMMARY_MESSAGE_REFERENCE_PATH,
+        content: MERGE_SUMMARY_MESSAGE_REFERENCE,
+      },
+    ],
   };
 }
 

@@ -18,6 +18,12 @@ function normalizeSteps(content: string): string {
   return content.slice(start, end).replace(/\s+/g, ' ').trim();
 }
 
+function readReference(path: string): string {
+  const reference = getArchiveChangeSkillTemplate().referenceFiles?.find((file) => file.path === path);
+  expect(reference).toBeDefined();
+  return reference!.content;
+}
+
 describe('openspec archive skill content', () => {
   it('documents archive commit merge and cleanup steps in order', () => {
     const instructions = getArchiveChangeSkillTemplate().instructions;
@@ -57,11 +63,36 @@ describe('openspec archive skill content', () => {
     expect(instructions).toContain('do not parse raw YAML inside the skill');
   });
 
+  it('splits archive and merge message conventions into references', () => {
+    const template = getArchiveChangeSkillTemplate();
+    const instructions = template.instructions;
+    const archiveReference = readReference('references/archive-commit-message.md');
+    const mergeReference = readReference('references/merge-summary-message.md');
+
+    expect(template.referenceFiles?.map((file) => file.path)).toContain('references/archive-commit-message.md');
+    expect(template.referenceFiles?.map((file) => file.path)).toContain('references/merge-summary-message.md');
+    expect(instructions).toContain('read `references/archive-commit-message.md` before creating the archive commit');
+    expect(instructions).toContain('Read `references/merge-summary-message.md` before creating a merge or squash commit message');
+    expect(archiveReference).toContain('convention: openspec-archive');
+    expect(archiveReference).toContain('docs(<change-name>): 归档变更制品');
+    expect(mergeReference).toContain('convention: openspec-merge-summary');
+    expect(mergeReference).toContain('<type>(<scope>): <中文标题>');
+  });
+
   it('keeps codex and claude archive skill step sections equivalent', () => {
     const codex = readSkill('.codex/skills/openspec-archive-change/SKILL.md');
     const claude = readSkill('.claude/skills/openspec-archive-change/SKILL.md');
 
     expect(normalizeSteps(codex)).toBe(normalizeSteps(claude));
     expect(normalizeSteps(codex)).toBe(normalizeSteps(getArchiveChangeSkillTemplate().instructions));
+  });
+
+  it('keeps generated archive skill references equivalent to template source', () => {
+    for (const filePath of ['references/archive-commit-message.md', 'references/merge-summary-message.md']) {
+      const expected = readReference(filePath);
+
+      expect(readSkill(join('.codex/skills/openspec-archive-change', filePath))).toBe(expected);
+      expect(readSkill(join('.claude/skills/openspec-archive-change', filePath))).toBe(expected);
+    }
   });
 });

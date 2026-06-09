@@ -77,7 +77,7 @@ describe('workflow installation planning', () => {
   });
 
   it('includes skill reference files in planned artifacts', () => {
-    const plan = createToolWorkflowArtifactPlan('claude', ['sync'], 'skills', testDir);
+    const plan = createToolWorkflowArtifactPlan('claude', ['archive', 'sync'], 'skills', testDir);
     const artifacts = getPlannedToolArtifacts(testDir, 'claude', plan);
 
     expect(artifacts.skillFiles).toContain(
@@ -85,6 +85,12 @@ describe('workflow installation planning', () => {
     );
     expect(artifacts.skillFiles).toContain(
       path.join(testDir, '.claude', 'skills', 'openspec-sync-specs', 'references', 'merge-rules.md')
+    );
+    expect(artifacts.skillFiles).toContain(
+      path.join(testDir, '.claude', 'skills', 'openspec-archive-change', 'references', 'archive-commit-message.md')
+    );
+    expect(artifacts.skillFiles).toContain(
+      path.join(testDir, '.claude', 'skills', 'openspec-archive-change', 'references', 'merge-summary-message.md')
     );
     expect(artifacts.skillFiles).toContain(
       path.join(testDir, '.claude', 'skills', 'openspec-optimizer', 'references', 'output-protocol.md')
@@ -117,7 +123,7 @@ describe('workflow installation planning', () => {
     const result = await ArtifactSyncEngine.syncOne({
       toolId: 'claude',
       projectPath: testDir,
-      workflows: ['sync'],
+      workflows: ['archive', 'sync'],
       delivery: 'skills',
       version: 'test',
     });
@@ -127,7 +133,17 @@ describe('workflow installation planning', () => {
       path.join(testDir, '.claude', 'skills', 'openspec-sync-specs', 'references', 'merge-rules.md'),
       'utf-8'
     );
+    const archiveReference = await fs.readFile(
+      path.join(testDir, '.claude', 'skills', 'openspec-archive-change', 'references', 'archive-commit-message.md'),
+      'utf-8'
+    );
+    const mergeReference = await fs.readFile(
+      path.join(testDir, '.claude', 'skills', 'openspec-archive-change', 'references', 'merge-summary-message.md'),
+      'utf-8'
+    );
     expect(reference).toContain('Key Principle: Intelligent Merging');
+    expect(archiveReference).toContain('convention: openspec-archive');
+    expect(mergeReference).toContain('convention: openspec-merge-summary');
   });
 
   it('resolves legacy codex command files via explicit paths', () => {
