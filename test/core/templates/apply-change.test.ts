@@ -24,15 +24,20 @@ describe('apply change workflow template', () => {
     expect(template.instructions).toContain('read `references/apply-phase2-optimization.md` before Phase 2');
   });
 
-  it('keeps apply Phase 2 checkpoint commands in a stash-only reference', () => {
+  it('keeps apply Phase 2 checkpoint commands in a commit-based reference', () => {
     const template = getApplyChangeSkillTemplate();
     const reference = template.referenceFiles?.find(
       (file) => file.path === 'references/apply-phase2-optimization.md'
     );
 
-    expect(reference?.content).toContain('git stash push -u -m "apply-opt-checkpoint-r0"');
-    expect(reference?.content).toContain('git stash push -u -m "apply-opt-checkpoint-r<N>"');
-    expect(reference?.content).toContain('git stash apply stash@{0}');
+    expect(reference?.content).toContain('git commit -m "wip: opt-checkpoint-r0 (baseline)"');
+    expect(reference?.content).toContain('git commit -m "wip: opt-r${N} (${description})"');
+    expect(reference?.content).toContain('git reset --hard HEAD');
+    expect(reference?.content).toContain('git clean -fd');
+    expect(reference?.content).toContain('record verification PASS and save the new successful state before deciding whether to continue');
+    expect(reference?.content).not.toContain('If another retry remains, save the new successful state');
+    expect(reference?.content).not.toContain('git stash push');
+    expect(reference?.content).not.toContain('git stash apply');
     expect(reference?.content).not.toContain('git tag apply-opt-checkpoint');
   });
 
@@ -49,7 +54,11 @@ describe('apply change workflow template', () => {
       expect(template).toContain('openspec verify phase1 "<change-name>"');
       expect(template).toContain('openspec verify phase2');
       expect(template).toContain('openspec verify seal "<change-name>"');
-      expect(template).toContain('apply-opt-checkpoint-r0');
+      expect(template).toContain('wip: opt-checkpoint-r0 (baseline)');
+      expect(template).toContain('create an incremental checkpoint commit');
+      expect(template).not.toContain('create an incremental checkpoint commit when another retry remains');
+      expect(template).not.toContain('git stash push');
+      expect(template).not.toContain('git stash apply');
       expect(template).toContain('optimization.optRetries');
       expect(template).toContain('failed direction');
       expect(template).toContain('--skip-optimization');

@@ -35,7 +35,7 @@ ${VERIFY_CLI_JSON_SCHEMA_REFERENCE}
 
    - Skip Phase 2 only when the user requested \`--skip-optimization\` or \`optimization.enabled: false\`; record \`SKIPPED\` through \`openspec verify phase2\`
    - Read \`optimization.optRetries\` from \`openspec/config.yaml\`; default to \`2\`
-   - Before the first optimization attempt, create a checkpoint: \`git stash push -u -m "apply-opt-checkpoint-r0"\`
+   - Before the first optimization attempt, create a checkpoint commit: \`git add -A && git commit -m "wip: opt-checkpoint-r0 (baseline)"\`
    - Each complete proposal + patch + reviewer re-verify loop consumes one \`optRetries\` budget, whether it passes or fails
    - Format or Search/Replace matching problems are handled by the main agent and do not consume retry budget
    - Optimizer subagent: spawn and instruct to invoke the \`openspec-optimizer\` skill (loads full optimizer contract: role, constraints, optimization principles, Search/Replace format, failed directions protocol). Proposes Search/Replace blocks only; it MUST NOT edit files
@@ -43,9 +43,9 @@ ${VERIFY_CLI_JSON_SCHEMA_REFERENCE}
      1. Main agent calls \`openspec verify phase2 "<change-name>" --type=optimization --files "<affected-files>" --input '<json>'\` to record \`OPTIMIZATION_PROPOSED\` with pre-patch file hashes (disk MUST still be in pre-patch state at this point)
      2. Main agent applies Search/Replace blocks atomically (disk transitions to post-patch state)
      3. Main agent spawns the reviewer subagent for speculative Phase 1 re-verification
-   - On speculative PASS, record \`verification PASS\`, and continue until no opportunities remain or \`optRetries\` is exhausted
-   - On speculative FAIL, restore the latest checkpoint with \`git reset --hard HEAD\`, \`git clean -fd\`, then \`git stash apply stash@{0}\`; record the failed direction in \`.verify-result.json\`
-   - When all attempts finish, consume all \`apply-opt-checkpoint-*\` stash entries only after the final safe workspace state is confirmed
+   - On speculative PASS, record \`verification PASS\`, create an incremental checkpoint commit for that successful round, then continue until no opportunities remain or \`optRetries\` is exhausted
+   - On speculative FAIL, restore the latest commit with \`git reset --hard HEAD\` and \`git clean -fd\`; record the failed direction in \`.verify-result.json\`
+   - When all attempts finish, keep all \`wip: opt-*\` commits as audit history
 
 ${VERIFY_SIMPLE_CHANGE_FAST_PATH}
 
@@ -66,13 +66,14 @@ ${VERIFY_STATE_MACHINE_DIAGRAM}
 const APPLY_PHASE2_OPTIMIZATION_REFERENCE = `
 ## Apply Phase 2 Optimization Protocol
 
-The checkpoint is a git stash entry, not a git tag. Do not create tag checkpoints for apply optimization.
+The checkpoint is a git commit, not a git stash entry or git tag. Do not create stash or tag checkpoints for apply optimization.
 
 1. Skip Phase 2 only when the user requested \`--skip-optimization\` or \`optimization.enabled: false\`; record \`SKIPPED\` through \`openspec verify phase2\`.
 2. Read \`optimization.optRetries\` from \`openspec/config.yaml\`; default to \`2\`.
 3. Before the first optimization attempt, save the Phase 1 baseline:
    \`\`\`bash
-   git stash push -u -m "apply-opt-checkpoint-r0"
+   git add -A
+   git commit -m "wip: opt-checkpoint-r0 (baseline)"
    \`\`\`
 4. Spawn the optimizer subagent and instruct it to invoke the \`openspec-optimizer\` skill. The optimizer proposes Search/Replace blocks only; it MUST NOT edit files.
 5. For each proposed optimization, record pre-patch hashes before editing:
@@ -80,19 +81,19 @@ The checkpoint is a git stash entry, not a git tag. Do not create tag checkpoint
    openspec verify phase2 "<change-name>" --type=optimization --files "<affected-files>" --input '<json>' --json
    \`\`\`
 6. Apply Search/Replace blocks atomically, then spawn the reviewer subagent for speculative Phase 1 re-verification.
-7. On speculative PASS, record verification PASS. If another retry remains, save the new successful state:
+7. On speculative PASS, record verification PASS and save the new successful state before deciding whether to continue:
    \`\`\`bash
-   git stash push -u -m "apply-opt-checkpoint-r<N>"
+   git add -A
+   git commit -m "wip: opt-r\${N} (\${description})"
    \`\`\`
-8. On speculative FAIL, restore the latest checkpoint:
+8. On speculative FAIL, restore the latest commit:
    \`\`\`bash
    git reset --hard HEAD
    git clean -fd
-   git stash apply stash@{0}
    \`\`\`
-   Record the failed direction in \`.verify-result.json\`; the checkpoint is not consumed.
+   Record the failed direction in \`.verify-result.json\`.
 9. Each complete proposal + patch + reviewer re-verify loop consumes one \`optRetries\` budget, whether it passes or fails. Format or Search/Replace matching problems are handled by the main agent and do not consume retry budget.
-10. When all attempts finish, consume all \`apply-opt-checkpoint-*\` stash entries only after the final safe workspace state is confirmed.
+10. When all attempts finish, keep all \`wip: opt-*\` commits as audit history.
 `.trim();
 
 const APPLY_STRICT_TDD_IMPLEMENTATION = `
@@ -191,7 +192,7 @@ Invoke reviewer subagent, persist \`openspec verify phase1 "<change-name>" --inp
 
 ### Phase 2: Optimize under checkpoint protection
 
-You MUST read \`references/apply-phase2-optimization.md\` before Phase 2. Checkpoints are git stash entries, not git tags. Respect \`--skip-optimization\`; read \`optimization.optRetries\`; create the initial stash checkpoint \`apply-opt-checkpoint-r0\` with git stash; invoke Optimizer subagent; use \`openspec verify phase2\`; record each failed direction.
+You MUST read \`references/apply-phase2-optimization.md\` before Phase 2. Checkpoints are git commits, not git stash entries or git tags. Respect \`--skip-optimization\`; read \`optimization.optRetries\`; create the initial checkpoint commit with \`git add -A && git commit -m "wip: opt-checkpoint-r0 (baseline)"\`; invoke Optimizer subagent; use \`openspec verify phase2\`; create an incremental checkpoint commit for each successful optimization round; record each failed direction.
 
 ### Phase 3: Seal final result
 
