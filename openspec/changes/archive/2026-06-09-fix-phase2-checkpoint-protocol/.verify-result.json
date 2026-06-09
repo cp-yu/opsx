@@ -1,0 +1,145 @@
+{
+  "timestamp": "2026-06-09T08:57:52.305Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "de7add11658586a278dd06242318253d14e0480627e8e693540bcaf5f3203c9b",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent",
+    "evidenceFiles": [
+      ".claude/skills/openspec-apply-change/references/apply-phase2-optimization.md",
+      ".codex/skills/openspec-apply-change/references/apply-phase2-optimization.md",
+      ".github/skills/openspec-apply-change/references/apply-phase2-optimization.md",
+      "openspec/changes/fix-phase2-checkpoint-protocol/design.md",
+      "openspec/changes/fix-phase2-checkpoint-protocol/proposal.md",
+      "openspec/changes/fix-phase2-checkpoint-protocol/specs/apply-verify-integration/spec.md",
+      "openspec/changes/fix-phase2-checkpoint-protocol/specs/verify-optimization/spec.md",
+      "openspec/changes/fix-phase2-checkpoint-protocol/tasks.md",
+      "src/core/templates/workflows/apply-change.ts",
+      "test/core/templates/apply-change.test.ts"
+    ],
+    "evidenceFingerprint": "7544d6eb8b8e68bc073395fdfb78574f4ca9cde6f592029f46525a25afa0b56e",
+    "evidenceFingerprintEntries": [
+      {
+        "path": ".claude/skills/openspec-apply-change/references/apply-phase2-optimization.md",
+        "hash": "d0388dd28e6af8670e12a11eaabc094bb81dabbc796a9516f5b7d57c7bba07ec"
+      },
+      {
+        "path": ".codex/skills/openspec-apply-change/references/apply-phase2-optimization.md",
+        "hash": "d0388dd28e6af8670e12a11eaabc094bb81dabbc796a9516f5b7d57c7bba07ec"
+      },
+      {
+        "path": ".github/skills/openspec-apply-change/references/apply-phase2-optimization.md",
+        "hash": "d0388dd28e6af8670e12a11eaabc094bb81dabbc796a9516f5b7d57c7bba07ec"
+      },
+      {
+        "path": "openspec/changes/fix-phase2-checkpoint-protocol/design.md",
+        "hash": "ee40502e8744f0a917f5e1cf6f1916113cd4406f680e125e292386fb90ab6055"
+      },
+      {
+        "path": "openspec/changes/fix-phase2-checkpoint-protocol/proposal.md",
+        "hash": "b23a671faba30a4941abcd1dba0c666139e28fb4fefd413b5977f8aa8a0f8f49"
+      },
+      {
+        "path": "openspec/changes/fix-phase2-checkpoint-protocol/specs/apply-verify-integration/spec.md",
+        "hash": "92318a4a22b51f1d3849de106f5ca37cb1ac657f04c34c62bba572e742f00c13"
+      },
+      {
+        "path": "openspec/changes/fix-phase2-checkpoint-protocol/specs/verify-optimization/spec.md",
+        "hash": "c770fdfcca6ab48667d0c0659d63996a4964bcc5112be1d17b38936baeb7370b"
+      },
+      {
+        "path": "openspec/changes/fix-phase2-checkpoint-protocol/tasks.md",
+        "hash": "de7add11658586a278dd06242318253d14e0480627e8e693540bcaf5f3203c9b"
+      },
+      {
+        "path": "src/core/templates/workflows/apply-change.ts",
+        "hash": "cbb32d840454effd4ac7d3225402b28117e167531c4414568b92dac41ea54381"
+      },
+      {
+        "path": "test/core/templates/apply-change.test.ts",
+        "hash": "4af1ed6ed18e67bf1ba8b94b50609433373d8fd78ebaaf7031224902886b54c0"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "efc1cebcc8238dff0d39b881d1bfff6e148b4b61"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-09T08:58:05.586Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "Reviewer pass found no remaining optimization opportunities after remediation; the change is limited to template text, delta specs, and targeted tests."
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-06-09T08:57:52.305Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "de7add11658586a278dd06242318253d14e0480627e8e693540bcaf5f3203c9b",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent",
+        "evidenceFiles": [
+          ".claude/skills/openspec-apply-change/references/apply-phase2-optimization.md",
+          ".codex/skills/openspec-apply-change/references/apply-phase2-optimization.md",
+          ".github/skills/openspec-apply-change/references/apply-phase2-optimization.md",
+          "openspec/changes/fix-phase2-checkpoint-protocol/design.md",
+          "openspec/changes/fix-phase2-checkpoint-protocol/proposal.md",
+          "openspec/changes/fix-phase2-checkpoint-protocol/specs/apply-verify-integration/spec.md",
+          "openspec/changes/fix-phase2-checkpoint-protocol/specs/verify-optimization/spec.md",
+          "openspec/changes/fix-phase2-checkpoint-protocol/tasks.md",
+          "src/core/templates/workflows/apply-change.ts",
+          "test/core/templates/apply-change.test.ts"
+        ],
+        "evidenceFingerprint": "7544d6eb8b8e68bc073395fdfb78574f4ca9cde6f592029f46525a25afa0b56e",
+        "evidenceFingerprintEntries": [
+          {
+            "path": ".claude/skills/openspec-apply-change/references/apply-phase2-optimization.md",
+            "hash": "d0388dd28e6af8670e12a11eaabc094bb81dabbc796a9516f5b7d57c7bba07ec"
+          },
+          {
+            "path": ".codex/skills/openspec-apply-change/references/apply-phase2-optimization.md",
+            "hash": "d0388dd28e6af8670e12a11eaabc094bb81dabbc796a9516f5b7d57c7bba07ec"
+          },
+          {
+            "path": ".github/skills/openspec-apply-change/references/apply-phase2-optimization.md",
+            "hash": "d0388dd28e6af8670e12a11eaabc094bb81dabbc796a9516f5b7d57c7bba07ec"
+          },
+          {
+            "path": "openspec/changes/fix-phase2-checkpoint-protocol/design.md",
+            "hash": "ee40502e8744f0a917f5e1cf6f1916113cd4406f680e125e292386fb90ab6055"
+          },
+          {
+            "path": "openspec/changes/fix-phase2-checkpoint-protocol/proposal.md",
+            "hash": "b23a671faba30a4941abcd1dba0c666139e28fb4fefd413b5977f8aa8a0f8f49"
+          },
+          {
+            "path": "openspec/changes/fix-phase2-checkpoint-protocol/specs/apply-verify-integration/spec.md",
+            "hash": "92318a4a22b51f1d3849de106f5ca37cb1ac657f04c34c62bba572e742f00c13"
+          },
+          {
+            "path": "openspec/changes/fix-phase2-checkpoint-protocol/specs/verify-optimization/spec.md",
+            "hash": "c770fdfcca6ab48667d0c0659d63996a4964bcc5112be1d17b38936baeb7370b"
+          },
+          {
+            "path": "openspec/changes/fix-phase2-checkpoint-protocol/tasks.md",
+            "hash": "de7add11658586a278dd06242318253d14e0480627e8e693540bcaf5f3203c9b"
+          },
+          {
+            "path": "src/core/templates/workflows/apply-change.ts",
+            "hash": "cbb32d840454effd4ac7d3225402b28117e167531c4414568b92dac41ea54381"
+          },
+          {
+            "path": "test/core/templates/apply-change.test.ts",
+            "hash": "4af1ed6ed18e67bf1ba8b94b50609433373d8fd78ebaaf7031224902886b54c0"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "efc1cebcc8238dff0d39b881d1bfff6e148b4b61"
+      }
+    }
+  }
+}
