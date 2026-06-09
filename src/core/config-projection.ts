@@ -196,6 +196,17 @@ function buildArtifactRulesFragment(
   };
 }
 
+function buildGitProjectionLines(git: NonNullable<NormalizedProjectConfig['git']>): string[] {
+  return [
+    `git.autoCommit: ${git.autoCommit}`,
+    'git.autoCommit semantics: auto means agent handoff after archive CLI; manual means user handoff after archive CLI',
+    `git.archive.commitMessage.convention: ${git.archive.commitMessage.convention}`,
+    `git.merge.strategy: ${git.merge.strategy}`,
+    `git.merge.commitMessage.convention: ${git.merge.commitMessage.convention}`,
+    `git.branch.deleteAfterArchive: ${git.branch.deleteAfterArchive}`,
+  ];
+}
+
 const projectionRules: ProjectionRule[] = [
   {
     key: 'proseLanguage',
@@ -275,13 +286,7 @@ const projectionRules: ProjectionRule[] = [
       return {
         key: 'git',
         scope: 'global',
-        lines: [
-          `git.autoCommit: ${config.git.autoCommit}`,
-          `git.archive.commitMessage.convention: ${config.git.archive.commitMessage.convention}`,
-          `git.merge.strategy: ${config.git.merge.strategy}`,
-          `git.merge.commitMessage.convention: ${config.git.merge.commitMessage.convention}`,
-          `git.branch.deleteAfterArchive: ${config.git.branch.deleteAfterArchive}`,
-        ],
+        lines: buildGitProjectionLines(config.git),
       };
     },
     buildRuntime(config, scope) {
@@ -292,13 +297,7 @@ const projectionRules: ProjectionRule[] = [
       return {
         key: 'git',
         scope: 'global',
-        lines: [
-          `git.autoCommit: ${config.git.autoCommit}`,
-          `git.archive.commitMessage.convention: ${config.git.archive.commitMessage.convention}`,
-          `git.merge.strategy: ${config.git.merge.strategy}`,
-          `git.merge.commitMessage.convention: ${config.git.merge.commitMessage.convention}`,
-          `git.branch.deleteAfterArchive: ${config.git.branch.deleteAfterArchive}`,
-        ],
+        lines: buildGitProjectionLines(config.git),
       };
     },
     affectsFingerprint() {

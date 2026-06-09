@@ -118,6 +118,52 @@ describe('ArchiveCommand', () => {
       await expect(fs.access(changeDir)).rejects.toThrow();
     });
 
+    it('prints agent handoff reminder for auto git mode without recommended commit message', async () => {
+      const changeName = 'auto-handoff';
+      const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
+      await fs.mkdir(changeDir, { recursive: true });
+      await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] Task 1\n', 'utf-8');
+      await fs.writeFile(path.join(tempDir, 'openspec', 'config.yaml'), `schema: spec-driven
+git:
+  autoCommit: auto
+`, 'utf-8');
+
+      await archiveCommand.execute(changeName, { yes: true, noVerify: true });
+
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining('Git handoff: git.autoCommit is auto')
+      );
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining('agent')
+      );
+      expect(console.log).not.toHaveBeenCalledWith(
+        expect.stringContaining(`docs(${changeName}): 归档变更制品`)
+      );
+    });
+
+    it('prints user handoff reminder for manual git mode without recommended commit message', async () => {
+      const changeName = 'manual-handoff';
+      const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
+      await fs.mkdir(changeDir, { recursive: true });
+      await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] Task 1\n', 'utf-8');
+      await fs.writeFile(path.join(tempDir, 'openspec', 'config.yaml'), `schema: spec-driven
+git:
+  autoCommit: manual
+`, 'utf-8');
+
+      await archiveCommand.execute(changeName, { yes: true, noVerify: true });
+
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining('Git handoff: git.autoCommit is manual')
+      );
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining('user')
+      );
+      expect(console.log).not.toHaveBeenCalledWith(
+        expect.stringContaining(`docs(${changeName}): 归档变更制品`)
+      );
+    });
+
     it('should block archive when verify result is missing', async () => {
       const changeName = 'missing-verify';
       await fs.mkdir(path.join(tempDir, 'openspec', 'changes', changeName), { recursive: true });
@@ -203,6 +249,32 @@ System SHALL keep synced gates stable.
           relations: [{ from: 'cap.verify.gate', to: 'dom.verify', type: 'contains' }],
         },
       }), 'utf-8');
+
+      await archiveCommand.execute(changeName, { yes: true });
+
+      const archiveDir = path.join(tempDir, 'openspec', 'changes', 'archive');
+      const archives = await fs.readdir(archiveDir);
+      expect(archives.some((entry) => entry.includes(changeName))).toBe(true);
+    });
+
+    it('should allow archive when removal-only delta already deleted the main spec', async () => {
+      const changeName = 'already-deleted-spec';
+      const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
+      const changeSpecDir = path.join(changeDir, 'specs', 'old-merge');
+      const mainSpecDir = path.join(tempDir, 'openspec', 'specs', 'old-merge');
+      await fs.mkdir(changeSpecDir, { recursive: true });
+      await fs.mkdir(mainSpecDir, { recursive: true });
+      await writeFreshVerifyResult(changeDir);
+
+      await fs.writeFile(
+        path.join(changeSpecDir, 'spec.md'),
+        `## REMOVED Requirements
+
+### Requirement: Old A
+### Requirement: Old B`,
+        'utf-8'
+      );
+      await fs.rm(path.join(mainSpecDir, 'spec.md'), { force: true });
 
       await archiveCommand.execute(changeName, { yes: true });
 
@@ -1258,7 +1330,7 @@ E1 updated`);
       await expect(fs.access(changeDir)).resolves.not.toThrow();
     });
 
-    it('skips apply isolation cleanup under --yes', async () => {
+    it('preserves apply isolation state for handoff under --yes', async () => {
       const changeName = 'isolated-yes';
       const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
       await fs.mkdir(changeDir, { recursive: true });
@@ -1275,10 +1347,18 @@ E1 updated`);
 
       await archiveCommand.execute(changeName, { yes: true, noVerify: true, noValidate: true });
 
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Worktree cleanup skipped under --yes:')
+      expect(console.log).not.toHaveBeenCalledWith(
+        expect.stringContaining('Worktree cleanup')
       );
-      expect(console.log).toHaveBeenCalledWith('Branch switch skipped under --yes: main');
+      expect(console.log).not.toHaveBeenCalledWith(
+        expect.stringContaining('Branch switch')
+      );
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining('Git handoff: git.autoCommit is auto')
+      );
+      const archiveDir = path.join(tempDir, 'openspec', 'changes', 'archive');
+      const [archiveName] = (await fs.readdir(archiveDir)).filter((entry) => entry.includes(changeName));
+      await expect(fs.access(path.join(archiveDir, archiveName, '.apply-isolation.json'))).resolves.not.toThrow();
     });
 
     it('prompts before apply isolation cleanup and respects declines', async () => {

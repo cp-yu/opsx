@@ -19,6 +19,7 @@ import {
 } from './specs-apply.js';
 import { refreshVerifyEvidenceAfterSync } from './verify/freshness.js';
 import { Validator } from './validation/validator.js';
+import { extractRequirementsSection, parseDeltaSpec } from './parsers/requirement-blocks.js';
 
 type SpecCounts = { added: number; modified: number; removed: number; renamed: number };
 
@@ -36,6 +37,7 @@ interface PreparedSpecWrite {
   rebuilt: string;
   counts: SpecCounts;
   originalContent: string | null;
+  action: 'write' | 'delete';
 }
 
 interface PreparedOpsxWrite {
@@ -106,6 +108,9 @@ export async function getPendingChangeSync(
     ) {
       continue;
     }
+    if (originalContent === null && isRemovalOnlyDelta(changeContent)) {
+      continue;
+    }
     pendingSpecs += 1;
   }
 
@@ -139,15 +144,18 @@ export async function prepareChangeSync(
     }
 
     const built = await buildUpdatedSpec(update, state.changeName, projectRoot);
+    const action = shouldDeleteRebuiltSpec(built.rebuilt) ? 'delete' : 'write';
     if (validator) {
       const specName = path.basename(path.dirname(update.target));
-      const report = await validator.validateSpecContent(specName, built.rebuilt);
-      if (!report.valid) {
-        const errors = report.issues
-          .filter((issue) => issue.level === 'ERROR')
-          .map((issue) => `  ✗ ${issue.message}`)
-          .join('\n');
-        throw new Error(`Validation errors in rebuilt spec for ${specName}:\n${errors}`);
+      if (action === 'write') {
+        const report = await validator.validateSpecContent(specName, built.rebuilt);
+        if (!report.valid) {
+          const errors = report.issues
+            .filter((issue) => issue.level === 'ERROR')
+            .map((issue) => `  ✗ ${issue.message}`)
+            .join('\n');
+          throw new Error(`Validation errors in rebuilt spec for ${specName}:\n${errors}`);
+        }
       }
     }
 
@@ -156,6 +164,7 @@ export async function prepareChangeSync(
       rebuilt: built.rebuilt,
       counts: built.counts,
       originalContent,
+      action,
     });
 
     totals.added += built.counts.added;
@@ -280,8 +289,12 @@ async function writePreparedSpecs(writes: PreparedSpecWrite[], silent: boolean):
 
   try {
     for (const write of writes) {
-      await fs.mkdir(path.dirname(write.update.target), { recursive: true });
-      await fs.writeFile(write.update.target, write.rebuilt, 'utf-8');
+      if (write.action === 'delete') {
+        await fs.rm(write.update.target, { force: true });
+      } else {
+        await fs.mkdir(path.dirname(write.update.target), { recursive: true });
+        await fs.writeFile(write.update.target, write.rebuilt, 'utf-8');
+      }
       applied.push(write);
 
       if (!silent) {
@@ -303,6 +316,18 @@ async function writePreparedSpecs(writes: PreparedSpecWrite[], silent: boolean):
     }
     throw error;
   }
+}
+
+function shouldDeleteRebuiltSpec(content: string): boolean {
+  return extractRequirementsSection(content).bodyBlocks.length === 0;
+}
+
+function isRemovalOnlyDelta(content: string): boolean {
+  const plan = parseDeltaSpec(content);
+  return plan.removed.length > 0 &&
+    plan.added.length === 0 &&
+    plan.modified.length === 0 &&
+    plan.renamed.length === 0;
 }
 
 function formatOpsxSummary(result: OpsxDeltaApplyResult): string {

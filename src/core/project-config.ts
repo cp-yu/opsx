@@ -272,6 +272,10 @@ function deletePath(document: Document, keys: readonly string[]): boolean {
   return true;
 }
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 export function migrateProjectConfigDefaults(projectRoot: string): ProjectConfigDefaultsMigrationResult {
   const configPath = findProjectConfigPath(projectRoot);
   if (!configPath.exists) {
@@ -447,10 +451,10 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
     config.git = cloneFunctionalDefaults().git;
     const gitConfig = config.git!;
     if (raw.git !== undefined) {
-      if (typeof raw.git !== 'object' || raw.git === null || Array.isArray(raw.git)) {
+      if (!isPlainRecord(raw.git)) {
         console.warn(`Invalid 'git' field in config (must be an object)`);
       } else {
-        const rawGit = raw.git as Record<string, unknown>;
+        const rawGit = raw.git;
 
         if (rawGit.autoCommit !== undefined) {
           const autoCommitResult = gitAutoCommitField.safeParse(rawGit.autoCommit);
@@ -462,15 +466,15 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
         }
 
         if (rawGit.archive !== undefined) {
-          if (typeof rawGit.archive === 'object' && rawGit.archive !== null && !Array.isArray(rawGit.archive)) {
-            const rawArchive = rawGit.archive as Record<string, unknown>;
+          if (isPlainRecord(rawGit.archive)) {
+            const rawArchive = rawGit.archive;
             const rawCommitMessage = rawArchive.commitMessage;
             if (rawCommitMessage !== undefined) {
-              if (typeof rawCommitMessage === 'object' && rawCommitMessage !== null && !Array.isArray(rawCommitMessage)) {
-                const conventionResult = gitArchiveCommitConventionField.safeParse((rawCommitMessage as Record<string, unknown>).convention);
+              if (isPlainRecord(rawCommitMessage)) {
+                const conventionResult = gitArchiveCommitConventionField.safeParse(rawCommitMessage.convention);
                 if (conventionResult.success) {
                   gitConfig.archive.commitMessage.convention = conventionResult.data;
-                } else if ((rawCommitMessage as Record<string, unknown>).convention !== undefined) {
+                } else if (rawCommitMessage.convention !== undefined) {
                   console.warn('git.archive.commitMessage.convention must be one of: openspec-archive');
                 }
               } else {
@@ -483,8 +487,8 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
         }
 
         if (rawGit.merge !== undefined) {
-          if (typeof rawGit.merge === 'object' && rawGit.merge !== null && !Array.isArray(rawGit.merge)) {
-            const rawMerge = rawGit.merge as Record<string, unknown>;
+          if (isPlainRecord(rawGit.merge)) {
+            const rawMerge = rawGit.merge;
 
             if (rawMerge.strategy !== undefined) {
               const strategyResult = gitMergeStrategyField.safeParse(rawMerge.strategy);
@@ -497,11 +501,11 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
 
             const rawCommitMessage = rawMerge.commitMessage;
             if (rawCommitMessage !== undefined) {
-              if (typeof rawCommitMessage === 'object' && rawCommitMessage !== null && !Array.isArray(rawCommitMessage)) {
-                const conventionResult = gitMergeCommitConventionField.safeParse((rawCommitMessage as Record<string, unknown>).convention);
+              if (isPlainRecord(rawCommitMessage)) {
+                const conventionResult = gitMergeCommitConventionField.safeParse(rawCommitMessage.convention);
                 if (conventionResult.success) {
                   gitConfig.merge.commitMessage.convention = conventionResult.data;
-                } else if ((rawCommitMessage as Record<string, unknown>).convention !== undefined) {
+                } else if (rawCommitMessage.convention !== undefined) {
                   console.warn('git.merge.commitMessage.convention must be one of: openspec-merge-summary');
                 }
               } else {
@@ -514,8 +518,8 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
         }
 
         if (rawGit.branch !== undefined) {
-          if (typeof rawGit.branch === 'object' && rawGit.branch !== null && !Array.isArray(rawGit.branch)) {
-            const rawBranch = rawGit.branch as Record<string, unknown>;
+          if (isPlainRecord(rawGit.branch)) {
+            const rawBranch = rawGit.branch;
 
             if (rawBranch.deleteAfterArchive !== undefined) {
               const deleteAfterArchiveResult = gitDeleteAfterArchiveField.safeParse(rawBranch.deleteAfterArchive);
@@ -534,10 +538,8 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
 
     // Parse rules field using Zod
     if (raw.rules !== undefined) {
-      const rulesField = z.record(z.string(), z.array(z.string()));
-
       // First check if it's an object structure (guard against null since typeof null === 'object')
-      if (typeof raw.rules === 'object' && raw.rules !== null && !Array.isArray(raw.rules)) {
+      if (isPlainRecord(raw.rules)) {
         const parsedRules: Record<string, string[]> = {};
         let hasValidRules = false;
 

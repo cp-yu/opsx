@@ -182,6 +182,44 @@ Then the system signs the user in`
     expect(mainSpec).not.toContain('TBD - created by archiving change');
   });
 
+  it('deletes a main spec when sync removes all requirements', async () => {
+    const syncCommand = await loadSyncCommand();
+    const changeDir = await createChange('remove-empty-spec');
+    const changeSpecDir = path.join(changeDir, 'specs', 'old-merge');
+    const mainSpecDir = path.join(tempDir, 'openspec', 'specs', 'old-merge');
+    await fs.mkdir(changeSpecDir, { recursive: true });
+    await fs.mkdir(mainSpecDir, { recursive: true });
+
+    await fs.writeFile(
+      path.join(mainSpecDir, 'spec.md'),
+      `# old-merge Specification
+
+## Purpose
+Old merge behavior.
+
+## Requirements
+
+### Requirement: Old A
+Old A.
+
+### Requirement: Old B
+Old B.`
+    );
+    await fs.writeFile(
+      path.join(changeSpecDir, 'spec.md'),
+      `## REMOVED Requirements
+
+### Requirement: Old A
+### Requirement: Old B`
+    );
+
+    await syncCommand('remove-empty-spec', { noVerify: true });
+
+    await expect(fs.access(path.join(mainSpecDir, 'spec.md'))).rejects.toThrow();
+    expect(console.log).toHaveBeenCalledWith("Sync complete for 'remove-empty-spec'.");
+    expect(console.log).toHaveBeenCalledWith('specs: synced');
+  });
+
   it('supports interactive change selection when no name is provided', async () => {
     const syncCommand = await loadSyncCommand();
     const { select } = await import('@inquirer/prompts');

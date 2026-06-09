@@ -85,18 +85,6 @@ async function writeChange(projectRoot: string, changeName = 'feature-archive'):
   await git(projectRoot, ['commit', '-m', 'feat: implementation']);
 }
 
-async function writeSharedConflict(projectRoot: string): Promise<void> {
-  await writeFile(projectRoot, 'src/shared.ts', 'export const value = 1;\n');
-  await git(projectRoot, ['add', 'src/shared.ts']);
-  await git(projectRoot, ['commit', '-m', 'feat: shared baseline']);
-
-  await git(projectRoot, ['checkout', 'main']);
-  await writeFile(projectRoot, 'src/shared.ts', 'export const value = 2;\n');
-  await git(projectRoot, ['add', 'src/shared.ts']);
-  await git(projectRoot, ['commit', '-m', 'chore: main conflict']);
-  await git(projectRoot, ['checkout', 'feature-archive']);
-}
-
 describe('archive branch merge', () => {
   let projectRoot: string;
   let originalCwd: string;
@@ -114,7 +102,7 @@ describe('archive branch merge', () => {
     }
   });
 
-  it('creates archive commit on feature branch and no-ff merge commit on original branch', async () => {
+  it('archives and syncs without git writes when autoCommit is auto', async () => {
     projectRoot = await setupRepo();
     await writeChange(projectRoot);
     await writeFile(projectRoot, 'openspec/changes/feature-archive/specs/synced/spec.md', `# Synced - Changes
@@ -153,83 +141,87 @@ ADDED:
       type: contains
 `);
     await writeFile(projectRoot, 'openspec/specs/unrelated/spec.md', '# Unrelated\n');
+    const beforeHead = await git(projectRoot, ['rev-parse', 'HEAD']);
     process.chdir(projectRoot);
 
     await new ArchiveCommand().execute('feature-archive', { yes: true, noVerify: true, noValidate: true });
 
     const currentBranch = await git(projectRoot, ['branch', '--show-current']);
-    expect(currentBranch).toBe('main');
-    const parentLine = await git(projectRoot, ['rev-list', '--parents', '-n', '1', 'HEAD']);
-    expect(parentLine.split(' ')).toHaveLength(3);
-    const mergeMessage = await git(projectRoot, ['log', '-1', '--pretty=%B']);
-    expect(mergeMessage).toContain('## Why');
-    expect(mergeMessage).toContain('## Changes');
+    expect(currentBranch).toBe('feature-archive');
+    expect(await git(projectRoot, ['rev-parse', 'HEAD'])).toBe(beforeHead);
+    expect(await git(projectRoot, ['diff', '--cached', '--name-only'])).toBe('');
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Git handoff: git.autoCommit is auto')
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('agent')
+    );
+    expect(console.log).not.toHaveBeenCalledWith(
+      expect.stringContaining('docs(feature-archive): 归档变更制品')
+    );
 
-    await git(projectRoot, ['checkout', 'feature-archive']);
-    const archiveCommitSubject = await git(projectRoot, ['log', '-1', '--pretty=%s']);
-    expect(archiveCommitSubject).toBe('docs(feature-archive): 归档变更制品');
-    const archiveCommitMessage = await git(projectRoot, ['log', '-1', '--pretty=%B']);
-    expect(archiveCommitMessage).toContain('## Why');
-    expect(archiveCommitMessage).toContain(`归档 \`feature-archive\` 的 OpenSpec change artifacts`);
-    expect(archiveCommitMessage).toContain('## Changes');
-    expect(archiveCommitMessage).toContain('openspec/changes/archive/');
-    expect(archiveCommitMessage).toContain('openspec/specs/: 同步 delta spec');
-    expect(archiveCommitMessage).toContain('openspec/project.opsx.*.yaml: 应用 OPSX delta');
-    const archiveCommitFiles = await git(projectRoot, ['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD']);
-    expect(archiveCommitFiles).toContain('openspec/specs/synced/spec.md');
-    expect(archiveCommitFiles).toContain('openspec/project.opsx.yaml');
-    expect(archiveCommitFiles).toContain('openspec/project.opsx.relations.yaml');
-    expect(archiveCommitFiles).toContain('openspec/project.opsx.code-map.yaml');
-    expect(archiveCommitFiles).not.toContain('openspec/specs/unrelated/spec.md');
+    expect(await fs.readFile(path.join(projectRoot, 'openspec', 'specs', 'synced', 'spec.md'), 'utf-8')).toContain('Synced behavior');
+    const status = await git(projectRoot, ['status', '--short']);
+    expect(status).toContain('?? openspec/changes/');
+    expect(status).toContain('?? openspec/specs/');
+    expect(status).toContain('?? openspec/project.opsx.code-map.yaml');
   });
 
-  it('keeps unrelated dirty files out of the archive commit', async () => {
+  it('leaves unrelated dirty files unstaged during handoff', async () => {
     projectRoot = await setupRepo();
     await writeChange(projectRoot);
     await writeFile(projectRoot, 'scratch.txt', 'do not commit\n');
+    const beforeHead = await git(projectRoot, ['rev-parse', 'HEAD']);
     process.chdir(projectRoot);
 
     await new ArchiveCommand().execute('feature-archive', { yes: true, noVerify: true, noValidate: true });
 
-    await git(projectRoot, ['checkout', 'feature-archive']);
-    const archiveCommitFiles = await git(projectRoot, ['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD']);
-    expect(archiveCommitFiles).not.toContain('scratch.txt');
+    expect(await git(projectRoot, ['rev-parse', 'HEAD'])).toBe(beforeHead);
+    expect(await git(projectRoot, ['diff', '--cached', '--name-only'])).toBe('');
     const status = await git(projectRoot, ['status', '--short', '--', 'scratch.txt']);
     expect(status).toBe('?? scratch.txt');
   });
 
-  it('aborts merge conflict and keeps the feature archive commit and branch', async () => {
+  it('does not checkout merge or abort when original branch diverged', async () => {
     projectRoot = await setupRepo();
     await writeChange(projectRoot);
-    await writeSharedConflict(projectRoot);
+    await writeFile(projectRoot, 'src/shared.ts', 'export const value = 1;\n');
+    await git(projectRoot, ['add', 'src/shared.ts']);
+    await git(projectRoot, ['commit', '-m', 'feat: shared baseline']);
+    await git(projectRoot, ['checkout', 'main']);
+    await writeFile(projectRoot, 'src/shared.ts', 'export const value = 2;\n');
+    await git(projectRoot, ['add', 'src/shared.ts']);
+    await git(projectRoot, ['commit', '-m', 'chore: main divergence']);
+    await git(projectRoot, ['checkout', 'feature-archive']);
+    const beforeHead = await git(projectRoot, ['rev-parse', 'HEAD']);
     process.chdir(projectRoot);
 
-    await expect(new ArchiveCommand().execute('feature-archive', { yes: true, noVerify: true, noValidate: true })).rejects.toThrow(
-      '合并 originalBranch 时发生冲突；已 abort，请手动解决冲突后重跑 archive'
-    );
+    await new ArchiveCommand().execute('feature-archive', { yes: true, noVerify: true, noValidate: true });
 
+    expect(await git(projectRoot, ['branch', '--show-current'])).toBe('feature-archive');
+    expect(await git(projectRoot, ['rev-parse', 'HEAD'])).toBe(beforeHead);
     const featureBranch = await git(projectRoot, ['branch', '--list', 'feature-archive']);
     expect(featureBranch).toContain('feature-archive');
-    await git(projectRoot, ['checkout', 'feature-archive']);
-    const archiveCommitSubject = await git(projectRoot, ['log', '-1', '--pretty=%s']);
-    expect(archiveCommitSubject).toBe('docs(feature-archive): 归档变更制品');
   });
 
-  it('reuses the archived change path on rerun and still completes the merge flow', async () => {
+  it('reuses the archived change path on rerun without git writes', async () => {
     projectRoot = await setupRepo();
     await writeChange(projectRoot);
+    const beforeHead = await git(projectRoot, ['rev-parse', 'HEAD']);
     process.chdir(projectRoot);
 
     await new ArchiveCommand().execute('feature-archive', { yes: true, noVerify: true, noValidate: true });
     await new ArchiveCommand().execute('feature-archive', { yes: true, noVerify: true, noValidate: true });
 
     const currentBranch = await git(projectRoot, ['branch', '--show-current']);
-    expect(currentBranch).toBe('main');
+    expect(currentBranch).toBe('feature-archive');
+    expect(await git(projectRoot, ['rev-parse', 'HEAD'])).toBe(beforeHead);
+    expect(await git(projectRoot, ['diff', '--cached', '--name-only'])).toBe('');
     const archives = await fs.readdir(path.join(projectRoot, 'openspec', 'changes', 'archive'));
     expect(archives.filter((entry) => entry.endsWith('-feature-archive'))).toHaveLength(1);
   });
 
-  it('deletes the feature branch after merge when archive cleanup is enabled', async () => {
+  it('does not delete the feature branch when archive cleanup is enabled', async () => {
     projectRoot = await setupRepo();
     await writeFile(projectRoot, 'openspec/config.yaml', `schema: spec-driven
 git:
@@ -245,15 +237,17 @@ git:
     deleteAfterArchive: true
 `);
     await writeChange(projectRoot);
+    const beforeHead = await git(projectRoot, ['rev-parse', 'HEAD']);
     process.chdir(projectRoot);
 
     await new ArchiveCommand().execute('feature-archive', { yes: true, noVerify: true, noValidate: true });
 
+    expect(await git(projectRoot, ['rev-parse', 'HEAD'])).toBe(beforeHead);
     const featureBranch = await git(projectRoot, ['branch', '--list', 'feature-archive']);
-    expect(featureBranch).toBe('');
+    expect(featureBranch).toContain('feature-archive');
   });
 
-  it('archives files without git automation when autoCommit is manual', async () => {
+  it('archives files with user handoff when autoCommit is manual', async () => {
     projectRoot = await setupRepo();
     await writeFile(projectRoot, 'openspec/config.yaml', `schema: spec-driven
 git:
@@ -277,6 +271,12 @@ git:
     const currentBranch = await git(projectRoot, ['branch', '--show-current']);
     expect(currentBranch).toBe('feature-archive');
     expect(await git(projectRoot, ['rev-parse', 'HEAD'])).toBe(beforeHead);
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Git handoff: git.autoCommit is manual')
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('user')
+    );
     const archives = await fs.readdir(path.join(projectRoot, 'openspec', 'changes', 'archive'));
     expect(archives.some((entry) => entry.endsWith('-feature-archive'))).toBe(true);
     const status = await git(projectRoot, ['status', '--short']);
@@ -284,11 +284,10 @@ git:
     expect(await git(projectRoot, ['diff', '--cached', '--name-only'])).toBe('');
   });
 
-  it('prompts for originalBranch when isolation and remote default branch are missing', async () => {
+  it('does not prompt for originalBranch when isolation and remote default branch are missing', async () => {
     projectRoot = await setupRepo();
     const { input } = await import('@inquirer/prompts');
     const mockInput = input as unknown as ReturnType<typeof vi.fn>;
-    mockInput.mockResolvedValueOnce('main');
     const changeDir = path.join(projectRoot, 'openspec', 'changes', 'feature-archive');
     await fs.mkdir(changeDir, { recursive: true });
     await writeFile(projectRoot, path.join('openspec', 'changes', 'feature-archive', 'tasks.md'), '- [x] Task 1\n');
@@ -298,20 +297,19 @@ git:
     await git(projectRoot, ['add', 'src/feature.ts']);
     await git(projectRoot, ['commit', '-m', 'feat: implementation']);
     await fs.rm(path.join(changeDir, '.apply-isolation.json'), { force: true });
+    const beforeHead = await git(projectRoot, ['rev-parse', 'HEAD']);
     process.chdir(projectRoot);
 
     await new ArchiveCommand().execute('feature-archive', { yes: true, noVerify: true, noValidate: true });
 
+    expect(mockInput).not.toHaveBeenCalled();
     const currentBranch = await git(projectRoot, ['branch', '--show-current']);
-    expect(currentBranch).toBe('main');
+    expect(currentBranch).toBe('feature-archive');
+    expect(await git(projectRoot, ['rev-parse', 'HEAD'])).toBe(beforeHead);
     const archiveDir = path.join(projectRoot, 'openspec', 'changes', 'archive');
     const archives = await fs.readdir(archiveDir);
     const archiveName = archives.find((entry) => entry.includes('feature-archive'));
     expect(archiveName).toBeDefined();
-    const isolation = JSON.parse(await fs.readFile(path.join(archiveDir, archiveName!, '.apply-isolation.json'), 'utf-8'));
-    expect(isolation).toEqual(expect.objectContaining({
-      branchName: 'feature-archive',
-      originalBranch: 'main',
-    }));
+    await expect(fs.access(path.join(archiveDir, archiveName!, '.apply-isolation.json'))).rejects.toThrow();
   });
 });

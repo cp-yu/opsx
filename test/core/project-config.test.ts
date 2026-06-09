@@ -1148,6 +1148,7 @@ rules:
           scope: 'global',
           lines: [
             'git.autoCommit: auto',
+            'git.autoCommit semantics: auto means agent handoff after archive CLI; manual means user handoff after archive CLI',
             'git.archive.commitMessage.convention: openspec-archive',
             'git.merge.strategy: no-ff',
             'git.merge.commitMessage.convention: openspec-merge-summary',
@@ -1175,6 +1176,7 @@ rules:
           scope: 'global',
           lines: [
             'git.autoCommit: manual',
+            'git.autoCommit semantics: auto means agent handoff after archive CLI; manual means user handoff after archive CLI',
             'git.archive.commitMessage.convention: openspec-archive',
             'git.merge.strategy: squash',
             'git.merge.commitMessage.convention: openspec-merge-summary',
@@ -1205,6 +1207,7 @@ rules:
           scope: 'global',
           lines: [
             'git.autoCommit: manual',
+            'git.autoCommit semantics: auto means agent handoff after archive CLI; manual means user handoff after archive CLI',
             'git.archive.commitMessage.convention: openspec-archive',
             'git.merge.strategy: squash',
             'git.merge.commitMessage.convention: openspec-merge-summary',
