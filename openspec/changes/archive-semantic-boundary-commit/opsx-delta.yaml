@@ -1,0 +1,9 @@
+schema_version: 1
+ADDED: {}
+MODIFIED:
+  capabilities:
+    - id: cap.archive.branch-merge
+      intent: 归档后的 git commit、merge 与 branch cleanup 属于 agent/user handoff 流程；agent 根据 git.autoCommit、commitMessage convention references、实际 diff 与 Phase 2 checkpoint history 生成 semantic boundary commit、archive commit、merge message 并处理后续 git 工作
+    - id: cap.ai.workflow-templates
+      intent: 提供 AI workflow 模板和 spec-driven artifact instructions；archive workflow 模板通过 runtime projection 消费 git.autoCommit 的 agent/user handoff 语义，并要求 agent 在归档后区分未提交实现变更、Phase 2 checkpoint history 承载的实现边界，以及 OpenSpec/docs 归档制品提交
+REMOVED: {}

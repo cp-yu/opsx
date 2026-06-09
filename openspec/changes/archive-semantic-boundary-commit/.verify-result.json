@@ -1,0 +1,118 @@
+{
+  "timestamp": "2026-06-09T13:33:26.898Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "547d4011d7ecbdea6aa133562f98bbc5694705fad1a820d65f05a1e26b85ebcc",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "canonical-phase1-review",
+    "evidenceFiles": [
+      ".codex/skills/openspec-archive-change/SKILL.md",
+      "openspec/changes/archive-semantic-boundary-commit/design.md",
+      "openspec/changes/archive-semantic-boundary-commit/opsx-delta.yaml",
+      "openspec/changes/archive-semantic-boundary-commit/proposal.md",
+      "openspec/changes/archive-semantic-boundary-commit/specs/opsx-archive-skill/spec.md",
+      "openspec/changes/archive-semantic-boundary-commit/tasks.md",
+      "src/core/templates/workflows/archive-change.ts",
+      "test/skills/archive-skill-content.test.ts"
+    ],
+    "evidenceFingerprint": "36998473efa7e7d7f3ffe2b037fae6f34eed845c92985793564a6ea77f600207",
+    "evidenceFingerprintEntries": [
+      {
+        "path": ".codex/skills/openspec-archive-change/SKILL.md",
+        "hash": "0fb33c3142647a4c9213ea95e5017e08f0f3943f378d52f7068e909f66c72f8b"
+      },
+      {
+        "path": "openspec/changes/archive-semantic-boundary-commit/design.md",
+        "hash": "d93508221ce7333b48c4cf1c0888038b2124710c1c19db5d3211c0481977591e"
+      },
+      {
+        "path": "openspec/changes/archive-semantic-boundary-commit/opsx-delta.yaml",
+        "hash": "c63a90e012998afc0a7f771566a77cf5a4cd7ffe63367f71cf1b23ada0136eab"
+      },
+      {
+        "path": "openspec/changes/archive-semantic-boundary-commit/proposal.md",
+        "hash": "ee1ffbbbab8d8f3ea412abce8302905a2d9619280f1fbfe83bfd817d4c8caf8b"
+      },
+      {
+        "path": "openspec/changes/archive-semantic-boundary-commit/specs/opsx-archive-skill/spec.md",
+        "hash": "d56fcb0c385398f2c20a7e0211152d58640e5ee8c0b4080a101f2247188bfbc3"
+      },
+      {
+        "path": "openspec/changes/archive-semantic-boundary-commit/tasks.md",
+        "hash": "547d4011d7ecbdea6aa133562f98bbc5694705fad1a820d65f05a1e26b85ebcc"
+      },
+      {
+        "path": "src/core/templates/workflows/archive-change.ts",
+        "hash": "54f740b943415ebe3f73650eace23fbd6ea13ed60b32592e38ad999233cd9c8c"
+      },
+      {
+        "path": "test/skills/archive-skill-content.test.ts",
+        "hash": "1b8c84681e4147cfb45d584f7846df00a06e015757881f735133204e0397c921"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "5f10964c103a5ad47b0e13eab8ed72f766c2dec3"
+  },
+  "optimization": {
+    "status": "PENDING_VERIFICATION",
+    "attempts": [],
+    "baseline": {
+      "timestamp": "2026-06-09T13:33:26.898Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "547d4011d7ecbdea6aa133562f98bbc5694705fad1a820d65f05a1e26b85ebcc",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "canonical-phase1-review",
+        "evidenceFiles": [
+          ".codex/skills/openspec-archive-change/SKILL.md",
+          "openspec/changes/archive-semantic-boundary-commit/design.md",
+          "openspec/changes/archive-semantic-boundary-commit/opsx-delta.yaml",
+          "openspec/changes/archive-semantic-boundary-commit/proposal.md",
+          "openspec/changes/archive-semantic-boundary-commit/specs/opsx-archive-skill/spec.md",
+          "openspec/changes/archive-semantic-boundary-commit/tasks.md",
+          "src/core/templates/workflows/archive-change.ts",
+          "test/skills/archive-skill-content.test.ts"
+        ],
+        "evidenceFingerprint": "36998473efa7e7d7f3ffe2b037fae6f34eed845c92985793564a6ea77f600207",
+        "evidenceFingerprintEntries": [
+          {
+            "path": ".codex/skills/openspec-archive-change/SKILL.md",
+            "hash": "0fb33c3142647a4c9213ea95e5017e08f0f3943f378d52f7068e909f66c72f8b"
+          },
+          {
+            "path": "openspec/changes/archive-semantic-boundary-commit/design.md",
+            "hash": "d93508221ce7333b48c4cf1c0888038b2124710c1c19db5d3211c0481977591e"
+          },
+          {
+            "path": "openspec/changes/archive-semantic-boundary-commit/opsx-delta.yaml",
+            "hash": "c63a90e012998afc0a7f771566a77cf5a4cd7ffe63367f71cf1b23ada0136eab"
+          },
+          {
+            "path": "openspec/changes/archive-semantic-boundary-commit/proposal.md",
+            "hash": "ee1ffbbbab8d8f3ea412abce8302905a2d9619280f1fbfe83bfd817d4c8caf8b"
+          },
+          {
+            "path": "openspec/changes/archive-semantic-boundary-commit/specs/opsx-archive-skill/spec.md",
+            "hash": "d56fcb0c385398f2c20a7e0211152d58640e5ee8c0b4080a101f2247188bfbc3"
+          },
+          {
+            "path": "openspec/changes/archive-semantic-boundary-commit/tasks.md",
+            "hash": "547d4011d7ecbdea6aa133562f98bbc5694705fad1a820d65f05a1e26b85ebcc"
+          },
+          {
+            "path": "src/core/templates/workflows/archive-change.ts",
+            "hash": "54f740b943415ebe3f73650eace23fbd6ea13ed60b32592e38ad999233cd9c8c"
+          },
+          {
+            "path": "test/skills/archive-skill-content.test.ts",
+            "hash": "1b8c84681e4147cfb45d584f7846df00a06e015757881f735133204e0397c921"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "5f10964c103a5ad47b0e13eab8ed72f766c2dec3"
+      }
+    }
+  }
+}

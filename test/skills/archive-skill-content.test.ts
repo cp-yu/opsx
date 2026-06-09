@@ -48,7 +48,14 @@ describe('openspec archive skill content', () => {
     expect(instructions.indexOf('7. **Git handoff**')).toBeLessThan(instructions.indexOf('8. **Agent auto git flow**'));
     expect(instructions.indexOf('8. **Agent auto git flow**')).toBeLessThan(instructions.indexOf('9. **User manual git flow**'));
     expect(instructions).toContain('CLI only verifies, syncs, moves the change to archive');
-    expect(instructions).toContain('commit real project changes before OpenSpec/docs archive artifacts');
+    expect(instructions).toContain('handle the implementation boundary before OpenSpec/docs archive artifacts');
+    expect(instructions).toContain('uncommitted real project implementation changes');
+    expect(instructions).toContain('wip: opt-*');
+    expect(instructions).toContain('git commit --allow-empty');
+    expect(instructions).toContain('semantic boundary commit');
+    expect(instructions).toContain('effective implementation diff');
+    expect(instructions).toContain('intentionally empty');
+    expect(instructions).not.toContain('First commit real project changes before OpenSpec/docs archive artifacts.');
     expect(instructions).toContain('git commit -F -');
     expect(instructions).toContain('git merge --no-ff');
     expect(instructions).toContain('git branch --merged');
