@@ -79,6 +79,7 @@
 - **THEN** 当前配置启用的 `openspec-optimizer`、`openspec-impact-sweeper` MUST 将长协议写入 `references/*.md`
 - **AND** 当选择包含 `apply` workflow 的安装计划时，`openspec-apply-change` MUST 将 Phase 2 优化协议写入 `references/apply-phase2-optimization.md`
 - **AND** 当选择包含 `sync` workflow 的安装计划时，`openspec-sync-specs` MUST 将长协议写入 `references/*.md`
+- **AND** 当选择包含 `archive` workflow 的安装计划时，`openspec-archive-change` MUST 将 commit message convention 说明写入 `references/archive-commit-message.md` 与 `references/merge-summary-message.md`
 - **AND** 主 `SKILL.md` MUST 保留入口、输入、边界和 reference 清单
 
 #### Scenario: 关键契约语义仍由现有测试保护
@@ -90,3 +91,4 @@
 
 - **WHEN** 刷新生成的 `.claude`、`.codex`、`.github` 工具产物
 - **THEN** 生成文件中的 `SKILL.md` 与 `references/*.md` 内容与对应模板源保持一致
+

@@ -1,0 +1,7 @@
+schema_version: 1
+MODIFIED:
+  capabilities:
+    - id: cap.ai.workflow-templates
+      intent: 提供 AI workflow 模板和 spec-driven artifact instructions；archive workflow 模板通过 runtime projection 消费新 git.autoCommit 与 commitMessage convention，并将 openspec-archive 与 openspec-merge-summary 格式说明拆入 openspec-archive-change 的 references 文件，结构 token 保持 canonical。
+    - id: cap.validation.skill-template-length
+      intent: 验证所有生成的 `SKILL.md` 模板 instructions 不超过 200 行，并验证所有 `template.referenceFiles[]` 文件不超过 500 行；archive skill 的 commit message convention references 也纳入 reference 文件生成与一致性检查。

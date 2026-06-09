@@ -1,0 +1,221 @@
+{
+  "timestamp": "2026-06-09T05:01:01.950Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "4be3650b89122b0786b341bc6e882420e13132f4a753755cb0ed2f1e6997a50a",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent",
+    "evidenceFiles": [
+      ".claude/skills/openspec-archive-change/SKILL.md",
+      ".claude/skills/openspec-archive-change/references/archive-commit-message.md",
+      ".claude/skills/openspec-archive-change/references/merge-summary-message.md",
+      ".codex/skills/openspec-archive-change/SKILL.md",
+      ".codex/skills/openspec-archive-change/references/archive-commit-message.md",
+      ".codex/skills/openspec-archive-change/references/merge-summary-message.md",
+      "openspec/changes/split-archive-commit-message-references/design.md",
+      "openspec/changes/split-archive-commit-message-references/opsx-delta.yaml",
+      "openspec/changes/split-archive-commit-message-references/proposal.md",
+      "openspec/changes/split-archive-commit-message-references/specs/opsx-archive-skill/spec.md",
+      "openspec/changes/split-archive-commit-message-references/specs/skill-template-length-check/spec.md",
+      "openspec/changes/split-archive-commit-message-references/tasks.md",
+      "src/core/templates/workflows/archive-change.ts",
+      "test/core/workflow-installation.test.ts",
+      "test/skills/archive-skill-content.test.ts",
+      "test/skills/skill-template-length-validation.test.ts"
+    ],
+    "evidenceFingerprint": "e6f64433145eda0cfcad061cbe64f6fb639ecae2ba2c9e37ab1e6302ac76c0f7",
+    "evidenceFingerprintEntries": [
+      {
+        "path": ".claude/skills/openspec-archive-change/references/archive-commit-message.md",
+        "hash": "984a9abadfb4d6d52bece8a8ca8da5d6f961300604bba22cdfdc8011b81e1dfc"
+      },
+      {
+        "path": ".claude/skills/openspec-archive-change/references/merge-summary-message.md",
+        "hash": "6670865c71f089733ab021a0d59f410e11e996b6d095c832783bf7f5acacf53f"
+      },
+      {
+        "path": ".claude/skills/openspec-archive-change/SKILL.md",
+        "hash": "03ba3cf6877606e07c8bb67e09aee4585f57bb9a88a7c5a5ae2e965208468842"
+      },
+      {
+        "path": ".codex/skills/openspec-archive-change/references/archive-commit-message.md",
+        "hash": "984a9abadfb4d6d52bece8a8ca8da5d6f961300604bba22cdfdc8011b81e1dfc"
+      },
+      {
+        "path": ".codex/skills/openspec-archive-change/references/merge-summary-message.md",
+        "hash": "6670865c71f089733ab021a0d59f410e11e996b6d095c832783bf7f5acacf53f"
+      },
+      {
+        "path": ".codex/skills/openspec-archive-change/SKILL.md",
+        "hash": "4c4d74d95b0b07e3b5db889314d13e6e2449980b647fa15156a26f5a867dbe73"
+      },
+      {
+        "path": "openspec/changes/split-archive-commit-message-references/design.md",
+        "hash": "921ce9a740cb98bcb2465e8615b5b28c1d25e6a838e25dbedc5e45902264f954"
+      },
+      {
+        "path": "openspec/changes/split-archive-commit-message-references/opsx-delta.yaml",
+        "hash": "b07426e18e8e79b323b35ab25baf788b07fcf5edb1c9cdfdbf62b89592ab7c4a"
+      },
+      {
+        "path": "openspec/changes/split-archive-commit-message-references/proposal.md",
+        "hash": "511acdc43777de4559b27162b2efc43c86d92f80f0b4eab2c37eedad50d7b0f1"
+      },
+      {
+        "path": "openspec/changes/split-archive-commit-message-references/specs/opsx-archive-skill/spec.md",
+        "hash": "61b91c1d0bc54bc2b6e81a83f0deeca90281b74c47a2685f1d65ff92996ed357"
+      },
+      {
+        "path": "openspec/changes/split-archive-commit-message-references/specs/skill-template-length-check/spec.md",
+        "hash": "7c0fa09cc34c0fc092ee0c7240d726edf4ab1458aba55bf69c73a5cfe44a5018"
+      },
+      {
+        "path": "openspec/changes/split-archive-commit-message-references/tasks.md",
+        "hash": "4be3650b89122b0786b341bc6e882420e13132f4a753755cb0ed2f1e6997a50a"
+      },
+      {
+        "path": "src/core/templates/workflows/archive-change.ts",
+        "hash": "e959e8c7d5139be229a34567bbab8133094598404a1bff855a8db728ed1c149d"
+      },
+      {
+        "path": "test/core/workflow-installation.test.ts",
+        "hash": "5d4680b58b03dfaf32b770c9c34a580771b6c5d65a8e2dd5d5df2fba2fbc96d4"
+      },
+      {
+        "path": "test/skills/archive-skill-content.test.ts",
+        "hash": "7ea72ab2397ac79ab2505ff0f5f64f658dcc5cd0e559c83b08155daec6932d79"
+      },
+      {
+        "path": "test/skills/skill-template-length-validation.test.ts",
+        "hash": "8fd52579ff4d63dd63456e8dfd9cdfd7c38984511db9b732ef3c8fd5fdc87c2c"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "f0fd6a2b16644bf17fc4e48fcb353b91efd13ce9"
+  },
+  "optimization": {
+    "status": "IMPROVED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-09T05:03:56.493Z",
+        "type": "optimization",
+        "status": "OPTIMIZATION_PROPOSED",
+        "summary": "Extract archive commit message reference paths into constants reused by instructions and referenceFiles.",
+        "files": [
+          "src/core/templates/workflows/archive-change.ts"
+        ]
+      },
+      {
+        "timestamp": "2026-06-09T05:07:37.954Z",
+        "type": "verification",
+        "result": "PASS",
+        "behaviorRetryCounter": 1
+      }
+    ],
+    "affectedFileHashes": {
+      "src/core/templates/workflows/archive-change.ts": "92d9e63f371f6f73cf4b9f7220aa3c8c03c80a2fcd47f400ef926c6554a0bd0d"
+    },
+    "baseline": {
+      "timestamp": "2026-06-09T05:01:01.950Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "4be3650b89122b0786b341bc6e882420e13132f4a753755cb0ed2f1e6997a50a",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent",
+        "evidenceFiles": [
+          ".claude/skills/openspec-archive-change/SKILL.md",
+          ".claude/skills/openspec-archive-change/references/archive-commit-message.md",
+          ".claude/skills/openspec-archive-change/references/merge-summary-message.md",
+          ".codex/skills/openspec-archive-change/SKILL.md",
+          ".codex/skills/openspec-archive-change/references/archive-commit-message.md",
+          ".codex/skills/openspec-archive-change/references/merge-summary-message.md",
+          "openspec/changes/split-archive-commit-message-references/design.md",
+          "openspec/changes/split-archive-commit-message-references/opsx-delta.yaml",
+          "openspec/changes/split-archive-commit-message-references/proposal.md",
+          "openspec/changes/split-archive-commit-message-references/specs/opsx-archive-skill/spec.md",
+          "openspec/changes/split-archive-commit-message-references/specs/skill-template-length-check/spec.md",
+          "openspec/changes/split-archive-commit-message-references/tasks.md",
+          "src/core/templates/workflows/archive-change.ts",
+          "test/core/workflow-installation.test.ts",
+          "test/skills/archive-skill-content.test.ts",
+          "test/skills/skill-template-length-validation.test.ts"
+        ],
+        "evidenceFingerprint": "e5b14e8b5cf6e8a8d8187144b188f8c5bc6cd57b4e9598271fe7c17c6bfe9d88",
+        "evidenceFingerprintEntries": [
+          {
+            "path": ".claude/skills/openspec-archive-change/references/archive-commit-message.md",
+            "hash": "984a9abadfb4d6d52bece8a8ca8da5d6f961300604bba22cdfdc8011b81e1dfc"
+          },
+          {
+            "path": ".claude/skills/openspec-archive-change/references/merge-summary-message.md",
+            "hash": "6670865c71f089733ab021a0d59f410e11e996b6d095c832783bf7f5acacf53f"
+          },
+          {
+            "path": ".claude/skills/openspec-archive-change/SKILL.md",
+            "hash": "03ba3cf6877606e07c8bb67e09aee4585f57bb9a88a7c5a5ae2e965208468842"
+          },
+          {
+            "path": ".codex/skills/openspec-archive-change/references/archive-commit-message.md",
+            "hash": "984a9abadfb4d6d52bece8a8ca8da5d6f961300604bba22cdfdc8011b81e1dfc"
+          },
+          {
+            "path": ".codex/skills/openspec-archive-change/references/merge-summary-message.md",
+            "hash": "6670865c71f089733ab021a0d59f410e11e996b6d095c832783bf7f5acacf53f"
+          },
+          {
+            "path": ".codex/skills/openspec-archive-change/SKILL.md",
+            "hash": "4c4d74d95b0b07e3b5db889314d13e6e2449980b647fa15156a26f5a867dbe73"
+          },
+          {
+            "path": "openspec/changes/split-archive-commit-message-references/design.md",
+            "hash": "921ce9a740cb98bcb2465e8615b5b28c1d25e6a838e25dbedc5e45902264f954"
+          },
+          {
+            "path": "openspec/changes/split-archive-commit-message-references/opsx-delta.yaml",
+            "hash": "b07426e18e8e79b323b35ab25baf788b07fcf5edb1c9cdfdbf62b89592ab7c4a"
+          },
+          {
+            "path": "openspec/changes/split-archive-commit-message-references/proposal.md",
+            "hash": "511acdc43777de4559b27162b2efc43c86d92f80f0b4eab2c37eedad50d7b0f1"
+          },
+          {
+            "path": "openspec/changes/split-archive-commit-message-references/specs/opsx-archive-skill/spec.md",
+            "hash": "61b91c1d0bc54bc2b6e81a83f0deeca90281b74c47a2685f1d65ff92996ed357"
+          },
+          {
+            "path": "openspec/changes/split-archive-commit-message-references/specs/skill-template-length-check/spec.md",
+            "hash": "7c0fa09cc34c0fc092ee0c7240d726edf4ab1458aba55bf69c73a5cfe44a5018"
+          },
+          {
+            "path": "openspec/changes/split-archive-commit-message-references/tasks.md",
+            "hash": "4be3650b89122b0786b341bc6e882420e13132f4a753755cb0ed2f1e6997a50a"
+          },
+          {
+            "path": "src/core/templates/workflows/archive-change.ts",
+            "hash": "92d9e63f371f6f73cf4b9f7220aa3c8c03c80a2fcd47f400ef926c6554a0bd0d"
+          },
+          {
+            "path": "test/core/workflow-installation.test.ts",
+            "hash": "5d4680b58b03dfaf32b770c9c34a580771b6c5d65a8e2dd5d5df2fba2fbc96d4"
+          },
+          {
+            "path": "test/skills/archive-skill-content.test.ts",
+            "hash": "7ea72ab2397ac79ab2505ff0f5f64f658dcc5cd0e559c83b08155daec6932d79"
+          },
+          {
+            "path": "test/skills/skill-template-length-validation.test.ts",
+            "hash": "8fd52579ff4d63dd63456e8dfd9cdfd7c38984511db9b732ef3c8fd5fdc87c2c"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "f0fd6a2b16644bf17fc4e48fcb353b91efd13ce9"
+      }
+    },
+    "final": {
+      "result": "PASS",
+      "issues": []
+    }
+  }
+}
