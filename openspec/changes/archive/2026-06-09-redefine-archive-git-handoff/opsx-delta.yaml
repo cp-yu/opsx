@@ -1,0 +1,13 @@
+schema_version: 1
+MODIFIED:
+  capabilities:
+    - id: cap.change.archive
+      intent: 归档已完成的变更，将规约合并到主目录并移动变更到 archive；archive CLI 执行 verify、sync 与 move-to-archive 后停止，只输出基于 git.autoCommit 的 agent/user handoff 提醒，不执行 git commit、merge、checkout、branch cleanup 或 commit message 生成
+    - id: cap.cli.archive
+      intent: 归档已完成的变更并将规约合并到主规约目录；读取 normalized project config 输出 git handoff 提醒，但不执行 git 写操作或生成推荐 commit message
+    - id: cap.archive.branch-merge
+      intent: 归档后的 git commit、merge 与 branch cleanup 属于 agent/user handoff 流程；agent 根据 git.autoCommit、commitMessage convention references 与实际 diff 生成 message 并处理后续 git 工作
+    - id: cap.ai.workflow-templates
+      intent: 提供 AI workflow 模板和 spec-driven artifact instructions；archive workflow 模板通过 runtime projection 消费 git.autoCommit 的 agent/user handoff 语义，并要求 agent 在归档后读取 openspec-archive 与 openspec-merge-summary references 生成 commit message
+    - id: cap.config.project
+      intent: 加载、验证、合并并物化项目级配置 openspec/config.yaml；将 git.autoCommit 作为 archive 后 agent/user handoff 策略暴露给 prompt/runtime projection，并继续暴露 archive/merge commitMessage convention、merge strategy 与 branch cleanup 字段作为 agent 后续 git 流程上下文

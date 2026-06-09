@@ -180,7 +180,7 @@ The system SHALL continue operation with default values when config loading or p
 
 ### Requirement: 加载 git 配置节点
 
-`openspec/config.yaml` 的项目配置加载器 SHALL 解析顶层 `git` 节点，并支持 `autoCommit`、`archive.commitMessage.convention`、`merge.strategy`、`merge.commitMessage.convention`、`branch.deleteAfterArchive` 五个字段。
+`openspec/config.yaml` 的项目配置加载器 SHALL 解析顶层 `git` 节点，并支持 `autoCommit`、`archive.commitMessage.convention`、`merge.strategy`、`merge.commitMessage.convention`、`branch.deleteAfterArchive` 五个字段。`git.autoCommit` SHALL 表示归档后的 git 工作由 agent 自动继续或由用户手动处理，而不是 archive CLI 自动提交授权。
 
 #### Scenario: 完整 git 节点
 
@@ -199,6 +199,7 @@ The system SHALL continue operation with default values when config loading or p
       deleteAfterArchive: false
   ```
 - **THEN** 加载器 SHALL 返回的 ProjectConfig 中包含完整 `git` 字段
+- **AND** `auto` SHALL 表示 agent 在 archive CLI 完成后自动继续 git 工作
 
 #### Scenario: git 节点缺失时填默认值
 
@@ -233,6 +234,8 @@ The system SHALL continue operation with default values when config loading or p
 
 - **WHEN** `git.autoCommit` 为 `auto` 或 `manual`
 - **THEN** schema SHALL 接受该值
+- **AND** `auto` SHALL 表示 agent 自动完成归档后的 git 工作
+- **AND** `manual` SHALL 表示用户手动完成归档后的 git 工作
 
 #### Scenario: autoCommit 非法值
 
@@ -271,7 +274,7 @@ The system SHALL continue operation with default values when config loading or p
 
 ### Requirement: git 配置暴露给 projection 消费者
 
-加载器 SHALL 把 `git` 节点（含填充后的默认值）作为 normalized projection 输入暴露给 prompt projection 与 runtime projection 消费者。
+加载器 SHALL 把 `git` 节点（含填充后的默认值）作为 normalized projection 输入暴露给 prompt projection 与 runtime projection 消费者。archive CLI SHALL 只把这些字段用于 handoff 提醒；archive skill/agent SHALL 把这些字段用于归档后的 agent/user 工作流选择。
 
 #### Scenario: projection 输入包含 git 节点
 
@@ -285,6 +288,7 @@ The system SHALL continue operation with default values when config loading or p
 - **WHEN** archive surface 请求 prompt projection
 - **THEN** projection SHALL 把 `git` 段渲染为 archive skill 可消费的指令片段
 - **AND** SHALL 保留枚举值与字段名的 canonical 形式
+- **AND** SHALL 表达 `git.autoCommit` 的 agent/user handoff 语义
 
 ### Requirement: 跨平台路径与默认值
 

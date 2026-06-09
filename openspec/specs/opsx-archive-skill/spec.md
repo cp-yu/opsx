@@ -158,73 +158,71 @@ The `/opsx:archive` skill SHALL consume prompt projection for archive-time sync 
 
 ### Requirement: Archive 在 sync 完成后追加 archive commit、merge、cleanup 三步
 
-`opsx-archive-skill` SHALL 在现有归档流程的 mv 与 sync 完成之后，根据 `git.autoCommit` 决定是否追加 archive commit、merge to originalBranch、可选 branch 清理三个步骤。
+`opsx-archive-skill` SHALL 调用 archive CLI 完成 verify、sync 与 move-to-archive；CLI 返回后，skill SHALL 根据 `git.autoCommit` 决定 agent 是否继续归档后的 git 流程。CLI 本身 SHALL NOT 执行 archive commit、merge 或 cleanup。
 
-#### Scenario: auto 模式三步顺序
+#### Scenario: auto 模式由 agent 继续 git 流程
 
-- **WHEN** archive 完成 sync 与 mv
+- **WHEN** archive CLI 完成 sync 与 mv
 - **AND** 配置 `git.autoCommit` 为 `auto`
-- **AND** `.apply-isolation.json` 的 `originalBranch` 字段非空
-- **AND** 当前 git HEAD 在 feature 分支
-- **THEN** archive SHALL 先在 feature 分支执行 archive commit
-- **AND** SHALL 切换到 originalBranch 并执行 merge（行为见 archive-branch-merge spec）
-- **AND** SHALL 在 merge 成功后按配置决定是否删除 feature 分支
-- **AND** archive commit 与 merge 的具体行为 SHALL 与 archive-branch-merge spec 保持一致
+- **THEN** archive skill SHALL 由 agent 继续处理 git 提交流程
+- **AND** agent SHALL 先提交真实项目变更
+- **AND** agent SHALL 再提交 OpenSpec/docs 归档制品
+- **AND** agent SHALL 在生成归档制品 commit message 前读取 `references/archive-commit-message.md`
 
 #### Scenario: manual 模式只归档
 
-- **WHEN** archive 完成 sync 与 mv
+- **WHEN** archive CLI 完成 sync 与 mv
 - **AND** 配置 `git.autoCommit` 为 `manual`
-- **THEN** archive SHALL 跳过 archive commit
-- **AND** SHALL 跳过 merge
-- **AND** SHALL 跳过 branch cleanup
-- **AND** SHALL 保留归档后的未提交工作树
+- **THEN** archive skill SHALL 停止在归档完成状态
+- **AND** SHALL 提醒后续 git 提交流程由用户手动处理
+- **AND** SHALL NOT 生成 commit message
+- **AND** SHALL NOT 执行 git commit 或 merge
 
-#### Scenario: 非 git 仓库时跳过
+#### Scenario: 非 git 仓库时只报告归档结果
 
 - **WHEN** 项目根目录不是 git 仓库
-- **THEN** archive SHALL 跳过 archive commit、merge、branch cleanup 三步
-- **AND** SHALL 保留现有的"询问是否切换回原分支"的交互行为作为兜底
+- **THEN** archive skill SHALL 报告 archive CLI 已完成的归档结果
+- **AND** SHALL NOT 尝试执行 git 提交、合并或分支清理
 
-#### Scenario: isolation 缺失时解析 originalBranch
+#### Scenario: agent 处理 merge message
 
-- **WHEN** `.apply-isolation.json` 不存在或 `originalBranch` 为空
-- **AND** 当前 git HEAD 在 feature 分支
-- **AND** 配置 `git.autoCommit` 为 `auto`
-- **THEN** archive SHALL 按 archive-branch-merge spec 的 originalBranch 回退顺序解析目标分支
-- **AND** 解析成功后 SHALL 继续执行 archive commit、merge、branch cleanup 三步
-- **AND** 远程默认分支无法解析时 SHALL 提示用户输入 originalBranch 并写回 `.apply-isolation.json`
+- **WHEN** `git.autoCommit` 为 `auto`
+- **AND** agent 后续 git 流程需要创建 merge 或 squash commit message
+- **THEN** agent SHALL 在生成 message 前读取 `references/merge-summary-message.md`
+- **AND** SHALL NOT 使用 archive CLI 输出的推荐 message
 
 ### Requirement: Archive 摘要扩展报告 merge 状态
 
-archive 在归档摘要输出中 SHALL 报告 archive commit、merge 与 branch cleanup 的执行结果。
+archive skill 的输出 SHALL 区分 CLI 归档结果与归档后的 git handoff 状态，而不是报告 CLI 已执行的 archive commit、merge 或 branch cleanup。
 
 #### Scenario: 摘要报告字段
 
-- **WHEN** archive 完成全部步骤
+- **WHEN** archive CLI 完成归档
 - **THEN** 摘要 SHALL 包含以下字段：
-  - git auto commit 模式（auto / manual）
-  - 是否创建了 archive commit（commit SHA / skipped: no changes / skipped: manual）
-  - merge 策略（no-ff / ff-only / squash / skipped: manual / skipped: no isolation）
-  - merge 结果（success: <merge SHA> / abort: conflict / skipped）
-  - feature 分支处理（deleted / kept: branch not merged / kept: config disabled / skipped: manual）
-  - originalBranch 当前 HEAD
+  - change name
+  - schema
+  - archive location
+  - verify gate result
+  - specs / OPSX sync result
+  - git handoff mode（agent auto / user manual）
+  - next git responsibility
 
-#### Scenario: 冲突 abort 时摘要
+#### Scenario: 不报告 CLI merge 结果
 
-- **WHEN** merge 因冲突 abort
-- **THEN** 摘要 SHALL 显式标注 "merge aborted due to conflict"
-- **AND** SHALL 提示用户解决冲突后重跑 archive
-- **AND** archive 退出码 SHALL 为非 0
+- **WHEN** archive CLI 完成归档
+- **THEN** 摘要 SHALL NOT 声称 CLI 创建了 archive commit
+- **AND** SHALL NOT 声称 CLI 执行了 merge
+- **AND** SHALL NOT 声称 CLI 删除了 feature branch
 
 ### Requirement: Archive 通过 prompt projection 消费 git 配置
 
-archive skill 在执行 archive commit、merge、branch cleanup 时 SHALL 通过统一 runtime projection 消费 `git` 配置节点，而非直接读取 raw YAML 键。
+archive skill 在决定归档后的 agent/user handoff 时 SHALL 通过统一 prompt/runtime projection 消费 `git` 配置节点，而非直接读取 raw YAML 键。
 
 #### Scenario: 配置经投影后被 archive 消费
 
-- **WHEN** archive 需要决定 auto commit 模式、archive commit convention、merge 策略、merge commit convention 与 branch cleanup
-- **THEN** archive SHALL 从 prompt/runtime projection 读取 `git.autoCommit`、`git.archive.commitMessage.convention`、`git.merge.strategy`、`git.merge.commitMessage.convention`、`git.branch.deleteAfterArchive`
+- **WHEN** archive 需要决定归档后 git 工作由 agent 还是用户处理
+- **THEN** archive SHALL 从 prompt/runtime projection 读取 `git.autoCommit`
+- **AND** SHALL 从 projection 读取 `git.archive.commitMessage.convention` 与 `git.merge.commitMessage.convention` 作为 agent 后续读取 references 的上下文
 - **AND** SHALL NOT 在模板正文里直接 `yaml.parse(config.yaml)`
 - **AND** projection 缺失字段时 SHALL 使用默认值（`auto` / `openspec-archive` / `no-ff` / `openspec-merge-summary` / `false`）
 
@@ -235,20 +233,20 @@ archive skill 在执行 archive commit、merge、branch cleanup 时 SHALL 通过
 
 ### Requirement: Archive skill 拆分 commit message convention references
 
-`opsx-archive-skill` SHALL 将 archive commit 与 merge summary commit 的 message convention 格式说明作为 skill reference 文件提供，并在主 archive skill 中要求 agent 在对应步骤读取。
+`opsx-archive-skill` SHALL 将 archive commit 与 merge summary commit 的 message convention 格式说明作为 skill reference 文件提供，并要求 agent 在归档后的 git 流程中读取。
 
-#### Scenario: archive commit 步骤读取 archive reference
+#### Scenario: archive 制品提交读取 archive reference
 - **WHEN** 生成 `openspec-archive-change` skill
-- **THEN** 主 `SKILL.md` SHALL 要求在创建 archive commit 前读取 `references/archive-commit-message.md`
+- **THEN** 主 `SKILL.md` SHALL 要求 agent 在创建 OpenSpec/docs 归档制品 commit 前读取 `references/archive-commit-message.md`
 - **AND** `references/archive-commit-message.md` SHALL 说明 `convention: openspec-archive` 的 subject、`## Why` 与 `## Changes` 格式
 
 #### Scenario: merge 步骤读取 merge summary reference
 - **WHEN** 生成 `openspec-archive-change` skill
-- **THEN** 主 `SKILL.md` SHALL 要求在创建 merge 或 squash commit message 前读取 `references/merge-summary-message.md`
+- **THEN** 主 `SKILL.md` SHALL 要求 agent 在创建 merge 或 squash commit message 前读取 `references/merge-summary-message.md`
 - **AND** `references/merge-summary-message.md` SHALL 说明 `convention: openspec-merge-summary` 的 subject、`## Why` 与 `## Changes` 格式
 
 #### Scenario: 主 skill 保留流程边界
 - **WHEN** 生成 `openspec-archive-change` skill
-- **THEN** 主 `SKILL.md` SHALL 保留 archive 流程、verify gate、sync、archive commit、merge 与 cleanup 步骤
+- **THEN** 主 `SKILL.md` SHALL 保留 archive 流程、verify gate、sync、CLI archive、agent/user handoff 与 references 读取步骤
 - **AND** 主 `SKILL.md` SHALL NOT 内联两个 commit message convention 的完整格式说明
 
