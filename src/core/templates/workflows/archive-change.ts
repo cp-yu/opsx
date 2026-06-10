@@ -6,11 +6,6 @@
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
 import {
-  VERIFY_CLI_JSON_SCHEMA_REFERENCE,
-  VERIFY_FRESHNESS_RULES,
-  VERIFY_STATE_MACHINE_DIAGRAM,
-} from '../fragments/opsx-fragments.js';
-import {
   REREAD_VERIFY_EXECUTION_MODEL,
   SUBAGENT_VERIFY_EXECUTION_MODEL,
   type VerifyExecutionModel,
