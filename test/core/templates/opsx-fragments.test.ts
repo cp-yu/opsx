@@ -31,7 +31,10 @@ import {
   getArchiveChangeSkillTemplate,
   getOpsxArchiveCommandTemplate,
 } from '../../../src/core/templates/workflows/archive-change.js';
-import { getExploreSkillTemplate } from '../../../src/core/templates/workflows/explore.js';
+import {
+  getExploreSkillTemplate,
+  getOpsxExploreCommandTemplate,
+} from '../../../src/core/templates/workflows/explore.js';
 import { getOnboardSkillTemplate } from '../../../src/core/templates/workflows/onboard.js';
 import {
   getOpsxProposeCommandTemplate,
@@ -54,34 +57,88 @@ describe('OPSX shared context fragments', () => {
     expect(OPSX_READ_CONTEXT).toBe(OPSX_SHARED_CONTEXT);
   });
 
-  it('guides readers from project structure to project intent before code-map refs', () => {
+  it('keeps shared OPSX context to a single project file', () => {
+    const filePaths = OPSX_SHARED_CONTEXT.match(/openspec\/[^\s`]+/g) ?? [];
+
+    expect(filePaths).toEqual(['openspec/project.opsx.yaml']);
+    expect(OPSX_SHARED_CONTEXT).not.toContain('project.opsx.code-map.yaml');
+    expect(OPSX_SHARED_CONTEXT).not.toContain('project.opsx.relations.yaml');
+    expect(OPSX_SHARED_CONTEXT).not.toContain('openspec/specs/');
+    expect(OPSX_SHARED_CONTEXT).toContain('navigation context');
+    expect(OPSX_SHARED_CONTEXT).toContain('not as a replacement for change artifacts');
+  });
+
+  it('guides readers from project structure to project intent', () => {
     const domainsIndex = OPSX_SHARED_CONTEXT.indexOf('domains → capabilities structure');
     const projectIndex = OPSX_SHARED_CONTEXT.indexOf('Read the `project:` block for project intent and scope');
-    const codeMapIndex = OPSX_SHARED_CONTEXT.indexOf('project.opsx.code-map.yaml');
 
     expect(domainsIndex).toBeGreaterThanOrEqual(0);
     expect(projectIndex).toBeGreaterThan(domainsIndex);
-    expect(projectIndex).toBeLessThan(codeMapIndex);
   });
 
-  it('uses raw OPSX navigation only for explore and CLI query context for propose/apply', () => {
-    // Layer 3: Fragment reference verification
-    expect(getExploreSkillTemplate().instructions).toContain(OPSX_SHARED_CONTEXT);
-    expect(getExploreSkillTemplate().instructions).toContain(OPSX_NAVIGATION_GUIDANCE);
+  it('positions CLI queries as node detail lookup after shared OPSX context', () => {
+    expect(OPSX_CLI_QUERY_CONTEXT).not.toContain(
+      'instead of reading OPSX YAML files directly'
+    );
+    expect(OPSX_CLI_QUERY_CONTEXT).toContain('After reading shared `project.opsx.yaml` context');
+    expect(OPSX_CLI_QUERY_CONTEXT).toContain('openspec opsx query <node-id> --json');
+    expect(OPSX_CLI_QUERY_CONTEXT).toContain('relations and code-map');
+  });
 
-    // Command templates should include CLI query fragment
-    expect(getOpsxProposeCommandTemplate().content).toContain(OPSX_CLI_QUERY_CONTEXT);
-    expect(getOpsxApplyCommandTemplate().content).toContain(OPSX_CLI_QUERY_CONTEXT);
+  it('injects shared OPSX context into explore while retaining broad navigation', () => {
+    for (const template of [
+      getExploreSkillTemplate().instructions,
+      getOpsxExploreCommandTemplate().content,
+    ]) {
+      expect(template).toContain(OPSX_SHARED_CONTEXT);
+      expect(template).toContain(OPSX_NAVIGATION_GUIDANCE);
+    }
+  });
 
-    // Skill templates have inlined/simplified CLI query guidance - check core concepts
+  it('injects shared OPSX context into propose before artifact generation', () => {
+    const commandTemplate = getOpsxProposeCommandTemplate().content;
+    const commandContextIndex = commandTemplate.indexOf(OPSX_SHARED_CONTEXT);
+    const commandArtifactIndex = commandTemplate.indexOf('4. **Create artifacts in sequence until apply-ready**');
+
+    expect(commandContextIndex).toBeGreaterThanOrEqual(0);
+    expect(commandContextIndex).toBeLessThan(commandArtifactIndex);
+    expect(commandTemplate).toContain(OPSX_CLI_QUERY_CONTEXT);
+
+    const skillTemplate = getOpsxProposeSkillTemplate().instructions;
+    const skillContextIndex = skillTemplate.indexOf(OPSX_SHARED_CONTEXT);
+    const skillArtifactIndex = skillTemplate.indexOf('For each ready artifact');
+
+    expect(skillContextIndex).toBeGreaterThanOrEqual(0);
+    expect(skillContextIndex).toBeLessThan(skillArtifactIndex);
+    expect(skillTemplate).toContain('openspec opsx query <node-id> --json');
+  });
+
+  it('injects shared OPSX context into apply before reading change artifacts', () => {
+    const commandTemplate = getOpsxApplyCommandTemplate().content;
+    const commandContextIndex = commandTemplate.indexOf(OPSX_SHARED_CONTEXT);
+    const commandReadIndex = commandTemplate.indexOf('Read the files listed in `contextFiles`');
+
+    expect(commandContextIndex).toBeGreaterThanOrEqual(0);
+    expect(commandContextIndex).toBeLessThan(commandReadIndex);
+    expect(commandTemplate).toContain(OPSX_CLI_QUERY_CONTEXT);
+
+    const skillTemplate = getApplyChangeSkillTemplate().instructions;
+    const skillContextIndex = skillTemplate.indexOf(OPSX_SHARED_CONTEXT);
+    const skillReadIndex = skillTemplate.indexOf('Read every context file listed by the CLI');
+
+    expect(skillContextIndex).toBeGreaterThanOrEqual(0);
+    expect(skillContextIndex).toBeLessThan(skillReadIndex);
+    expect(skillTemplate).toContain('openspec opsx query <node-id> --json');
+  });
+
+  it('does not add broad OPSX navigation to propose or apply templates', () => {
     for (const template of [
       getOpsxProposeSkillTemplate().instructions,
+      getOpsxProposeCommandTemplate().content,
       getApplyChangeSkillTemplate().instructions,
+      getOpsxApplyCommandTemplate().content,
     ]) {
-      expect(template).toMatch(/openspec.*list.*--specs|openspec.*opsx.*query/i);
-      expect(template).not.toContain('read it first for domains');
-      expect(template).not.toContain('Check `openspec/project.opsx.code-map.yaml`');
-      expect(template).not.toContain('Check `openspec/project.opsx.relations.yaml`');
+      expect(template).not.toContain(OPSX_NAVIGATION_GUIDANCE);
     }
   });
 

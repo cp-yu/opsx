@@ -8,6 +8,7 @@ import type { SkillTemplate, CommandTemplate } from '../types.js';
 import {
   ARTIFACT_DOC_LANGUAGE_CONTRACT,
   OPSX_CLI_QUERY_CONTEXT,
+  OPSX_SHARED_CONTEXT,
   VERIFY_CLI_JSON_SCHEMA_REFERENCE,
   VERIFY_ERROR_RECOVERY_GUIDE,
   VERIFY_SIMPLE_CHANGE_FAST_PATH,
@@ -169,8 +170,11 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
 
 1. Select the change. If no clear name is provided, infer only from explicit context; otherwise run \`openspec list --json\` and ask. Always announce "Using change: <name>".
 2. Run \`openspec status --change "<name>" --json\` and \`openspec instructions apply --change "<name>" --json\`. Read \`configProjection.prompt.fragments\` for \`proseLanguage\` and \`apply.defaultIsolation\`. Handle \`state: "needs_verify"\` by skip back to Phase 1 and \`state: "needs_seal"\` by continue with Phase 2/3.
-3. Read every context file listed by the CLI. Inspect \`changeDir/.verify-result.json\` and \`## Remediation\`; unresolved CRITICAL/code_fix/artifact_fix items take priority.
-4. Use OPSX context: \`openspec list --specs --json\`, each spec's \`capabilities\` string array, \`capabilities: []\`, and \`openspec opsx query <node-id> --json\`.
+3. Load shared OPSX context before reading change artifacts.
+${OPSX_SHARED_CONTEXT}
+4. Read every context file listed by the CLI. Inspect \`changeDir/.verify-result.json\` and \`## Remediation\`; unresolved CRITICAL/code_fix/artifact_fix items take priority.
+5. Use CLI-backed OPSX navigation after shared context.
+${OPSX_CLI_QUERY_CONTEXT}
 
 ### Branch Isolation Preflight
 
@@ -266,6 +270,8 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
    - Otherwise: proceed to implementation
 
 4. **Read context files**
+
+   ${OPSX_SHARED_CONTEXT}
 
    ${OPSX_CLI_QUERY_CONTEXT}
 

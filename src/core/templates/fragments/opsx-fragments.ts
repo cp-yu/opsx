@@ -13,8 +13,6 @@ export const OPSX_SHARED_CONTEXT = `
 Before reading other context files, check whether \`openspec/project.opsx.yaml\` exists.
 - If it exists, read it first for domains → capabilities structure
 - Read the \`project:\` block for project intent and scope
-- Check \`openspec/project.opsx.code-map.yaml\` for code location references
-- Check \`openspec/specs/\` for behavior documentation
 - Treat it as navigation context, not as a replacement for change artifacts
 `.trim();
 
@@ -28,9 +26,9 @@ export const OPSX_READ_CONTEXT = OPSX_SHARED_CONTEXT;
  * Used in: propose, apply-change
  */
 export const OPSX_CLI_QUERY_CONTEXT = `
-Use OpenSpec CLI query surfaces for architecture context instead of reading OPSX YAML files directly.
-- Run \`openspec list --specs --json\` to get specs and their \`capabilities\` string arrays.
-- For known or affected OPSX node IDs, run \`openspec opsx query <node-id> --json\` to get node details, relations, and code-map refs.
+After reading shared \`project.opsx.yaml\` context, use OpenSpec CLI query surfaces for node details.
+- Run \`openspec list --specs --json\` to get specs and their \`capabilities\` string arrays; specs without frontmatter return \`capabilities: []\`.
+- For known or affected OPSX node IDs, run \`openspec opsx query <node-id> --json\` to get node details, relations and code-map refs.
 - Treat CLI output as navigation context, not as a replacement for change artifacts.
 `.trim();
 

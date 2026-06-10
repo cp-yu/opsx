@@ -1,0 +1,118 @@
+{
+  "timestamp": "2026-06-10T05:13:05.825Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "15015be2024b44b32df610b1c926ce482a0d91db9123507d9bac2e70e9cc6024",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      "openspec/changes/restore-unified-opsx-read/opsx-delta.yaml",
+      "openspec/changes/restore-unified-opsx-read/specs/opsx-shared-context/spec.md",
+      "openspec/changes/restore-unified-opsx-read/tasks.md",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "src/core/templates/workflows/apply-change.ts",
+      "src/core/templates/workflows/propose.ts",
+      "test/core/templates/opsx-fragments.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts"
+    ],
+    "evidenceFingerprint": "7690bd8076c0d42acb26d2c56b9b65ede211c11ef39c2ef9c2e560489541daa3",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/restore-unified-opsx-read/opsx-delta.yaml",
+        "hash": "b0322096c5a9b4811cc75d5a9a8961fe2a28fe7fefe4b03bafb0996675de291b"
+      },
+      {
+        "path": "openspec/changes/restore-unified-opsx-read/specs/opsx-shared-context/spec.md",
+        "hash": "f73685218e3ba1346ac35c6dfa5de82116e51c96d4d206543d757cde9eaae53e"
+      },
+      {
+        "path": "openspec/changes/restore-unified-opsx-read/tasks.md",
+        "hash": "15015be2024b44b32df610b1c926ce482a0d91db9123507d9bac2e70e9cc6024"
+      },
+      {
+        "path": "src/core/templates/fragments/opsx-fragments.ts",
+        "hash": "02b81986979fb6eea559fae625023a9c3fc39c56b7187877f5c51288b57b5c7c"
+      },
+      {
+        "path": "src/core/templates/workflows/apply-change.ts",
+        "hash": "1c85ac61d35233fc5f57f53e3fc33f47c6c213d5a5c88cd328101c6d78a6654b"
+      },
+      {
+        "path": "src/core/templates/workflows/propose.ts",
+        "hash": "8a41e6aa68cf2deef33b39a88759940121542a7d71e4a259a47865f9bfd9cd93"
+      },
+      {
+        "path": "test/core/templates/opsx-fragments.test.ts",
+        "hash": "90856fa7b4d1b13a57be4e2b1af411a49a593c141a8556480a5fe2dfcbcca7a3"
+      },
+      {
+        "path": "test/core/templates/skill-templates-parity.test.ts",
+        "hash": "b3fa22c89c07f3526dbeb01f08f50a7859b38a96ba4514708432a87d3ccc77b7"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "6cef7f3129c151adfa91a54c779f335934bb1bbe"
+  },
+  "optimization": {
+    "status": "PENDING_VERIFICATION",
+    "attempts": [],
+    "baseline": {
+      "timestamp": "2026-06-10T05:13:05.825Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "15015be2024b44b32df610b1c926ce482a0d91db9123507d9bac2e70e9cc6024",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          "openspec/changes/restore-unified-opsx-read/opsx-delta.yaml",
+          "openspec/changes/restore-unified-opsx-read/specs/opsx-shared-context/spec.md",
+          "openspec/changes/restore-unified-opsx-read/tasks.md",
+          "src/core/templates/fragments/opsx-fragments.ts",
+          "src/core/templates/workflows/apply-change.ts",
+          "src/core/templates/workflows/propose.ts",
+          "test/core/templates/opsx-fragments.test.ts",
+          "test/core/templates/skill-templates-parity.test.ts"
+        ],
+        "evidenceFingerprint": "7690bd8076c0d42acb26d2c56b9b65ede211c11ef39c2ef9c2e560489541daa3",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/restore-unified-opsx-read/opsx-delta.yaml",
+            "hash": "b0322096c5a9b4811cc75d5a9a8961fe2a28fe7fefe4b03bafb0996675de291b"
+          },
+          {
+            "path": "openspec/changes/restore-unified-opsx-read/specs/opsx-shared-context/spec.md",
+            "hash": "f73685218e3ba1346ac35c6dfa5de82116e51c96d4d206543d757cde9eaae53e"
+          },
+          {
+            "path": "openspec/changes/restore-unified-opsx-read/tasks.md",
+            "hash": "15015be2024b44b32df610b1c926ce482a0d91db9123507d9bac2e70e9cc6024"
+          },
+          {
+            "path": "src/core/templates/fragments/opsx-fragments.ts",
+            "hash": "02b81986979fb6eea559fae625023a9c3fc39c56b7187877f5c51288b57b5c7c"
+          },
+          {
+            "path": "src/core/templates/workflows/apply-change.ts",
+            "hash": "1c85ac61d35233fc5f57f53e3fc33f47c6c213d5a5c88cd328101c6d78a6654b"
+          },
+          {
+            "path": "src/core/templates/workflows/propose.ts",
+            "hash": "8a41e6aa68cf2deef33b39a88759940121542a7d71e4a259a47865f9bfd9cd93"
+          },
+          {
+            "path": "test/core/templates/opsx-fragments.test.ts",
+            "hash": "90856fa7b4d1b13a57be4e2b1af411a49a593c141a8556480a5fe2dfcbcca7a3"
+          },
+          {
+            "path": "test/core/templates/skill-templates-parity.test.ts",
+            "hash": "b3fa22c89c07f3526dbeb01f08f50a7859b38a96ba4514708432a87d3ccc77b7"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "6cef7f3129c151adfa91a54c779f335934bb1bbe"
+      }
+    }
+  }
+}
