@@ -38,7 +38,7 @@
       "test/core/templates/opsx-fragments.test.ts",
       "test/core/templates/skill-templates-parity.test.ts"
     ],
-    "evidenceFingerprint": "c6fcbf8772682895fe632561a0c7b7566b816405b19bca5bed03a9bf9e4f3ae4",
+    "evidenceFingerprint": "40b2695cc84cbce3edd244a0ae0a1e15b08565024374939f8d3963034874c798",
     "evidenceFingerprintEntries": [
       {
         "path": ".claude/commands/opsx/apply.md",
@@ -114,7 +114,7 @@
       },
       {
         "path": "src/commands/opsx.ts",
-        "hash": "5abc78704ce139e9d3bca5a6e50fc752d86ae467b923feda57ddbf270678a896"
+        "hash": "52c8bbb2a1acbaea12fbbd894e32764540d87fc0b22fc51791dcff73311063c2"
       },
       {
         "path": "src/core/completions/command-registry.ts",
@@ -165,8 +165,27 @@
     "gitHeadCommit": "82c3a088a5e9d9977d7e5f6d18e3b91a783fdf44"
   },
   "optimization": {
-    "status": "PENDING_VERIFICATION",
-    "attempts": [],
+    "status": "IMPROVED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-10T07:16:19.060Z",
+        "type": "optimization",
+        "status": "OPTIMIZATION_PROPOSED",
+        "summary": "Two behavior-preserving simplifications proposed in src/commands/opsx.ts: remove duplicated option predicate logic and simplify BFS neighbor enqueueing without changing traversal order or output shape.",
+        "files": [
+          "src/commands/opsx.ts"
+        ]
+      },
+      {
+        "timestamp": "2026-06-10T07:21:49.770Z",
+        "type": "verification",
+        "result": "PASS",
+        "behaviorRetryCounter": 1
+      }
+    ],
+    "affectedFileHashes": {
+      "src/commands/opsx.ts": "5abc78704ce139e9d3bca5a6e50fc752d86ae467b923feda57ddbf270678a896"
+    },
     "baseline": {
       "timestamp": "2026-06-10T07:07:18.897Z",
       "result": "PASS",
@@ -333,6 +352,10 @@
         "skippedEvidenceFiles": [],
         "gitHeadCommit": "82c3a088a5e9d9977d7e5f6d18e3b91a783fdf44"
       }
+    },
+    "final": {
+      "result": "PASS",
+      "issues": []
     }
   }
 }

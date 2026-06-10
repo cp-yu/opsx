@@ -63,23 +63,23 @@ function collectSubgraph(
     orderedNodeIds.push(seedId);
   }
 
+  const enqueueNode = (candidate: string, next: string[]): void => {
+    if (!visited.has(candidate) && nodesById.has(candidate)) {
+      visited.add(candidate);
+      orderedNodeIds.push(candidate);
+      next.push(candidate);
+    }
+  };
+
   for (let level = 0; level < depth; level += 1) {
     const next: string[] = [];
     const frontierSet = new Set(frontier);
     for (const relation of relations) {
-      const candidates: string[] = [];
       if (frontierSet.has(relation.from)) {
-        candidates.push(relation.to);
+        enqueueNode(relation.to, next);
       }
       if (frontierSet.has(relation.to)) {
-        candidates.push(relation.from);
-      }
-      for (const candidate of candidates) {
-        if (!visited.has(candidate) && nodesById.has(candidate)) {
-          visited.add(candidate);
-          orderedNodeIds.push(candidate);
-          next.push(candidate);
-        }
+        enqueueNode(relation.from, next);
       }
     }
     frontier = next;
@@ -137,8 +137,9 @@ export class OpsxCommand {
       throw new Error(`${label} not found in OPSX. Available nodes: ${available}`);
     }
 
-    const includeRelations = !options.relations && !options.codeMap || !!options.relations;
-    const includeCodeMap = !options.relations && !options.codeMap || !!options.codeMap;
+    const includeAll = !options.relations && !options.codeMap;
+    const includeRelations = includeAll || !!options.relations;
+    const includeCodeMap = includeAll || !!options.codeMap;
     const useSubgraphOutput = requestedIds.length > 1 || explicit;
     const output: Record<string, unknown> = {};
 
