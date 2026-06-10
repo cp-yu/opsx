@@ -105,7 +105,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 提供 AI workflow 模板和 spec-driven artifact instructions；archive workflow 模板通过 runtime projection 消费 git.autoCommit 的 agent/user handoff 语义，并要求 agent 在归档后区分未提交实现变更、Phase 2 checkpoint history 承载的实现边界，以及 OpenSpec/docs 归档制品提交
+    intent: 提供 AI workflow 模板和 spec-driven artifact instructions；explore/propose/apply 三个核心工作流统一注入 OPSX 共享上下文（启动阶段整读 openspec/project.opsx.yaml 获取 project intent/scope 与全局结构，CLI 点查询作为节点细节补充）；archive workflow 模板通过 runtime projection 消费 git.autoCommit 的 agent/user handoff 语义，并要求 agent 在归档后区分未提交实现变更、Phase 2 checkpoint history 承载的实现边界，以及 OpenSpec/docs 归档制品提交
     type: capability
   - id: cap.apply.branch-isolation
     intent: Apply 阶段分支隔离策略由 apply.defaultIsolation 驱动；main/master 上仅 ask 模式询问用户，branch/worktree/none 配置直接执行并持久化 .apply-isolation.json。
