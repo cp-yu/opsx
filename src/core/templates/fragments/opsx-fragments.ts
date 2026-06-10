@@ -28,7 +28,7 @@ export const OPSX_READ_CONTEXT = OPSX_SHARED_CONTEXT;
 export const OPSX_CLI_QUERY_CONTEXT = `
 After reading shared \`project.opsx.yaml\` context, use OpenSpec CLI query surfaces for node details.
 - Run \`openspec list --specs --json\` to get specs and their \`capabilities\` string arrays; specs without frontmatter return \`capabilities: []\`.
-- For known or affected OPSX node IDs, run \`openspec opsx query <node-id> --json\` to get node details, relations and code-map refs.
+- For known or affected OPSX node IDs, run \`openspec opsx query <node-id...> --json\` to get node details, relations and code-map refs in one batch; add \`--depth 2\` when broader related context is needed.
 - Treat CLI output as navigation context, not as a replacement for change artifacts.
 `.trim();
 
@@ -42,7 +42,7 @@ export const OPSX_GENERATE_DELTA = `
 - Use the returned \`template\`, \`instruction\`, and \`outputPath\` to generate \`opsx-delta.yaml\`
 - Read \`proposal.md\` to extract the capability list
 - Read all delta specs in \`openspec/changes/<name>/specs/*/spec.md\`
-- For existing capability or domain IDs, run \`openspec opsx query <node-id> --json\` for current-system context
+- For existing capability or domain IDs, run \`openspec opsx query <node-id...> --json\` for current-system context in one batch; add \`--depth 2\` when related context is needed
 - Treat \`ADDED\`, \`MODIFIED\`, and \`REMOVED\` as YAML object keys, not Markdown headings
 - Follow a concrete YAML object structure such as:
   \`\`\`yaml

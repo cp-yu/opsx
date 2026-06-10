@@ -7,6 +7,7 @@ import {
   OPTIMIZATION_PROTOCOL_SUBAGENT,
   OPSX_NAVIGATION_GUIDANCE,
   OPSX_CLI_QUERY_CONTEXT,
+  OPSX_GENERATE_DELTA,
   OPSX_POST_PROPOSE_VALIDATION,
   OPSX_READ_CONTEXT,
   OPSX_SHARED_CONTEXT,
@@ -81,8 +82,12 @@ describe('OPSX shared context fragments', () => {
       'instead of reading OPSX YAML files directly'
     );
     expect(OPSX_CLI_QUERY_CONTEXT).toContain('After reading shared `project.opsx.yaml` context');
-    expect(OPSX_CLI_QUERY_CONTEXT).toContain('openspec opsx query <node-id> --json');
+    expect(OPSX_CLI_QUERY_CONTEXT).toContain('openspec opsx query <node-id...> --json');
+    expect(OPSX_CLI_QUERY_CONTEXT).toContain('--depth 2');
     expect(OPSX_CLI_QUERY_CONTEXT).toContain('relations and code-map');
+    expect(OPSX_GENERATE_DELTA).toContain('openspec opsx query <node-id...> --json');
+    expect(OPSX_GENERATE_DELTA).toContain('--depth 2');
+    expect(OPSX_GENERATE_DELTA).not.toContain('openspec opsx query <node-id> --json');
   });
 
   it('injects shared OPSX context into explore while retaining broad navigation', () => {
@@ -110,7 +115,7 @@ describe('OPSX shared context fragments', () => {
 
     expect(skillContextIndex).toBeGreaterThanOrEqual(0);
     expect(skillContextIndex).toBeLessThan(skillArtifactIndex);
-    expect(skillTemplate).toContain('openspec opsx query <node-id> --json');
+    expect(skillTemplate).toContain('openspec opsx query <node-id...> --json');
   });
 
   it('injects shared OPSX context into apply before reading change artifacts', () => {
@@ -128,7 +133,7 @@ describe('OPSX shared context fragments', () => {
 
     expect(skillContextIndex).toBeGreaterThanOrEqual(0);
     expect(skillContextIndex).toBeLessThan(skillReadIndex);
-    expect(skillTemplate).toContain('openspec opsx query <node-id> --json');
+    expect(skillTemplate).toContain('openspec opsx query <node-id...> --json');
   });
 
   it('does not add broad OPSX navigation to propose or apply templates', () => {

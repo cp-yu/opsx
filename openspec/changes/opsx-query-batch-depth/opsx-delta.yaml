@@ -1,0 +1,7 @@
+schema_version: 1
+MODIFIED:
+  capabilities:
+    - id: cap.cli.opsx-query
+      intent: 批量查询 OPSX 节点信息、关系和 code-map 引用的 CLI 命令，支持 depth 深度展开输出去重子图
+    - id: cap.ai.impact-sweeper
+      intent: 通过 CLI 批量 + depth 查询接口获取 OPSX 数据和 cap→spec 映射，生成影响面报告；在读取 specs 时同时执行术语提取步骤，用于检测术语漂移

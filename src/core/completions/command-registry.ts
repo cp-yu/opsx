@@ -274,6 +274,11 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
             name: 'code-map',
             description: 'Include code-map refs only',
           },
+          {
+            name: 'depth',
+            description: 'Include related nodes up to depth n',
+            takesValue: true,
+          },
           COMMON_FLAGS.json,
         ],
       },

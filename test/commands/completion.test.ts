@@ -303,7 +303,10 @@ describe('completion registry coverage', () => {
     const opsx = COMMAND_REGISTRY.find((command) => command.name === 'opsx');
     const opsxQuery = opsx?.subcommands?.find((command) => command.name === 'query');
     expect(opsxQuery?.acceptsPositional).toBe(true);
-    expect(opsxQuery?.flags.map((flag) => flag.name)).toEqual(expect.arrayContaining(['relations', 'code-map', 'json']));
+    expect(opsxQuery?.flags.map((flag) => flag.name)).toEqual(expect.arrayContaining(['relations', 'code-map', 'json', 'depth']));
+    expect(opsxQuery?.flags).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: 'depth', takesValue: true }),
+    ]));
 
     const newCommand = COMMAND_REGISTRY.find((command) => command.name === 'new');
     const newChange = newCommand?.subcommands?.find((command) => command.name === 'change');

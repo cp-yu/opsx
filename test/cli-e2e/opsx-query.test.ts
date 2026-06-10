@@ -30,6 +30,10 @@ capabilities:
     type: capability
     intent: Query OPSX nodes
     status: active
+  - id: cap.cli.show
+    type: capability
+    intent: Show items
+    status: active
 `
   );
   await fs.writeFile(
@@ -42,6 +46,9 @@ relations:
   - from: cap.cli.opsx-query
     to: cap.cli.list
     type: depends_on
+  - from: cap.cli.show
+    to: cap.cli.list
+    type: depends_on
 `
   );
   await fs.writeFile(
@@ -51,6 +58,9 @@ nodes:
   - id: cap.cli.list
     refs:
       - path: src/core/list.ts
+  - id: cap.cli.show
+    refs:
+      - path: src/core/show.ts
 `
   );
   await fs.writeFile(
@@ -101,6 +111,38 @@ describe('openspec opsx query e2e', () => {
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toContain("Node 'cap.missing' not found in OPSX");
     expect(result.stderr).toContain('cap.cli.list');
+  });
+
+  it('queries a batch OPSX subgraph with depth', async () => {
+    const projectDir = await createProject();
+
+    const result = await runCLI(
+      ['opsx', 'query', 'cap.cli.opsx-query', 'cap.cli.show', '--depth', '2', '--json'],
+      { cwd: projectDir }
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe('');
+    const output = JSON.parse(result.stdout);
+    expect(output.seeds).toEqual(['cap.cli.opsx-query', 'cap.cli.show']);
+    expect(output.nodes.map((node: { id: string }) => node.id)).toEqual([
+      'cap.cli.opsx-query',
+      'cap.cli.show',
+      'cap.cli.list',
+      'dom.cli',
+    ]);
+    expect(output.relations).toEqual([
+      { from: 'cap.cli.list', to: 'dom.cli', type: 'contains' },
+      { from: 'cap.cli.opsx-query', to: 'cap.cli.list', type: 'depends_on' },
+      { from: 'cap.cli.show', to: 'cap.cli.list', type: 'depends_on' },
+    ]);
+    expect(output.codeMap).toEqual({
+      'cap.cli.opsx-query': [],
+      'cap.cli.show': [{ path: 'src/core/show.ts' }],
+      'cap.cli.list': [{ path: 'src/core/list.ts' }],
+      'dom.cli': [],
+    });
+    expect(output.missing).toEqual([]);
   });
 
   it('lists spec capabilities through list --specs --json', async () => {

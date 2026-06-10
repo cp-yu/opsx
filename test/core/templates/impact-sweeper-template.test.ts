@@ -66,15 +66,20 @@ describe('impact sweeper template', () => {
   it('requires CLI-backed OPSX evidence and bounded reverse search', () => {
     const evidence = readReference('references/evidence-protocol.md');
 
-    expect(evidence).toContain('openspec opsx query <node-id> --json');
-    expect(evidence).toContain('Use the returned `node`, `relations`, and `codeMap` fields as evidence');
+    expect(evidence).toContain('openspec opsx query <node-id...> --json');
+    expect(evidence).toContain('Use `--depth 2` when');
+    expect(evidence).toContain('Use the returned `nodes`, `relations`, `codeMap`, and `missing` fields as evidence');
     expect(evidence).toContain('OPSX files not found');
     expect(evidence).toContain('openspec list --specs --json');
     expect(evidence).toContain("Extract each spec entry's `capabilities` string array");
     expect(evidence).toContain('Treat a missing frontmatter mapping as an empty array');
-    expect(evidence).toContain('one-hop relations');
-    expect(evidence).toContain('Expand to second-hop relations only when');
+    expect(evidence).not.toContain('For each plausible node ID');
+    expect(evidence).not.toContain('one-hop relations');
+    expect(evidence).not.toContain('Expand to second-hop relations only when');
+    expect(evidence).toContain('Default to `--depth 1`');
     expect(evidence).toContain('shared infrastructure');
+    expect(evidence).toContain('crosses domains');
+    expect(evidence).toContain('outward runtime use');
     expect(evidence).toContain('git ls-files');
     expect(evidence).toContain('Exclude openspec/changes/archive/**');
     expect(evidence).toContain('repo-wide reverse search');
