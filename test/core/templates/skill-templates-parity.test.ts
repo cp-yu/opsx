@@ -33,14 +33,14 @@ import {
 import { generateSkillContent } from '../../../src/core/shared/skill-generation.js';
 
 const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
-  getExploreSkillTemplate: '3555289d96bf598edfc1d7277e3152629c02165cc37a1b70d9ee3a26002c97eb',
+  getExploreSkillTemplate: '808d2e71a88f13ea0e7329f4ada9e208fc6e711c7c1591078d637a7307a50a56',
   getNewChangeSkillTemplate: '5989672758eccf54e3bb554ab97f2c129a192b12bbb7688cc1ffcf6bccb1ae9d',
   getContinueChangeSkillTemplate: '587da99321f9730fa54c8718b96ee4112078847473dbbfb9fedd7fcf416d1182',
   getApplyChangeSkillTemplate: 'd9fab1f6cddf1d2d061411d3d42c124fda2666ecc28b9b9a8c43a6ec0f9ad965',
   getFfChangeSkillTemplate: '05b8c2433bf7ef13195c135b99a034514a3cbe33bfb5c2a65e64c7d09754c21b',
   getSyncSpecsSkillTemplate: '92299f9d3ebb13b71aceab145359b162928c51d693de709e5fcd3016b19b5941',
   getOnboardSkillTemplate: '89eb19e0d8c39df8bb06b18738f067c9693d2558f1d3cc1b824f6c68249a0fcf',
-  getOpsxExploreCommandTemplate: '40b173b3d12695a0392242ea50c2332b462567e8b3f75a6e1bfc459867c21d98',
+  getOpsxExploreCommandTemplate: '82c3f5ad06538d82e6c95ea2548abf1c2746a713c5a1838e77e2aca55d0b5d57',
   getOpsxNewCommandTemplate: '62eee32d6d81a376e7be845d0891e28e6262ad07482f9bfe6af12a9f0366c364',
   getOpsxContinueCommandTemplate: 'cbaf78a8fbbc3d08921f15f5228530b8dbf75971e3086f6e16a00b6c282b308d',
   getOpsxApplyCommandTemplate: '7e06ab0eb3724719dd18e205a3ab14355034dff92623cf6243c363459420d6bb',
@@ -62,7 +62,7 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
 };
 
 const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
-  'openspec-explore': 'fb5780f85ded0db1060d224d9eda8a03b056f582b545e39b67dc11ed90f35cec',
+  'openspec-explore': 'd370a021d6528eefb4c8ccb7229f2d222113d942c172e09fdc51c8dd0d70f36a',
   'openspec-new-change': 'c324a7ace1f244aa3f534ac8e3370a2c11190d6d1b85a315f26a211398310f0f',
   'openspec-continue-change': 'e07de6f8ac6a152a5c694f07c08115fdd27dd270036697dfc4a593cb077d9c5b',
   'openspec-apply-change': '459eeb03e94764878730b632d5346ebe7957b82186559dba324c417e7e2e0678',

@@ -12,6 +12,7 @@
 export const OPSX_SHARED_CONTEXT = `
 Before reading other context files, check whether \`openspec/project.opsx.yaml\` exists.
 - If it exists, read it first for domains → capabilities structure
+- Read the \`project:\` block for project intent and scope
 - Check \`openspec/project.opsx.code-map.yaml\` for code location references
 - Check \`openspec/specs/\` for behavior documentation
 - Treat it as navigation context, not as a replacement for change artifacts

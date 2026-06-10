@@ -54,6 +54,16 @@ describe('OPSX shared context fragments', () => {
     expect(OPSX_READ_CONTEXT).toBe(OPSX_SHARED_CONTEXT);
   });
 
+  it('guides readers from project structure to project intent before code-map refs', () => {
+    const domainsIndex = OPSX_SHARED_CONTEXT.indexOf('domains → capabilities structure');
+    const projectIndex = OPSX_SHARED_CONTEXT.indexOf('Read the `project:` block for project intent and scope');
+    const codeMapIndex = OPSX_SHARED_CONTEXT.indexOf('project.opsx.code-map.yaml');
+
+    expect(domainsIndex).toBeGreaterThanOrEqual(0);
+    expect(projectIndex).toBeGreaterThan(domainsIndex);
+    expect(projectIndex).toBeLessThan(codeMapIndex);
+  });
+
   it('uses raw OPSX navigation only for explore and CLI query context for propose/apply', () => {
     // Layer 3: Fragment reference verification
     expect(getExploreSkillTemplate().instructions).toContain(OPSX_SHARED_CONTEXT);
