@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-09T13:33:26.898Z",
+  "timestamp": "2026-06-10T01:34:05.359Z",
   "result": "PASS",
   "issues": [],
   "tasksFileHash": "547d4011d7ecbdea6aa133562f98bbc5694705fad1a820d65f05a1e26b85ebcc",
@@ -16,7 +16,7 @@
       "src/core/templates/workflows/archive-change.ts",
       "test/skills/archive-skill-content.test.ts"
     ],
-    "evidenceFingerprint": "36998473efa7e7d7f3ffe2b037fae6f34eed845c92985793564a6ea77f600207",
+    "evidenceFingerprint": "e19cfaa918d8d1265448bcc67cec8340f0dee4f203fddd6cc56a3365b547c067",
     "evidenceFingerprintEntries": [
       {
         "path": ".codex/skills/openspec-archive-change/SKILL.md",
@@ -44,7 +44,7 @@
       },
       {
         "path": "src/core/templates/workflows/archive-change.ts",
-        "hash": "54f740b943415ebe3f73650eace23fbd6ea13ed60b32592e38ad999233cd9c8c"
+        "hash": "2681088906ab1024674847367f95622034be80273657182f899cb4c3bfc81ccd"
       },
       {
         "path": "test/skills/archive-skill-content.test.ts",
@@ -52,20 +52,32 @@
       }
     ],
     "skippedEvidenceFiles": [],
-    "gitHeadCommit": "5f10964c103a5ad47b0e13eab8ed72f766c2dec3"
+    "gitHeadCommit": "dce661f64a047d057f4a01149769ab6ea997ac8e"
   },
   "optimization": {
-    "status": "NOT_NEEDED",
+    "status": "IMPROVED",
     "attempts": [
       {
-        "timestamp": "2026-06-09T14:08:32.025Z",
+        "timestamp": "2026-06-10T01:46:38.682Z",
         "type": "optimization",
-        "status": "NO_OPTIMIZATION_NEEDED",
-        "summary": "Optimizer subagent reported no behavior-preserving optimization opportunities for the scoped template/test change."
+        "status": "OPTIMIZATION_PROPOSED",
+        "summary": "Remove unused verify fragment imports from archive workflow template.",
+        "files": [
+          "src/core/templates/workflows/archive-change.ts"
+        ]
+      },
+      {
+        "timestamp": "2026-06-10T01:55:08.117Z",
+        "type": "verification",
+        "result": "PASS",
+        "behaviorRetryCounter": 1
       }
     ],
+    "affectedFileHashes": {
+      "src/core/templates/workflows/archive-change.ts": "54f740b943415ebe3f73650eace23fbd6ea13ed60b32592e38ad999233cd9c8c"
+    },
     "baseline": {
-      "timestamp": "2026-06-09T13:33:26.898Z",
+      "timestamp": "2026-06-10T01:34:05.359Z",
       "result": "PASS",
       "issues": [],
       "tasksFileHash": "547d4011d7ecbdea6aa133562f98bbc5694705fad1a820d65f05a1e26b85ebcc",
@@ -118,8 +130,12 @@
           }
         ],
         "skippedEvidenceFiles": [],
-        "gitHeadCommit": "5f10964c103a5ad47b0e13eab8ed72f766c2dec3"
+        "gitHeadCommit": "dce661f64a047d057f4a01149769ab6ea997ac8e"
       }
+    },
+    "final": {
+      "result": "PASS",
+      "issues": []
     }
   }
 }

@@ -165,9 +165,30 @@ The `/opsx:archive` skill SHALL consume prompt projection for archive-time sync 
 - **WHEN** archive CLI 完成 sync 与 mv
 - **AND** 配置 `git.autoCommit` 为 `auto`
 - **THEN** archive skill SHALL 由 agent 继续处理 git 提交流程
-- **AND** agent SHALL 先提交真实项目变更
-- **AND** agent SHALL 再提交 OpenSpec/docs 归档制品
+- **AND** agent SHALL 先处理实现边界，再提交 OpenSpec/docs 归档制品
 - **AND** agent SHALL 在生成归档制品 commit message 前读取 `references/archive-commit-message.md`
+
+#### Scenario: auto 模式存在未提交实现变更
+
+- **WHEN** archive CLI 完成 sync 与 mv
+- **AND** 配置 `git.autoCommit` 为 `auto`
+- **AND** 工作区仍存在未提交的真实项目实现变更
+- **THEN** agent SHALL 先创建普通 implementation commit
+- **AND** 该 commit SHALL 只承载尚未提交的真实项目实现变更
+- **AND** agent SHALL 再提交 OpenSpec/docs 归档制品
+
+#### Scenario: auto 模式实现已由 Phase 2 checkpoint commits 承载
+
+- **WHEN** archive CLI 完成 sync 与 mv
+- **AND** 配置 `git.autoCommit` 为 `auto`
+- **AND** git history 中存在保留的 `wip: opt-*` checkpoint commits 承载本次 change 的实现 diff
+- **AND** 不存在需要普通 implementation commit 承载的未提交真实项目实现变更
+- **THEN** agent SHALL 创建 `--allow-empty` 的 semantic boundary commit
+- **AND** semantic boundary commit 的 subject SHALL 使用 `feat`、`fix`、`refactor` 等真实语义类型，而非 `meta`
+- **AND** semantic boundary commit body SHALL 记录 effective implementation diff 范围
+- **AND** semantic boundary commit body SHALL 列出承载该 diff 的 `wip: opt-*` checkpoint commits
+- **AND** semantic boundary commit body SHALL 明确该 commit intentionally empty
+- **AND** agent SHALL 再提交 OpenSpec/docs 归档制品
 
 #### Scenario: manual 模式只归档
 
