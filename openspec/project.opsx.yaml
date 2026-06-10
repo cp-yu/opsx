@@ -65,7 +65,7 @@ capabilities:
     intent: Explore 阶段的 brainstorming 流程，包含 6 步 checklist、一次一问纪律、2-3 方案对比、Design Summary 生成；main explore agent 严格 read-only，用户设计确认不构成文件写入授权；已有 change 的 insight 仅分类为 future capture target，不在 explore 中更新 artifacts
     type: capability
   - id: cap.ai.impact-sweeper
-    intent: 通过 CLI 查询接口获取 OPSX 数据和 cap→spec 映射，生成影响面报告；在读取 specs 时同时执行术语提取步骤，用于检测术语漂移
+    intent: 通过 CLI 批量 + depth 查询接口获取 OPSX 数据和 cap→spec 映射，生成影响面报告；在读取 specs 时同时执行术语提取步骤，用于检测术语漂移
     status: active
     type: capability
   - id: cap.ai.internal-skill-installation
@@ -202,7 +202,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.opsx-query
-    intent: 查询 OPSX 节点信息、关系和 code-map 引用的 CLI 命令
+    intent: 批量查询 OPSX 节点信息、关系和 code-map 引用的 CLI 命令，支持 depth 深度展开输出去重子图
     type: capability
   - id: cap.cli.schema
     intent: 管理工作流 Schema，包含 init、fork 和 which 子命令

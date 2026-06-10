@@ -7,10 +7,12 @@
 
 Impact sweeper SHALL 通过 OpenSpec CLI 查询 OPSX 数据和 cap→spec 映射，MUST NOT 直接读取 YAML 文件。在读取 specs 时，SHALL 同时执行术语提取步骤，用于检测术语漂移。
 
-#### Scenario: 查询 OPSX 节点信息
+#### Scenario: 批量查询 OPSX 节点信息
 
 - **WHEN** sweeper 需要获取 OPSX 节点信息、关系或 code-map 引用
-- **THEN** SHALL 执行 `openspec opsx query <node-id> --json` 获取数据
+- **THEN** SHALL 将全部 plausible node IDs 通过单次 `openspec opsx query <node-id...> --json` 批量调用获取数据
+- **AND** 需要二跳展开时 SHALL 使用 `--depth 2` 参数，MUST NOT 通过逐节点连环查询模拟多跳展开
+- **AND** SHALL 使用返回的 `nodes`、`relations`、`codeMap`、`missing` 字段作为证据
 - **AND** MUST NOT 直接读取 `openspec/project.opsx.yaml`、`openspec/project.opsx.relations.yaml` 或 `openspec/project.opsx.code-map.yaml`
 
 #### Scenario: 查询 cap→spec 映射
