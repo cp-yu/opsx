@@ -40,6 +40,12 @@ artifacts:
       - Route forbidden content to the right artifact: technical decisions and refactor rationale go in `design.md`; concrete implementation steps and checks go in `tasks.md`; motivation and scope go in `proposal.md`; architecture graph intent changes go in `opsx-delta.yaml`.
       - If "do not call/use the old path" is not externally observable, write it in `design.md`, not in a requirement. In specs, express the preserved or changed observable behavior instead.
 
+      Requirement framing rules:
+      - Requirement names MUST be durable capability names. FORBIDDEN: change-action names such as gap-closure, restore, unify, replace, or migrate.
+      - One requirement covers one capability concern. Do not bundle multiple unrelated commands or features into one requirement - split them.
+      - Behavior definitions MUST NOT reference change context such as "as promised", "the deprecated X", or "the original Y". State the behavior as it will be.
+      - Litmus test: a reader two years later, unaware of this change, must understand the requirement standalone. When existing capability behavior changes, prefer MODIFIED on the existing requirement over ADDED of a change-named requirement.
+
       Before writing or modifying a requirement, classify each candidate statement:
       - Observable behavior or constraint -> keep in specs.
       - Why this approach, why not the old approach, or how to implement it -> move to design/tasks/proposal/opsx-delta.

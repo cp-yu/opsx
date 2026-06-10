@@ -18,7 +18,7 @@ OpenSpec conventions SHALL mandate a structured spec format with clear requireme
 - **THEN** authors SHALL use `### Requirement: ...` followed by at least one `#### Scenario: ...` section
 
 ### Requirement: Behavior-First Specification Boundary
-OpenSpec specifications SHALL capture verifiable WHAT-only behavior contracts and avoid implementation, refactor, and process detail.
+OpenSpec specifications SHALL capture verifiable WHAT-only behavior contracts, avoid implementation, refactor, and process detail, and frame requirements as durable capabilities rather than change records.
 
 #### Scenario: Writing behavior requirements
 - **WHEN** documenting a capability in `spec.md`
@@ -33,6 +33,20 @@ OpenSpec specifications SHALL capture verifiable WHAT-only behavior contracts an
 - **WHEN** a candidate spec statement explains why an implementation path was chosen, why an old path is not used, or how code should be organized
 - **THEN** authors SHALL move that statement to `design.md`
 - **AND** specs SHALL express only the preserved or changed observable behavior
+
+#### Scenario: 以能力命名 Requirement
+- **WHEN** 为变更撰写新的 requirement 标题
+- **THEN** 标题 SHALL 使用持久的能力名称
+- **AND** 标题 SHALL NOT 使用缺口、恢复、统一、替代、迁移等一次性变更动作命名
+
+#### Scenario: 单一 Requirement 不打包多个能力
+- **WHEN** 一条候选 requirement 覆盖多个互不相关的命令或功能
+- **THEN** 作者 SHALL 将其拆分为按能力划分的独立 requirement
+
+#### Scenario: 行为定义不引用变更上下文
+- **WHEN** requirement 正文出现"已承诺"、"原有"、"deprecated 的 X"等仅在变更上下文中可理解的表述
+- **THEN** 作者 SHALL 改写为以目标状态直接陈述的行为定义
+- **AND** 既有能力的行为变化 SHALL 优先以 MODIFIED 更新既有 requirement，而非 ADDED 变更命名的新 requirement
 
 ### Requirement: Progressive Rigor
 OpenSpec conventions SHALL keep specs lightweight by default and scale rigor only when risk or coordination complexity demands it.

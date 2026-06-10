@@ -95,6 +95,19 @@ describe('artifact-graph/resolver', () => {
       expect(design?.instruction).toContain('why an old path should not be used');
     });
 
+    it('should define requirement framing rules in built-in specs instruction', () => {
+      const schema = resolveSchema('spec-driven');
+      const specs = schema.artifacts.find((artifact) => artifact.id === 'specs');
+
+      expect(specs?.instruction).toContain('Requirement framing rules');
+      expect(specs?.instruction).toContain('durable capability names');
+      expect(specs?.instruction).toContain('One requirement covers one capability concern');
+      expect(specs?.instruction).toContain('MUST NOT reference change context');
+      expect(specs?.instruction).toContain(
+        'prefer MODIFIED on the existing requirement over ADDED of a change-named requirement'
+      );
+    });
+
     it('should strip .yaml extension from name', () => {
       const schema1 = resolveSchema('spec-driven');
       const schema2 = resolveSchema('spec-driven.yaml');
