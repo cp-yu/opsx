@@ -1,31 +1,34 @@
+import path from 'path';
 import { z } from 'zod';
+
+const GitCommitMessagePathSchema = z
+  .string()
+  .min(1)
+  .refine(
+    (value) =>
+      !path.posix.isAbsolute(value) &&
+      !path.win32.isAbsolute(value) &&
+      !value.includes('\\') &&
+      path.posix.normalize(value) !== '..' &&
+      !path.posix.normalize(value).startsWith('../'),
+    'must be a POSIX relative path without ..'
+  );
 
 const GitConfigSchema = z
   .object({
-    autoCommit: z.enum(['auto', 'manual']).optional().default('auto'),
-    archive: z
+    commitMessage: z
       .object({
-        commitMessage: z
-          .object({
-            convention: z.enum(['openspec-archive']).optional().default('openspec-archive'),
-          })
-          .optional()
-          .default({ convention: 'openspec-archive' }),
+        boundary: GitCommitMessagePathSchema.optional(),
+        archive: GitCommitMessagePathSchema.optional(),
+        merge: GitCommitMessagePathSchema.optional(),
       })
-      .optional()
-      .default({ commitMessage: { convention: 'openspec-archive' } }),
+      .optional(),
     merge: z
       .object({
         strategy: z.enum(['no-ff', 'ff-only', 'squash']).optional().default('no-ff'),
-        commitMessage: z
-          .object({
-            convention: z.enum(['openspec-merge-summary']).optional().default('openspec-merge-summary'),
-          })
-          .optional()
-          .default({ convention: 'openspec-merge-summary' }),
       })
       .optional()
-      .default({ strategy: 'no-ff', commitMessage: { convention: 'openspec-merge-summary' } }),
+      .default({ strategy: 'no-ff' }),
     branch: z
       .object({
         deleteAfterArchive: z.boolean().optional().default(false),
@@ -35,9 +38,7 @@ const GitConfigSchema = z
   })
   .optional()
   .default({
-    autoCommit: 'auto',
-    archive: { commitMessage: { convention: 'openspec-archive' } },
-    merge: { strategy: 'no-ff', commitMessage: { convention: 'openspec-merge-summary' } },
+    merge: { strategy: 'no-ff' },
     branch: { deleteAfterArchive: false },
   });
 
@@ -104,17 +105,8 @@ export const DEFAULT_CONFIG: GlobalConfigType = {
     defaultIsolation: 'ask',
   },
   git: {
-    autoCommit: 'auto',
-    archive: {
-      commitMessage: {
-        convention: 'openspec-archive',
-      },
-    },
     merge: {
       strategy: 'no-ff',
-      commitMessage: {
-        convention: 'openspec-merge-summary',
-      },
     },
     branch: {
       deleteAfterArchive: false,
@@ -192,19 +184,13 @@ export function validateConfigKeyPath(path: string): { valid: boolean; reason?: 
     if (rawKeys.length === 1) {
       return { valid: true };
     }
-    if (rawKeys.length === 2 && (rawKeys[1] === 'autoCommit' || rawKeys[1] === 'archive' || rawKeys[1] === 'merge' || rawKeys[1] === 'branch')) {
+    if (rawKeys.length === 2 && (rawKeys[1] === 'commitMessage' || rawKeys[1] === 'merge' || rawKeys[1] === 'branch')) {
       return { valid: true };
     }
-    if (rawKeys.length === 3 && rawKeys[1] === 'archive' && rawKeys[2] === 'commitMessage') {
+    if (rawKeys.length === 3 && rawKeys[1] === 'commitMessage' && ['boundary', 'archive', 'merge'].includes(rawKeys[2])) {
       return { valid: true };
     }
-    if (rawKeys.length === 4 && rawKeys[1] === 'archive' && rawKeys[2] === 'commitMessage' && rawKeys[3] === 'convention') {
-      return { valid: true };
-    }
-    if (rawKeys.length === 3 && rawKeys[1] === 'merge' && (rawKeys[2] === 'strategy' || rawKeys[2] === 'commitMessage')) {
-      return { valid: true };
-    }
-    if (rawKeys.length === 4 && rawKeys[1] === 'merge' && rawKeys[2] === 'commitMessage' && rawKeys[3] === 'convention') {
+    if (rawKeys.length === 3 && rawKeys[1] === 'merge' && rawKeys[2] === 'strategy') {
       return { valid: true };
     }
     if (rawKeys.length === 3 && rawKeys[1] === 'branch' && rawKeys[2] === 'deleteAfterArchive') {
@@ -212,7 +198,7 @@ export function validateConfigKeyPath(path: string): { valid: boolean; reason?: 
     }
     return {
       valid: false,
-      reason: 'git only supports the nested keys "autoCommit", "archive.commitMessage.convention", "merge.strategy", "merge.commitMessage.convention", and "branch.deleteAfterArchive"',
+      reason: 'git only supports the nested keys "commitMessage.boundary", "commitMessage.archive", "commitMessage.merge", "merge.strategy", and "branch.deleteAfterArchive"',
     };
   }
 

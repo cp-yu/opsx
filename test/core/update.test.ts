@@ -113,11 +113,11 @@ describe('UpdateCommand', () => {
       expect(config.optimization.enabled).toBe(true);
       expect(config.optimization.optRetries).toBe(2);
       expect(config.apply.defaultIsolation).toBe('ask');
-      expect(config.git.autoCommit).toBe('auto');
-      expect(config.git.archive.commitMessage.convention).toBe('openspec-archive');
       expect(config.git.merge.strategy).toBe('no-ff');
-      expect(config.git.merge.commitMessage.convention).toBe('openspec-merge-summary');
       expect(config.git.branch.deleteAfterArchive).toBe(false);
+      expect(config.git).not.toHaveProperty('autoCommit');
+      expect(config.git).not.toHaveProperty('archive');
+      expect(config.git.merge).not.toHaveProperty('commitMessage');
 
       consoleSpy.mockRestore();
     });
@@ -145,11 +145,11 @@ rules:
       expect(config.optimization.enabled).toBe(true);
       expect(config.optimization.optRetries).toBe(2);
       expect(config.apply.defaultIsolation).toBe('ask');
-      expect(config.git.autoCommit).toBe('auto');
-      expect(config.git.archive.commitMessage.convention).toBe('openspec-archive');
       expect(config.git.merge.strategy).toBe('no-ff');
-      expect(config.git.merge.commitMessage.convention).toBe('openspec-merge-summary');
       expect(config.git.branch.deleteAfterArchive).toBe(false);
+      expect(config.git).not.toHaveProperty('autoCommit');
+      expect(config.git).not.toHaveProperty('archive');
+      expect(config.git.merge).not.toHaveProperty('commitMessage');
       expect(config).not.toHaveProperty('propose');
       expect(config.apply).toEqual({
         defaultIsolation: 'ask',
@@ -166,6 +166,8 @@ optimization:
 apply:
   defaultIsolation: worktree
 git:
+  commitMessage:
+    archive: docs/archive.md
   merge:
     strategy: squash
 `
@@ -178,34 +180,43 @@ git:
       expect(config.optimization.enabled).toBe(false);
       expect(config.optimization.optRetries).toBe(2);
       expect(config.apply.defaultIsolation).toBe('worktree');
-      expect(config.git.autoCommit).toBe('auto');
-      expect(config.git.archive.commitMessage.convention).toBe('openspec-archive');
+      expect(config.git.commitMessage.archive).toBe('docs/archive.md');
       expect(config.git.merge.strategy).toBe('squash');
-      expect(config.git.merge.commitMessage.convention).toBe('openspec-merge-summary');
       expect(config.git.branch.deleteAfterArchive).toBe(false);
+      expect(config.git).not.toHaveProperty('autoCommit');
+      expect(config.git).not.toHaveProperty('archive');
+      expect(config.git.merge).not.toHaveProperty('commitMessage');
     });
 
-    it('should remove obsolete git merge messageFrom while adding new defaults', async () => {
+    it('should remove obsolete git fields while adding new defaults', async () => {
       const configPath = path.join(testDir, 'openspec', 'config.yaml');
       await fs.writeFile(
         configPath,
         `schema: custom-schema
 git:
   autoCommit: manual
+  archive:
+    commitMessage:
+      convention: openspec-archive
+  commitMessage:
+    merge: docs/merge.md
   merge:
     strategy: squash
     messageFrom: manual
+    commitMessage:
+      convention: openspec-merge-summary
 `
       );
 
       await updateCommand.execute(testDir);
 
       const config = parseYaml(await fs.readFile(configPath, 'utf-8'));
-      expect(config.git.autoCommit).toBe('manual');
+      expect(config.git).not.toHaveProperty('autoCommit');
+      expect(config.git).not.toHaveProperty('archive');
       expect(config.git.merge.strategy).toBe('squash');
       expect(config.git.merge).not.toHaveProperty('messageFrom');
-      expect(config.git.archive.commitMessage.convention).toBe('openspec-archive');
-      expect(config.git.merge.commitMessage.convention).toBe('openspec-merge-summary');
+      expect(config.git.merge).not.toHaveProperty('commitMessage');
+      expect(config.git.commitMessage.merge).toBe('docs/merge.md');
       expect(config.git.branch.deleteAfterArchive).toBe(false);
     });
 

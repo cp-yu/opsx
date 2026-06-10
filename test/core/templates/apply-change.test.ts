@@ -21,7 +21,9 @@ describe('apply change workflow template', () => {
         }),
       ])
     );
-    expect(template.instructions).toContain('read `references/apply-phase2-optimization.md` before Phase 2');
+    expect(template.instructions).toContain(
+      'read `openspec/references/openspec-apply-phase2-optimization.md` before Phase 2'
+    );
   });
 
   it('keeps apply Phase 2 checkpoint commands in a commit-based reference', () => {

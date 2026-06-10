@@ -29,16 +29,10 @@ async function writeFile(projectRoot: string, relativePath: string, content: str
 async function setupRepo(): Promise<string> {
   const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-archive-merge-'));
   await fs.mkdir(path.join(projectRoot, 'openspec', 'changes', 'archive'), { recursive: true });
-  await writeFile(projectRoot, 'openspec/config.yaml', `schema: spec-driven
+await writeFile(projectRoot, 'openspec/config.yaml', `schema: spec-driven
 git:
-  autoCommit: auto
-  archive:
-    commitMessage:
-      convention: openspec-archive
   merge:
     strategy: no-ff
-    commitMessage:
-      convention: openspec-merge-summary
   branch:
     deleteAfterArchive: false
 `);
@@ -151,7 +145,7 @@ ADDED:
     expect(await git(projectRoot, ['rev-parse', 'HEAD'])).toBe(beforeHead);
     expect(await git(projectRoot, ['diff', '--cached', '--name-only'])).toBe('');
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Git handoff: git.autoCommit is auto')
+      expect.stringContaining('Git handoff: agent handles git commits, merge, and cleanup after archive.')
     );
     expect(console.log).toHaveBeenCalledWith(
       expect.stringContaining('agent')
@@ -223,16 +217,10 @@ ADDED:
 
   it('does not delete the feature branch when archive cleanup is enabled', async () => {
     projectRoot = await setupRepo();
-    await writeFile(projectRoot, 'openspec/config.yaml', `schema: spec-driven
+await writeFile(projectRoot, 'openspec/config.yaml', `schema: spec-driven
 git:
-  autoCommit: auto
-  archive:
-    commitMessage:
-      convention: openspec-archive
   merge:
     strategy: no-ff
-    commitMessage:
-      convention: openspec-merge-summary
   branch:
     deleteAfterArchive: true
 `);
@@ -247,7 +235,7 @@ git:
     expect(featureBranch).toContain('feature-archive');
   });
 
-  it('archives files with user handoff when autoCommit is manual', async () => {
+  it('archives files with agent handoff when legacy autoCommit is manual', async () => {
     projectRoot = await setupRepo();
     await writeFile(projectRoot, 'openspec/config.yaml', `schema: spec-driven
 git:
@@ -272,10 +260,10 @@ git:
     expect(currentBranch).toBe('feature-archive');
     expect(await git(projectRoot, ['rev-parse', 'HEAD'])).toBe(beforeHead);
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Git handoff: git.autoCommit is manual')
+      expect.stringContaining('Git handoff: agent handles git commits, merge, and cleanup after archive.')
     );
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('user')
+      expect.stringContaining('agent')
     );
     const archives = await fs.readdir(path.join(projectRoot, 'openspec', 'changes', 'archive'));
     expect(archives.some((entry) => entry.endsWith('-feature-archive'))).toBe(true);

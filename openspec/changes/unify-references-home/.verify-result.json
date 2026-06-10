@@ -1,0 +1,298 @@
+{
+  "timestamp": "2026-06-10T14:47:21.751Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "497f7c6ccaf4c8db8a639c8487f834f421cd8f938a28b9769bf18b60f6cbe84e",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-only-reviewer",
+    "evidenceFiles": [
+      "openspec/changes/unify-references-home/design.md",
+      "openspec/changes/unify-references-home/opsx-delta.yaml",
+      "openspec/changes/unify-references-home/proposal.md",
+      "openspec/changes/unify-references-home/specs/config-loading/spec.md",
+      "openspec/changes/unify-references-home/specs/opsx-archive-skill/spec.md",
+      "openspec/changes/unify-references-home/specs/references-home/spec.md",
+      "openspec/changes/unify-references-home/tasks.md",
+      "openspec/config.yaml",
+      "openspec/references/openspec-archive-commit-message.md",
+      "openspec/references/openspec-merge-summary-message.md",
+      "src/core/archive.ts",
+      "src/core/config-projection.ts",
+      "src/core/config-prompts.ts",
+      "src/core/config-schema.ts",
+      "src/core/init.ts",
+      "src/core/project-config.ts",
+      "src/core/templates/sync-engine.ts",
+      "src/core/templates/workflows/archive-change.ts",
+      "src/core/update.ts",
+      "src/core/workflow-installation.ts",
+      "test/core/config-schema.test.ts",
+      "test/core/init.test.ts",
+      "test/core/project-config.test.ts",
+      "test/core/update.test.ts",
+      "test/core/workflow-installation.test.ts",
+      "test/skills/archive-skill-content.test.ts"
+    ],
+    "evidenceFingerprint": "17abdb560dcbf34311c36750a6ee45a88f630f826ae61aa2f2d36d8de5ca2961",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/unify-references-home/design.md",
+        "hash": "91f34d21c2ebf385e6ee991171022bf52bc5de6fde4f8fa3b3d7cfeb6e786ab2"
+      },
+      {
+        "path": "openspec/changes/unify-references-home/opsx-delta.yaml",
+        "hash": "7d579930873b55e71114bd4c6f46bca6d08916662c57f8724bac30889cb9af45"
+      },
+      {
+        "path": "openspec/changes/unify-references-home/proposal.md",
+        "hash": "3c42845a226c9921f75f52cfde98bacae3fcdcdf4425b151affe822db14b83cd"
+      },
+      {
+        "path": "openspec/changes/unify-references-home/specs/config-loading/spec.md",
+        "hash": "dfb08475dff63ff63535044819ca1dfc8ea6504a435b7ce54ce1218267c4e106"
+      },
+      {
+        "path": "openspec/changes/unify-references-home/specs/opsx-archive-skill/spec.md",
+        "hash": "fa7739fdfad887c2183bbc171a98610e94fb08eb85a57ee3bac034f7353ceab2"
+      },
+      {
+        "path": "openspec/changes/unify-references-home/specs/references-home/spec.md",
+        "hash": "10bd167807f54b03d7cc8491ae4cef8d010d7202c3fbe5a0407a183ce9599a12"
+      },
+      {
+        "path": "openspec/changes/unify-references-home/tasks.md",
+        "hash": "497f7c6ccaf4c8db8a639c8487f834f421cd8f938a28b9769bf18b60f6cbe84e"
+      },
+      {
+        "path": "openspec/config.yaml",
+        "hash": "9f7bd016166cec3ddb532e91d5bf8e181d37f039f6a1e6abd7432e2e34602e11"
+      },
+      {
+        "path": "openspec/references/openspec-archive-commit-message.md",
+        "hash": "4bfd7daeaad1e56928ef695a2bf537e4788276f5c48adac96669b82c66ad4450"
+      },
+      {
+        "path": "openspec/references/openspec-merge-summary-message.md",
+        "hash": "3b8ab86240c6135d5d28075b9c5447a9054cfa30bd686b7ca9eba9ebf472315b"
+      },
+      {
+        "path": "src/core/archive.ts",
+        "hash": "113672121e5c17b03fdf05af30a764bde67016857e4029547af7a1339f2c36f7"
+      },
+      {
+        "path": "src/core/config-projection.ts",
+        "hash": "dce65bb139dfad172b88999995adbe7f569aa736cf5f86b70cf99e439e83e209"
+      },
+      {
+        "path": "src/core/config-prompts.ts",
+        "hash": "1a78ac71c3f32ca9b0dee6f116f267aa17109d099bef5693ae537888c2573377"
+      },
+      {
+        "path": "src/core/config-schema.ts",
+        "hash": "5620386e45afc83d987d6c6249d506e087ecbef723128bfd170a36ce14f9fdb3"
+      },
+      {
+        "path": "src/core/init.ts",
+        "hash": "97696e055f529017ac5efbf95a9fe0081c52e518a8d08aa86c4ba45383ecb0ce"
+      },
+      {
+        "path": "src/core/project-config.ts",
+        "hash": "841c8fdd94ba1de98f83c0f6c3b5221aff3b07f693fbddcd420e7cdf7efe1130"
+      },
+      {
+        "path": "src/core/templates/sync-engine.ts",
+        "hash": "43759887a69559ac28edf3034865a63394e9b49d1f0ccd968f58c966ff655d19"
+      },
+      {
+        "path": "src/core/templates/workflows/archive-change.ts",
+        "hash": "40e6f149768d6d21a721da88a6d59831fccb7b6d5c0763e8d0a1a9021d284b15"
+      },
+      {
+        "path": "src/core/update.ts",
+        "hash": "f7821fc163000ac62549fdf971ddff987dc3fc59ff0d5abb173824e48003db03"
+      },
+      {
+        "path": "src/core/workflow-installation.ts",
+        "hash": "bfdb0c1d73d4b3b1a98075ce68deea7204963f5a3c96a986bb83838b1e166b70"
+      },
+      {
+        "path": "test/core/config-schema.test.ts",
+        "hash": "b0b3ec610d14d17e97be94e94a35ff4af74322aa550f4d86d2bc6b0b80fa8fdc"
+      },
+      {
+        "path": "test/core/init.test.ts",
+        "hash": "64198e645dea15614ee7c5cdbfb13692850f8109bc1223ae142233aaf02d2469"
+      },
+      {
+        "path": "test/core/project-config.test.ts",
+        "hash": "7e11c472b5131b4b365bcb59a3f10c3ad03a04b0c273e06e85def1408fba8e70"
+      },
+      {
+        "path": "test/core/update.test.ts",
+        "hash": "2a6749af2a9eca9e80748ed12d4b39074f1e6fe1a9e04dad145926e8f6932dce"
+      },
+      {
+        "path": "test/core/workflow-installation.test.ts",
+        "hash": "7f54dbe71629693094f91d2fbdfb6b2787b1a988801d4acafee5b0f8f8cc01bf"
+      },
+      {
+        "path": "test/skills/archive-skill-content.test.ts",
+        "hash": "7fa16dc63e83af2dc74c530bd5036e2b4bfff525f0ceeed4f26ad4e9d34d5986"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "7618f4edadbcd30b5c8afdef287bd7679c096586"
+  },
+  "optimization": {
+    "status": "PENDING_VERIFICATION",
+    "attempts": [],
+    "baseline": {
+      "timestamp": "2026-06-10T14:47:21.751Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "497f7c6ccaf4c8db8a639c8487f834f421cd8f938a28b9769bf18b60f6cbe84e",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-only-reviewer",
+        "evidenceFiles": [
+          "openspec/changes/unify-references-home/design.md",
+          "openspec/changes/unify-references-home/opsx-delta.yaml",
+          "openspec/changes/unify-references-home/proposal.md",
+          "openspec/changes/unify-references-home/specs/config-loading/spec.md",
+          "openspec/changes/unify-references-home/specs/opsx-archive-skill/spec.md",
+          "openspec/changes/unify-references-home/specs/references-home/spec.md",
+          "openspec/changes/unify-references-home/tasks.md",
+          "openspec/config.yaml",
+          "openspec/references/openspec-archive-commit-message.md",
+          "openspec/references/openspec-merge-summary-message.md",
+          "src/core/archive.ts",
+          "src/core/config-projection.ts",
+          "src/core/config-prompts.ts",
+          "src/core/config-schema.ts",
+          "src/core/init.ts",
+          "src/core/project-config.ts",
+          "src/core/templates/sync-engine.ts",
+          "src/core/templates/workflows/archive-change.ts",
+          "src/core/update.ts",
+          "src/core/workflow-installation.ts",
+          "test/core/config-schema.test.ts",
+          "test/core/init.test.ts",
+          "test/core/project-config.test.ts",
+          "test/core/update.test.ts",
+          "test/core/workflow-installation.test.ts",
+          "test/skills/archive-skill-content.test.ts"
+        ],
+        "evidenceFingerprint": "17abdb560dcbf34311c36750a6ee45a88f630f826ae61aa2f2d36d8de5ca2961",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/unify-references-home/design.md",
+            "hash": "91f34d21c2ebf385e6ee991171022bf52bc5de6fde4f8fa3b3d7cfeb6e786ab2"
+          },
+          {
+            "path": "openspec/changes/unify-references-home/opsx-delta.yaml",
+            "hash": "7d579930873b55e71114bd4c6f46bca6d08916662c57f8724bac30889cb9af45"
+          },
+          {
+            "path": "openspec/changes/unify-references-home/proposal.md",
+            "hash": "3c42845a226c9921f75f52cfde98bacae3fcdcdf4425b151affe822db14b83cd"
+          },
+          {
+            "path": "openspec/changes/unify-references-home/specs/config-loading/spec.md",
+            "hash": "dfb08475dff63ff63535044819ca1dfc8ea6504a435b7ce54ce1218267c4e106"
+          },
+          {
+            "path": "openspec/changes/unify-references-home/specs/opsx-archive-skill/spec.md",
+            "hash": "fa7739fdfad887c2183bbc171a98610e94fb08eb85a57ee3bac034f7353ceab2"
+          },
+          {
+            "path": "openspec/changes/unify-references-home/specs/references-home/spec.md",
+            "hash": "10bd167807f54b03d7cc8491ae4cef8d010d7202c3fbe5a0407a183ce9599a12"
+          },
+          {
+            "path": "openspec/changes/unify-references-home/tasks.md",
+            "hash": "497f7c6ccaf4c8db8a639c8487f834f421cd8f938a28b9769bf18b60f6cbe84e"
+          },
+          {
+            "path": "openspec/config.yaml",
+            "hash": "9f7bd016166cec3ddb532e91d5bf8e181d37f039f6a1e6abd7432e2e34602e11"
+          },
+          {
+            "path": "openspec/references/openspec-archive-commit-message.md",
+            "hash": "4bfd7daeaad1e56928ef695a2bf537e4788276f5c48adac96669b82c66ad4450"
+          },
+          {
+            "path": "openspec/references/openspec-merge-summary-message.md",
+            "hash": "3b8ab86240c6135d5d28075b9c5447a9054cfa30bd686b7ca9eba9ebf472315b"
+          },
+          {
+            "path": "src/core/archive.ts",
+            "hash": "113672121e5c17b03fdf05af30a764bde67016857e4029547af7a1339f2c36f7"
+          },
+          {
+            "path": "src/core/config-projection.ts",
+            "hash": "dce65bb139dfad172b88999995adbe7f569aa736cf5f86b70cf99e439e83e209"
+          },
+          {
+            "path": "src/core/config-prompts.ts",
+            "hash": "1a78ac71c3f32ca9b0dee6f116f267aa17109d099bef5693ae537888c2573377"
+          },
+          {
+            "path": "src/core/config-schema.ts",
+            "hash": "5620386e45afc83d987d6c6249d506e087ecbef723128bfd170a36ce14f9fdb3"
+          },
+          {
+            "path": "src/core/init.ts",
+            "hash": "97696e055f529017ac5efbf95a9fe0081c52e518a8d08aa86c4ba45383ecb0ce"
+          },
+          {
+            "path": "src/core/project-config.ts",
+            "hash": "841c8fdd94ba1de98f83c0f6c3b5221aff3b07f693fbddcd420e7cdf7efe1130"
+          },
+          {
+            "path": "src/core/templates/sync-engine.ts",
+            "hash": "43759887a69559ac28edf3034865a63394e9b49d1f0ccd968f58c966ff655d19"
+          },
+          {
+            "path": "src/core/templates/workflows/archive-change.ts",
+            "hash": "40e6f149768d6d21a721da88a6d59831fccb7b6d5c0763e8d0a1a9021d284b15"
+          },
+          {
+            "path": "src/core/update.ts",
+            "hash": "f7821fc163000ac62549fdf971ddff987dc3fc59ff0d5abb173824e48003db03"
+          },
+          {
+            "path": "src/core/workflow-installation.ts",
+            "hash": "bfdb0c1d73d4b3b1a98075ce68deea7204963f5a3c96a986bb83838b1e166b70"
+          },
+          {
+            "path": "test/core/config-schema.test.ts",
+            "hash": "b0b3ec610d14d17e97be94e94a35ff4af74322aa550f4d86d2bc6b0b80fa8fdc"
+          },
+          {
+            "path": "test/core/init.test.ts",
+            "hash": "64198e645dea15614ee7c5cdbfb13692850f8109bc1223ae142233aaf02d2469"
+          },
+          {
+            "path": "test/core/project-config.test.ts",
+            "hash": "7e11c472b5131b4b365bcb59a3f10c3ad03a04b0c273e06e85def1408fba8e70"
+          },
+          {
+            "path": "test/core/update.test.ts",
+            "hash": "2a6749af2a9eca9e80748ed12d4b39074f1e6fe1a9e04dad145926e8f6932dce"
+          },
+          {
+            "path": "test/core/workflow-installation.test.ts",
+            "hash": "7f54dbe71629693094f91d2fbdfb6b2787b1a988801d4acafee5b0f8f8cc01bf"
+          },
+          {
+            "path": "test/skills/archive-skill-content.test.ts",
+            "hash": "7fa16dc63e83af2dc74c530bd5036e2b4bfff525f0ceeed4f26ad4e9d34d5986"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "7618f4edadbcd30b5c8afdef287bd7679c096586"
+      }
+    }
+  }
+}

@@ -19,6 +19,7 @@ import {
   type CommandTemplateEntry,
 } from './shared/skill-generation.js';
 import type { CommandContent } from './command-generation/index.js';
+import { collectSharedReferenceFiles } from './templates/sync-engine.js';
 
 export { MANAGED_STALE_INTERNAL_SKILL_DIR_NAMES } from './shared/skill-generation.js';
 
@@ -198,15 +199,14 @@ export function getPlannedToolArtifacts(
   }
 
   const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
+  const referenceFiles = collectSharedReferenceFiles(plan.skillTemplates).map((referenceFile) =>
+    path.join(projectPath, 'openspec', 'references', referenceFile.fileName)
+  );
   const skillFiles = plan.skillTemplates.flatMap((entry) => {
     const skillDir = path.join(skillsDir, entry.dirName);
-    return [
-      path.join(skillDir, 'SKILL.md'),
-      ...(entry.template.referenceFiles ?? []).map((referenceFile) =>
-        path.join(skillDir, referenceFile.path)
-      ),
-    ];
+    return [path.join(skillDir, 'SKILL.md')];
   });
+  skillFiles.push(...referenceFiles);
 
   if (!toolSupportsCommandGeneration(toolId)) {
     return { skillFiles, commandFiles: [] };

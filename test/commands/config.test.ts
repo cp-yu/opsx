@@ -201,14 +201,11 @@ propose:
 apply:
   defaultIsolation: branch
 git:
-  autoCommit: manual
-  archive:
-    commitMessage:
-      convention: openspec-archive
+  commitMessage:
+    archive: docs/archive.md
+    merge: docs/merge.md
   merge:
     strategy: squash
-    commitMessage:
-      convention: openspec-merge-summary
   branch:
     deleteAfterArchive: true
 rules:
@@ -236,17 +233,12 @@ rules:
         defaultIsolation: 'branch',
       },
       git: {
-        autoCommit: 'manual',
-        archive: {
-          commitMessage: {
-            convention: 'openspec-archive',
-          },
+        commitMessage: {
+          archive: 'docs/archive.md',
+          merge: 'docs/merge.md',
         },
         merge: {
           strategy: 'squash',
-          commitMessage: {
-            convention: 'openspec-merge-summary',
-          },
         },
         branch: {
           deleteAfterArchive: true,

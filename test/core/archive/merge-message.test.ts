@@ -15,14 +15,14 @@ describe('archive merge message runtime boundary', () => {
     expect(existsSync(join(projectRoot, 'src', 'core', 'archive', 'merge-message.ts'))).toBe(false);
   });
 
-  it('keeps message conventions in archive skill references', () => {
+  it('keeps message templates in archive skill references', () => {
     const template = getArchiveChangeSkillTemplate();
     const archiveReference = template.referenceFiles?.find((file) => file.path === 'references/archive-commit-message.md');
     const mergeReference = template.referenceFiles?.find((file) => file.path === 'references/merge-summary-message.md');
 
-    expect(archiveReference?.content).toContain('convention: openspec-archive');
+    expect(archiveReference?.content).toContain('git.commitMessage.archive');
     expect(archiveReference?.content).toContain('docs(<change-name>): 归档变更制品');
-    expect(mergeReference?.content).toContain('convention: openspec-merge-summary');
+    expect(mergeReference?.content).toContain('git.commitMessage.merge');
     expect(mergeReference?.content).toContain('<type>(<scope>): <中文标题>');
   });
 });

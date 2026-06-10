@@ -16,17 +16,13 @@ export interface NormalizedProjectConfig {
     defaultIsolation: 'ask' | 'branch' | 'worktree' | 'none';
   };
   git?: {
-    autoCommit: 'auto' | 'manual';
-    archive: {
-      commitMessage: {
-        convention: 'openspec-archive';
-      };
+    commitMessage?: {
+      boundary?: string;
+      archive?: string;
+      merge?: string;
     };
     merge: {
       strategy: 'no-ff' | 'ff-only' | 'squash';
-      commitMessage: {
-        convention: 'openspec-merge-summary';
-      };
     };
     branch: {
       deleteAfterArchive: boolean;
@@ -145,17 +141,9 @@ export function normalizeProjectConfig(config: ProjectConfig | null): Normalized
       : undefined,
     git: config.git
       ? {
-          autoCommit: config.git.autoCommit,
-          archive: {
-            commitMessage: {
-              convention: config.git.archive.commitMessage.convention,
-            },
-          },
+          ...(config.git.commitMessage ? { commitMessage: config.git.commitMessage } : {}),
           merge: {
             strategy: config.git.merge.strategy,
-            commitMessage: {
-              convention: config.git.merge.commitMessage.convention,
-            },
           },
           branch: {
             deleteAfterArchive: config.git.branch.deleteAfterArchive,
@@ -197,14 +185,19 @@ function buildArtifactRulesFragment(
 }
 
 function buildGitProjectionLines(git: NonNullable<NormalizedProjectConfig['git']>): string[] {
-  return [
-    `git.autoCommit: ${git.autoCommit}`,
-    'git.autoCommit semantics: auto means agent handoff after archive CLI; manual means user handoff after archive CLI',
-    `git.archive.commitMessage.convention: ${git.archive.commitMessage.convention}`,
-    `git.merge.strategy: ${git.merge.strategy}`,
-    `git.merge.commitMessage.convention: ${git.merge.commitMessage.convention}`,
-    `git.branch.deleteAfterArchive: ${git.branch.deleteAfterArchive}`,
-  ];
+  const lines: string[] = [];
+  if (git.commitMessage?.boundary) {
+    lines.push(`git.commitMessage.boundary: ${git.commitMessage.boundary}`);
+  }
+  if (git.commitMessage?.archive) {
+    lines.push(`git.commitMessage.archive: ${git.commitMessage.archive}`);
+  }
+  if (git.commitMessage?.merge) {
+    lines.push(`git.commitMessage.merge: ${git.commitMessage.merge}`);
+  }
+  lines.push(`git.merge.strategy: ${git.merge.strategy}`);
+  lines.push(`git.branch.deleteAfterArchive: ${git.branch.deleteAfterArchive}`);
+  return lines;
 }
 
 const projectionRules: ProjectionRule[] = [

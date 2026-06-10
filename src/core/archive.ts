@@ -15,8 +15,6 @@ import {
   formatVerifyGateFailure,
 } from './verify/freshness.js';
 import { selectActiveChange } from './change-utils.js';
-import { readProjectConfig } from './project-config.js';
-import { projectConfigForRuntime } from './config-projection.js';
 
 /**
  * Recursively copy a directory. Used when fs.rename fails (e.g. EPERM on Windows).
@@ -119,7 +117,7 @@ export class ArchiveCommand {
     }
 
     if (!activeChangeExists && archivePath) {
-      this.printGitHandoff(targetPath);
+      this.printGitHandoff();
       return;
     }
 
@@ -329,18 +327,11 @@ export class ArchiveCommand {
     await moveDirectory(changeDir, archivePath);
 
     console.log(`Change '${changeName}' archived as '${archiveName}'.`);
-    this.printGitHandoff(targetPath);
+    this.printGitHandoff();
   }
 
-  private printGitHandoff(projectRoot: string): void {
-    const projection = projectConfigForRuntime(readProjectConfig(projectRoot), { consumer: 'archive' });
-    const autoCommit = projection.git?.autoCommit ?? 'auto';
-    if (autoCommit === 'manual') {
-      console.log('Git handoff: git.autoCommit is manual; user handles git commits, merge, and cleanup.');
-      return;
-    }
-
-    console.log('Git handoff: git.autoCommit is auto; agent handles git commits, merge, and cleanup after archive.');
+  private printGitHandoff(): void {
+    console.log('Git handoff: agent handles git commits, merge, and cleanup after archive.');
   }
 
   private getArchiveDate(): string {

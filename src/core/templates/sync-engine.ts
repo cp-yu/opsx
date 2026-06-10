@@ -22,6 +22,7 @@ import {
   getManagedSkillDirNames,
 } from '../shared/skill-generation.js';
 import type { SkillTemplateEntry } from '../shared/skill-generation.js';
+import type { SkillTemplate } from './types.js';
 import { runTransforms } from './transforms/index.js';
 import {
   ALL_WORKFLOWS,
@@ -73,6 +74,17 @@ interface SkillWriteEntry {
   template: SkillTemplateEntry['template'];
   dirName: string;
   workflowId: string;
+}
+
+interface SharedReferenceSource {
+  template: Pick<SkillTemplate, 'referenceFiles'>;
+  workflowId: string;
+}
+
+export interface SharedReferenceFile {
+  fileName: string;
+  sourcePath: string;
+  content: string;
 }
 
 interface CommandWriteEntry {
@@ -159,6 +171,75 @@ function buildPlan(request: ArtifactSyncRequest): ToolSyncPlan | null {
   };
 }
 
+function toSharedReferenceFileName(referencePath: string): string {
+  const normalized = path.posix.normalize(referencePath);
+  if (
+    path.posix.isAbsolute(referencePath) ||
+    path.win32.isAbsolute(referencePath) ||
+    referencePath.includes('\\') ||
+    normalized === '..' ||
+    normalized.startsWith('../') ||
+    !normalized.startsWith('references/')
+  ) {
+    throw new Error(`Invalid skill reference path: ${referencePath}`);
+  }
+
+  return `openspec-${path.posix.basename(normalized)}`;
+}
+
+function assertToolNeutralReference(referencePath: string, content: string): void {
+  if (/\/opsx:|\$openspec-/.test(content)) {
+    throw new Error(`Tool-specific syntax in skill reference file: ${referencePath}`);
+  }
+}
+
+export function collectSharedReferenceFiles(
+  sources: readonly SharedReferenceSource[]
+): SharedReferenceFile[] {
+  const byFileName = new Map<string, string>();
+  const references: SharedReferenceFile[] = [];
+
+  for (const source of sources) {
+    for (const referenceFile of source.template.referenceFiles ?? []) {
+      const fileName = toSharedReferenceFileName(referenceFile.path);
+      const previousSource = byFileName.get(fileName);
+      if (previousSource) {
+        throw new Error(
+          `Duplicate skill reference file name: ${fileName} from ${previousSource} and ${source.workflowId}`
+        );
+      }
+
+      assertToolNeutralReference(referenceFile.path, referenceFile.content);
+      byFileName.set(fileName, source.workflowId);
+      references.push({
+        fileName,
+        sourcePath: referenceFile.path,
+        content: referenceFile.content,
+      });
+    }
+  }
+
+  return references;
+}
+
+async function writeSharedReferences(
+  projectPath: string,
+  references: readonly SharedReferenceFile[]
+): Promise<void> {
+  const referencesDir = path.join(projectPath, 'openspec', 'references');
+
+  for (const referenceFile of references) {
+    if (!referenceFile.fileName.startsWith('openspec-')) {
+      throw new Error(`Invalid managed reference file name: ${referenceFile.fileName}`);
+    }
+
+    await FileSystemUtils.writeFile(
+      path.join(referencesDir, referenceFile.fileName),
+      referenceFile.content
+    );
+  }
+}
+
 async function writeSkills(
   projectPath: string,
   skillsDir: string,
@@ -168,23 +249,13 @@ async function writeSkills(
 ): Promise<number> {
   let written = 0;
   const baseDir = path.join(projectPath, skillsDir, 'skills');
+  const sharedReferenceFiles = collectSharedReferenceFiles(entries);
+  await writeSharedReferences(projectPath, sharedReferenceFiles);
 
   for (const entry of entries) {
     const skillDir = path.join(baseDir, entry.dirName);
     const skillFile = path.join(skillDir, 'SKILL.md');
     const referencesDir = path.join(skillDir, 'references');
-    const referenceFiles = (entry.template.referenceFiles ?? []).map((referenceFile) => {
-      const referencePath = path.normalize(referenceFile.path);
-      if (
-        path.isAbsolute(referencePath) ||
-        referencePath.startsWith('..') ||
-        !referencePath.startsWith(`references${path.sep}`)
-      ) {
-        throw new Error(`Invalid skill reference path: ${referenceFile.path}`);
-      }
-
-      return { ...referenceFile, path: referencePath };
-    });
 
     const skillContent = generateSkillContent(entry.template, version, (instructions) =>
       runTransforms(instructions, {
@@ -196,19 +267,6 @@ async function writeSkills(
 
     await FileSystemUtils.writeFile(skillFile, skillContent);
     await fs.promises.rm(referencesDir, { recursive: true, force: true });
-
-    if (referenceFiles.length > 0) {
-      for (const referenceFile of referenceFiles) {
-        await FileSystemUtils.writeFile(
-          path.join(skillDir, referenceFile.path),
-          runTransforms(referenceFile.content, {
-            toolId,
-            workflowId: entry.workflowId,
-            artifactType: 'skill',
-          })
-        );
-      }
-    }
     written++;
   }
 
