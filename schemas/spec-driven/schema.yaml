@@ -187,14 +187,18 @@ artifacts:
       Required structure:
       - Create one `### Task N: <name>` section per component or coherent work unit
       - Each task MUST include `**Goal**:`, `**Files**:`, `**Requirements**:`, and `#### Checks`
-      - `Files` MUST use POSIX project-relative paths and label each path as `Create:`, `Modify:`, or `Test:`
+      - `Files` MUST use POSIX project-relative paths and label each path as `Create:`, `Modify:`, `Delete:`, or `Test:`
+      - File-level deletions (including moves and merges that produce deletions) use `Delete:` declaration; generated-surface changes (such as skill regeneration directories) should be declared at directory granularity
       - `Requirements` MUST contain no more than 5 bullet items per task; split complex work into multiple tasks
       - `Checks` are executable verification items and MUST use checkbox IDs prefixed with `C`: `- [ ] C1 Verify ...`
-      - Each check MUST include `Verifies:` before executable evidence fields, identifying the change-local spec requirement and scenario it verifies
+      - Each check MUST include `Verifies:` or `Preserves:` before executable evidence fields
+      - `Verifies:` identifies the change-local spec requirement and scenario(s); for deletion deliverables, use `Verifies: ... / REMOVED Requirement "<name>"` (no Scenario required)
+      - `Preserves:` anchors behavior-equivalence checks to main spec paths (`openspec/specs/<capability>/spec.md` / Requirement "<name>" / Scenario "<name>"), naming old forms in `Expect:` and absence assertion in `Command:`
       - Each check MUST include at least one executable evidence field: `Command:`, `Evidence:`, or `Expect:`
       - When this change has local delta specs, `Verifies:` MUST use a change-local relative POSIX path from the change directory: `specs/<capability>/spec.md`
-      - `Verifies:` MUST name the full Requirement title and one or more full Scenario names
+      - `Verifies:` MUST name the full Requirement title and one or more full Scenario names (except for REMOVED Requirement variant)
       - `Verifies:` MUST NOT use `openspec/specs/...`, project-root-relative paths, archived/main spec paths, absolute paths, parent traversal, or backslash-separated paths
+      - `Preserves:` path whitelist is independent: only `openspec/specs/<capability>/spec.md` is allowed; it does not relax `Verifies:` constraints
 
       Conversion rules:
       - Task titles, check names, requirements bullet prose, and Evidence:/Expect: descriptions follow `proseLanguage` when configured.
@@ -204,9 +208,11 @@ artifacts:
       - Put technical stack constraints and boundary conditions under Requirements, not free-form prose
       - Validation work maps to checks for invalid-input behavior
       - Bug fixes map to a check that reproduces the failure and proves the regression fix
-      - Refactors map to a before/after behavior-equivalence check
+      - Refactors map to a behavior-equivalence check: use `Preserves:` field anchoring a main spec requirement with scenarios, `Expect:` naming the old form (old symbol, old path, or old duplication), and `Command:` with corresponding absence assertion
+      - Deletion work maps to a check anchored by `Verifies: ... / REMOVED Requirement "<name>"` (no Scenario variant) with an absence assertion command
       - non-runtime text or non-runtime artifact changes do not require artificial failing tests, but still need at least one lightweight check with a non-empty `Verifies:` explaining how completion will be verified
       - config, schema, template, workflow template, and agent instruction template changes default to behavior Checks unless the task proves there is no runtime or generated-surface consumer
+      - Absence assertions (such as grep empty assertions after deletion) are handled by the non-runtime text fast path: use `Command:` output as final evidence, do not require artificial red/green form
       - Existing Actions/Checks files remain valid for older changes, but new changes SHOULD use the Task/Goal/Files/Requirements/Checks format
 
       Example:

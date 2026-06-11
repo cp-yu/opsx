@@ -1276,4 +1276,41 @@ context: Updated context
       }, 60000);
     });
   });
+
+  describe('tasks instructions content', () => {
+    it('includes deletion and refactor conversion rules', async () => {
+      const changeDir = await createTestChange('delete-refactor-change', ['proposal', 'specs', 'design']);
+
+      const result = await runCLI(['instructions', 'tasks', '--change', 'delete-refactor-change', '--json'], {
+        cwd: tempDir,
+      });
+      expect(result.exitCode).toBe(0);
+
+      const json = JSON.parse(result.stdout);
+      const instruction = json.instruction;
+
+      expect(instruction).toContain('REMOVED Requirement');
+      expect(instruction).toContain('Preserves');
+      expect(instruction).toContain('Delete:');
+      expect(instruction).toContain('Deletion work');
+      expect(instruction).toContain('Refactors map');
+      expect(instruction).toContain('absence assertion');
+    });
+
+    it('describes non-runtime text fast path', async () => {
+      const changeDir = await createTestChange('text-change', ['proposal', 'specs', 'design']);
+
+      const result = await runCLI(['instructions', 'tasks', '--change', 'text-change', '--json'], {
+        cwd: tempDir,
+      });
+      expect(result.exitCode).toBe(0);
+
+      const json = JSON.parse(result.stdout);
+      const instruction = json.instruction;
+
+      expect(instruction).toContain('non-runtime text');
+      expect(instruction).toContain('do not require artificial failing tests');
+      expect(instruction).toContain('Absence assertions');
+    });
+  });
 });
