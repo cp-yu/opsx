@@ -78,7 +78,7 @@
 - **WHEN** 刷新生成的 `.claude`、`.codex`、`.github` 工具产物
 - **THEN** 各 skill 声明的长协议 MUST 物化到 `openspec/references/openspec-<name>.md`
 - **AND** `openspec-apply-change` 的 Phase 2 优化协议 MUST 物化为 `openspec/references/openspec-apply-phase2-optimization.md`
-- **AND** `openspec-archive-change` 的 commit message 格式说明 MUST 物化为 `openspec/references/openspec-archive-commit-message.md` 与 `openspec/references/openspec-merge-summary-message.md`
+- **AND** `openspec-archive-change` 的 commit message 格式说明 MUST 物化为 `openspec/references/openspec-boundary-commit-message.md`、`openspec/references/openspec-archive-commit-message.md` 与 `openspec/references/openspec-merge-summary-message.md`
 - **AND** 主 `SKILL.md` MUST 保留入口、输入、边界和 reference 清单
 
 #### Scenario: 关键契约语义仍由现有测试保护
