@@ -48,18 +48,18 @@ Default stance: Strict. When uncertain: Escalate to CRITICAL when claimed work h
 ### Correctness
 判定模式按 Check 锚点类型分派：
 
-**存在性判定**（普通 \`Verifies\` 锚点）：
+**存在性判定** (\`Verifies\` 锚点):
 - Compare each requirement and Scenario against final code and tests.
 - If divergence detected: issue CRITICAL "Implementation contradicts spec".
 - Downgrade to WARNING only when drift is cosmetic and does not affect observable behavior.
 - If scenario coverage incomplete: issue CRITICAL "Scenario not covered". Scenario coverage gaps are not downgrade candidates.
 
-**缺失性判定**（\`Verifies ... REMOVED Requirement\` 锚点）：
+**缺失性判定** (\`Verifies ... REMOVED Requirement\` 锚点):
 - Use multi-angle search: search by symbol name, file path, and import reference.
 - Confirm absence: cite search commands and empty results as evidence for PASS.
 - 发现任何残留引用时，issue CRITICAL "REMOVED requirement residue found" 并引用 residue 位置。
 
-**等价性判定**（\`Preserves\` 锚点）：
+**等价性判定** (\`Preserves\` 锚点):
 - 双支验证：① 关联测试通过（行为不变）；② Check \`Expect:\` 点名的旧形态（old form）在最终代码中已消失。
 - 旧实现与新实现并存（coexist）时，issue CRITICAL "Half migration: old and new form coexist"。
 - 不得仅凭测试通过判定等价性。

@@ -223,7 +223,6 @@ function validateVerifies(
 
   if (!hasVerifies && !hasPreserves) {
     issues.push(error('missing-verifies', `Check ${item.id} is missing Verifies or Preserves.`, item.line));
-    return;
   }
 
   if (hasVerifies) {
@@ -424,14 +423,17 @@ function listChangeSpecFiles(changeDir: string): Set<string> {
   return files;
 }
 
-function isValidChangeSpecPath(specPath: string): boolean {
-  if (
+function hasInvalidPathChars(specPath: string): boolean {
+  return (
     specPath.includes('\\') ||
     specPath.startsWith('/') ||
     path.win32.isAbsolute(specPath) ||
-    specPath.startsWith('openspec/') ||
     specPath.includes('../')
-  ) {
+  );
+}
+
+function isValidChangeSpecPath(specPath: string): boolean {
+  if (hasInvalidPathChars(specPath) || specPath.startsWith('openspec/')) {
     return false;
   }
 
@@ -440,12 +442,7 @@ function isValidChangeSpecPath(specPath: string): boolean {
 }
 
 function isValidMainSpecPath(specPath: string): boolean {
-  if (
-    specPath.includes('\\') ||
-    specPath.startsWith('/') ||
-    path.win32.isAbsolute(specPath) ||
-    specPath.includes('../')
-  ) {
+  if (hasInvalidPathChars(specPath)) {
     return false;
   }
 

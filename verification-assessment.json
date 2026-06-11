@@ -1,0 +1,191 @@
+{
+  "changeName": "verify-task-genuine-completion",
+  "verificationTimestamp": "2026-06-11T19:30:00Z",
+  "result": "PASS",
+  "summary": {
+    "tasksTotal": 5,
+    "tasksVerified": 5,
+    "checksTotal": 12,
+    "checksVerified": 12,
+    "criticalIssuesFound": 0
+  },
+  "taskVerification": [
+    {
+      "taskId": "Task 1",
+      "title": "Parser 支持三类验证锚点",
+      "status": "PASS",
+      "checks": [
+        {
+          "checkId": "C1",
+          "title": "验证 REMOVED 锚定语法解析与交叉校验",
+          "status": "PASS",
+          "evidence": [
+            "test/core/parsers/task-structure.test.ts:314-426 - REMOVED requirement anchoring tests pass",
+            "src/core/parsers/task-structure.ts:370-391 - parseVerifies accepts REMOVED Requirement without Scenario",
+            "src/core/parsers/task-structure.ts:462-489 - parseSpecRequirements indexes REMOVED Requirements"
+          ]
+        },
+        {
+          "checkId": "C2",
+          "title": "验证 Preserves 字段解析与路径白名单",
+          "status": "PASS",
+          "evidence": [
+            "test/core/parsers/task-structure.test.ts:428-677 - Preserves field anchoring tests pass",
+            "src/core/parsers/task-structure.ts:313-368 - validatePreservesField with main spec path validation",
+            "src/core/parsers/task-structure.ts:442-460 - isValidMainSpecPath separate from isValidChangeSpecPath",
+            "src/core/parsers/task-structure.ts:393-404 - parsePreserves function"
+          ]
+        }
+      ]
+    },
+    {
+      "taskId": "Task 2",
+      "title": "Tasks 指令与模板支持删除/重构呈现",
+      "status": "PASS",
+      "checks": [
+        {
+          "checkId": "C3",
+          "title": "验证 tasks 指令包含删除与重构转换规则",
+          "status": "PASS",
+          "evidence": [
+            "test/commands/artifact-workflow.test.ts - tasks instructions content tests pass",
+            "schemas/spec-driven/schema.yaml:57-77 - tasks instruction includes REMOVED anchoring and Preserves equivalence rules",
+            "schemas/spec-driven/templates/tasks.md:21-57 - tasks template includes deletion and refactor examples with Delete: and REMOVED/Preserves anchors"
+          ]
+        },
+        {
+          "checkId": "C4",
+          "title": "验证缺失断言走非运行时快速路径",
+          "status": "PASS",
+          "evidence": [
+            "test/commands/artifact-workflow.test.ts - non-runtime text fast path test passes",
+            "schemas/spec-driven/schema.yaml:70-77 - instruction states absence assertions use Command output as final evidence without red/green"
+          ]
+        }
+      ]
+    },
+    {
+      "taskId": "Task 3",
+      "title": "Reviewer 模板分派判定与规格外检测",
+      "status": "PASS",
+      "checks": [
+        {
+          "checkId": "C5",
+          "title": "验证 reviewer 模板包含三类判定与 Delete 核对",
+          "status": "PASS",
+          "evidence": [
+            "test/skills/reviewer-skill-content.test.ts - all 6 tests pass",
+            ".claude/skills/openspec-reviewer/SKILL.md:44-61 - Correctness section contains three-anchor dispatch (存在性/缺失性/等价性判定)",
+            ".claude/skills/openspec-reviewer/SKILL.md:42 - Completeness includes Delete declaration cross-check",
+            ".codex/skills/openspec-reviewer/SKILL.md - identical content confirmed by parity test"
+          ]
+        },
+        {
+          "checkId": "C6",
+          "title": "验证规格外改动检测与归因宇宙",
+          "status": "PASS",
+          "evidence": [
+            "test/skills/reviewer-cleanliness-dimension.test.ts - all 7 tests pass",
+            ".claude/skills/openspec-reviewer/SKILL.md:77-89 - unaccounted changes detection with attribution universe defined",
+            "src/core/templates/workflows/reviewer.ts:77-94 - template source contains same attribution universe rules"
+          ]
+        },
+        {
+          "checkId": "C7",
+          "title": "验证 writeBackPlan 对规格外发现的扩展",
+          "status": "PASS",
+          "evidence": [
+            "test/skills/reviewer-summary-schema.test.ts - taskLine null test passes",
+            ".claude/skills/openspec-reviewer/SKILL.md:116 - writeBackPlan allows taskLine null for append_remediation action"
+          ]
+        },
+        {
+          "checkId": "C11",
+          "title": "验证 cleanliness 计数器扩展",
+          "status": "PASS",
+          "evidence": [
+            "test/skills/reviewer-summary-schema.test.ts - unaccountedChangesFound counter test passes",
+            ".claude/skills/openspec-reviewer/SKILL.md:112 - cleanliness summary includes unaccountedChangesFound field"
+          ]
+        }
+      ]
+    },
+    {
+      "taskId": "Task 4",
+      "title": "Verify 模板双骨架同步判定语义",
+      "status": "PASS",
+      "checks": [
+        {
+          "checkId": "C8",
+          "title": "验证 verify 模板双骨架包含 Correctness 分派判定",
+          "status": "PASS",
+          "evidence": [
+            "test/skills/verify-change-strictness.test.ts - C8 tests pass for both skeletons",
+            "src/core/templates/workflows/reviewer.ts:49-66 - subagent skeleton contains three-anchor dispatch in Correctness",
+            "src/core/templates/workflows/verify-change.ts:492-493,734 - reread skeleton mentions Delete cross-check"
+          ],
+          "note": "Reread skeleton uses reviewer subagent delegation pattern, inheriting three-anchor semantics from reviewer template"
+        },
+        {
+          "checkId": "C12",
+          "title": "验证 verify 模板双骨架包含 Completeness 扩展",
+          "status": "PASS",
+          "evidence": [
+            "test/skills/verify-change-strictness.test.ts - C12 tests pass for both skeletons",
+            "src/core/templates/workflows/verify-change.ts:506-513 - Spec Coverage by anchor type with REMOVED handling",
+            "src/core/templates/workflows/verify-change.ts:492-496 - Delete declaration cross-check in Completeness"
+          ]
+        }
+      ]
+    },
+    {
+      "taskId": "Task 5",
+      "title": "Skill 再生成与全链路回归",
+      "status": "PASS",
+      "checks": [
+        {
+          "checkId": "C9",
+          "title": "验证生成面一致性与集成回归",
+          "status": "PASS",
+          "evidence": [
+            "test/integration/reviewer-strictness.test.ts - all 5 integration tests pass",
+            "test/skills/ - all skill tests pass",
+            ".claude/skills/openspec-reviewer/SKILL.md metadata shows generatedBy: 1.2.0-cpyu.9",
+            "test/core/templates/skill-templates-parity.test.ts included in Files declaration"
+          ]
+        },
+        {
+          "checkId": "C10",
+          "title": "验证全量回归与 change 结构",
+          "status": "PASS",
+          "evidence": [
+            "pnpm test output: Test Files 132 passed (132), Tests 1996 passed (1996)",
+            "test/core/parsers/task-structure.test.ts:649-676 - Verifies path validation unchanged, rejects main spec paths",
+            "All Windows-related path tests pass (POSIX normalization, backslash rejection)"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementationFiles": [
+    "src/core/parsers/task-structure.ts",
+    "src/core/templates/workflows/reviewer.ts",
+    "src/core/templates/workflows/verify-change.ts",
+    "src/core/templates/fragments/opsx-fragments.ts",
+    "schemas/spec-driven/schema.yaml",
+    "schemas/spec-driven/templates/tasks.md",
+    ".claude/skills/openspec-reviewer/SKILL.md",
+    ".codex/skills/openspec-reviewer/SKILL.md"
+  ],
+  "testFiles": [
+    "test/core/parsers/task-structure.test.ts",
+    "test/commands/artifact-workflow.test.ts",
+    "test/skills/reviewer-skill-content.test.ts",
+    "test/skills/reviewer-cleanliness-dimension.test.ts",
+    "test/skills/reviewer-summary-schema.test.ts",
+    "test/skills/verify-change-strictness.test.ts",
+    "test/integration/reviewer-strictness.test.ts",
+    "test/core/templates/skill-templates-parity.test.ts"
+  ],
+  "issues": []
+}
