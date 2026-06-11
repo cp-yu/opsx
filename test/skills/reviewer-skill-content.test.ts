@@ -23,6 +23,34 @@ function normalizeSelfRead(content: string): string {
 }
 
 describe('openspec reviewer skill content', () => {
+  it('contains absence-check protocol for REMOVED anchors', () => {
+    const instructions = getReviewerSkillTemplate().instructions;
+
+    expect(instructions).toContain('REMOVED Requirement');
+    expect(instructions).toContain('multi-angle');
+    expect(instructions).toContain('symbol');
+    expect(instructions).toContain('import');
+    expect(instructions).toContain('residue');
+    expect(instructions).toContain('absence');
+  });
+
+  it('contains dual-branch equivalence check for Preserves anchors', () => {
+    const instructions = getReviewerSkillTemplate().instructions;
+
+    expect(instructions).toContain('Preserves');
+    expect(instructions).toContain('old form');
+    expect(instructions).toContain('half migration');
+    expect(instructions).toContain('coexist');
+  });
+
+  it('contains Delete declaration vs git diff cross-check in Completeness', () => {
+    const instructions = getReviewerSkillTemplate().instructions;
+
+    expect(instructions).toContain('Delete:');
+    expect(instructions).toContain('git diff <originalBranch>...HEAD');
+    expect(instructions).toContain('still exists');
+  });
+
   it('uses branch-aware name-only git scope instead of diff content', () => {
     const instructions = getReviewerSkillTemplate().instructions;
 

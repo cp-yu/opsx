@@ -33,4 +33,34 @@ describe('reviewer cleanliness dimension contract', () => {
     expect(instructions).toContain('Orphaned code, dead imports, stale TODOs, and half migrations: CRITICAL');
     expect(instructions).toContain('Unreachable code: WARNING');
   });
+
+  it('defines unaccounted change detection with attribution universe', () => {
+    const instructions = getReviewerSkillTemplate().instructions;
+
+    expect(instructions).toContain('unaccounted');
+    expect(instructions).toContain('attribution universe');
+    expect(instructions).toContain('Files');
+    expect(instructions).toContain('openspec/changes/');
+  });
+
+  it('escalates behavior code to CRITICAL and downgrades mechanical changes', () => {
+    const instructions = getReviewerSkillTemplate().instructions;
+
+    expect(instructions).toContain('behavior code');
+    expect(instructions).toContain('lockfile');
+    expect(instructions).toContain('WARNING');
+  });
+
+  it('requires POSIX path normalization for cross-platform attribution', () => {
+    const instructions = getReviewerSkillTemplate().instructions;
+
+    expect(instructions).toContain('POSIX');
+    expect(instructions).toContain('normalize');
+  });
+
+  it('supports directory-level attribution for generated files', () => {
+    const instructions = getReviewerSkillTemplate().instructions;
+
+    expect(instructions).toContain('directory');
+  });
 });

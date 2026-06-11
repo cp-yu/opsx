@@ -73,22 +73,22 @@
 
 #### Checks
 
-- [ ] C5 验证 reviewer 模板包含三类判定与 Delete 核对
+- [x] C5 验证 reviewer 模板包含三类判定与 Delete 核对
   - Verifies: `specs/openspec-reviewer-skill/spec.md` / Requirement "三个验证维度" / Scenario "缺失性判定要求多角度搜索后引用证据", "等价性判定不接受仅测试证据", "Delete 声明与 git diff 逐项核对"
   - Command: `npx vitest run test/skills/reviewer-skill-content.test.ts`
   - Expect: 模板文本含缺失性判定协议、双支等价判定、Delete 核对规则
 
-- [ ] C6 验证规格外改动检测与归因宇宙
+- [x] C6 验证规格外改动检测与归因宇宙
   - Verifies: `specs/reviewer-cleanliness-dimension/spec.md` / Requirement "规格外改动检测" / Scenario "无法归因的行为代码升级为 CRITICAL", "机械性良性改动降级", "生成面以目录粒度归因", "跨平台路径归因"
   - Command: `npx vitest run test/skills/reviewer-cleanliness-dimension.test.ts`
   - Expect: 模板含归因宇宙显式列表定义、严重级别分派与 POSIX 规范化比较要求
 
-- [ ] C7 验证 writeBackPlan 对规格外发现的扩展
+- [x] C7 验证 writeBackPlan 对规格外发现的扩展
   - Verifies: `specs/openspec-reviewer-skill/spec.md` / Requirement "结构化输出合约" / Scenario "规格外发现的 writeBackPlan 条目", "summary 包含 cleanliness 字段"
   - Command: `npx vitest run test/skills/reviewer-summary-schema.test.ts`
   - Expect: taskLine 可空仅限规格外发现条目且 action 为 append_remediation
 
-- [ ] C11 验证 cleanliness 计数器扩展
+- [x] C11 验证 cleanliness 计数器扩展
   - Verifies: `specs/reviewer-cleanliness-dimension/spec.md` / Requirement "Cleanliness summary schema 扩展" / Scenario "规格外改动计入计数器", "完整 cleanliness 检查输出"
   - Command: `npx vitest run test/skills/reviewer-summary-schema.test.ts`
   - Expect: schema 含 `unaccountedChangesFound` 且计数反映检测结果
