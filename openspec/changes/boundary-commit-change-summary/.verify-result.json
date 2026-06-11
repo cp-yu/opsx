@@ -1,0 +1,108 @@
+{
+  "timestamp": "2026-06-11T04:45:56.538Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "4cdcbdb6a72bba370f49fe370a7fdbf5f2bf55ca328115d7a3c4219af190989a",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      ".claude/skills/openspec-archive-change/SKILL.md",
+      ".codex/skills/openspec-archive-change/SKILL.md",
+      ".github/skills/openspec-archive-change/SKILL.md",
+      "openspec/references/openspec-boundary-commit-message.md",
+      "src/core/templates/workflows/archive-change.ts",
+      "test/core/templates/skill-templates-parity.test.ts",
+      "test/skills/archive-skill-content.test.ts"
+    ],
+    "evidenceFingerprint": "0de4ca8431dc13d278b61aee5818a88515a09e3e0c86a9f954d855721e5eb87c",
+    "evidenceFingerprintEntries": [
+      {
+        "path": ".claude/skills/openspec-archive-change/SKILL.md",
+        "hash": "3f06548c905ee4b57533915657dbcebc699f0976592655ee519cf2aab54d4fec"
+      },
+      {
+        "path": ".codex/skills/openspec-archive-change/SKILL.md",
+        "hash": "7cf8bf1904bdeaf7bead7830da5b77bbf478841931ef2cb6a733918c6f591272"
+      },
+      {
+        "path": ".github/skills/openspec-archive-change/SKILL.md",
+        "hash": "3f01a478bbf9e534f5d92a9849da9444438e597238df4a950785f8cf57139589"
+      },
+      {
+        "path": "openspec/references/openspec-boundary-commit-message.md",
+        "hash": "59e66c0267e6d7870624351866ab0b2bd803277866f5d5d7e40e59b3bd3e8b97"
+      },
+      {
+        "path": "src/core/templates/workflows/archive-change.ts",
+        "hash": "c223f49952217a53983975dde6fa52aa205c07d745e77e170a54ffe59d816ebd"
+      },
+      {
+        "path": "test/core/templates/skill-templates-parity.test.ts",
+        "hash": "62a6a0ab45b5e8524440f60d56a6fdb25b1a17a767fb3cb62175176338a98b3d"
+      },
+      {
+        "path": "test/skills/archive-skill-content.test.ts",
+        "hash": "d791013c7de463cdb9b399b26a7a14ac191197269bc33f0f9d87c6d48a51ffe7"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "89b4650c923a1a9a40966a3eda16d5446229e593"
+  },
+  "optimization": {
+    "status": "PENDING_VERIFICATION",
+    "attempts": [],
+    "baseline": {
+      "timestamp": "2026-06-11T04:45:56.538Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "4cdcbdb6a72bba370f49fe370a7fdbf5f2bf55ca328115d7a3c4219af190989a",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          ".claude/skills/openspec-archive-change/SKILL.md",
+          ".codex/skills/openspec-archive-change/SKILL.md",
+          ".github/skills/openspec-archive-change/SKILL.md",
+          "openspec/references/openspec-boundary-commit-message.md",
+          "src/core/templates/workflows/archive-change.ts",
+          "test/core/templates/skill-templates-parity.test.ts",
+          "test/skills/archive-skill-content.test.ts"
+        ],
+        "evidenceFingerprint": "0de4ca8431dc13d278b61aee5818a88515a09e3e0c86a9f954d855721e5eb87c",
+        "evidenceFingerprintEntries": [
+          {
+            "path": ".claude/skills/openspec-archive-change/SKILL.md",
+            "hash": "3f06548c905ee4b57533915657dbcebc699f0976592655ee519cf2aab54d4fec"
+          },
+          {
+            "path": ".codex/skills/openspec-archive-change/SKILL.md",
+            "hash": "7cf8bf1904bdeaf7bead7830da5b77bbf478841931ef2cb6a733918c6f591272"
+          },
+          {
+            "path": ".github/skills/openspec-archive-change/SKILL.md",
+            "hash": "3f01a478bbf9e534f5d92a9849da9444438e597238df4a950785f8cf57139589"
+          },
+          {
+            "path": "openspec/references/openspec-boundary-commit-message.md",
+            "hash": "59e66c0267e6d7870624351866ab0b2bd803277866f5d5d7e40e59b3bd3e8b97"
+          },
+          {
+            "path": "src/core/templates/workflows/archive-change.ts",
+            "hash": "c223f49952217a53983975dde6fa52aa205c07d745e77e170a54ffe59d816ebd"
+          },
+          {
+            "path": "test/core/templates/skill-templates-parity.test.ts",
+            "hash": "62a6a0ab45b5e8524440f60d56a6fdb25b1a17a767fb3cb62175176338a98b3d"
+          },
+          {
+            "path": "test/skills/archive-skill-content.test.ts",
+            "hash": "d791013c7de463cdb9b399b26a7a14ac191197269bc33f0f9d87c6d48a51ffe7"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "89b4650c923a1a9a40966a3eda16d5446229e593"
+      }
+    }
+  }
+}
