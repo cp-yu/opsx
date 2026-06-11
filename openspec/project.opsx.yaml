@@ -78,10 +78,10 @@ capabilities:
     intent: Propose 阶段的智能路由与 artifact 生成 guidance；生成 specs 时应用 schema content boundary，并消费共享 artifact language contract 而不增加额外 per-artifact language scan。
     type: capability
   - id: cap.ai.reviewer-cleanliness-dimension
-    intent: Cleanliness 维度的检测逻辑、severity 映射和跨语言工具适配策略，用于检测重构残留、孤儿代码、过时 TODO、半迁移等遗留物
+    intent: Cleanliness 维度的检测逻辑、severity 映射和跨语言工具适配策略，用于检测重构残留、孤儿代码、过时 TODO、半迁移等遗留物；新增规格外改动检测——以 task Files 声明（含目录条目）、Check 证据文件与 change 工件构成归因宇宙，diff 中无法归因的行为代码升级 CRITICAL，机械性良性改动降级
     type: capability
   - id: cap.ai.reviewer-skill
-    intent: Phase 1 验证审查 subagent skill。元规则从"不确定时降级"反转为"不确定时升级"，Correctness/Coherence trigger 强化（spec 偏离和设计违背升为 CRITICAL），新增 Cleanliness 维度检测，summary schema 扩展包含 cleanliness 指标
+    intent: Phase 1 验证审查 subagent skill。元规则从"不确定时降级"反转为"不确定时升级"，Correctness/Coherence trigger 强化（spec 偏离和设计违背升为 CRITICAL），新增 Cleanliness 维度检测，summary schema 扩展包含 cleanliness 指标。判定模式按 Check 锚点类型分派：Verifies 普通 requirement 执行存在性判定，REMOVED 锚点执行缺失性判定（残留即 CRITICAL），Preserves 锚点执行双支等价性判定（行为不变 ∧ 旧形态消失）；Completeness 对 Files Delete 声明与 git diff 逐项核对
     type: capability
   - id: cap.ai.skill-generation
     intent: AI 技能文件生成，包含 reviewer、optimizer、impact-sweeper 等仍被 workflow 引用的内部 skill；不生成 openspec-implementer，并通过显式 managed stale skill name 清理旧生成残留。
@@ -105,7 +105,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 提供 AI workflow 模板和 spec-driven artifact instructions；explore/propose/apply 三个核心工作流统一注入 OPSX 共享上下文（启动阶段整读 openspec/project.opsx.yaml 获取 project intent/scope 与全局结构，CLI 点查询作为节点细节补充）；archive workflow 模板在 CLI 归档后由 agent 无条件继续 git 流程，按 git.commitMessage.* 路径覆盖路由读取 openspec/references/ 下的 commit message 模板，实现边界为"残余 diff 提交（如有）→ 无条件 semantic boundary commit（完整 change 总结）→ OpenSpec/docs 归档制品提交"的顺序语义
+    intent: 提供 AI workflow 模板和 spec-driven artifact instructions；explore/propose/apply 三个核心工作流统一注入 OPSX 共享上下文（启动阶段整读 openspec/project.opsx.yaml 获取 project intent/scope 与全局结构，CLI 点查询作为节点细节补充）；archive workflow 模板在 CLI 归档后由 agent 无条件继续 git 流程，按 git.commitMessage.* 路径覆盖路由读取 openspec/references/ 下的 commit message 模板，实现边界为"残余 diff 提交（如有）→ 无条件 semantic boundary commit（完整 change 总结）→ OpenSpec/docs 归档制品提交"的顺序语义；tasks artifact instructions 定义三类验证锚点合约（Verifies/REMOVED 变体/Preserves）、Delete 文件标签与删除/重构任务转换规则
     type: capability
   - id: cap.apply.branch-isolation
     intent: Apply 阶段分支隔离策略由 apply.defaultIsolation 驱动；main/master 上仅 ask 模式询问用户，branch/worktree/none 配置直接执行并持久化 .apply-isolation.json。
@@ -114,7 +114,7 @@ capabilities:
     intent: apply 工作流中严格区分编码角色和判断角色；Master agent 负责严格 TDD 编码执行，reviewer/optimizer subagent 仅用于 clean-context 验证和优化判断，不用于编码执行。
     type: capability
   - id: cap.apply.task-decomposition
-    intent: Apply Phase 0 中 Master agent 直接读取 tasks.md、change-local specs、design 与项目代码上下文，但必须按 pending Check 执行严格 TDD。行为/代码 Check 需要 test first、预期失败、最小实现、通过确认后才勾选；非运行时文本制品只需最终证据。继续不生成 .apply-steps，也不 dispatch openspec-implementer。
+    intent: Apply Phase 0 中 Master agent 直接读取 tasks.md、change-local specs、design 与项目代码上下文，但必须按 pending Check 执行严格 TDD。行为/代码 Check 需要 test first、预期失败、最小实现、通过确认后才勾选；非运行时文本制品只需最终证据；缺失断言（删除交付物的 grep 空断言等）按非运行时快速路径以 Command 输出为最终证据。继续不生成 .apply-steps，也不 dispatch openspec-implementer。
     type: capability
   - id: cap.apply.verify-integration
     intent: apply 命令内置 Phase 1 一致性验证、Phase 2 优化循环和 Phase 3 seal；Phase 1 或 seal failure 写回 remediation 后进入同一 recovery loop，不因首次失败直接 pause。
@@ -335,7 +335,7 @@ capabilities:
     intent: sync 完成后自动刷新 .verify-result.json 中与 sync 输出重叠的 evidence 文件哈希，使 verify freshness 判决不受合法 sync 写入的影响
     type: capability
   - id: cap.validation.change
-    intent: 验证变更的完整性和结构，包括 delta spec section-type 与主 spec header 存在性的交叉验证，以及 tasks.md 中 Verifies 字段的确定性结构和 change-local spec 引用校验
+    intent: 验证变更的完整性和结构，包括 delta spec section-type 与主 spec header 存在性的交叉验证，以及 tasks.md 中 Verifies 字段的确定性结构和 change-local spec 引用校验；Verifies 支持 REMOVED 锚定语法变体（无 Scenario，交叉校验 REMOVED 区段条目），新增 Preserves 字段校验（仅主 spec 路径白名单，不放宽 Verifies）
     status: active
     type: capability
   - id: cap.validation.opsx

@@ -1,0 +1,219 @@
+{
+  "timestamp": "2026-06-11T11:57:05.728Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "2d107396f1599fc7c0a2be3b96db87281c6dacd5e814540f496b4c95c9ec60f7",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      ".claude/skills/openspec-reviewer/SKILL.md",
+      ".codex/skills/openspec-reviewer/SKILL.md",
+      "openspec/changes/verify-task-genuine-completion/design.md",
+      "openspec/changes/verify-task-genuine-completion/opsx-delta.yaml",
+      "openspec/changes/verify-task-genuine-completion/proposal.md",
+      "openspec/changes/verify-task-genuine-completion/specs/cli-artifact-workflow/spec.md",
+      "openspec/changes/verify-task-genuine-completion/specs/openspec-reviewer-skill/spec.md",
+      "openspec/changes/verify-task-genuine-completion/specs/opsx-verify-skill/spec.md",
+      "openspec/changes/verify-task-genuine-completion/specs/reviewer-cleanliness-dimension/spec.md",
+      "openspec/changes/verify-task-genuine-completion/tasks.md",
+      "schemas/spec-driven/schema.yaml",
+      "schemas/spec-driven/templates/tasks.md",
+      "src/core/parsers/task-structure.ts",
+      "src/core/shared/skill-generation.ts",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "src/core/templates/workflows/reviewer.ts",
+      "src/core/templates/workflows/verify-change.ts"
+    ],
+    "evidenceFingerprint": "0adf75cbc4411154287d0a111c454f01a7bb5e49eec3951a29e3a13d571d1569",
+    "evidenceFingerprintEntries": [
+      {
+        "path": ".claude/skills/openspec-reviewer/SKILL.md",
+        "hash": "3e6ac96e15c9c96408f6693da30f41bf0afb32e238ae48330bf825be818191eb"
+      },
+      {
+        "path": ".codex/skills/openspec-reviewer/SKILL.md",
+        "hash": "3e6ac96e15c9c96408f6693da30f41bf0afb32e238ae48330bf825be818191eb"
+      },
+      {
+        "path": "openspec/changes/verify-task-genuine-completion/design.md",
+        "hash": "0c145be507944386021ae20dfe3a0984eabd37c937f7c9dfef8222a100bcb2b8"
+      },
+      {
+        "path": "openspec/changes/verify-task-genuine-completion/opsx-delta.yaml",
+        "hash": "5bbabd5b0b59b688a54603fa7b49ff9e385e82f5214468ecd32854666267b85b"
+      },
+      {
+        "path": "openspec/changes/verify-task-genuine-completion/proposal.md",
+        "hash": "f9696e52534b7b9e656de87d7cc463c8d204e558f06cfe94be472c79044b4e17"
+      },
+      {
+        "path": "openspec/changes/verify-task-genuine-completion/specs/cli-artifact-workflow/spec.md",
+        "hash": "7cd209bb15652e373d64486f6816fbf8bb97a609584f373c890bb3779bea65ac"
+      },
+      {
+        "path": "openspec/changes/verify-task-genuine-completion/specs/openspec-reviewer-skill/spec.md",
+        "hash": "8f069bd5362974714d000f9b6cf13cba0b38c8b5a9926f9d194595cbf83f6992"
+      },
+      {
+        "path": "openspec/changes/verify-task-genuine-completion/specs/opsx-verify-skill/spec.md",
+        "hash": "7e0eb2d720127e77d4cc0b00a64561e69ad8177e3f5169a480be9e79060741fa"
+      },
+      {
+        "path": "openspec/changes/verify-task-genuine-completion/specs/reviewer-cleanliness-dimension/spec.md",
+        "hash": "decdc75e81d0a09e57cacba83adcd702faf3a612f59f78d49dc1484c80a6b12c"
+      },
+      {
+        "path": "openspec/changes/verify-task-genuine-completion/tasks.md",
+        "hash": "2d107396f1599fc7c0a2be3b96db87281c6dacd5e814540f496b4c95c9ec60f7"
+      },
+      {
+        "path": "schemas/spec-driven/schema.yaml",
+        "hash": "53234b5f4a2d26f84cf02124117ce12bfa78ad22381a758b8f236d89513e700b"
+      },
+      {
+        "path": "schemas/spec-driven/templates/tasks.md",
+        "hash": "d28523fd54cb77ff8089c459b49e90ef7267039801e43d515fed0fb22e562937"
+      },
+      {
+        "path": "src/core/parsers/task-structure.ts",
+        "hash": "c6b6155f469dab3de78844898b5a88f3f75a04f2e840f14e996e52b848fd4b95"
+      },
+      {
+        "path": "src/core/shared/skill-generation.ts",
+        "hash": "57cb724bdab2529d873edd0e125acf5e426161180d3e2811d6106d709b36bd51"
+      },
+      {
+        "path": "src/core/templates/fragments/opsx-fragments.ts",
+        "hash": "bb5165a909f62887b668342bc2a8fd34756d576aefd413126ef78dbe5ee19090"
+      },
+      {
+        "path": "src/core/templates/workflows/reviewer.ts",
+        "hash": "e0141087b53dc77d27d02604a9d106201e177e1dbdececdd894860210da94ea0"
+      },
+      {
+        "path": "src/core/templates/workflows/verify-change.ts",
+        "hash": "41908ae638be73a34b1db5f502ea4ac9b46d523804e8d84567b8b4f7152617d4"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "e852883e54eeda9e8a5cf4493bfbec7f9bef32aa"
+  },
+  "optimization": {
+    "status": "IMPROVED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-11T11:57:37.936Z",
+        "type": "verification",
+        "result": "PASS",
+        "behaviorRetryCounter": 1
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-06-11T11:57:05.728Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "2d107396f1599fc7c0a2be3b96db87281c6dacd5e814540f496b4c95c9ec60f7",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          ".claude/skills/openspec-reviewer/SKILL.md",
+          ".codex/skills/openspec-reviewer/SKILL.md",
+          "openspec/changes/verify-task-genuine-completion/design.md",
+          "openspec/changes/verify-task-genuine-completion/opsx-delta.yaml",
+          "openspec/changes/verify-task-genuine-completion/proposal.md",
+          "openspec/changes/verify-task-genuine-completion/specs/cli-artifact-workflow/spec.md",
+          "openspec/changes/verify-task-genuine-completion/specs/openspec-reviewer-skill/spec.md",
+          "openspec/changes/verify-task-genuine-completion/specs/opsx-verify-skill/spec.md",
+          "openspec/changes/verify-task-genuine-completion/specs/reviewer-cleanliness-dimension/spec.md",
+          "openspec/changes/verify-task-genuine-completion/tasks.md",
+          "schemas/spec-driven/schema.yaml",
+          "schemas/spec-driven/templates/tasks.md",
+          "src/core/parsers/task-structure.ts",
+          "src/core/shared/skill-generation.ts",
+          "src/core/templates/fragments/opsx-fragments.ts",
+          "src/core/templates/workflows/reviewer.ts",
+          "src/core/templates/workflows/verify-change.ts"
+        ],
+        "evidenceFingerprint": "0adf75cbc4411154287d0a111c454f01a7bb5e49eec3951a29e3a13d571d1569",
+        "evidenceFingerprintEntries": [
+          {
+            "path": ".claude/skills/openspec-reviewer/SKILL.md",
+            "hash": "3e6ac96e15c9c96408f6693da30f41bf0afb32e238ae48330bf825be818191eb"
+          },
+          {
+            "path": ".codex/skills/openspec-reviewer/SKILL.md",
+            "hash": "3e6ac96e15c9c96408f6693da30f41bf0afb32e238ae48330bf825be818191eb"
+          },
+          {
+            "path": "openspec/changes/verify-task-genuine-completion/design.md",
+            "hash": "0c145be507944386021ae20dfe3a0984eabd37c937f7c9dfef8222a100bcb2b8"
+          },
+          {
+            "path": "openspec/changes/verify-task-genuine-completion/opsx-delta.yaml",
+            "hash": "5bbabd5b0b59b688a54603fa7b49ff9e385e82f5214468ecd32854666267b85b"
+          },
+          {
+            "path": "openspec/changes/verify-task-genuine-completion/proposal.md",
+            "hash": "f9696e52534b7b9e656de87d7cc463c8d204e558f06cfe94be472c79044b4e17"
+          },
+          {
+            "path": "openspec/changes/verify-task-genuine-completion/specs/cli-artifact-workflow/spec.md",
+            "hash": "7cd209bb15652e373d64486f6816fbf8bb97a609584f373c890bb3779bea65ac"
+          },
+          {
+            "path": "openspec/changes/verify-task-genuine-completion/specs/openspec-reviewer-skill/spec.md",
+            "hash": "8f069bd5362974714d000f9b6cf13cba0b38c8b5a9926f9d194595cbf83f6992"
+          },
+          {
+            "path": "openspec/changes/verify-task-genuine-completion/specs/opsx-verify-skill/spec.md",
+            "hash": "7e0eb2d720127e77d4cc0b00a64561e69ad8177e3f5169a480be9e79060741fa"
+          },
+          {
+            "path": "openspec/changes/verify-task-genuine-completion/specs/reviewer-cleanliness-dimension/spec.md",
+            "hash": "decdc75e81d0a09e57cacba83adcd702faf3a612f59f78d49dc1484c80a6b12c"
+          },
+          {
+            "path": "openspec/changes/verify-task-genuine-completion/tasks.md",
+            "hash": "2d107396f1599fc7c0a2be3b96db87281c6dacd5e814540f496b4c95c9ec60f7"
+          },
+          {
+            "path": "schemas/spec-driven/schema.yaml",
+            "hash": "53234b5f4a2d26f84cf02124117ce12bfa78ad22381a758b8f236d89513e700b"
+          },
+          {
+            "path": "schemas/spec-driven/templates/tasks.md",
+            "hash": "d28523fd54cb77ff8089c459b49e90ef7267039801e43d515fed0fb22e562937"
+          },
+          {
+            "path": "src/core/parsers/task-structure.ts",
+            "hash": "c6b6155f469dab3de78844898b5a88f3f75a04f2e840f14e996e52b848fd4b95"
+          },
+          {
+            "path": "src/core/shared/skill-generation.ts",
+            "hash": "57cb724bdab2529d873edd0e125acf5e426161180d3e2811d6106d709b36bd51"
+          },
+          {
+            "path": "src/core/templates/fragments/opsx-fragments.ts",
+            "hash": "bb5165a909f62887b668342bc2a8fd34756d576aefd413126ef78dbe5ee19090"
+          },
+          {
+            "path": "src/core/templates/workflows/reviewer.ts",
+            "hash": "e0141087b53dc77d27d02604a9d106201e177e1dbdececdd894860210da94ea0"
+          },
+          {
+            "path": "src/core/templates/workflows/verify-change.ts",
+            "hash": "41908ae638be73a34b1db5f502ea4ac9b46d523804e8d84567b8b4f7152617d4"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "e852883e54eeda9e8a5cf4493bfbec7f9bef32aa"
+      }
+    },
+    "final": {
+      "result": "PASS",
+      "issues": []
+    }
+  }
+}
