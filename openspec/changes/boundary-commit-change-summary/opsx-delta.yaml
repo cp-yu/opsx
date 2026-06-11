@@ -1,0 +1,7 @@
+schema_version: 1
+MODIFIED:
+  capabilities:
+    - id: cap.archive.branch-merge
+      intent: 归档后的 git commit、merge 与 branch cleanup 由 agent 无条件继续处理；agent 先提交残余实现 diff（如有），再无条件创建 --allow-empty 的 semantic boundary commit 承载完整 change 总结（Why/Changes + Implementation footer），随后提交归档制品；message 模板按 git.commitMessage.* 路径覆盖或 openspec/references/ 内置模板路由
+    - id: cap.ai.workflow-templates
+      intent: 提供 AI workflow 模板和 spec-driven artifact instructions；explore/propose/apply 三个核心工作流统一注入 OPSX 共享上下文（启动阶段整读 openspec/project.opsx.yaml 获取 project intent/scope 与全局结构，CLI 点查询作为节点细节补充）；archive workflow 模板在 CLI 归档后由 agent 无条件继续 git 流程，按 git.commitMessage.* 路径覆盖路由读取 openspec/references/ 下的 commit message 模板，实现边界为"残余 diff 提交（如有）→ 无条件 semantic boundary commit（完整 change 总结）→ OpenSpec/docs 归档制品提交"的顺序语义

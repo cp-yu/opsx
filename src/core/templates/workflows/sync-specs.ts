@@ -144,7 +144,7 @@ Treat \`openspec/config.yaml\` as the compact source of truth and follow the sha
 
    For each capability with a delta spec at \`openspec/changes/<name>/specs/<capability>/spec.md\`, read the delta spec and the main spec at \`openspec/specs/<capability>/spec.md\` if it exists.
 
-   Follow references/merge-rules.md for ADDED, MODIFIED, REMOVED, RENAMED, and new main spec handling.
+   Follow openspec/references/openspec-merge-rules.md for ADDED, MODIFIED, REMOVED, RENAMED, and new main spec handling.
 
 4. **Sync OPSX delta**
 
@@ -163,9 +163,9 @@ ${OPSX_SYNC_DELTA}
 
 Read these before editing specs:
 
-- references/delta-format.md
-- references/merge-rules.md
-- references/output-example.md`,
+- openspec/references/openspec-delta-format.md
+- openspec/references/openspec-merge-rules.md
+- openspec/references/openspec-output-example.md`,
     referenceFiles: [
       {
         path: 'references/delta-format.md',

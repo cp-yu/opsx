@@ -18,26 +18,22 @@ import {
 } from '../../src/core/config-projection.js';
 
 function gitConfig({
-  autoCommit = 'auto',
   strategy = 'no-ff',
   deleteAfterArchive = false,
+  commitMessage,
 }: {
-  autoCommit?: 'auto' | 'manual';
   strategy?: 'no-ff' | 'ff-only' | 'squash';
   deleteAfterArchive?: boolean;
+  commitMessage?: {
+    boundary?: string;
+    archive?: string;
+    merge?: string;
+  };
 } = {}) {
   return {
-    autoCommit,
-    archive: {
-      commitMessage: {
-        convention: 'openspec-archive',
-      },
-    },
+    ...(commitMessage ? { commitMessage } : {}),
     merge: {
       strategy,
-      commitMessage: {
-        convention: 'openspec-merge-summary',
-      },
     },
     branch: {
       deleteAfterArchive,
@@ -149,11 +145,11 @@ context: keep me
       expect(parsed.context).toBe('keep me');
       expect(parsed.optimization.enabled).toBe(false);
       expect(parsed.optimization.optRetries).toBe(2);
-      expect(parsed.git.autoCommit).toBe('auto');
-      expect(parsed.git.archive.commitMessage.convention).toBe('openspec-archive');
       expect(parsed.git.merge.strategy).toBe('squash');
-      expect(parsed.git.merge.commitMessage.convention).toBe('openspec-merge-summary');
       expect(parsed.git.branch.deleteAfterArchive).toBe(false);
+      expect(parsed.git).not.toHaveProperty('autoCommit');
+      expect(parsed.git).not.toHaveProperty('archive');
+      expect(parsed.git.merge).not.toHaveProperty('commitMessage');
       expect(parsed).not.toHaveProperty('propose');
       expect(parsed.apply.defaultIsolation).toBe('ask');
     });
@@ -427,14 +423,12 @@ apply:
           path.join(configDir, 'config.yaml'),
           `schema: spec-driven
 git:
-  autoCommit: manual
-  archive:
-    commitMessage:
-      convention: openspec-archive
+  commitMessage:
+    boundary: docs/boundary.md
+    archive: docs/archive.md
+    merge: docs/merge.md
   merge:
     strategy: squash
-    commitMessage:
-      convention: openspec-merge-summary
   branch:
     deleteAfterArchive: true
 `
@@ -444,7 +438,15 @@ git:
 
         expect(config).toEqual({
           schema: 'spec-driven',
-          git: gitConfig({ autoCommit: 'manual', strategy: 'squash', deleteAfterArchive: true }),
+          git: gitConfig({
+            strategy: 'squash',
+            deleteAfterArchive: true,
+            commitMessage: {
+              boundary: 'docs/boundary.md',
+              archive: 'docs/archive.md',
+              merge: 'docs/merge.md',
+            },
+          }),
         });
         expect(consoleWarnSpy).not.toHaveBeenCalled();
       });
@@ -488,14 +490,18 @@ git:
           path.join(configDir, 'config.yaml'),
           `schema: spec-driven
 git:
-  autoCommit: archive-only
+  autoCommit: manual
+  commitMessage:
+    boundary: /absolute.md
+    archive: ../archive.md
+    merge: docs\\merge.md
   archive:
     commitMessage:
-      convention: invalid-archive
+      convention: openspec-archive
   merge:
     strategy: rebase
     commitMessage:
-      convention: invalid-merge
+      convention: openspec-merge-summary
   branch:
     deleteAfterArchive: "true"
 `
@@ -505,16 +511,25 @@ git:
 
         expect(config?.git).toEqual(gitConfig());
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          'git.autoCommit must be one of: auto, manual'
+          'git.autoCommit is deprecated and ignored; archive handoff is always handled by the agent'
         );
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          'git.archive.commitMessage.convention must be one of: openspec-archive'
+          'git.archive.commitMessage.convention is deprecated and ignored; use git.commitMessage.archive for path overrides'
+        );
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          'git.merge.commitMessage.convention is deprecated and ignored; use git.commitMessage.merge for path overrides'
+        );
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          'git.commitMessage.boundary must be a POSIX relative path without ..'
+        );
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          'git.commitMessage.archive must be a POSIX relative path without ..'
+        );
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          'git.commitMessage.merge must be a POSIX relative path without ..'
         );
         expect(consoleWarnSpy).toHaveBeenCalledWith(
           'git.merge.strategy must be one of: no-ff, ff-only, squash'
-        );
-        expect(consoleWarnSpy).toHaveBeenCalledWith(
-          'git.merge.commitMessage.convention must be one of: openspec-merge-summary'
         );
         expect(consoleWarnSpy).toHaveBeenCalledWith(
           'git.branch.deleteAfterArchive must be boolean'
@@ -1062,7 +1077,14 @@ rules:
           defaultIsolation: 'worktree',
         },
         git: {
-          ...gitConfig({ autoCommit: 'manual', strategy: 'squash', deleteAfterArchive: true }),
+          ...gitConfig({
+            strategy: 'squash',
+            deleteAfterArchive: true,
+            commitMessage: {
+              archive: 'docs/archive.md',
+              merge: 'docs/merge.md',
+            },
+          }),
         },
         rules: {
           proposal: ['  Rule 1  ', ' ', 'Rule 2'],
@@ -1086,7 +1108,14 @@ rules:
           defaultIsolation: 'worktree',
         },
         git: {
-          ...gitConfig({ autoCommit: 'manual', strategy: 'squash', deleteAfterArchive: true }),
+          ...gitConfig({
+            strategy: 'squash',
+            deleteAfterArchive: true,
+            commitMessage: {
+              archive: 'docs/archive.md',
+              merge: 'docs/merge.md',
+            },
+          }),
         },
         rules: {
           proposal: ['Rule 1', 'Rule 2'],
@@ -1147,11 +1176,7 @@ rules:
           key: 'git',
           scope: 'global',
           lines: [
-            'git.autoCommit: auto',
-            'git.autoCommit semantics: auto means agent handoff after archive CLI; manual means user handoff after archive CLI',
-            'git.archive.commitMessage.convention: openspec-archive',
             'git.merge.strategy: no-ff',
-            'git.merge.commitMessage.convention: openspec-merge-summary',
             'git.branch.deleteAfterArchive: false',
           ],
         }),
@@ -1163,7 +1188,14 @@ rules:
         {
           schema: 'spec-driven',
         git: {
-          ...gitConfig({ autoCommit: 'manual', strategy: 'squash', deleteAfterArchive: true }),
+          ...gitConfig({
+            strategy: 'squash',
+            deleteAfterArchive: true,
+            commitMessage: {
+              archive: 'docs/archive.md',
+              merge: 'docs/merge.md',
+            },
+          }),
         },
           rules: {},
         },
@@ -1175,11 +1207,9 @@ rules:
           key: 'git',
           scope: 'global',
           lines: [
-            'git.autoCommit: manual',
-            'git.autoCommit semantics: auto means agent handoff after archive CLI; manual means user handoff after archive CLI',
-            'git.archive.commitMessage.convention: openspec-archive',
+            'git.commitMessage.archive: docs/archive.md',
+            'git.commitMessage.merge: docs/merge.md',
             'git.merge.strategy: squash',
-            'git.merge.commitMessage.convention: openspec-merge-summary',
             'git.branch.deleteAfterArchive: true',
           ],
         }),
@@ -1191,7 +1221,15 @@ rules:
         {
           schema: 'spec-driven',
         git: {
-          ...gitConfig({ autoCommit: 'manual', strategy: 'squash', deleteAfterArchive: true }),
+          ...gitConfig({
+            strategy: 'squash',
+            deleteAfterArchive: true,
+            commitMessage: {
+              boundary: 'docs/boundary.md',
+              archive: 'docs/archive.md',
+              merge: 'docs/merge.md',
+            },
+          }),
         },
           rules: {},
         },
@@ -1199,18 +1237,25 @@ rules:
       );
 
       expect(projection.git).toEqual({
-        ...gitConfig({ autoCommit: 'manual', strategy: 'squash', deleteAfterArchive: true }),
+        ...gitConfig({
+          strategy: 'squash',
+          deleteAfterArchive: true,
+          commitMessage: {
+            boundary: 'docs/boundary.md',
+            archive: 'docs/archive.md',
+            merge: 'docs/merge.md',
+          },
+        }),
       });
       expect(projection.fragments).toEqual([
         expect.objectContaining({
           key: 'git',
           scope: 'global',
           lines: [
-            'git.autoCommit: manual',
-            'git.autoCommit semantics: auto means agent handoff after archive CLI; manual means user handoff after archive CLI',
-            'git.archive.commitMessage.convention: openspec-archive',
+            'git.commitMessage.boundary: docs/boundary.md',
+            'git.commitMessage.archive: docs/archive.md',
+            'git.commitMessage.merge: docs/merge.md',
             'git.merge.strategy: squash',
-            'git.merge.commitMessage.convention: openspec-merge-summary',
             'git.branch.deleteAfterArchive: true',
           ],
         }),

@@ -118,7 +118,7 @@ describe('ArchiveCommand', () => {
       await expect(fs.access(changeDir)).rejects.toThrow();
     });
 
-    it('prints agent handoff reminder for auto git mode without recommended commit message', async () => {
+    it('prints agent handoff reminder for legacy auto git mode without recommended commit message', async () => {
       const changeName = 'auto-handoff';
       const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
       await fs.mkdir(changeDir, { recursive: true });
@@ -131,7 +131,7 @@ git:
       await archiveCommand.execute(changeName, { yes: true, noVerify: true });
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Git handoff: git.autoCommit is auto')
+        expect.stringContaining('Git handoff: agent handles git commits, merge, and cleanup after archive.')
       );
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining('agent')
@@ -141,7 +141,7 @@ git:
       );
     });
 
-    it('prints user handoff reminder for manual git mode without recommended commit message', async () => {
+    it('prints agent handoff reminder for legacy manual git mode without recommended commit message', async () => {
       const changeName = 'manual-handoff';
       const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
       await fs.mkdir(changeDir, { recursive: true });
@@ -154,10 +154,7 @@ git:
       await archiveCommand.execute(changeName, { yes: true, noVerify: true });
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Git handoff: git.autoCommit is manual')
-      );
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('user')
+        expect.stringContaining('Git handoff: agent handles git commits, merge, and cleanup after archive.')
       );
       expect(console.log).not.toHaveBeenCalledWith(
         expect.stringContaining(`docs(${changeName}): 归档变更制品`)
@@ -1354,7 +1351,7 @@ E1 updated`);
         expect.stringContaining('Branch switch')
       );
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Git handoff: git.autoCommit is auto')
+        expect.stringContaining('Git handoff: agent handles git commits, merge, and cleanup after archive.')
       );
       const archiveDir = path.join(tempDir, 'openspec', 'changes', 'archive');
       const [archiveName] = (await fs.readdir(archiveDir)).filter((entry) => entry.includes(changeName));

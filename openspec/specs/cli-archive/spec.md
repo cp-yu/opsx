@@ -232,21 +232,16 @@ When `openspec archive` performs embedded spec sync, any generated or rebuilt ar
 - **AND** SHALL NOT generate archive or merge commit messages
 
 ### Requirement: Archive CLI 输出 git handoff 提醒
-`openspec archive` 在完成 verify、sync 与 move-to-archive 后 SHALL 读取 normalized project config 中的 `git.autoCommit`，并输出后续 git 工作的责任归属提醒。
 
-#### Scenario: auto 模式提醒 agent 接管
+`openspec archive` 在完成 verify、sync 与 move-to-archive 后 SHALL 输出后续 git 工作由 agent 自动继续的责任归属提醒，不再读取或区分任何 handoff 模式配置。
+
+#### Scenario: 归档完成后提醒 agent 接管
+
 - **WHEN** `openspec archive <change>` 完成归档
-- **AND** normalized project config 中 `git.autoCommit` 为 `auto`
 - **THEN** CLI SHALL 输出归档已完成
 - **AND** SHALL 提醒后续 git 提交流程由 agent 自动继续处理
 - **AND** SHALL NOT 输出任何推荐 commit message
-
-#### Scenario: manual 模式提醒用户手动处理
-- **WHEN** `openspec archive <change>` 完成归档
-- **AND** normalized project config 中 `git.autoCommit` 为 `manual`
-- **THEN** CLI SHALL 输出归档已完成
-- **AND** SHALL 提醒后续 git 提交流程由用户手动处理
-- **AND** SHALL NOT 输出任何推荐 commit message
+- **AND** SHALL NOT 读取 `git.autoCommit` 配置
 
 ## Why These Decisions
 

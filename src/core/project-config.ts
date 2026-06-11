@@ -19,17 +19,8 @@ export const PROJECT_CONFIG_FUNCTIONAL_DEFAULTS = {
     defaultIsolation: 'ask' as const,
   },
   git: {
-    autoCommit: 'auto' as const,
-    archive: {
-      commitMessage: {
-        convention: 'openspec-archive' as const,
-      },
-    },
     merge: {
       strategy: 'no-ff' as const,
-      commitMessage: {
-        convention: 'openspec-merge-summary' as const,
-      },
     },
     branch: {
       deleteAfterArchive: false,
@@ -46,10 +37,20 @@ export type ProjectConfigDefaultsMigrationResult =
   | { status: 'skipped'; path: string; reason: 'invalid-yaml' | 'non-object' };
 
 const gitMergeStrategyField = z.enum(['no-ff', 'ff-only', 'squash']);
-const gitAutoCommitField = z.enum(['auto', 'manual']);
-const gitArchiveCommitConventionField = z.enum(['openspec-archive']);
-const gitMergeCommitConventionField = z.enum(['openspec-merge-summary']);
 const gitDeleteAfterArchiveField = z.boolean();
+const gitCommitMessagePathField = z
+  .string()
+  .min(1)
+  .refine((value) => {
+    const normalized = path.posix.normalize(value);
+    return (
+      !path.posix.isAbsolute(value) &&
+      !path.win32.isAbsolute(value) &&
+      !value.includes('\\') &&
+      normalized !== '..' &&
+      !normalized.startsWith('../')
+    );
+  });
 
 /**
  * Zod schema for project configuration.
@@ -119,30 +120,19 @@ export const ProjectConfigSchema = z.object({
   // Optional: git archive/merge policy
   git: z
     .object({
-      autoCommit: z.enum(['auto', 'manual']).optional().default('auto'),
-      archive: z
+      commitMessage: z
         .object({
-          commitMessage: z
-            .object({
-              convention: z.enum(['openspec-archive']).optional().default('openspec-archive'),
-            })
-            .optional()
-            .default({ convention: 'openspec-archive' }),
+          boundary: gitCommitMessagePathField.optional(),
+          archive: gitCommitMessagePathField.optional(),
+          merge: gitCommitMessagePathField.optional(),
         })
-        .optional()
-        .default({ commitMessage: { convention: 'openspec-archive' } }),
+        .optional(),
       merge: z
         .object({
           strategy: z.enum(['no-ff', 'ff-only', 'squash']).optional().default('no-ff'),
-          commitMessage: z
-            .object({
-              convention: z.enum(['openspec-merge-summary']).optional().default('openspec-merge-summary'),
-            })
-            .optional()
-            .default({ convention: 'openspec-merge-summary' }),
         })
         .optional()
-        .default({ strategy: 'no-ff', commitMessage: { convention: 'openspec-merge-summary' } }),
+        .default({ strategy: 'no-ff' }),
       branch: z
         .object({
           deleteAfterArchive: z.boolean().optional().default(false),
@@ -183,17 +173,8 @@ function cloneFunctionalDefaults() {
       ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.apply,
     },
     git: {
-      autoCommit: PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.autoCommit,
-      archive: {
-        commitMessage: {
-          ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.archive.commitMessage,
-        },
-      },
       merge: {
         ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.merge,
-        commitMessage: {
-          ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.merge.commitMessage,
-        },
       },
       branch: {
         ...PROJECT_CONFIG_FUNCTIONAL_DEFAULTS.git.branch,
@@ -299,11 +280,14 @@ export function migrateProjectConfigDefaults(projectRoot: string): ProjectConfig
   changed = setMissingPath(document, ['optimization', 'enabled'], defaults.optimization.enabled) || changed;
   changed = setMissingPath(document, ['optimization', 'optRetries'], defaults.optimization.optRetries) || changed;
   changed = setMissingPath(document, ['apply', 'defaultIsolation'], defaults.apply.defaultIsolation) || changed;
-  changed = setMissingPath(document, ['git', 'autoCommit'], defaults.git.autoCommit) || changed;
-  changed = setMissingPath(document, ['git', 'archive', 'commitMessage', 'convention'], defaults.git.archive.commitMessage.convention) || changed;
+  changed = deletePath(document, ['git', 'autoCommit']) || changed;
+  changed = deletePath(document, ['git', 'archive', 'commitMessage', 'convention']) || changed;
+  changed = deletePath(document, ['git', 'archive', 'commitMessage']) || changed;
+  changed = deletePath(document, ['git', 'archive']) || changed;
   changed = setMissingPath(document, ['git', 'merge', 'strategy'], defaults.git.merge.strategy) || changed;
   changed = deletePath(document, ['git', 'merge', 'messageFrom']) || changed;
-  changed = setMissingPath(document, ['git', 'merge', 'commitMessage', 'convention'], defaults.git.merge.commitMessage.convention) || changed;
+  changed = deletePath(document, ['git', 'merge', 'commitMessage', 'convention']) || changed;
+  changed = deletePath(document, ['git', 'merge', 'commitMessage']) || changed;
   changed = setMissingPath(document, ['git', 'branch', 'deleteAfterArchive'], defaults.git.branch.deleteAfterArchive) || changed;
 
   if (!changed) {
@@ -457,11 +441,33 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
         const rawGit = raw.git;
 
         if (rawGit.autoCommit !== undefined) {
-          const autoCommitResult = gitAutoCommitField.safeParse(rawGit.autoCommit);
-          if (autoCommitResult.success) {
-            gitConfig.autoCommit = autoCommitResult.data;
+          console.warn(
+            'git.autoCommit is deprecated and ignored; archive handoff is always handled by the agent'
+          );
+        }
+
+        if (rawGit.commitMessage !== undefined) {
+          if (isPlainRecord(rawGit.commitMessage)) {
+            const commitMessage: NonNullable<ProjectConfig['git']>['commitMessage'] = {};
+            for (const key of ['boundary', 'archive', 'merge'] as const) {
+              const value = rawGit.commitMessage[key];
+              if (value === undefined) {
+                continue;
+              }
+
+              const result = gitCommitMessagePathField.safeParse(value);
+              if (result.success) {
+                commitMessage[key] = result.data;
+              } else {
+                console.warn(`git.commitMessage.${key} must be a POSIX relative path without ..`);
+              }
+            }
+
+            if (Object.keys(commitMessage).length > 0) {
+              gitConfig.commitMessage = commitMessage;
+            }
           } else {
-            console.warn('git.autoCommit must be one of: auto, manual');
+            console.warn(`Invalid 'git.commitMessage' field in config (must be an object)`);
           }
         }
 
@@ -469,17 +475,10 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
           if (isPlainRecord(rawGit.archive)) {
             const rawArchive = rawGit.archive;
             const rawCommitMessage = rawArchive.commitMessage;
-            if (rawCommitMessage !== undefined) {
-              if (isPlainRecord(rawCommitMessage)) {
-                const conventionResult = gitArchiveCommitConventionField.safeParse(rawCommitMessage.convention);
-                if (conventionResult.success) {
-                  gitConfig.archive.commitMessage.convention = conventionResult.data;
-                } else if (rawCommitMessage.convention !== undefined) {
-                  console.warn('git.archive.commitMessage.convention must be one of: openspec-archive');
-                }
-              } else {
-                console.warn(`Invalid 'git.archive.commitMessage' field in config (must be an object)`);
-              }
+            if (isPlainRecord(rawCommitMessage) && rawCommitMessage.convention !== undefined) {
+              console.warn(
+                'git.archive.commitMessage.convention is deprecated and ignored; use git.commitMessage.archive for path overrides'
+              );
             }
           } else {
             console.warn(`Invalid 'git.archive' field in config (must be an object)`);
@@ -500,17 +499,10 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
             }
 
             const rawCommitMessage = rawMerge.commitMessage;
-            if (rawCommitMessage !== undefined) {
-              if (isPlainRecord(rawCommitMessage)) {
-                const conventionResult = gitMergeCommitConventionField.safeParse(rawCommitMessage.convention);
-                if (conventionResult.success) {
-                  gitConfig.merge.commitMessage.convention = conventionResult.data;
-                } else if (rawCommitMessage.convention !== undefined) {
-                  console.warn('git.merge.commitMessage.convention must be one of: openspec-merge-summary');
-                }
-              } else {
-                console.warn(`Invalid 'git.merge.commitMessage' field in config (must be an object)`);
-              }
+            if (isPlainRecord(rawCommitMessage) && rawCommitMessage.convention !== undefined) {
+              console.warn(
+                'git.merge.commitMessage.convention is deprecated and ignored; use git.commitMessage.merge for path overrides'
+              );
             }
           } else {
             console.warn(`Invalid 'git.merge' field in config (must be an object)`);

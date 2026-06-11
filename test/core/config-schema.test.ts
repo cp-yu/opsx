@@ -345,17 +345,8 @@ describe('config-schema', () => {
     it('should provide default git archive policy', () => {
       const result = GlobalConfigSchema.parse({});
       expect(result.git).toEqual({
-        autoCommit: 'auto',
-        archive: {
-          commitMessage: {
-            convention: 'openspec-archive',
-          },
-        },
         merge: {
           strategy: 'no-ff',
-          commitMessage: {
-            convention: 'openspec-merge-summary',
-          },
         },
         branch: {
           deleteAfterArchive: false,
@@ -366,17 +357,13 @@ describe('config-schema', () => {
     it('should accept valid git archive policy', () => {
       const result = GlobalConfigSchema.safeParse({
         git: {
-          autoCommit: 'manual',
-          archive: {
-            commitMessage: {
-              convention: 'openspec-archive',
-            },
+          commitMessage: {
+            boundary: 'docs/boundary.md',
+            archive: 'docs/archive.md',
+            merge: 'docs/merge.md',
           },
           merge: {
             strategy: 'squash',
-            commitMessage: {
-              convention: 'openspec-merge-summary',
-            },
           },
           branch: {
             deleteAfterArchive: true,
@@ -398,17 +385,8 @@ describe('config-schema', () => {
 
     it('should default git archive policy conservatively', () => {
       expect(DEFAULT_CONFIG.git).toEqual({
-        autoCommit: 'auto',
-        archive: {
-          commitMessage: {
-            convention: 'openspec-archive',
-          },
-        },
         merge: {
           strategy: 'no-ff',
-          commitMessage: {
-            convention: 'openspec-merge-summary',
-          },
         },
         branch: {
           deleteAfterArchive: false,
@@ -431,17 +409,24 @@ describe('config-schema', () => {
 
     it('allows git archive policy keys', () => {
       expect(validateConfigKeyPath('git').valid).toBe(true);
-      expect(validateConfigKeyPath('git.autoCommit').valid).toBe(true);
-      expect(validateConfigKeyPath('git.archive').valid).toBe(true);
-      expect(validateConfigKeyPath('git.archive.commitMessage').valid).toBe(true);
-      expect(validateConfigKeyPath('git.archive.commitMessage.convention').valid).toBe(true);
+      expect(validateConfigKeyPath('git.commitMessage').valid).toBe(true);
+      expect(validateConfigKeyPath('git.commitMessage.boundary').valid).toBe(true);
+      expect(validateConfigKeyPath('git.commitMessage.archive').valid).toBe(true);
+      expect(validateConfigKeyPath('git.commitMessage.merge').valid).toBe(true);
       expect(validateConfigKeyPath('git.merge').valid).toBe(true);
       expect(validateConfigKeyPath('git.merge.strategy').valid).toBe(true);
-      expect(validateConfigKeyPath('git.merge.commitMessage').valid).toBe(true);
-      expect(validateConfigKeyPath('git.merge.commitMessage.convention').valid).toBe(true);
       expect(validateConfigKeyPath('git.branch').valid).toBe(true);
       expect(validateConfigKeyPath('git.branch.deleteAfterArchive').valid).toBe(true);
+      expect(validateConfigKeyPath('git.autoCommit').valid).toBe(false);
+      expect(validateConfigKeyPath('git.archive.commitMessage.convention').valid).toBe(false);
+      expect(validateConfigKeyPath('git.merge.commitMessage.convention').valid).toBe(false);
       expect(validateConfigKeyPath('git.merge.messageFrom').valid).toBe(false);
+    });
+
+    it('rejects invalid git commitMessage paths', () => {
+      expect(GlobalConfigSchema.safeParse({ git: { commitMessage: { archive: '/tmp/archive.md' } } }).success).toBe(false);
+      expect(GlobalConfigSchema.safeParse({ git: { commitMessage: { archive: '../archive.md' } } }).success).toBe(false);
+      expect(GlobalConfigSchema.safeParse({ git: { commitMessage: { archive: 'docs\\archive.md' } } }).success).toBe(false);
     });
 
     it('rejects unknown nested git keys', () => {

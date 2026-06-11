@@ -73,8 +73,8 @@ describe('openspec optimizer skill content', () => {
   });
 
   it('keeps codex and claude optimizer skill self-read sections equivalent', () => {
-    const codex = readSkill('.codex/skills/openspec-optimizer/references/self-read-protocol.md');
-    const claude = readSkill('.claude/skills/openspec-optimizer/references/self-read-protocol.md');
+    const codex = readSkill('openspec/references/openspec-self-read-protocol.md');
+    const claude = readSkill('openspec/references/openspec-self-read-protocol.md');
 
     expect(normalizeSelfRead(codex)).toBe(normalizeSelfRead(claude));
     expect(normalizeSelfRead(codex)).toBe(normalizeSelfRead(readReference('references/self-read-protocol.md')));

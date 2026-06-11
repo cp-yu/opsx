@@ -11,7 +11,10 @@ import {
   MANAGED_STALE_INTERNAL_SKILL_DIR_NAMES,
   resolveEffectiveWorkflows,
 } from '../../src/core/workflow-installation.js';
-import { ArtifactSyncEngine } from '../../src/core/templates/sync-engine.js';
+import {
+  ArtifactSyncEngine,
+  collectSharedReferenceFiles,
+} from '../../src/core/templates/sync-engine.js';
 
 describe('workflow installation planning', () => {
   let testDir: string;
@@ -25,6 +28,15 @@ describe('workflow installation planning', () => {
     delete process.env.CODEX_HOME;
     await fs.rm(testDir, { recursive: true, force: true });
   });
+
+  async function exists(filePath: string): Promise<boolean> {
+    try {
+      await fs.stat(filePath);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
   it('keeps profile workflows unchanged when no bootstrap workspace exists', () => {
     expect(resolveEffectiveWorkflows(testDir, ['propose', 'explore', 'apply', 'archive'])).toEqual([
@@ -76,7 +88,7 @@ describe('workflow installation planning', () => {
     expect(plan.expectedSkillDirNames).not.toContain('openspec-implementer');
   });
 
-  it('includes skill reference files in planned artifacts', () => {
+  it('includes shared reference files in planned artifacts', () => {
     const plan = createToolWorkflowArtifactPlan('claude', ['archive', 'sync'], 'skills', testDir);
     const artifacts = getPlannedToolArtifacts(testDir, 'claude', plan);
 
@@ -84,16 +96,16 @@ describe('workflow installation planning', () => {
       path.join(testDir, '.claude', 'skills', 'openspec-sync-specs', 'SKILL.md')
     );
     expect(artifacts.skillFiles).toContain(
-      path.join(testDir, '.claude', 'skills', 'openspec-sync-specs', 'references', 'merge-rules.md')
+      path.join(testDir, 'openspec', 'references', 'openspec-merge-rules.md')
     );
     expect(artifacts.skillFiles).toContain(
-      path.join(testDir, '.claude', 'skills', 'openspec-archive-change', 'references', 'archive-commit-message.md')
+      path.join(testDir, 'openspec', 'references', 'openspec-archive-commit-message.md')
     );
     expect(artifacts.skillFiles).toContain(
-      path.join(testDir, '.claude', 'skills', 'openspec-archive-change', 'references', 'merge-summary-message.md')
+      path.join(testDir, 'openspec', 'references', 'openspec-merge-summary-message.md')
     );
     expect(artifacts.skillFiles).toContain(
-      path.join(testDir, '.claude', 'skills', 'openspec-optimizer', 'references', 'output-protocol.md')
+      path.join(testDir, 'openspec', 'references', 'openspec-output-protocol.md')
     );
   });
 
@@ -119,7 +131,17 @@ describe('workflow installation planning', () => {
     await expect(fs.stat(path.join(skillsDir, 'openspec-reviewer', 'SKILL.md'))).resolves.toBeDefined();
   });
 
-  it('writes skill reference files during sync', async () => {
+  it('writes shared reference files during sync and removes legacy skill references', async () => {
+    const legacyReferencesDir = path.join(
+      testDir,
+      '.claude',
+      'skills',
+      'openspec-sync-specs',
+      'references'
+    );
+    await fs.mkdir(legacyReferencesDir, { recursive: true });
+    await fs.writeFile(path.join(legacyReferencesDir, 'merge-rules.md'), 'stale');
+
     const result = await ArtifactSyncEngine.syncOne({
       toolId: 'claude',
       projectPath: testDir,
@@ -129,21 +151,137 @@ describe('workflow installation planning', () => {
     });
 
     expect(result.error).toBeUndefined();
+    await expect(fs.stat(legacyReferencesDir)).rejects.toThrow();
     const reference = await fs.readFile(
-      path.join(testDir, '.claude', 'skills', 'openspec-sync-specs', 'references', 'merge-rules.md'),
+      path.join(testDir, 'openspec', 'references', 'openspec-merge-rules.md'),
       'utf-8'
     );
     const archiveReference = await fs.readFile(
-      path.join(testDir, '.claude', 'skills', 'openspec-archive-change', 'references', 'archive-commit-message.md'),
+      path.join(testDir, 'openspec', 'references', 'openspec-archive-commit-message.md'),
       'utf-8'
     );
     const mergeReference = await fs.readFile(
-      path.join(testDir, '.claude', 'skills', 'openspec-archive-change', 'references', 'merge-summary-message.md'),
+      path.join(testDir, 'openspec', 'references', 'openspec-merge-summary-message.md'),
       'utf-8'
     );
     expect(reference).toContain('Key Principle: Intelligent Merging');
-    expect(archiveReference).toContain('convention: openspec-archive');
-    expect(mergeReference).toContain('convention: openspec-merge-summary');
+    expect(archiveReference).toContain('git.commitMessage.archive');
+    expect(mergeReference).toContain('git.commitMessage.merge');
+  });
+
+  it('preserves user reference files and overwrites managed reference files', async () => {
+    const referencesDir = path.join(testDir, 'openspec', 'references');
+    await fs.mkdir(referencesDir, { recursive: true });
+    await fs.writeFile(path.join(referencesDir, 'custom-archive-commit-message.md'), 'user template');
+    await fs.writeFile(path.join(referencesDir, 'openspec-archive-commit-message.md'), 'modified');
+
+    const result = await ArtifactSyncEngine.syncOne({
+      toolId: 'claude',
+      projectPath: testDir,
+      workflows: ['archive'],
+      delivery: 'skills',
+      version: 'test',
+    });
+
+    expect(result.error).toBeUndefined();
+    await expect(
+      fs.readFile(path.join(referencesDir, 'custom-archive-commit-message.md'), 'utf-8')
+    ).resolves.toBe('user template');
+    await expect(
+      fs.readFile(path.join(referencesDir, 'openspec-archive-commit-message.md'), 'utf-8')
+    ).resolves.toContain('git.commitMessage.archive');
+  });
+
+  it('rejects duplicate shared reference file names', () => {
+    expect(() =>
+      collectSharedReferenceFiles([
+        {
+          workflowId: 'one',
+          template: {
+            name: 'one',
+            description: 'one',
+            instructions: '',
+            referenceFiles: [{ path: 'references/details.md', content: 'one' }],
+          },
+        },
+        {
+          workflowId: 'two',
+          template: {
+            name: 'two',
+            description: 'two',
+            instructions: '',
+            referenceFiles: [{ path: 'references/details.md', content: 'two' }],
+          },
+        },
+      ])
+    ).toThrow(/Duplicate skill reference file name: openspec-details\.md/);
+  });
+
+  it('rejects tool-specific syntax in shared reference files', () => {
+    expect(() =>
+      collectSharedReferenceFiles([
+        {
+          workflowId: 'archive',
+          template: {
+            name: 'archive',
+            description: 'archive',
+            instructions: '',
+            referenceFiles: [{ path: 'references/details.md', content: 'Run /opsx:archive.' }],
+          },
+        },
+      ])
+    ).toThrow(/Tool-specific syntax in skill reference file: references\/details\.md/);
+  });
+
+  it('writes one shared reference copy for multiple tools', async () => {
+    const summary = await ArtifactSyncEngine.syncAll([
+      {
+        toolId: 'claude',
+        projectPath: testDir,
+        workflows: ['archive'],
+        delivery: 'skills',
+        version: 'test',
+      },
+      {
+        toolId: 'codex',
+        projectPath: testDir,
+        workflows: ['archive'],
+        delivery: 'skills',
+        version: 'test',
+      },
+    ]);
+
+    expect(summary.failed).toEqual([]);
+    await expect(
+      fs.readFile(
+        path.join(testDir, 'openspec', 'references', 'openspec-archive-commit-message.md'),
+        'utf-8'
+      )
+    ).resolves.toContain('git.commitMessage.archive');
+    expect(
+      await exists(
+        path.join(
+          testDir,
+          '.claude',
+          'skills',
+          'openspec-archive-change',
+          'references',
+          'archive-commit-message.md'
+        )
+      )
+    ).toBe(false);
+    expect(
+      await exists(
+        path.join(
+          testDir,
+          '.codex',
+          'skills',
+          'openspec-archive-change',
+          'references',
+          'archive-commit-message.md'
+        )
+      )
+    ).toBe(false);
   });
 
   it('resolves legacy codex command files via explicit paths', () => {

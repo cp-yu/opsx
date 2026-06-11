@@ -714,13 +714,13 @@ Optionally specify a change name and \`--skip-optimization\`. If no clear change
 6. Validate reviewer/current payload shape: result, issues with severity/recommendation/evidence citations, evidenceFiles, gitDiffSummary, and writeBackPlan targeting \`tasks.md\` only.
 7. Classify strictly: when uncertain, escalate to CRITICAL to enforce the 'clean slate' principle. CRITICAL writes remediation; WARNING/SUGGESTION do not.
 8. Persist Phase 1 with \`openspec verify phase1 "<change-name>" --input '<json>' --json\`.
-9. Phase 2: unless skipped by user/config, follow the checkpoint protocol in references/phase2-checkpoint-protocol.md. This includes creating a git stash checkpoint, using **Agent tool** to invoke \`openspec-optimizer\`, recording optimization proposal hashes before applying Search/Replace blocks, then running speculative reviewer verification with **Agent tool**. Restore checkpoint on failure and record phase2 optimization/verification through CLI.
+9. Phase 2: unless skipped by user/config, follow the checkpoint protocol in openspec/references/openspec-phase2-checkpoint-protocol.md. This includes creating a git stash checkpoint, using **Agent tool** to invoke \`openspec-optimizer\`, recording optimization proposal hashes before applying Search/Replace blocks, then running speculative reviewer verification with **Agent tool**. Restore checkpoint on failure and record phase2 optimization/verification through CLI.
 10. Run \`openspec verify seal "<change-name>" --json\`; preserve diagnostics if seal fails.
 
 ## Required References
 
 Read the detailed Phase 2 protocol before executing optimization:
-- references/phase2-checkpoint-protocol.md
+- openspec/references/openspec-phase2-checkpoint-protocol.md
 
 ## Evidence Rules
 

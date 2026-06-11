@@ -361,7 +361,7 @@ The update command SHALL remove workflow files that are no longer selected in th
 
 ### Requirement: Migrate project config defaults
 
-`openspec update` SHALL migrate project configuration defaults for existing OpenSpec projects by materializing missing functional defaults in `openspec/config.yaml` or `openspec/config.yml` without overwriting user-authored values, except it SHALL remove the obsolete `git.merge.messageFrom` field.
+`openspec update` SHALL migrate project configuration defaults for existing OpenSpec projects by materializing missing functional defaults in `openspec/config.yaml` or `openspec/config.yml` without overwriting user-authored values, except it SHALL remove the obsolete `git.merge.messageFrom`, `git.autoCommit`, `git.archive.commitMessage.convention`, and `git.merge.commitMessage.convention` fields.
 
 #### Scenario: Create config when missing
 
@@ -373,11 +373,11 @@ The update command SHALL remove workflow files that are no longer selected in th
 - **AND** the created file SHALL include `optimization.enabled: true`
 - **AND** the created file SHALL include `optimization.optRetries: 2`
 - **AND** the created file SHALL include `apply.defaultIsolation: ask`
-- **AND** the created file SHALL include `git.autoCommit: auto`
-- **AND** the created file SHALL include `git.archive.commitMessage.convention: openspec-archive`
 - **AND** the created file SHALL include `git.merge.strategy: no-ff`
-- **AND** the created file SHALL include `git.merge.commitMessage.convention: openspec-merge-summary`
 - **AND** the created file SHALL include `git.branch.deleteAfterArchive: false`
+- **AND** the created file SHALL NOT include `git.autoCommit`
+- **AND** the created file SHALL NOT include `git.archive.commitMessage.convention`
+- **AND** the created file SHALL NOT include `git.merge.commitMessage.convention`
 - **AND** the created file SHALL NOT include `git.merge.messageFrom`
 
 #### Scenario: Add missing top-level defaults
@@ -394,27 +394,23 @@ The update command SHALL remove workflow files that are no longer selected in th
 
 - **WHEN** `openspec/config.yaml` contains `optimization.enabled: false`
 - **AND** contains `apply.defaultIsolation: worktree`
-- **AND** contains `git.autoCommit: manual`
 - **AND** contains `git.merge.strategy: squash`
-- **AND** lacks `optimization.optRetries`, `git.archive.commitMessage.convention`, `git.merge.commitMessage.convention`, and `git.branch.deleteAfterArchive`
+- **AND** lacks `optimization.optRetries` and `git.branch.deleteAfterArchive`
 - **AND** the user runs `openspec update`
 - **THEN** the command SHALL keep `optimization.enabled: false`
 - **AND** the command SHALL keep `apply.defaultIsolation: worktree`
-- **AND** the command SHALL keep `git.autoCommit: manual`
 - **AND** the command SHALL keep `git.merge.strategy: squash`
 - **AND** the command SHALL add `optimization.optRetries: 2`
-- **AND** the command SHALL add `git.archive.commitMessage.convention: openspec-archive`
-- **AND** the command SHALL add `git.merge.commitMessage.convention: openspec-merge-summary`
 - **AND** the command SHALL add `git.branch.deleteAfterArchive: false`
 
-#### Scenario: Remove obsolete messageFrom
+#### Scenario: Remove obsolete git fields
 
-- **WHEN** `openspec/config.yaml` contains `git.merge.messageFrom`
+- **WHEN** `openspec/config.yaml` contains any of `git.merge.messageFrom`, `git.autoCommit`, `git.archive.commitMessage.convention`, or `git.merge.commitMessage.convention`
 - **AND** the user runs `openspec update`
-- **THEN** the command SHALL remove the `git.merge.messageFrom` field
-- **AND** SHALL NOT map its value to any new field
+- **THEN** the command SHALL remove those obsolete fields
+- **AND** SHALL NOT map their values to any new field
 - **AND** SHALL materialize missing new git defaults
-- **AND** SHALL preserve other user-authored `git` fields
+- **AND** SHALL preserve other user-authored `git` fields including `git.commitMessage.*` path overrides
 
 #### Scenario: Migrate config.yml alias
 
@@ -436,7 +432,7 @@ The update command SHALL remove workflow files that are no longer selected in th
 
 - **WHEN** `openspec update` migrates `openspec/config.yaml` or `openspec/config.yml` on Windows
 - **THEN** the command SHALL build config paths with Node.js path utilities
-- **AND** SHALL remove `git.merge.messageFrom` and add new defaults with the same behavior as Unix systems
+- **AND** SHALL remove obsolete git fields and add new defaults with the same behavior as Unix systems
 
 ## Edge Cases
 
