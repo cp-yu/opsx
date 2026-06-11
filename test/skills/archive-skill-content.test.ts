@@ -50,9 +50,6 @@ describe('openspec archive skill content', () => {
     expect(instructions).toContain('uncommitted real project implementation changes');
     expect(instructions).toContain('wip: opt-*');
     expect(instructions).toContain('git commit --allow-empty');
-    expect(instructions).toContain('semantic boundary commit');
-    expect(instructions).toContain('effective implementation diff');
-    expect(instructions).toContain('intentionally empty');
     expect(instructions).not.toContain('First commit real project changes before OpenSpec/docs archive artifacts.');
     expect(instructions).toContain('git commit -F -');
     expect(instructions).toContain('git merge --no-ff');
@@ -91,24 +88,38 @@ describe('openspec archive skill content', () => {
     expect(instructions).toContain('do not parse raw YAML inside the skill');
   });
 
-  it('routes archive and merge message templates through configured paths or shared references', () => {
+  it('routes archive, boundary, and merge message templates through configured paths or shared references', () => {
     const template = getArchiveChangeSkillTemplate();
     const instructions = template.instructions;
     const archiveReference = readReference('references/archive-commit-message.md');
+    const boundaryReference = readReference('references/boundary-commit-message.md');
     const mergeReference = readReference('references/merge-summary-message.md');
     const archivePath = 'openspec/references/openspec-archive-commit-message.md';
+    const boundaryPath = 'openspec/references/openspec-boundary-commit-message.md';
     const mergePath = 'openspec/references/openspec-merge-summary-message.md';
 
     expect(template.referenceFiles?.map((file) => file.path)).toContain('references/archive-commit-message.md');
+    expect(template.referenceFiles?.map((file) => file.path)).toContain('references/boundary-commit-message.md');
     expect(template.referenceFiles?.map((file) => file.path)).toContain('references/merge-summary-message.md');
     expect(instructions).toContain(`If \`git.commitMessage.archive\` is set, read that project-relative path; otherwise read \`${archivePath}\``);
+    expect(instructions).toContain(`If \`git.commitMessage.boundary\` is set, read that project-relative path; otherwise read \`${boundaryPath}\``);
     expect(instructions).toContain(`If \`git.commitMessage.merge\` is set, read that project-relative path; otherwise read \`${mergePath}\``);
     expect(instructions).not.toContain('read `references/archive-commit-message.md` before creating the OpenSpec/docs archive commit');
+    expect(instructions).not.toContain('read `references/boundary-commit-message.md`');
     expect(instructions).not.toContain('read `references/merge-summary-message.md` before creating a merge or squash commit message');
     expect(instructions).not.toContain('docs(<change-name>): 归档变更制品');
     expect(instructions).not.toContain('<type>(<scope>): <中文标题>');
+    expect(instructions).not.toContain('## Why');
+    expect(instructions).not.toContain('## Changes');
+    expect(instructions).not.toContain('Implementation:');
     expect(archiveReference).toContain('git.commitMessage.archive');
     expect(archiveReference).toContain('docs(<change-name>): 归档变更制品');
+    expect(boundaryReference).toContain('git.commitMessage.boundary');
+    expect(boundaryReference).toContain('<type>(<scope>): <中文标题>');
+    expect(boundaryReference).toContain('## Why');
+    expect(boundaryReference).toContain('## Changes');
+    expect(boundaryReference).toContain('Implementation:');
+    expect(boundaryReference).toContain('git diff --name-only');
     expect(mergeReference).toContain('git.commitMessage.merge');
     expect(mergeReference).toContain('<type>(<scope>): <中文标题>');
   });
@@ -133,6 +144,7 @@ describe('openspec archive skill content', () => {
     try {
       for (const [filePath, generatedPath] of [
         ['references/archive-commit-message.md', 'openspec/references/openspec-archive-commit-message.md'],
+        ['references/boundary-commit-message.md', 'openspec/references/openspec-boundary-commit-message.md'],
         ['references/merge-summary-message.md', 'openspec/references/openspec-merge-summary-message.md'],
       ] as const) {
         const expected = readReference(filePath);

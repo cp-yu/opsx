@@ -12,9 +12,49 @@ import {
 } from './verify-execution-model.js';
 
 const ARCHIVE_COMMIT_MESSAGE_REFERENCE_PATH = 'references/archive-commit-message.md';
+const BOUNDARY_COMMIT_MESSAGE_REFERENCE_PATH = 'references/boundary-commit-message.md';
 const MERGE_SUMMARY_MESSAGE_REFERENCE_PATH = 'references/merge-summary-message.md';
 const ARCHIVE_COMMIT_MESSAGE_SHARED_PATH = 'openspec/references/openspec-archive-commit-message.md';
+const BOUNDARY_COMMIT_MESSAGE_SHARED_PATH = 'openspec/references/openspec-boundary-commit-message.md';
 const MERGE_SUMMARY_MESSAGE_SHARED_PATH = 'openspec/references/openspec-merge-summary-message.md';
+
+const BOUNDARY_COMMIT_MESSAGE_REFERENCE = `
+# Boundary Commit Message Template
+
+Use this built-in format when \`git.commitMessage.boundary\` is not configured.
+
+Subject:
+
+\`\`\`text
+<type>(<scope>): <中文标题>
+\`\`\`
+
+Body:
+
+\`\`\`text
+## Why
+[业务背景] <why from proposal.md>
+[技术决策] <decision from design.md when present>
+
+## Changes
+- \`<file-path>\`: <why this file changed>
+\`\`\`
+
+Footer:
+
+\`\`\`text
+Implementation: <base>..<head> (carried by <commits>)
+\`\`\`
+
+Rules:
+- Build \`## Why\` from the archived \`proposal.md\` and \`design.md\` (when present).
+- Build \`## Changes\` from \`git diff --name-only <base>..<head>\` file list cross-referenced with archived \`tasks.md\` Files/Goal and \`opsx-delta.yaml\`.
+- List all files from the diff; if a file is not mentioned in archived artifacts, state that explicitly.
+- The \`<base>\` is the prior change boundary (prior archive/boundary commit); the agent infers it from git history.
+- The \`Implementation:\` footer lists the effective diff range and the commits carrying that diff (including \`wip: opt-*\` checkpoint commits and any just-created normal implementation commit).
+- Use \`git commit -F -\` to pass the message.
+- Always create this commit with \`git commit --allow-empty\`; it may be intentionally empty when all implementation diff is carried by checkpoint commits.
+`.trim();
 
 const ARCHIVE_COMMIT_MESSAGE_REFERENCE = `
 # Archive Commit Message Template
@@ -128,7 +168,7 @@ ${buildArchiveFullVerifyContract(executionModel)}
    Read the archive CLI output and the projected git policy from \`openspec config project --json\`. Summary fields include change name, schema, archive location, verify gate result, specs / OPSX sync result, agent-owned git follow-up status, and merge strategy.
 
 8. **Agent git flow**
-   The agent continues the post-archive git flow. First handle the implementation boundary before OpenSpec/docs archive artifacts. If uncommitted real project implementation changes remain, create a normal implementation commit that contains only those changes. If the effective implementation diff is already carried by retained \`wip: opt-*\` checkpoint commits and no uncommitted implementation changes remain, create an intentionally empty semantic boundary commit with \`git commit --allow-empty\`; use a real semantic subject type such as \`feat\`, \`fix\`, or \`refactor\`, not \`meta\`, and record the effective implementation diff range, the checkpoint commits carrying that diff, and why the commit is intentionally empty in the body. If \`git.commitMessage.archive\` is set, read that project-relative path; otherwise read \`${ARCHIVE_COMMIT_MESSAGE_SHARED_PATH}\`. Use that template before creating the OpenSpec/docs archive commit, add only archive/synced paths, and run \`git commit -F -\`. If a merge or squash commit message is needed, prepare it from the configured or built-in merge template. If \`git.commitMessage.merge\` is set, read that project-relative path; otherwise read \`${MERGE_SUMMARY_MESSAGE_SHARED_PATH}\`. Apply \`git.merge.strategy\` with \`git merge --no-ff\`, \`git merge --ff-only\`, or \`git merge --squash\` as appropriate. Use \`git.branch.deleteAfterArchive\` only after confirming the branch is merged with \`git branch --merged\`. Build paths with \`path.join()\`, \`path.resolve()\`, and \`path.normalize()\`.
+   The agent continues the post-archive git flow. First handle the implementation boundary before OpenSpec/docs archive artifacts. If uncommitted real project implementation changes remain, create a normal implementation commit that contains only those changes. Then always create a semantic boundary commit with \`git commit --allow-empty\`; this boundary commit may be intentionally empty when the effective implementation diff is already carried by retained \`wip: opt-*\` checkpoint commits. If \`git.commitMessage.boundary\` is set, read that project-relative path; otherwise read \`${BOUNDARY_COMMIT_MESSAGE_SHARED_PATH}\`. Use that template to build the boundary commit message and run \`git commit -F -\` for the boundary commit. If \`git.commitMessage.archive\` is set, read that project-relative path; otherwise read \`${ARCHIVE_COMMIT_MESSAGE_SHARED_PATH}\`. Use that template before creating the OpenSpec/docs archive commit, add only archive/synced paths, and run \`git commit -F -\`. If a merge or squash commit message is needed, prepare it from the configured or built-in merge template. If \`git.commitMessage.merge\` is set, read that project-relative path; otherwise read \`${MERGE_SUMMARY_MESSAGE_SHARED_PATH}\`. Apply \`git.merge.strategy\` with \`git merge --no-ff\`, \`git merge --ff-only\`, or \`git merge --squash\` as appropriate. Use \`git.branch.deleteAfterArchive\` only after confirming the branch is merged with \`git branch --merged\`. Build paths with \`path.join()\`, \`path.resolve()\`, and \`path.normalize()\`.
 
 9. **Display summary**
    Include change, schema, archive location, verify gate result, specs / OPSX sync result, agent-owned git follow-up status, Merge Strategy, cleanup responsibility, verify reuse/reexecution, and warnings. Do not report that CLI created an archive commit, performed a merge, or deleted a feature branch.
@@ -176,6 +216,10 @@ export function createArchiveChangeSkillTemplateForExecutionModel(
       {
         path: ARCHIVE_COMMIT_MESSAGE_REFERENCE_PATH,
         content: ARCHIVE_COMMIT_MESSAGE_REFERENCE,
+      },
+      {
+        path: BOUNDARY_COMMIT_MESSAGE_REFERENCE_PATH,
+        content: BOUNDARY_COMMIT_MESSAGE_REFERENCE,
       },
       {
         path: MERGE_SUMMARY_MESSAGE_REFERENCE_PATH,
