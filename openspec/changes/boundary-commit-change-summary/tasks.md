@@ -15,17 +15,17 @@
 
 #### Checks
 
-- [ ] C1 验证无条件 boundary commit 指令
+- [x] C1 验证无条件 boundary commit 指令
   - Verifies: `specs/opsx-archive-skill/spec.md` / Requirement "Archive 在 sync 完成后追加 archive commit、merge、cleanup 三步" / Scenario "无条件创建 semantic boundary commit", "存在未提交实现变更"
   - Command: `npx vitest run test/skills/archive-skill-content.test.ts`
   - Expect: Step 8 含顺序语义与无条件 `--allow-empty` 指令；不含 intentionally-empty 内联 prose 与条件分支文案
 
-- [ ] C2 验证 boundary 模板内容与路由
+- [x] C2 验证 boundary 模板内容与路由
   - Verifies: `specs/opsx-archive-skill/spec.md` / Requirement "Archive skill 拆分 commit message convention references" / Scenario "boundary 提交读取 boundary reference"; Requirement "Archive 在 sync 完成后追加 archive commit、merge、cleanup 三步" / Scenario "boundary commit message 承载完整 change 总结", "boundary commit 模板路由"
   - Command: `npx vitest run test/skills/archive-skill-content.test.ts`
   - Expect: 模板含 `## Why`、`## Changes`、`Implementation:` footer 与 `git diff --name-only` 事实来源规则；SKILL.md 含 `git.commitMessage.boundary` 覆盖路由文案
 
-- [ ] C3 验证 boundary 覆盖键消费
+- [x] C3 验证 boundary 覆盖键消费
   - Verifies: `specs/opsx-archive-skill/spec.md` / Requirement "Archive 在 sync 完成后追加 archive commit、merge、cleanup 三步" / Scenario "boundary commit 模板路由"
   - Command: `npx vitest run test/skills/archive-skill-content.test.ts`
   - Expect: 指令明确"配置 `git.commitMessage.boundary` 读用户模板，未配置读 `openspec/references/openspec-boundary-commit-message.md`"
@@ -49,12 +49,12 @@
 
 #### Checks
 
-- [ ] C4 验证物化与长度限制
+- [x] C4 验证物化与长度限制
   - Verifies: `specs/skill-template-length-check/spec.md` / Requirement "现有超标 skill 模板必须拆分或精简" / Scenario "长协议拆分到共享 references home", "生成的工具 skill 与模板源一致"
   - Command: `openspec update --force && npx vitest run test/skills/skill-template-length-validation.test.ts`
   - Expect: boundary 模板物化为 `openspec/references/openspec-boundary-commit-message.md`，长度测试通过
 
-- [ ] C5 全量回归
+- [x] C5 全量回归
   - Verifies: `specs/opsx-archive-skill/spec.md` / Requirement "Archive 在 sync 完成后追加 archive commit、merge、cleanup 三步" / Scenario "agent 继续 git 流程"
   - Command: `pnpm test`
   - Expect: 全量测试通过
