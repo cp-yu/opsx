@@ -68,7 +68,7 @@ The system SHALL support ordered artifact transforms with explicit scope and pha
 
 ### Requirement: Shared Artifact Sync Engine
 
-The system SHALL provide a shared artifact sync engine used by all generation entry points.
+The system SHALL provide a shared artifact sync engine used by all generation entry points. Reference files declared by skill templates SHALL be written by the shared engine to the project-level `openspec/references/` home instead of per-tool skill directories.
 
 #### Scenario: Init and update use same engine
 
@@ -81,6 +81,13 @@ The system SHALL provide a shared artifact sync engine used by all generation en
 - **WHEN** legacy cleanup triggers artifact regeneration
 - **THEN** the regeneration path SHALL use the same shared engine
 - **AND** generated outputs SHALL follow the same transform and validation rules
+
+#### Scenario: Reference files write to the shared references home
+
+- **WHEN** the engine writes skill artifacts for any configured tool
+- **THEN** `template.referenceFiles[]` SHALL be written once to `openspec/references/` as `openspec-<name>.md`
+- **AND** the engine SHALL NOT write `references/` subdirectories under any tool skill directory
+- **AND** ownership, naming-uniqueness, and tool-neutrality constraints SHALL follow the `references-home` specification
 
 ### Requirement: Fidelity Guardrails
 
@@ -97,3 +104,4 @@ The system SHALL enforce guardrails that prevent output drift during refactors.
 - **WHEN** running parity tests for representative workflow/tool combinations
 - **THEN** generated artifacts SHALL remain behaviorally equivalent to approved baselines unless intentionally changed
 - **AND** intentional changes SHALL be captured in explicit spec/proposal updates
+

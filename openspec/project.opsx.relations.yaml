@@ -516,3 +516,9 @@ relations:
   - from: cap.config.apply-projection
     type: contains
     to: dom.config
+  - from: cap.ai.references-home
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.references-home
+    type: relates_to
+    to: dom.config

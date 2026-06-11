@@ -48,10 +48,11 @@
 #### Scenario: git 字段输出新结构
 
 - **WHEN** 用户执行 `openspec config project --json`
-- **THEN** 输出的 `git` 字段 SHALL 包含 `autoCommit`
-- **AND** SHALL 包含 `archive.commitMessage.convention`
+- **THEN** 输出的 `git` 字段 SHALL 包含 `commitMessage`（含已配置的 `boundary`、`archive`、`merge` 路径，未配置的键不输出值或输出空）
 - **AND** SHALL 包含 `merge.strategy`
-- **AND** SHALL 包含 `merge.commitMessage.convention`
 - **AND** SHALL 包含 `branch.deleteAfterArchive`
+- **AND** SHALL NOT 包含 `autoCommit`
+- **AND** SHALL NOT 包含 `archive.commitMessage.convention`
+- **AND** SHALL NOT 包含 `merge.commitMessage.convention`
 - **AND** SHALL NOT 包含 `merge.messageFrom`
 

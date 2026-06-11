@@ -91,7 +91,7 @@ capabilities:
     intent: Reviewer/Optimizer subagent 自主文件读取与测试执行能力定义，包括 Read+Bash 工具权限、安全约束和 L1 测试策略
     type: capability
   - id: cap.ai.template-artifact-pipeline
-    intent: "统一的 artifact 生成管线，包含 WorkflowManifest、ToolProfileRegistry、transform 管线和 ArtifactSyncEngine。transform 管线的 scope: 'both' 语义现在对 skill 和 command 两种产出均实际生效——writeSkills 和 writeCommands 均在适配器格式化前调用 runTransforms 执行 preAdapter 阶段变换"
+    intent: "统一的 artifact 生成管线，包含 WorkflowManifest、ToolProfileRegistry、transform 管线和 ArtifactSyncEngine。transform 管线的 scope: 'both' 语义对 skill 和 command 两种产出均实际生效。reference 文件经共享引擎单副本写入 openspec/references/，不再按工具 skill 目录复制"
     type: capability
   - id: cap.ai.tool-adapters
     intent: 为支持的 AI 工具提供工具元数据与适配器注册；其中 Codex 通过显式工具元数据声明为 skills-only，不再注册 command adapter
@@ -105,7 +105,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 提供 AI workflow 模板和 spec-driven artifact instructions；explore/propose/apply 三个核心工作流统一注入 OPSX 共享上下文（启动阶段整读 openspec/project.opsx.yaml 获取 project intent/scope 与全局结构，CLI 点查询作为节点细节补充）；archive workflow 模板通过 runtime projection 消费 git.autoCommit 的 agent/user handoff 语义，并要求 agent 在归档后区分未提交实现变更、Phase 2 checkpoint history 承载的实现边界，以及 OpenSpec/docs 归档制品提交
+    intent: 提供 AI workflow 模板和 spec-driven artifact instructions；explore/propose/apply 三个核心工作流统一注入 OPSX 共享上下文（启动阶段整读 openspec/project.opsx.yaml 获取 project intent/scope 与全局结构，CLI 点查询作为节点细节补充）；archive workflow 模板在 CLI 归档后由 agent 无条件继续 git 流程，按 git.commitMessage.* 路径覆盖路由读取 openspec/references/ 下的 commit message 模板，并区分未提交实现变更、Phase 2 checkpoint history 承载的实现边界，以及 OpenSpec/docs 归档制品提交
     type: capability
   - id: cap.apply.branch-isolation
     intent: Apply 阶段分支隔离策略由 apply.defaultIsolation 驱动；main/master 上仅 ask 模式询问用户，branch/worktree/none 配置直接执行并持久化 .apply-isolation.json。
@@ -120,7 +120,7 @@ capabilities:
     intent: apply 命令内置 Phase 1 一致性验证、Phase 2 优化循环和 Phase 3 seal；Phase 1 或 seal failure 写回 remediation 后进入同一 recovery loop，不因首次失败直接 pause。
     type: capability
   - id: cap.archive.branch-merge
-    intent: 归档后的 git commit、merge 与 branch cleanup 属于 agent/user handoff 流程；agent 根据 git.autoCommit、commitMessage convention references、实际 diff 与 Phase 2 checkpoint history 生成 semantic boundary commit、archive commit、merge message 并处理后续 git 工作
+    intent: 归档后的 git commit、merge 与 branch cleanup 由 agent 无条件继续处理；agent 根据 git.commitMessage.* 路径覆盖或 openspec/references/ 内置模板、实际 diff 与 Phase 2 checkpoint history 生成 semantic boundary commit、archive commit、merge message 并处理后续 git 工作
     status: active
     type: capability
   - id: cap.artifact-graph.instruction-loader
@@ -140,7 +140,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.change.archive
-    intent: 归档已完成的变更，将规约合并到主目录并移动变更到 archive；archive CLI 执行 verify、sync 与 move-to-archive 后停止，只输出基于 git.autoCommit 的 agent/user handoff 提醒，不执行 git commit、merge、checkout、branch cleanup 或 commit message 生成
+    intent: 归档已完成的变更，将规约合并到主目录并移动变更到 archive；archive CLI 执行 verify、sync 与 move-to-archive 后停止，只输出 agent 接管后续 git 工作的 handoff 提醒，不执行 git commit、merge、checkout、branch cleanup 或 commit message 生成
     status: active
     type: capability
   - id: cap.change.create
@@ -160,7 +160,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.archive
-    intent: 归档已完成的变更并将规约合并到主规约目录；读取 normalized project config 输出 git handoff 提醒，但不执行 git 写操作或生成推荐 commit message
+    intent: 归档已完成的变更并将规约合并到主规约目录；输出 agent 接管后续 git 工作的 handoff 提醒，不读取 handoff 模式配置，不执行 git 写操作或生成推荐 commit message
     status: active
     type: capability
   - id: cap.cli.change
@@ -174,7 +174,7 @@ capabilities:
     intent: 管理 OpenSpec CLI 的 shell 补全，COMMAND_REGISTRY 现已包含 verify 命令及其子命令 phase1、phase2、seal、status
     type: capability
   - id: cap.cli.config
-    intent: 查看和修改全局 OpenSpec 配置，查询包含新 git.autoCommit 与 commitMessage convention 结构的归一化项目配置
+    intent: 查看和修改全局 OpenSpec 配置，查询包含 git.commitMessage 路径覆盖与 merge/branch 字段结构的归一化项目配置
     status: active
     type: capability
   - id: cap.cli.feedback
@@ -182,7 +182,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.init
-    intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品；首次 init 自动生成 OPSX 骨架文件，并创建包含 schema、optimization、apply.defaultIsolation 与新 git.autoCommit/commitMessage convention 功能性默认值的 openspec/config.yaml。
+    intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品；首次 init 自动生成 OPSX 骨架文件，并创建包含 schema、optimization、apply.defaultIsolation 与 git merge/branch 功能性默认值（不含 autoCommit 与 commitMessage convention）的 openspec/config.yaml。
     status: active
     type: capability
   - id: cap.cli.init-opsx-skeleton
@@ -233,7 +233,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.update
-    intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品；同时对 openspec/config.yaml 或 config.yml 执行项目配置默认值迁移，删除陈旧 git.merge.messageFrom 并补齐新 git 自动提交功能性默认节点。
+    intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品；对 openspec/config.yaml 或 config.yml 执行项目配置默认值迁移，删除陈旧 git.merge.messageFrom、git.autoCommit 与 commitMessage convention 节点并补齐新 git 功能性默认值；将 reference 文件物化到 openspec/references/ 并清理 skill 目录残留 references/。
     status: active
     type: capability
   - id: cap.cli.validate
@@ -256,11 +256,11 @@ capabilities:
     status: active
     type: capability
   - id: cap.config.migration
-    intent: 处理配置格式迁移和破坏性字段清理，包括全局 profile 迁移与项目 config.yaml/config.yml 的默认值补齐；更新时删除陈旧 git.merge.messageFrom 并写入新的 git 自动提交配置结构
+    intent: 处理配置格式迁移和破坏性字段清理，包括全局 profile 迁移与项目 config.yaml/config.yml 的默认值补齐；更新时删除陈旧 git.merge.messageFrom、git.autoCommit 与 commitMessage convention 节点并写入新的 git 功能性默认结构
     status: active
     type: capability
   - id: cap.config.project
-    intent: 加载、验证、合并并物化项目级配置 openspec/config.yaml；将 git.autoCommit 作为 archive 后 agent/user handoff 策略暴露给 prompt/runtime projection，并继续暴露 archive/merge commitMessage convention、merge strategy 与 branch cleanup 字段作为 agent 后续 git 流程上下文
+    intent: 加载、验证、合并并物化项目级配置 openspec/config.yaml；将 git.commitMessage.{boundary,archive,merge} 路径覆盖、merge strategy 与 branch cleanup 字段经 prompt/runtime projection 暴露为 agent 归档后 git 流程上下文，对残留 autoCommit 与 convention 字段输出废弃 warning
     status: active
     type: capability
   - id: cap.config.schema-validation
@@ -394,4 +394,7 @@ capabilities:
     type: capability
   - id: cap.config.apply-projection
     intent: openspec instructions apply 命令输出包含 configProjection，使 apply skill 能读取项目级配置
+    type: capability
+  - id: cap.ai.references-home
+    intent: openspec/references/ 作为全部 skill reference 文件的唯一物理位置；openspec- 前缀文件由 update 逐文件覆盖管理、严禁目录级删除，非前缀文件为用户领地；生成时校验文件名全局唯一与内容工具中立；git.commitMessage.{boundary,archive,merge} 可选路径覆盖路由用户自有模板
     type: capability
