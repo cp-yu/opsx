@@ -323,10 +323,13 @@ export const OPSX_VERIFY_ALIGNMENT = `
  */
 export const CONFORMANCE_CHECK_RULES = `
 **Conformance Check Rules**:
-- For each delta-spec requirement, search for concrete implementation evidence in code and tests before concluding status
+- Dispatch verification by Check anchor type:
+  - **Verifies (existence)**: search for implementation evidence; missing → CRITICAL
+  - **Verifies ... REMOVED Requirement (absence)**: multi-angle search for residue (symbol, file path, import reference); any residue → CRITICAL; cite absence evidence on PASS
+  - **Preserves (equivalence)**: dual-branch — behavior unchanged (tests pass) AND old form absent from final code; old and new form coexist → CRITICAL "Half migration"
 - Classify issues using strict thresholds:
-  - **CRITICAL**: required behavior is missing, directly contradicted, or no credible implementation evidence exists
-  - **WARNING**: implementation exists but may diverge from the requirement, scenario coverage is incomplete, or artifact/code drift is likely
+  - **CRITICAL**: required behavior missing, directly contradicted, REMOVED residue found, Preserves old form still exists, or no credible implementation evidence
+  - **WARNING**: implementation exists but may diverge, scenario coverage incomplete, or artifact/code drift likely
   - **SUGGESTION**: minor pattern or clarity issues that do not block archive
 - Map every issue to the most specific requirement and, when possible, the task that claimed completion
 - Cite file paths and line ranges for both supporting evidence and missing evidence

@@ -482,16 +482,17 @@ function buildRereadVerifyInstructions(text: VerifyTemplateText): string {
      - Add one CRITICAL issue per incomplete task
      - Recommendation: "Complete task: <description>" or "Mark as done if already implemented"
 
-   **Spec Coverage**:
+   **Spec Coverage** (by anchor type):
    - If delta specs exist in \`openspec/changes/<name>/specs/\`:
      - Extract all requirements (marked with "### Requirement:")
-     - For each requirement:
-       - Search for candidate implementation files
-       - Read the final file contents for those candidates
-       - Assess whether credible implementation evidence exists
-     - If requirements appear unimplemented:
-       - Add CRITICAL issue: "Requirement not found: <requirement name>"
-       - Recommendation: "Implement requirement X: <description>"
+     - For ADDED/MODIFIED requirements: search for implementation evidence; missing → CRITICAL
+     - For REMOVED requirements: multi-angle search for residue (symbol, file path, import); any residue → CRITICAL spec coverage failure
+     - Reports which requirements are covered vs missing/residual
+
+   **Delete Declaration Cross-Check**:
+   - For each task whose \`Files\` section contains a \`Delete:\` entry:
+     - Run \`git diff <originalBranch>...HEAD --name-only\` and confirm declared file was deleted
+     - If the file still exists: issue CRITICAL "Declared deletion not completed"
 
 5.5. [Mode: Evidence] **Git Evidence Investigation**
 
@@ -728,6 +729,9 @@ Read the detailed Phase 2 protocol before executing optimization:
 - Check completeness, correctness, coherence, cleanliness, and OPSX alignment when artifacts exist.
 - Use \`git diff <originalBranch>...HEAD --name-only\` for branch-aware scope when available.
 - Cite concrete file paths and line ranges for every issue.
+- Spec coverage by anchor type: ADDED/MODIFIED requirements check for implementation; REMOVED requirements check for absence (any residue = CRITICAL); Preserves anchors use dual-branch equivalence (tests pass AND old form absent).
+ - For spec coverage, dispatch by anchor type: ADDED/MODIFIED requirements (existence) — search for implementation; REMOVED requirements (absence) — multi-angle search for residue, any residue is CRITICAL; cite absence evidence on PASS. **Verifies (existence)** search for implementation; **Verifies ... REMOVED Requirement (absence)** multi-angle residue search; **Preserves (equivalence)** dual-branch — tests pass AND old form absent; old form coexist = CRITICAL.
+- For each task whose \`Files\` section contains a \`Delete:\` entry: confirm file deleted via \`git diff <originalBranch>...HEAD --name-only\`; if the file still exists issue CRITICAL.
 - Use \`openspec/config.yaml\` only through the compiled prompt projection; preserve canonical artifact tokens during write-back.`;
 }
 

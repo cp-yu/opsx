@@ -108,12 +108,12 @@
 
 #### Checks
 
-- [ ] C8 验证 verify 模板双骨架包含 Correctness 分派判定
+- [x] C8 验证 verify 模板双骨架包含 Correctness 分派判定
   - Verifies: `specs/opsx-verify-skill/spec.md` / Requirement "Correctness Verification" / Scenario "REMOVED requirement 的缺失性判定", "Preserves 锚点的双支等价性判定"
   - Command: `npx vitest run test/skills/verify-change-strictness.test.ts`
   - Expect: 两套骨架模板文本均含缺失性判定与双支等价性判定语义
 
-- [ ] C12 验证 verify 模板双骨架包含 Completeness 扩展
+- [x] C12 验证 verify 模板双骨架包含 Completeness 扩展
   - Verifies: `specs/opsx-verify-skill/spec.md` / Requirement "Completeness Verification" / Scenario "Spec coverage check", "Delete 声明核对"
   - Command: `npx vitest run test/skills/verify-change-strictness.test.ts`
   - Expect: 两套骨架模板文本均含按锚定类型核查的 spec coverage 与 Delete 核对语义
