@@ -105,7 +105,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 提供 AI workflow 模板和 spec-driven artifact instructions；explore/propose/apply 三个核心工作流统一注入 OPSX 共享上下文（启动阶段整读 openspec/project.opsx.yaml 获取 project intent/scope 与全局结构，CLI 点查询作为节点细节补充）；archive workflow 模板在 CLI 归档后由 agent 无条件继续 git 流程，按 git.commitMessage.* 路径覆盖路由读取 openspec/references/ 下的 commit message 模板，并区分未提交实现变更、Phase 2 checkpoint history 承载的实现边界，以及 OpenSpec/docs 归档制品提交
+    intent: 提供 AI workflow 模板和 spec-driven artifact instructions；explore/propose/apply 三个核心工作流统一注入 OPSX 共享上下文（启动阶段整读 openspec/project.opsx.yaml 获取 project intent/scope 与全局结构，CLI 点查询作为节点细节补充）；archive workflow 模板在 CLI 归档后由 agent 无条件继续 git 流程，按 git.commitMessage.* 路径覆盖路由读取 openspec/references/ 下的 commit message 模板，实现边界为"残余 diff 提交（如有）→ 无条件 semantic boundary commit（完整 change 总结）→ OpenSpec/docs 归档制品提交"的顺序语义
     type: capability
   - id: cap.apply.branch-isolation
     intent: Apply 阶段分支隔离策略由 apply.defaultIsolation 驱动；main/master 上仅 ask 模式询问用户，branch/worktree/none 配置直接执行并持久化 .apply-isolation.json。
@@ -120,7 +120,7 @@ capabilities:
     intent: apply 命令内置 Phase 1 一致性验证、Phase 2 优化循环和 Phase 3 seal；Phase 1 或 seal failure 写回 remediation 后进入同一 recovery loop，不因首次失败直接 pause。
     type: capability
   - id: cap.archive.branch-merge
-    intent: 归档后的 git commit、merge 与 branch cleanup 由 agent 无条件继续处理；agent 根据 git.commitMessage.* 路径覆盖或 openspec/references/ 内置模板、实际 diff 与 Phase 2 checkpoint history 生成 semantic boundary commit、archive commit、merge message 并处理后续 git 工作
+    intent: 归档后的 git commit、merge 与 branch cleanup 由 agent 无条件继续处理；agent 先提交残余实现 diff（如有），再无条件创建 --allow-empty 的 semantic boundary commit 承载完整 change 总结（Why/Changes + Implementation footer），随后提交归档制品；message 模板按 git.commitMessage.* 路径覆盖或 openspec/references/ 内置模板路由
     status: active
     type: capability
   - id: cap.artifact-graph.instruction-loader
