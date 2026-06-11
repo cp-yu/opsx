@@ -133,12 +133,12 @@
 
 #### Checks
 
-- [ ] C9 验证生成面一致性与集成回归
+- [x] C9 验证生成面一致性与集成回归
   - Verifies: `specs/openspec-reviewer-skill/spec.md` / Requirement "三个验证维度" / Scenario "完整制品的变更"
   - Command: `npx vitest run test/integration/reviewer-strictness.test.ts test/skills/`
   - Expect: 再生成后的 skill 文件与模板一致，集成与 skill 测试全部通过
 
-- [ ] C10 验证全量回归与 change 结构
+- [x] C10 验证全量回归与 change 结构
   - Verifies: `specs/cli-artifact-workflow/spec.md` / Requirement "Instructions Command" / Scenario "Verifies path remains change-local and cross-platform"
   - Command: `pnpm test`
   - Expect: 全量测试通过（含 Windows 路径行为相关用例）；现有 Verifies 拒绝主 spec 路径的用例不变

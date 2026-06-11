@@ -92,7 +92,7 @@ export const OPSX_POST_PROPOSE_VALIDATION = `
   - For legacy tasks, verify \`A\`-prefixed action checkboxes, \`C\`-prefixed check checkboxes, required \`Covers:\` fields, valid \`Covers:\` references, and every action covered by at least one check
   - For coarse tasks, verify each task has no more than 5 requirements and at least one nested \`C\`-prefixed check
   - For every check, verify required non-empty \`Verifies:\` or \`Preserves:\` field
-  - When \`Verifies:\` anchors an ordinary requirement, verify change-local spec path plus Requirement and ≥1 Scenario names when local change specs exist
+  - When \`Verifies:\` anchors an ordinary requirement, verify change-local \`Verifies:\` spec paths plus Requirement/Scenario references when local change specs exist
   - When \`Verifies:\` anchors a REMOVED requirement, verify it uses \`REMOVED Requirement "<name>"\` syntax (no Scenario required) and the REMOVED requirement exists in the delta spec
   - When \`Preserves:\` is present, verify it uses main spec path (\`openspec/specs/<cap>/spec.md\`) with Requirement and ≥1 Scenario names, and the path whitelist does not relax \`Verifies:\` constraints
   - Verify at least one \`Command:\`, \`Evidence:\`, or \`Expect:\` field per check
