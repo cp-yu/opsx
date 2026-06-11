@@ -310,3 +310,368 @@ function createChangeDir(specs: Record<string, string>): string {
   }
   return tempDir;
 }
+
+describe('REMOVED requirement anchoring', () => {
+  it('accepts Verifies with REMOVED Requirement without Scenario', () => {
+    const tempDir = createChangeDir({
+      'example/spec.md': `## REMOVED Requirements
+
+### Requirement: Deprecated feature
+`,
+    });
+
+    try {
+      const result = validateTaskStructure(
+        `### Task 1: Remove feature
+
+**Goal**: Remove deprecated feature.
+
+**Files**:
+- Delete: \`src/deprecated.ts\`
+
+**Requirements**:
+- Remove all traces of deprecated feature
+
+#### Checks
+
+- [ ] C1 Verify feature removed
+  - Verifies: \`specs/example/spec.md\` / REMOVED Requirement "Deprecated feature"
+  - Command: \`grep -r "deprecated" src/ || true\`
+  - Expect: no matches found
+`,
+        { changeDir: tempDir }
+      );
+
+      expect(result.valid).toBe(true);
+      expect(result.checks).toEqual(['C1']);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports error when REMOVED requirement is missing from spec', () => {
+    const tempDir = createChangeDir({
+      'example/spec.md': `## REMOVED Requirements
+
+### Requirement: Deprecated feature
+`,
+    });
+
+    try {
+      const result = validateTaskStructure(
+        `### Task 1: Remove feature
+
+**Goal**: Remove missing feature.
+
+**Files**:
+- Delete: \`src/missing.ts\`
+
+**Requirements**:
+- Remove all traces
+
+#### Checks
+
+- [ ] C1 Verify feature removed
+  - Verifies: \`specs/example/spec.md\` / REMOVED Requirement "Missing feature"
+  - Command: \`grep -r "missing" src/ || true\`
+  - Expect: no matches found
+`,
+        { changeDir: tempDir }
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.issues.map((issue) => issue.code)).toContain('missing-verifies-requirement');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('still requires Scenario for non-REMOVED Verifies', () => {
+    const tempDir = createChangeDir({
+      'example/spec.md': `## ADDED Requirements
+
+### Requirement: New feature
+
+#### Scenario: Feature works
+`,
+    });
+
+    try {
+      const result = validateTaskStructure(
+        `### Task 1: Add feature
+
+**Goal**: Implement new feature.
+
+**Files**:
+- Create: \`src/feature.ts\`
+
+**Requirements**:
+- Implement feature
+
+#### Checks
+
+- [ ] C1 Verify feature
+  - Verifies: \`specs/example/spec.md\` / Requirement "New feature"
+  - Command: \`pnpm test\`
+`,
+        { changeDir: tempDir }
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.issues.map((issue) => issue.code)).toContain('invalid-verifies-path');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('Preserves field anchoring', () => {
+  it('accepts Preserves with main spec path and Scenario', () => {
+    const tempDir = createChangeDir({
+      'example/spec.md': `## ADDED Requirements
+
+### Requirement: Temp spec
+`,
+    });
+
+    const projectRoot = path.dirname(tempDir);
+    const mainSpecPath = path.join(projectRoot, 'openspec', 'specs', 'auth', 'spec.md');
+    fs.mkdirSync(path.dirname(mainSpecPath), { recursive: true });
+    fs.writeFileSync(
+      mainSpecPath,
+      `## Requirements
+
+### Requirement: Login behavior
+
+#### Scenario: User authenticates
+`
+    );
+
+    try {
+      const result = validateTaskStructure(
+        `### Task 1: Refactor login
+
+**Goal**: Refactor login code without behavior change.
+
+**Files**:
+- Modify: \`src/auth/login.ts\`
+
+**Requirements**:
+- Keep behavior unchanged
+
+#### Checks
+
+- [ ] C1 Verify behavior preserved
+  - Preserves: \`openspec/specs/auth/spec.md\` / Requirement "Login behavior" / Scenario "User authenticates"
+  - Command: \`pnpm test src/auth/login.test.ts\`
+  - Expect: old function loginUser no longer exists
+`,
+        { changeDir: tempDir }
+      );
+
+      expect(result.valid).toBe(true);
+      expect(result.checks).toEqual(['C1']);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+      fs.rmSync(path.join(projectRoot, 'openspec'), { recursive: true, force: true });
+    }
+  });
+
+  it('rejects Preserves with change-local path', () => {
+    const tempDir = createChangeDir({
+      'example/spec.md': `## ADDED Requirements
+
+### Requirement: Temp spec
+
+#### Scenario: Test
+`,
+    });
+
+    try {
+      const result = validateTaskStructure(
+        `### Task 1: Refactor
+
+**Goal**: Refactor code.
+
+**Files**:
+- Modify: \`src/code.ts\`
+
+**Requirements**:
+- Keep behavior unchanged
+
+#### Checks
+
+- [ ] C1 Verify behavior
+  - Preserves: \`specs/example/spec.md\` / Requirement "Temp spec" / Scenario "Test"
+  - Command: \`pnpm test\`
+`,
+        { changeDir: tempDir }
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.issues.map((issue) => issue.code)).toContain('invalid-verifies-path');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects Preserves with absolute path', () => {
+    const tempDir = createChangeDir({
+      'example/spec.md': `## ADDED Requirements
+
+### Requirement: Temp spec
+`,
+    });
+
+    try {
+      const result = validateTaskStructure(
+        `### Task 1: Refactor
+
+**Goal**: Refactor code.
+
+**Files**:
+- Modify: \`src/code.ts\`
+
+**Requirements**:
+- Keep behavior unchanged
+
+#### Checks
+
+- [ ] C1 Verify behavior
+  - Preserves: \`/openspec/specs/auth/spec.md\` / Requirement "Test" / Scenario "Test"
+  - Command: \`pnpm test\`
+`,
+        { changeDir: tempDir }
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.issues.map((issue) => issue.code)).toContain('invalid-verifies-path');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects Preserves with parent traversal', () => {
+    const tempDir = createChangeDir({
+      'example/spec.md': `## ADDED Requirements
+
+### Requirement: Temp spec
+`,
+    });
+
+    try {
+      const result = validateTaskStructure(
+        `### Task 1: Refactor
+
+**Goal**: Refactor code.
+
+**Files**:
+- Modify: \`src/code.ts\`
+
+**Requirements**:
+- Keep behavior unchanged
+
+#### Checks
+
+- [ ] C1 Verify behavior
+  - Preserves: \`openspec/../specs/auth/spec.md\` / Requirement "Test" / Scenario "Test"
+  - Command: \`pnpm test\`
+`,
+        { changeDir: tempDir }
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.issues.map((issue) => issue.code)).toContain('invalid-verifies-path');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects Preserves with backslash path', () => {
+    const tempDir = createChangeDir({
+      'example/spec.md': `## ADDED Requirements
+
+### Requirement: Temp spec
+`,
+    });
+
+    try {
+      const result = validateTaskStructure(
+        `### Task 1: Refactor
+
+**Goal**: Refactor code.
+
+**Files**:
+- Modify: \`src/code.ts\`
+
+**Requirements**:
+- Keep behavior unchanged
+
+#### Checks
+
+- [ ] C1 Verify behavior
+  - Preserves: \`openspec\\specs\\auth\\spec.md\` / Requirement "Test" / Scenario "Test"
+  - Command: \`pnpm test\`
+`,
+        { changeDir: tempDir }
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.issues.map((issue) => issue.code)).toContain('invalid-verifies-path');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('does not relax Verifies path rules', () => {
+    const tempDir = createChangeDir({
+      'example/spec.md': `## ADDED Requirements
+
+### Requirement: Temp spec
+
+#### Scenario: Test
+`,
+    });
+
+    const projectRoot = path.dirname(tempDir);
+    const mainSpecPath = path.join(projectRoot, 'openspec', 'specs', 'auth', 'spec.md');
+    fs.mkdirSync(path.dirname(mainSpecPath), { recursive: true });
+    fs.writeFileSync(
+      mainSpecPath,
+      `## Requirements
+
+### Requirement: Login
+
+#### Scenario: Works
+`
+    );
+
+    try {
+      const result = validateTaskStructure(
+        `### Task 1: Add feature
+
+**Goal**: Add new feature.
+
+**Files**:
+- Create: \`src/feature.ts\`
+
+**Requirements**:
+- Implement feature
+
+#### Checks
+
+- [ ] C1 Verify feature
+  - Verifies: \`openspec/specs/auth/spec.md\` / Requirement "Login" / Scenario "Works"
+  - Command: \`pnpm test\`
+`,
+        { changeDir: tempDir }
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.issues.map((issue) => issue.code)).toContain('invalid-verifies-path');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+      fs.rmSync(path.join(projectRoot, 'openspec'), { recursive: true, force: true });
+    }
+  });
+});

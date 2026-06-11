@@ -13,4 +13,17 @@ describe('reviewer summary schema contract', () => {
     expect(instructions).toContain('"staleTodosFound": 0');
     expect(instructions).toContain('"halfMigrationsFound": 0');
   });
+
+  it('includes unaccountedChangesFound counter in cleanliness summary', () => {
+    const instructions = getReviewerSkillTemplate().instructions;
+
+    expect(instructions).toContain('"unaccountedChangesFound": 0');
+  });
+
+  it('allows null taskLine for unaccounted change writeBackPlan entries', () => {
+    const instructions = getReviewerSkillTemplate().instructions;
+
+    expect(instructions).toContain('null');
+    expect(instructions).toContain('append_remediation');
+  });
 });

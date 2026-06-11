@@ -91,7 +91,11 @@ export const OPSX_POST_PROPOSE_VALIDATION = `
   - Programmatically verify either legacy \`Actions\`/\`Checks\` sections or coarse \`### Task N:\` sections with \`Goal\`, \`Files\`, \`Requirements\`, and nested \`Checks\`
   - For legacy tasks, verify \`A\`-prefixed action checkboxes, \`C\`-prefixed check checkboxes, required \`Covers:\` fields, valid \`Covers:\` references, and every action covered by at least one check
   - For coarse tasks, verify each task has no more than 5 requirements and at least one nested \`C\`-prefixed check
-  - For every check, verify required non-empty \`Verifies:\` fields, change-local \`Verifies:\` spec paths plus Requirement/Scenario references when local change specs exist, and at least one \`Command:\`, \`Evidence:\`, or \`Expect:\` field
+  - For every check, verify required non-empty \`Verifies:\` or \`Preserves:\` field
+  - When \`Verifies:\` anchors an ordinary requirement, verify change-local \`Verifies:\` spec paths plus Requirement/Scenario references when local change specs exist
+  - When \`Verifies:\` anchors a REMOVED requirement, verify it uses \`REMOVED Requirement "<name>"\` syntax (no Scenario required) and the REMOVED requirement exists in the delta spec
+  - When \`Preserves:\` is present, verify it uses main spec path (\`openspec/specs/<cap>/spec.md\`) with Requirement and ≥1 Scenario names, and the path whitelist does not relax \`Verifies:\` constraints
+  - Verify at least one \`Command:\`, \`Evidence:\`, or \`Expect:\` field per check
   - Do NOT invent semantic lint rules beyond the current templates
   - Do NOT judge whether a check is semantically sufficient; defer semantic suitability to verify/reviewer
 - If warnings are found, do exactly one repair pass on the generated artifacts, then re-check once
@@ -319,10 +323,13 @@ export const OPSX_VERIFY_ALIGNMENT = `
  */
 export const CONFORMANCE_CHECK_RULES = `
 **Conformance Check Rules**:
-- For each delta-spec requirement, search for concrete implementation evidence in code and tests before concluding status
+- Dispatch verification by Check anchor type:
+  - **Verifies (existence)**: search for implementation evidence; missing → CRITICAL
+  - **Verifies ... REMOVED Requirement (absence)**: multi-angle search for residue (symbol, file path, import reference); any residue → CRITICAL; cite absence evidence on PASS
+  - **Preserves (equivalence)**: dual-branch — behavior unchanged (tests pass) AND old form absent from final code; old and new form coexist → CRITICAL "Half migration"
 - Classify issues using strict thresholds:
-  - **CRITICAL**: required behavior is missing, directly contradicted, or no credible implementation evidence exists
-  - **WARNING**: implementation exists but may diverge from the requirement, scenario coverage is incomplete, or artifact/code drift is likely
+  - **CRITICAL**: required behavior missing, directly contradicted, REMOVED residue found, Preserves old form still exists, or no credible implementation evidence
+  - **WARNING**: implementation exists but may diverge, scenario coverage incomplete, or artifact/code drift likely
   - **SUGGESTION**: minor pattern or clarity issues that do not block archive
 - Map every issue to the most specific requirement and, when possible, the task that claimed completion
 - Cite file paths and line ranges for both supporting evidence and missing evidence

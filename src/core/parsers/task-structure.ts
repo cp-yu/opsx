@@ -47,11 +47,13 @@ interface TaskItem {
   fields: Set<string>;
   covers: string[];
   verifies?: string;
+  preserves?: string;
 }
 
 interface SpecRequirement {
   name: string;
   scenarios: Set<string>;
+  isRemoved?: boolean;
 }
 
 interface CoarseTask {
@@ -62,11 +64,12 @@ interface CoarseTask {
 }
 
 const CHECKBOX_RE = /^\s*-\s+\[[ xX]\]\s+(\S+)/;
-const FIELD_RE = /^\s*-\s+(Covers|Verifies|Command|Evidence|Expect):\s*(.*)$/;
+const FIELD_RE = /^\s*-\s+(Covers|Verifies|Preserves|Command|Evidence|Expect):\s*(.*)$/;
 const TASK_FIELD_RE = /^\*\*(Goal|Files|Requirements)\*\*:\s*(.*)$/;
 const TASK_CHECKS_HEADING_RE = /^####\s+Checks\s*$/;
 const SPEC_PATH_RE = /`([^`]+)`/;
 const REQUIREMENT_RE = /\bRequirement\s+"([^"]+)"/;
+const REMOVED_REQUIREMENT_RE = /\bREMOVED\s+Requirement\s+"([^"]+)"/;
 const SCENARIOS_RE = /\bScenarios?\s+(.+)$/;
 const SCENARIO_NAME_RE = /"([^"]+)"/g;
 
@@ -215,11 +218,29 @@ function validateVerifies(
   changeDir: string | undefined,
   issues: TaskStructureIssue[]
 ): void {
-  const value = item.verifies?.trim();
-  if (!value) {
-    issues.push(error('missing-verifies', `Check ${item.id} is missing Verifies.`, item.line));
-    return;
+  const hasVerifies = item.verifies?.trim();
+  const hasPreserves = item.preserves?.trim();
+
+  if (!hasVerifies && !hasPreserves) {
+    issues.push(error('missing-verifies', `Check ${item.id} is missing Verifies or Preserves.`, item.line));
   }
+
+  if (hasVerifies) {
+    validateVerifiesField(item, specFiles, changeDir, issues);
+  }
+
+  if (hasPreserves) {
+    validatePreservesField(item, changeDir, issues);
+  }
+}
+
+function validateVerifiesField(
+  item: TaskItem,
+  specFiles: Set<string>,
+  changeDir: string | undefined,
+  issues: TaskStructureIssue[]
+): void {
+  const value = item.verifies!.trim();
 
   if (!changeDir || specFiles.size === 0) {
     issues.push(
@@ -262,12 +283,82 @@ function validateVerifies(
     return;
   }
 
+  if (parsed.isRemoved && !requirement.isRemoved) {
+    issues.push(
+      error(
+        'missing-verifies-requirement',
+        `Check ${item.id} Verifies references "${parsed.requirement}" as REMOVED, but it is not in a REMOVED Requirements section.`,
+        item.line
+      )
+    );
+    return;
+  }
+
+  if (!parsed.isRemoved) {
+    for (const scenario of parsed.scenarios) {
+      if (!requirement.scenarios.has(scenario)) {
+        issues.push(
+          error(
+            'missing-verifies-scenario',
+            `Check ${item.id} Verifies references missing scenario "${scenario}".`,
+            item.line
+          )
+        );
+      }
+    }
+  }
+}
+
+function validatePreservesField(
+  item: TaskItem,
+  changeDir: string | undefined,
+  issues: TaskStructureIssue[]
+): void {
+  const value = item.preserves!.trim();
+
+  const parsed = parsePreserves(value);
+  if (!parsed || !isValidMainSpecPath(parsed.specPath)) {
+    issues.push(error('invalid-verifies-path', `Check ${item.id} has an invalid Preserves spec path.`, item.line));
+    return;
+  }
+
+  if (!changeDir) {
+    return;
+  }
+
+  const projectRoot = path.dirname(changeDir);
+  const mainSpecPath = path.join(projectRoot, parsed.specPath);
+
+  if (!fs.existsSync(mainSpecPath)) {
+    issues.push(
+      error(
+        'missing-verifies-spec',
+        `Check ${item.id} Preserves references missing spec ${parsed.specPath}.`,
+        item.line
+      )
+    );
+    return;
+  }
+
+  const spec = parseSpecRequirements(fs.readFileSync(mainSpecPath, 'utf8'));
+  const requirement = spec.get(parsed.requirement);
+  if (!requirement) {
+    issues.push(
+      error(
+        'missing-verifies-requirement',
+        `Check ${item.id} Preserves references missing requirement "${parsed.requirement}".`,
+        item.line
+      )
+    );
+    return;
+  }
+
   for (const scenario of parsed.scenarios) {
     if (!requirement.scenarios.has(scenario)) {
       issues.push(
         error(
           'missing-verifies-scenario',
-          `Check ${item.id} Verifies references missing scenario "${scenario}".`,
+          `Check ${item.id} Preserves references missing scenario "${scenario}".`,
           item.line
         )
       );
@@ -275,7 +366,30 @@ function validateVerifies(
   }
 }
 
-function parseVerifies(value: string): { specPath: string; requirement: string; scenarios: string[] } | undefined {
+function parseVerifies(value: string): { specPath: string; requirement: string; scenarios: string[]; isRemoved?: boolean } | undefined {
+  const specPath = value.match(SPEC_PATH_RE)?.[1]?.trim();
+
+  const removedMatch = value.match(REMOVED_REQUIREMENT_RE);
+  if (removedMatch) {
+    const requirement = removedMatch[1]?.trim();
+    if (!specPath || !requirement) {
+      return undefined;
+    }
+    return { specPath, requirement, scenarios: [], isRemoved: true };
+  }
+
+  const requirement = value.match(REQUIREMENT_RE)?.[1]?.trim();
+  const scenarioText = value.match(SCENARIOS_RE)?.[1] ?? '';
+  const scenarios = [...scenarioText.matchAll(SCENARIO_NAME_RE)].map((match) => match[1].trim());
+
+  if (!specPath || !requirement || scenarios.length === 0 || scenarios.some((scenario) => !scenario)) {
+    return undefined;
+  }
+
+  return { specPath, requirement, scenarios };
+}
+
+function parsePreserves(value: string): { specPath: string; requirement: string; scenarios: string[] } | undefined {
   const specPath = value.match(SPEC_PATH_RE)?.[1]?.trim();
   const requirement = value.match(REQUIREMENT_RE)?.[1]?.trim();
   const scenarioText = value.match(SCENARIOS_RE)?.[1] ?? '';
@@ -309,14 +423,17 @@ function listChangeSpecFiles(changeDir: string): Set<string> {
   return files;
 }
 
-function isValidChangeSpecPath(specPath: string): boolean {
-  if (
+function hasInvalidPathChars(specPath: string): boolean {
+  return (
     specPath.includes('\\') ||
     specPath.startsWith('/') ||
     path.win32.isAbsolute(specPath) ||
-    specPath.startsWith('openspec/') ||
     specPath.includes('../')
-  ) {
+  );
+}
+
+function isValidChangeSpecPath(specPath: string): boolean {
+  if (hasInvalidPathChars(specPath) || specPath.startsWith('openspec/')) {
     return false;
   }
 
@@ -324,20 +441,43 @@ function isValidChangeSpecPath(specPath: string): boolean {
   return parts.length === 3 && parts[0] === 'specs' && parts[1] !== '' && parts[2] === 'spec.md';
 }
 
+function isValidMainSpecPath(specPath: string): boolean {
+  if (hasInvalidPathChars(specPath)) {
+    return false;
+  }
+
+  const parts = specPath.split('/');
+  return (
+    parts.length === 4 &&
+    parts[0] === 'openspec' &&
+    parts[1] === 'specs' &&
+    parts[2] !== '' &&
+    parts[3] === 'spec.md'
+  );
+}
+
 function parseSpecRequirements(content: string): Map<string, SpecRequirement> {
   const requirements = new Map<string, SpecRequirement>();
   let current: SpecRequirement | undefined;
+  let inRemovedSection = false;
 
   for (const line of content.replace(/\r\n?/g, '\n').split('\n')) {
+    const sectionHeader = line.match(/^##\s+(REMOVED|ADDED|MODIFIED)\s+Requirements\s*$/);
+    if (sectionHeader) {
+      inRemovedSection = sectionHeader[1] === 'REMOVED';
+      current = undefined;
+      continue;
+    }
+
     const requirement = line.match(/^###\s+Requirement:\s+(.+?)\s*$/);
     if (requirement) {
-      current = { name: requirement[1], scenarios: new Set() };
+      current = { name: requirement[1], scenarios: new Set(), isRemoved: inRemovedSection };
       requirements.set(current.name, current);
       continue;
     }
 
     const scenario = line.match(/^####\s+Scenario:\s+(.+?)\s*$/);
-    if (scenario && current) {
+    if (scenario && current && !inRemovedSection) {
       current.scenarios.add(scenario[1]);
     }
   }
@@ -459,6 +599,8 @@ function parseItems(
       current.covers.push(...field[2].split(',').map((part) => part.trim()).filter(Boolean));
     } else if (name === 'Verifies') {
       current.verifies = field[2];
+    } else if (name === 'Preserves') {
+      current.preserves = field[2];
     }
   }
 
