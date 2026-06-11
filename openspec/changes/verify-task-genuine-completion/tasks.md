@@ -15,12 +15,12 @@
 
 #### Checks
 
-- [ ] C1 验证 REMOVED 锚定语法解析与交叉校验
+- [x] C1 验证 REMOVED 锚定语法解析与交叉校验
   - Verifies: `specs/cli-artifact-workflow/spec.md` / Requirement "Instructions Command" / Scenario "REMOVED 锚定的结构校验"
   - Command: `npx vitest run test/core/parsers/task-structure.test.ts`
   - Expect: 合法 REMOVED 锚定（无 Scenario）通过；所指 REMOVED 条目缺失时报错；普通 Verifies 缺 Scenario 仍报 `invalid-verifies-path`
 
-- [ ] C2 验证 Preserves 字段解析与路径白名单
+- [x] C2 验证 Preserves 字段解析与路径白名单
   - Verifies: `specs/cli-artifact-workflow/spec.md` / Requirement "Instructions Command" / Scenario "Preserves 字段锚定主 spec 且跨平台解析"
   - Command: `npx vitest run test/core/parsers/task-structure.test.ts`
   - Expect: 主 spec 路径 + Requirement/Scenario 通过；change-local 路径、绝对路径、`..` 穿越、反斜杠路径被拒绝；Verifies 未被顺带放宽
