@@ -15,7 +15,7 @@
       "test/core/templates/skill-templates-parity.test.ts",
       "test/skills/archive-skill-content.test.ts"
     ],
-    "evidenceFingerprint": "0de4ca8431dc13d278b61aee5818a88515a09e3e0c86a9f954d855721e5eb87c",
+    "evidenceFingerprint": "08bf9aa79a52090e6b62819a5a4fab73be44c41f4b5e624059fc1bd19652a0e4",
     "evidenceFingerprintEntries": [
       {
         "path": ".claude/skills/openspec-archive-change/SKILL.md",
@@ -35,7 +35,7 @@
       },
       {
         "path": "src/core/templates/workflows/archive-change.ts",
-        "hash": "c223f49952217a53983975dde6fa52aa205c07d745e77e170a54ffe59d816ebd"
+        "hash": "753017cc945fda868aedc4e65d2ab664b7c2eb2c81d6ffdade259f731fda5e49"
       },
       {
         "path": "test/core/templates/skill-templates-parity.test.ts",
@@ -50,8 +50,27 @@
     "gitHeadCommit": "89b4650c923a1a9a40966a3eda16d5446229e593"
   },
   "optimization": {
-    "status": "PENDING_VERIFICATION",
-    "attempts": [],
+    "status": "IMPROVED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-11T04:52:36.177Z",
+        "type": "optimization",
+        "status": "OPTIMIZATION_PROPOSED",
+        "summary": "Extract Step 8 git flow paragraph into buildAgentGitFlowStep() helper to improve readability",
+        "files": [
+          "src/core/templates/workflows/archive-change.ts"
+        ]
+      },
+      {
+        "timestamp": "2026-06-11T04:57:38.913Z",
+        "type": "verification",
+        "result": "PASS",
+        "behaviorRetryCounter": 1
+      }
+    ],
+    "affectedFileHashes": {
+      "src/core/templates/workflows/archive-change.ts": "c223f49952217a53983975dde6fa52aa205c07d745e77e170a54ffe59d816ebd"
+    },
     "baseline": {
       "timestamp": "2026-06-11T04:45:56.538Z",
       "result": "PASS",
@@ -103,6 +122,10 @@
         "skippedEvidenceFiles": [],
         "gitHeadCommit": "89b4650c923a1a9a40966a3eda16d5446229e593"
       }
+    },
+    "final": {
+      "result": "PASS",
+      "issues": []
     }
   }
 }
