@@ -44,12 +44,12 @@
 
 #### Checks
 
-- [ ] C3 验证 tasks 指令包含删除与重构转换规则
+- [x] C3 验证 tasks 指令包含删除与重构转换规则
   - Verifies: `specs/cli-artifact-workflow/spec.md` / Requirement "Instructions Command" / Scenario "Tasks instructions convert vague work into testable goals", "Files 支持 Delete 声明"
   - Command: `npx vitest run test/commands/artifact-workflow.test.ts`
   - Expect: `openspec instructions tasks --json` 的 instruction 包含 REMOVED 锚定删除规则、Preserves 等价检查规则与 `Delete:` 标签
 
-- [ ] C4 验证缺失断言走非运行时快速路径
+- [x] C4 验证缺失断言走非运行时快速路径
   - Verifies: `specs/cli-artifact-workflow/spec.md` / Requirement "Instructions Command" / Scenario "Tasks instructions allow non-runtime text fast path"
   - Command: `npx vitest run test/commands/artifact-workflow.test.ts`
   - Expect: instruction 声明缺失断言以 Command 输出为最终证据、不要求人为 red/green
@@ -125,6 +125,7 @@
 **Files**:
 - Modify: `.claude/skills/openspec-reviewer/SKILL.md`
 - Test: `test/integration/reviewer-strictness.test.ts`
+- Test: `test/core/templates/skill-templates-parity.test.ts`
 
 **Requirements**:
 - reviewer/verify 模板改动后运行 skill 再生成，生成面与模板一致
