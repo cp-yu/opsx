@@ -138,17 +138,17 @@
 
 #### Checks
 
-- [ ] C1 验证 profile 子命令已删除
+- [x] C1 验证 profile 子命令已删除
   - Verifies: `specs/cli-config/spec.md` / REMOVED Requirement "Profile Configuration Flow"
   - Command: `grep -q "\.command('profile')" src/commands/config.ts && exit 1 || exit 0`
   - Expect: config.ts 不包含 profile 子命令定义
 
-- [ ] C2 验证相关测试已删除
+- [x] C2 验证相关测试已删除
   - Verifies: `specs/cli-config/spec.md` / Requirement "Command Structure" / Scenario "Available subcommands"
   - Command: `test ! -f test/commands/config-profile.test.ts`
   - Expect: 测试文件不存在
 
-- [ ] C3 验证 config 帮助不显示 profile
+- [x] C3 验证 config 帮助不显示 profile
   - Verifies: `specs/cli-config/spec.md` / Requirement "Command Structure" / Scenario "Available subcommands"
   - Command: `pnpm test config.test.ts`
   - Expect: config --help 输出不包含 profile 子命令
