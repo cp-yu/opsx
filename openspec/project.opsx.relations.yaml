@@ -522,3 +522,9 @@ relations:
   - from: cap.ai.references-home
     type: relates_to
     to: dom.config
+  - from: cap.cli.completion-introspect
+    type: contains
+    to: dom.cli
+  - from: cap.cli.completion
+    type: depends_on
+    to: cap.cli.completion-introspect

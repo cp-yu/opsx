@@ -1,6 +1,7 @@
 import ora from 'ora';
+import type { Command } from 'commander';
 import { CompletionFactory } from '../core/completions/factory.js';
-import { COMMAND_REGISTRY } from '../core/completions/command-registry.js';
+import { introspectCommands } from '../core/completions/introspect.js';
 import { detectShell, SupportedShell } from '../utils/shell-detection.js';
 import { CompletionProvider } from '../core/completions/completion-provider.js';
 import { getArchivedChangeIds } from '../utils/item-discovery.js';
@@ -28,9 +29,11 @@ interface CompleteOptions {
  */
 export class CompletionCommand {
   private completionProvider: CompletionProvider;
+  private program: Command;
 
-  constructor() {
+  constructor(program: Command) {
     this.completionProvider = new CompletionProvider();
+    this.program = program;
   }
   /**
    * Resolve shell parameter or exit with error
@@ -114,7 +117,8 @@ export class CompletionCommand {
    */
   private async generateForShell(shell: SupportedShell): Promise<void> {
     const generator = CompletionFactory.createGenerator(shell);
-    const script = generator.generate(COMMAND_REGISTRY);
+    const commands = introspectCommands(this.program);
+    const script = generator.generate(commands);
     console.log(script);
   }
 
@@ -129,7 +133,8 @@ export class CompletionCommand {
 
     try {
       // Generate the completion script
-      const script = generator.generate(COMMAND_REGISTRY);
+      const commands = introspectCommands(this.program);
+      const script = generator.generate(commands);
 
       // Install it
       const result = await installer.install(script);

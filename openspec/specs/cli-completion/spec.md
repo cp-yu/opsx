@@ -299,7 +299,7 @@ The completion implementation SHALL follow clean architecture principles with Ty
 - **AND** implement a common `CompletionGenerator` interface with method:
   - `generate(commands: CommandDefinition[]): string` - Returns complete shell script
 - **AND** each generator handles shell-specific syntax, escaping, and patterns
-- **AND** all generators consume the same `CommandDefinition[]` from the command registry
+- **AND** all generators consume the same `CommandDefinition[]` from the introspection function
 
 #### Scenario: Shell-specific installers
 
@@ -329,18 +329,14 @@ The completion implementation SHALL follow clean architecture principles with Ty
   - `isOpenSpecProject(): boolean` - Checks if current directory is OpenSpec-enabled
 - **AND** implement caching with 2-second TTL using class properties
 
-#### Scenario: Command registry
+#### Scenario: 命令树运行时反射
 
-- **WHEN** defining completable commands
-- **THEN** create a centralized `CommandDefinition` type with properties:
-  - `name: string` - Command name
-  - `description: string` - Help text
-  - `flags: FlagDefinition[]` - Available flags
-  - `acceptsPositional: boolean` - Whether command takes positional arguments
-  - `positionalType: string` - Type of positional (change-id, spec-id, path, shell)
-  - `subcommands?: CommandDefinition[]` - Nested subcommands
-- **AND** export a `COMMAND_REGISTRY` constant with all command definitions
-- **AND** all generators consume this registry to ensure consistency across shells
+- **WHEN** 补全系统需要命令定义
+- **THEN** 通过 `introspectCommands(program)` 函数从 Commander.js `Command` 实例运行时反射命令树
+- **AND** 提取每个非 hidden 命令的 `name()`、`description()`、`options`、`registeredArguments` 和递归子命令
+- **AND** 通过 `POSITIONAL_TYPE_MAP` 集中式常量合并 `positionalType` 注解到对应命令
+- **AND** 返回 `CommandDefinition[]` 供所有 shell generators 消费
+- **AND** 不存在独立的静态 `COMMAND_REGISTRY` 数组
 
 #### Scenario: Type-safe shell detection
 
@@ -445,15 +441,22 @@ The completion implementation SHALL be testable with unit and integration tests 
 
 ### Requirement: Command Registry
 
-The `COMMAND_REGISTRY` constant SHALL include all CLI commands, including `verify` with its subcommands.
+`CompletionCommand` SHALL 通过构造时注入的 Commander.js `program` 实例调用 `introspectCommands()` 获取命令定义，而非依赖静态 `COMMAND_REGISTRY` 常量。
 
-#### Scenario: Verify command registered
+#### Scenario: 运行时反射取代静态注册表
 
-- **WHEN** the `COMMAND_REGISTRY` is loaded
-- **THEN** it SHALL contain a `verify` entry with description "Programmatic verify gates for changes"
-- **AND** it SHALL have subcommands: phase1, phase2, seal, status
-- **AND** phase1 SHALL have flags: `--input`, `--json` and positional type `change-id`
-- **AND** phase2 SHALL have flags: `--type`, `--files`, `--input`, `--json` and positional type `change-id`
-- **AND** seal SHALL have flags: `--json` and positional type `change-id`
-- **AND** status SHALL have flags: `--json` and positional type `change-id`
+- **WHEN** `CompletionCommand` 被实例化
+- **THEN** 构造函数 SHALL 接收 Commander.js `Command` 实例作为参数
+- **AND** 在 `generate`/`install` 操作中调用 `introspectCommands(program)` 获取 `CommandDefinition[]`
+- **AND** 不 import 或引用 `command-registry.ts` 模块
+
+#### Scenario: verify 命令通过反射可发现
+
+- **WHEN** 对包含 `verify` 命令的 `program` 实例调用 `introspectCommands()`
+- **THEN** 返回结果 SHALL 包含 `verify` 条目，description 为 "Programmatic verify gates for changes"
+- **AND** SHALL 包含子命令: phase1, phase2, seal, status
+- **AND** phase1 SHALL 包含 flags: `--input`, `--json` 且 positionalType 为 `change-id`
+- **AND** phase2 SHALL 包含 flags: `--type`, `--files`, `--input`, `--json` 且 positionalType 为 `change-id`
+- **AND** seal SHALL 包含 flags: `--json` 且 positionalType 为 `change-id`
+- **AND** status SHALL 包含 flags: `--json` 且 positionalType 为 `change-id`
 

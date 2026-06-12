@@ -92,72 +92,7 @@ describe('config command integration', () => {
   });
 });
 
-describe('config command shell completion registry', () => {
-  it('should have config command in registry', async () => {
-    const { COMMAND_REGISTRY } = await import('../../src/core/completions/command-registry.js');
-
-    const configCmd = COMMAND_REGISTRY.find((cmd) => cmd.name === 'config');
-    expect(configCmd).toBeDefined();
-    expect(configCmd?.description).toBe('View and modify global OpenSpec configuration');
-  });
-
-  it('should have all config subcommands in registry', async () => {
-    const { COMMAND_REGISTRY } = await import('../../src/core/completions/command-registry.js');
-
-    const configCmd = COMMAND_REGISTRY.find((cmd) => cmd.name === 'config');
-    const subcommandNames = configCmd?.subcommands?.map((s) => s.name) ?? [];
-
-    expect(subcommandNames).toContain('path');
-    expect(subcommandNames).toContain('list');
-    expect(subcommandNames).toContain('get');
-    expect(subcommandNames).toContain('set');
-    expect(subcommandNames).toContain('unset');
-    expect(subcommandNames).toContain('reset');
-    expect(subcommandNames).toContain('edit');
-    expect(subcommandNames).toContain('project');
-  });
-
-  it('should have --json flag on list subcommand', async () => {
-    const { COMMAND_REGISTRY } = await import('../../src/core/completions/command-registry.js');
-
-    const configCmd = COMMAND_REGISTRY.find((cmd) => cmd.name === 'config');
-    const listCmd = configCmd?.subcommands?.find((s) => s.name === 'list');
-    const flagNames = listCmd?.flags?.map((f) => f.name) ?? [];
-
-    expect(flagNames).toContain('json');
-  });
-
-  it('should have --string flag on set subcommand', async () => {
-    const { COMMAND_REGISTRY } = await import('../../src/core/completions/command-registry.js');
-
-    const configCmd = COMMAND_REGISTRY.find((cmd) => cmd.name === 'config');
-    const setCmd = configCmd?.subcommands?.find((s) => s.name === 'set');
-    const flagNames = setCmd?.flags?.map((f) => f.name) ?? [];
-
-    expect(flagNames).toContain('string');
-    expect(flagNames).toContain('allow-unknown');
-  });
-
-  it('should have --all and -y flags on reset subcommand', async () => {
-    const { COMMAND_REGISTRY } = await import('../../src/core/completions/command-registry.js');
-
-    const configCmd = COMMAND_REGISTRY.find((cmd) => cmd.name === 'config');
-    const resetCmd = configCmd?.subcommands?.find((s) => s.name === 'reset');
-    const flagNames = resetCmd?.flags?.map((f) => f.name) ?? [];
-
-    expect(flagNames).toContain('all');
-    expect(flagNames).toContain('yes');
-  });
-
-  it('should have --scope flag on config command', async () => {
-    const { COMMAND_REGISTRY } = await import('../../src/core/completions/command-registry.js');
-
-    const configCmd = COMMAND_REGISTRY.find((cmd) => cmd.name === 'config');
-    const flagNames = configCmd?.flags?.map((f) => f.name) ?? [];
-
-    expect(flagNames).toContain('scope');
-  });
-});
+// NOTE: Shell completion registry tests moved to introspect-regression.test.ts
 
 describe('config project command', () => {
   let tempDir: string;
