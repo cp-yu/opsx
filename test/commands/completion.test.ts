@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { Command } from 'commander';
 import { CompletionCommand } from '../../src/commands/completion.js';
-import { COMMAND_REGISTRY } from '../../src/core/completions/command-registry.js';
 import * as shellDetection from '../../src/utils/shell-detection.js';
 
 // Mock the shell detection module
@@ -31,11 +31,33 @@ vi.mock('../../src/core/completions/installers/zsh-installer.js', () => ({
 
 describe('CompletionCommand', () => {
   let command: CompletionCommand;
+  let mockProgram: Command;
   let consoleLogSpy: any;
   let consoleErrorSpy: any;
 
   beforeEach(() => {
-    command = new CompletionCommand();
+    // Create a minimal mock program with a few commands
+    mockProgram = new Command();
+    mockProgram
+      .command('list')
+      .description('List items')
+      .option('--json', 'Output as JSON');
+
+    mockProgram
+      .command('validate [item-name]')
+      .description('Validate items')
+      .option('--strict', 'Strict mode');
+
+    const specCmd = mockProgram
+      .command('spec')
+      .description('Manage specs');
+
+    specCmd
+      .command('show [spec-id]')
+      .description('Show a spec')
+      .option('--json', 'Output as JSON');
+
+    command = new CompletionCommand(mockProgram);
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     process.exitCode = 0;
@@ -211,7 +233,11 @@ describe('CompletionCommand', () => {
         backupExistingFile: vi.fn(),
       } as any));
 
-      const cmd = new CompletionCommand();
+      // Create fresh program for this test
+      const testProgram = new Command();
+      testProgram.command('list').description('List items');
+
+      const cmd = new CompletionCommand(testProgram);
       await cmd.install({ shell: 'zsh' });
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -269,71 +295,5 @@ describe('CompletionCommand', () => {
   });
 });
 
-describe('completion registry coverage', () => {
-  it('registers the workflow and bootstrap command surfaces exposed by the CLI', () => {
-    const topLevelNames = COMMAND_REGISTRY.map((command) => command.name);
-    expect(topLevelNames).toEqual(expect.arrayContaining([
-      'sync',
-      'status',
-      'instructions',
-      'templates',
-      'schemas',
-      'new',
-      'bootstrap',
-    ]));
-
-    const sync = COMMAND_REGISTRY.find((command) => command.name === 'sync');
-    expect(sync?.acceptsPositional).toBe(true);
-    expect(sync?.positionalType).toBe('change-id');
-    expect(sync?.flags.map((flag) => flag.name)).toContain('no-validate');
-
-    const status = COMMAND_REGISTRY.find((command) => command.name === 'status');
-    expect(status?.flags.map((flag) => flag.name)).toEqual(expect.arrayContaining(['change', 'schema', 'json']));
-
-    const instructions = COMMAND_REGISTRY.find((command) => command.name === 'instructions');
-    expect(instructions?.acceptsPositional).toBe(true);
-    expect(instructions?.flags.map((flag) => flag.name)).toEqual(expect.arrayContaining(['change', 'schema', 'json']));
-
-    const templates = COMMAND_REGISTRY.find((command) => command.name === 'templates');
-    expect(templates?.flags.map((flag) => flag.name)).toEqual(expect.arrayContaining(['schema', 'json']));
-
-    const schemas = COMMAND_REGISTRY.find((command) => command.name === 'schemas');
-    expect(schemas?.flags.map((flag) => flag.name)).toContain('json');
-
-    const opsx = COMMAND_REGISTRY.find((command) => command.name === 'opsx');
-    const opsxQuery = opsx?.subcommands?.find((command) => command.name === 'query');
-    expect(opsxQuery?.acceptsPositional).toBe(true);
-    expect(opsxQuery?.flags.map((flag) => flag.name)).toEqual(expect.arrayContaining(['relations', 'code-map', 'json', 'depth']));
-    expect(opsxQuery?.flags).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: 'depth', takesValue: true }),
-    ]));
-
-    const newCommand = COMMAND_REGISTRY.find((command) => command.name === 'new');
-    const newChange = newCommand?.subcommands?.find((command) => command.name === 'change');
-    expect(newChange?.acceptsPositional).toBe(true);
-    expect(newChange?.flags.map((flag) => flag.name)).toEqual(expect.arrayContaining(['description', 'schema']));
-
-    const bootstrap = COMMAND_REGISTRY.find((command) => command.name === 'bootstrap');
-    expect(bootstrap?.subcommands?.map((command) => command.name)).toEqual(expect.arrayContaining([
-      'init',
-      'status',
-      'instructions',
-      'validate',
-      'promote',
-    ]));
-
-    const bootstrapInit = bootstrap?.subcommands?.find((command) => command.name === 'init');
-    expect(bootstrapInit?.flags).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: 'mode', takesValue: true, values: ['full', 'opsx-first', 'refresh'] }),
-      expect.objectContaining({ name: 'scope', takesValue: true }),
-    ]));
-
-    const bootstrapInstructions = bootstrap?.subcommands?.find((command) => command.name === 'instructions');
-    expect(bootstrapInstructions?.acceptsPositional).toBe(true);
-
-    const bootstrapPromote = bootstrap?.subcommands?.find((command) => command.name === 'promote');
-    expect(bootstrapPromote?.flags).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: 'yes', short: 'y' }),
-    ]));
-  });
-});
+// NOTE: Registry coverage test moved to introspect-regression.test.ts
+// which tests against the real CLI program instead of static COMMAND_REGISTRY

@@ -385,7 +385,7 @@ completionCmd
   .description('Generate completion script for a shell (outputs to stdout)')
   .action(async (shell?: string) => {
     try {
-      const completionCommand = new CompletionCommand();
+      const completionCommand = new CompletionCommand(program);
       await completionCommand.generate({ shell });
     } catch (error) {
       console.log();
@@ -400,7 +400,7 @@ completionCmd
   .option('--verbose', 'Show detailed installation output')
   .action(async (shell?: string, options?: { verbose?: boolean }) => {
     try {
-      const completionCommand = new CompletionCommand();
+      const completionCommand = new CompletionCommand(program);
       await completionCommand.install({ shell, verbose: options?.verbose });
     } catch (error) {
       console.log();
@@ -415,7 +415,7 @@ completionCmd
   .option('-y, --yes', 'Skip confirmation prompts')
   .action(async (shell?: string, options?: { yes?: boolean }) => {
     try {
-      const completionCommand = new CompletionCommand();
+      const completionCommand = new CompletionCommand(program);
       await completionCommand.uninstall({ shell, yes: options?.yes });
     } catch (error) {
       console.log();
@@ -430,7 +430,7 @@ program
   .description('Output completion data in machine-readable format (internal use)')
   .action(async (type: string) => {
     try {
-      const completionCommand = new CompletionCommand();
+      const completionCommand = new CompletionCommand(program);
       await completionCommand.complete({ type });
     } catch (error) {
       // Silently fail for graceful shell completion experience
