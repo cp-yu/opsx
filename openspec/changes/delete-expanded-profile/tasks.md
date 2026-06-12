@@ -77,17 +77,17 @@
 
 #### Checks
 
-- [ ] C1 验证 profiles.ts 已删除
+- [x] C1 验证 profiles.ts 已删除
   - Verifies: `specs/profiles/spec.md` / REMOVED Requirement "Profile Resolution"
   - Command: `test ! -f src/core/profiles.ts`
   - Expect: 文件不存在
 
-- [ ] C2 验证相关测试已删除
+- [x] C2 验证相关测试已删除
   - Verifies: `specs/profiles/spec.md` / REMOVED Requirement "Profile Validation"
   - Command: `test ! -f test/core/profiles.test.ts`
   - Expect: 测试文件不存在
 
-- [ ] C3 验证 workflow-surface 不导出 profile 函数
+- [x] C3 验证 workflow-surface 不导出 profile 函数
   - Verifies: `specs/profiles/spec.md` / REMOVED Requirement "Workflow List Generation"
   - Command: `grep -q "getProfileWorkflows\|CORE_WORKFLOWS\|EXPANDED_WORKFLOWS" src/core/workflow-surface.ts && exit 1 || exit 0`
   - Expect: 不包含 profile 相关导出
