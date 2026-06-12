@@ -111,12 +111,12 @@
 
 #### Checks
 
-- [ ] C1 验证配置结构不包含 profile 字段
+- [x] C1 验证配置结构不包含 profile 字段
   - Verifies: `specs/global-config/spec.md` / Requirement "Global Configuration Structure" / Scenario "配置文件结构"
   - Command: `pnpm test global-config.test.ts`
   - Expect: 测试通过，GlobalConfig 类型不含 profile/workflows
 
-- [ ] C2 验证读取过时字段时输出警告
+- [x] C2 验证读取过时字段时输出警告
   - Verifies: `specs/global-config/spec.md` / Requirement "Global Configuration Structure" / Scenario "读取包含过时字段的配置"
   - Command: `pnpm test global-config.test.ts`
   - Expect: 包含过时字段时输出警告消息
