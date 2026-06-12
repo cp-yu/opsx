@@ -122,6 +122,9 @@ relations:
     to: cap.artifact-graph.parse
   - from: cap.artifact-graph.instruction-loader
     type: depends_on
+    to: cap.config.projection
+  - from: cap.artifact-graph.instruction-loader
+    type: depends_on
     to: cap.config.project
   - from: cap.change.archive
     type: depends_on
@@ -138,9 +141,6 @@ relations:
   - from: cap.change.specs-sync
     type: depends_on
     to: cap.verify.cli-gate
-  - from: cap.cli.command-reference-consistency
-    type: depends_on
-    to: cap.ai.agent-docs
   - from: cap.cli.command-reference-consistency
     type: depends_on
     to: cap.ai.workflow-templates
@@ -314,9 +314,6 @@ relations:
     to: dom.verify
   - from: dom.ai-integration
     type: contains
-    to: cap.ai.agent-docs
-  - from: dom.ai-integration
-    type: contains
     to: cap.ai.command-generation
   - from: dom.ai-integration
     type: contains
@@ -426,6 +423,9 @@ relations:
   - from: dom.config
     type: contains
     to: cap.config.project
+  - from: dom.config
+    type: contains
+    to: cap.config.projection
   - from: dom.config
     type: contains
     to: cap.config.schema-validation

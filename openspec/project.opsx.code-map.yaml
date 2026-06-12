@@ -1,10 +1,9 @@
 schema_version: 1
 generated_at: 2026-06-11T11:58:09.888Z
 nodes:
-  - id: cap.ai.agent-docs
+  - id: cap.config.projection
     refs:
-      - path: src/core/artifact-graph/instruction-loader.ts
-      - path: src/core/templates/workflows/
+      - path: src/core/config-projection.ts
   - id: cap.ai.command-generation
     refs:
       - path: src/core/command-generation/

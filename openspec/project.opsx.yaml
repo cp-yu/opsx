@@ -47,8 +47,8 @@ domains:
     status: active
     type: domain
 capabilities:
-  - id: cap.ai.agent-docs
-    intent: 生成面向 Agent 的指令文档，并让所有会生成或回写 artifact 的 workflow surface 共享同一套 config projection contract；contract 明确 prose 字段、canonical token 例外和英文术语保留边界。
+  - id: cap.config.projection
+    intent: 将 config.yaml 编译为 prompt/runtime projections，确保所有 artifact-writing surfaces 共享统一的 prose/canonical/rules 语义边界
     status: active
     type: capability
   - id: cap.ai.agent-prompt-guidance
