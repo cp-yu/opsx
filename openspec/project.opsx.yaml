@@ -171,7 +171,7 @@ capabilities:
     intent: Ensure active documentation, generated Agent instructions, skills, prompts, and workflow templates reference only supported OpenSpec CLI command forms and report historical archive-only stale references separately.
     type: capability
   - id: cap.cli.completion
-    intent: 管理 OpenSpec CLI 的 shell 补全，COMMAND_REGISTRY 现已包含 verify 命令及其子命令 phase1、phase2、seal、status
+    intent: 管理 OpenSpec CLI 的 shell 补全，通过运行时反射 Commander.js 命令树自动派生补全数据，不再依赖静态 COMMAND_REGISTRY
     type: capability
   - id: cap.cli.config
     intent: 查看和修改全局 OpenSpec 配置，查询包含 git.commitMessage 路径覆盖与 merge/branch 字段结构的归一化项目配置
@@ -397,4 +397,7 @@ capabilities:
     type: capability
   - id: cap.ai.references-home
     intent: openspec/references/ 作为全部 skill reference 文件的唯一物理位置；openspec- 前缀文件由 update 逐文件覆盖管理、严禁目录级删除，非前缀文件为用户领地；生成时校验文件名全局唯一与内容工具中立；git.commitMessage.{boundary,archive,merge} 可选路径覆盖路由用户自有模板
+    type: capability
+  - id: cap.cli.completion-introspect
+    intent: 从 Commander.js 命令树运行时反射派生 CommandDefinition[]，通过 POSITIONAL_TYPE_MAP 补充补全语义注解，消除静态 COMMAND_REGISTRY 的手工同步负担
     type: capability

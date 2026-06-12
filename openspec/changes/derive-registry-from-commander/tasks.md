@@ -14,12 +14,12 @@
 
 #### Checks
 
-- [ ] C1 验证 MAP 导出正确
+- [x] C1 验证 MAP 导出正确
   - Verifies: `specs/cli-completion-introspect/spec.md` / Requirement "positionalType 集中式注解映射" / Scenario "MAP 条目格式"
   - Command: `pnpm test -- --testPathPattern positional-types`
   - Expect: 测试通过，MAP 中每个条目的值为合法 PositionalType
 
-- [ ] C2 验证所有已知 positional 命令均有条目
+- [x] C2 验证所有已知 positional 命令均有条目
   - Verifies: `specs/cli-completion-introspect/spec.md` / Requirement "positionalType 集中式注解映射" / Scenario "防漏守护"
   - Command: `pnpm test -- --testPathPattern positional-types`
   - Expect: 测试断言当前 COMMAND_REGISTRY 中所有 positionalType 条目在 MAP 中均存在
@@ -41,22 +41,22 @@
 
 #### Checks
 
-- [ ] C1 验证顶层命令提取
+- [x] C1 验证顶层命令提取
   - Verifies: `specs/cli-completion-introspect/spec.md` / Requirement "Commander.js 命令树运行时反射" / Scenario "提取顶层命令"
   - Command: `pnpm test -- --testPathPattern introspect`
   - Expect: 测试通过，输出包含所有非 hidden 顶层命令
 
-- [ ] C2 验证子命令递归提取
+- [x] C2 验证子命令递归提取
   - Verifies: `specs/cli-completion-introspect/spec.md` / Requirement "Commander.js 命令树运行时反射" / Scenario "递归提取子命令"
   - Command: `pnpm test -- --testPathPattern introspect`
   - Expect: 测试通过，嵌套子命令正确递归
 
-- [ ] C3 验证 flags 提取
+- [x] C3 验证 flags 提取
   - Verifies: `specs/cli-completion-introspect/spec.md` / Requirement "Commander.js 命令树运行时反射" / Scenario "提取 flag 定义"
   - Command: `pnpm test -- --testPathPattern introspect`
   - Expect: 测试通过，flags 的 name/short/description/takesValue/values 正确
 
-- [ ] C4 验证 hidden 命令过滤
+- [x] C4 验证 hidden 命令过滤
   - Verifies: `specs/cli-completion-introspect/spec.md` / Requirement "Commander.js 命令树运行时反射" / Scenario "过滤 hidden 命令"
   - Command: `pnpm test -- --testPathPattern introspect`
   - Expect: hidden 命令（`experimental`、`__complete`）不出现在输出中
@@ -78,12 +78,12 @@
 
 #### Checks
 
-- [ ] C1 验证补全脚本生成功能保持正常
+- [x] C1 验证补全脚本生成功能保持正常
   - Preserves: `openspec/specs/cli-completion/spec.md` / Requirement "Completion Generation" / Scenario "Generating Zsh completion"
   - Command: `pnpm test -- --testPathPattern completion`
   - Expect: 现有补全测试全部通过
 
-- [ ] C2 验证 program 注入无循环依赖
+- [x] C2 验证 program 注入无循环依赖
   - Verifies: `specs/cli-completion-introspect/spec.md` / Requirement "Commander.js 命令树运行时反射" / Scenario "提取顶层命令"
   - Command: `pnpm build`
   - Expect: TypeScript 编译成功，无循环依赖错误
@@ -103,17 +103,17 @@
 
 #### Checks
 
-- [ ] C1 验证静态 registry 已删除
+- [x] C1 验证静态 registry 已删除
   - Verifies: `specs/cli-completion-registry/spec.md` / REMOVED Requirement "所有 CLI 命令必须注册到 COMMAND_REGISTRY"
   - Command: `test ! -f src/core/completions/command-registry.ts && echo "DELETED"`
   - Expect: 输出 DELETED
 
-- [ ] C2 验证无残余引用
+- [x] C2 验证无残余引用
   - Verifies: `specs/cli-completion-registry/spec.md` / REMOVED Requirement "COMMAND_REGISTRY 与 CLI 命令树保持一致"
   - Command: `grep -r "command-registry" src/ test/ --include="*.ts" | grep -v node_modules | grep -v ".d.ts"`
   - Expect: 无匹配输出
 
-- [ ] C3 验证项目编译通过
+- [x] C3 验证项目编译通过
   - Preserves: `openspec/specs/cli-completion/spec.md` / Requirement "Command Structure" / Scenario "Available subcommands"
   - Command: `pnpm build`
   - Expect: 编译成功，无错误
@@ -133,12 +133,12 @@
 
 #### Checks
 
-- [ ] C1 验证 Zsh 补全脚本覆盖率
+- [x] C1 验证 Zsh 补全脚本覆盖率
   - Verifies: `specs/cli-completion-introspect/spec.md` / Requirement "补全输出等价性" / Scenario "Zsh 输出回归"
   - Command: `pnpm test -- --testPathPattern introspect-regression`
   - Expect: snapshot 测试通过
 
-- [ ] C2 验证 Bash 补全脚本覆盖率
+- [x] C2 验证 Bash 补全脚本覆盖率
   - Verifies: `specs/cli-completion-introspect/spec.md` / Requirement "补全输出等价性" / Scenario "Bash 输出回归"
   - Command: `pnpm test -- --testPathPattern introspect-regression`
   - Expect: snapshot 测试通过
