@@ -48,12 +48,12 @@
 
 #### Checks
 
-- [ ] C1 验证 registry 仅包含 5 个工作流
+- [x] C1 验证 registry 仅包含 5 个工作流
   - Verifies: `specs/template-artifact-pipeline/spec.md` / Requirement "Canonical Workflow Manifest" / Scenario "Manifest 包含固定的 5 个工作流"
   - Command: `pnpm test registry.test.ts`
   - Expect: 测试通过，registry 包含 propose, explore, apply, archive, bootstrap-opsx
 
-- [ ] C2 验证 modeMembership 作为标签系统
+- [x] C2 验证 modeMembership 作为标签系统
   - Verifies: `specs/template-artifact-pipeline/spec.md` / Requirement "Canonical Workflow Manifest" / Scenario "modeMembership 作为标签系统"
   - Command: `pnpm test registry.test.ts`
   - Expect: modeMembership 字段存在但不用于过滤
