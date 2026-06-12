@@ -1,0 +1,18 @@
+schema_version: 1
+ADDED:
+  capabilities:
+    - id: cap.cli.completion-introspect
+      type: capability
+      intent: 从 Commander.js 命令树运行时反射派生 CommandDefinition[]，通过 POSITIONAL_TYPE_MAP 补充补全语义注解，消除静态 COMMAND_REGISTRY 的手工同步负担
+  relations:
+    - from: cap.cli.completion-introspect
+      type: contains
+      to: dom.cli
+    - from: cap.cli.completion
+      type: depends_on
+      to: cap.cli.completion-introspect
+
+MODIFIED:
+  capabilities:
+    - id: cap.cli.completion
+      intent: 管理 OpenSpec CLI 的 shell 补全，通过运行时反射 Commander.js 命令树自动派生补全数据，不再依赖静态 COMMAND_REGISTRY
