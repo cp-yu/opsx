@@ -232,9 +232,14 @@ describe('config key validation', () => {
     expect(validateConfigKeyPath('delivery').valid).toBe(true);
   });
 
-  it('allows workflows key', async () => {
+  it('rejects workflows key (removed field)', async () => {
     const { validateConfigKeyPath } = await import('../../src/core/config-schema.js');
-    expect(validateConfigKeyPath('workflows').valid).toBe(true);
+    expect(validateConfigKeyPath('workflows').valid).toBe(false);
+  });
+
+  it('rejects profile key (removed field)', async () => {
+    const { validateConfigKeyPath } = await import('../../src/core/config-schema.js');
+    expect(validateConfigKeyPath('profile').valid).toBe(false);
   });
 
   it('allows optimization.enabled key', async () => {
