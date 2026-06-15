@@ -1,0 +1,36 @@
+schema_version: 1
+ADDED: {}
+
+MODIFIED:
+  capabilities:
+    - id: cap.cli.init
+      intent: 在项目中初始化 OpenSpec，固定安装 5 个核心工作流（propose, explore, apply, archive, bootstrap-opsx），无需 profile 配置
+    - id: cap.cli.update
+      intent: 刷新 OpenSpec 指令文件，固定更新 5 个核心工作流，自动清理过时的 profile/workflows 配置字段和废弃工作流残留
+    - id: cap.cli.config
+      intent: 查看和修改全局 OpenSpec 配置（不含 profile 子命令），查询归一化项目配置
+    - id: cap.config.global
+      intent: 加载和验证用户全局配置，配置结构不再包含 profile 和 workflows 字段
+    - id: cap.ai.workflow-templates
+      intent: 提供 5 个核心工作流的 AI workflow 模板（propose, explore, apply, archive, bootstrap-opsx）
+    - id: cap.ai.template-artifact-pipeline
+      intent: 统一的 artifact 生成管线，基于固定的 5 个工作流 manifest entries 生成制品，modeMembership 作为标签系统而非 profile 过滤条件
+
+REMOVED:
+  capabilities:
+    - id: cap.config.profile
+      type: capability
+    - id: cap.ai.new-change-workflow
+      type: capability
+    - id: cap.ai.continue-change-workflow
+      type: capability
+    - id: cap.ai.ff-change-workflow
+      type: capability
+    - id: cap.ai.verify-change-workflow
+      type: capability
+    - id: cap.ai.sync-specs-workflow
+      type: capability
+    - id: cap.ai.bulk-archive-workflow
+      type: capability
+    - id: cap.ai.onboard-workflow
+      type: capability

@@ -15,7 +15,6 @@ import { parse as parseYaml } from 'yaml';
 const mockState = {
   config: {
     featureFlags: {},
-    profile: 'core' as const,
     delivery: 'both' as const,
   } as GlobalConfig,
 };
@@ -37,7 +36,7 @@ function setMockConfig(config: GlobalConfig) {
 }
 
 function resetMockConfig() {
-  mockState.config = { featureFlags: {}, profile: 'core', delivery: 'both' };
+  mockState.config = { featureFlags: {}, delivery: 'both' };
 }
 
 describe('UpdateCommand', () => {
@@ -256,7 +255,6 @@ git:
 
       setMockConfig({
         featureFlags: {},
-        profile: 'core',
         delivery: 'commands',
       });
 
@@ -429,7 +427,7 @@ Old instructions content
       }
     });
 
-    it('should remove mapped bootstrap command when workflow is deselected', async () => {
+    it('should keep bootstrap command when bootstrap-opsx is in registry', async () => {
       const skillsDir = path.join(testDir, '.claude', 'skills');
       await fs.mkdir(path.join(skillsDir, 'openspec-explore'), { recursive: true });
       await fs.writeFile(path.join(skillsDir, 'openspec-explore', 'SKILL.md'), 'old content');
@@ -440,13 +438,13 @@ Old instructions content
 
       setMockConfig({
         featureFlags: {},
-        profile: 'core',
         delivery: 'commands',
       });
 
       await updateCommand.execute(testDir);
 
-      expect(await FileSystemUtils.fileExists(bootstrapCmd)).toBe(false);
+      // bootstrap-opsx is in the registry, so it should be kept
+      expect(await FileSystemUtils.fileExists(bootstrapCmd)).toBe(true);
       expect(await FileSystemUtils.fileExists(path.join(testDir, '.claude', 'commands', 'opsx', 'explore.md'))).toBe(true);
     });
 
@@ -1365,7 +1363,7 @@ More user content after markers.
         expect.stringContaining('Getting started')
       );
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('/opsx:new')
+        expect.stringContaining('/opsx:propose')
       );
 
       // Skills should be created
@@ -1580,12 +1578,10 @@ More user content after markers.
       expect(exists).toBe(true);
     });
 
-    it('should not inject non-profile workflows when upgrading legacy tools', async () => {
+    it('should install all 5 registry workflows when upgrading legacy tools', async () => {
       setMockConfig({
         featureFlags: {},
-        profile: 'custom',
         delivery: 'both',
-        workflows: ['explore'],
       });
 
       await fs.mkdir(path.join(testDir, '.claude', 'commands', 'openspec'), { recursive: true });
@@ -1597,32 +1593,33 @@ More user content after markers.
       const forceUpdateCommand = new UpdateCommand({ force: true });
       await forceUpdateCommand.execute(testDir);
 
+      // All 5 registry workflows should be installed
       const skillsDir = path.join(testDir, '.claude', 'skills');
-      expect(await FileSystemUtils.fileExists(
-        path.join(skillsDir, 'openspec-explore', 'SKILL.md')
-      )).toBe(true);
-      expect(await FileSystemUtils.fileExists(
-        path.join(skillsDir, 'openspec-propose', 'SKILL.md')
-      )).toBe(false);
+      const expectedSkills = [
+        'openspec-explore', 'openspec-propose', 'openspec-apply-change',
+        'openspec-archive-change', 'openspec-bootstrap-opsx',
+      ];
+      for (const skill of expectedSkills) {
+        expect(await FileSystemUtils.fileExists(
+          path.join(skillsDir, skill, 'SKILL.md')
+        )).toBe(true);
+      }
 
       const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
-      expect(await FileSystemUtils.fileExists(
-        path.join(commandsDir, 'explore.md')
-      )).toBe(true);
-      expect(await FileSystemUtils.fileExists(
-        path.join(commandsDir, 'propose.md')
-      )).toBe(false);
+      for (const cmd of ['explore.md', 'propose.md', 'apply.md', 'archive.md', 'bootstrap.md']) {
+        expect(await FileSystemUtils.fileExists(
+          path.join(commandsDir, cmd)
+        )).toBe(true);
+      }
     });
   });
 
   describe('profile-aware updates', () => {
-    it('should generate only profile workflows when custom profile is set', async () => {
-      // Set custom profile with only explore and new
+    it('should install all 5 registry workflows regardless of config', async () => {
+      // Obsolete profile/workflows in config are now ignored
       setMockConfig({
         featureFlags: {},
-        profile: 'custom',
         delivery: 'both',
-        workflows: ['explore', 'new'],
       });
 
       // Set up a configured tool
@@ -1632,27 +1629,26 @@ More user content after markers.
 
       await updateCommand.execute(testDir);
 
-      // Should create explore and new skills
-      expect(await FileSystemUtils.fileExists(
-        path.join(skillsDir, 'openspec-explore', 'SKILL.md')
-      )).toBe(true);
+      // All 5 registry workflows should be created
+      const expectedSkills = [
+        'openspec-explore', 'openspec-propose', 'openspec-apply-change',
+        'openspec-archive-change', 'openspec-bootstrap-opsx',
+      ];
+      for (const skill of expectedSkills) {
+        expect(await FileSystemUtils.fileExists(
+          path.join(skillsDir, skill, 'SKILL.md')
+        )).toBe(true);
+      }
+
+      // Removed workflows should NOT be created
       expect(await FileSystemUtils.fileExists(
         path.join(skillsDir, 'openspec-new-change', 'SKILL.md')
-      )).toBe(true);
-
-      // Should NOT create non-profile skills
-      expect(await FileSystemUtils.fileExists(
-        path.join(skillsDir, 'openspec-apply-change', 'SKILL.md')
-      )).toBe(false);
-      expect(await FileSystemUtils.fileExists(
-        path.join(skillsDir, 'openspec-propose', 'SKILL.md')
       )).toBe(false);
     });
 
     it('should respect skills-only delivery setting', async () => {
       setMockConfig({
         featureFlags: {},
-        profile: 'core',
         delivery: 'skills',
       });
 
@@ -1677,7 +1673,6 @@ More user content after markers.
     it('should respect commands-only delivery setting', async () => {
       setMockConfig({
         featureFlags: {},
-        profile: 'core',
         delivery: 'commands',
       });
 
@@ -1702,7 +1697,6 @@ More user content after markers.
     it('should remove skills for configured tools without command adapters in commands-only delivery', async () => {
       setMockConfig({
         featureFlags: {},
-        profile: 'core',
         delivery: 'commands',
       });
 
@@ -1730,7 +1724,6 @@ More user content after markers.
     it('should apply config sync when templates are up to date', async () => {
       setMockConfig({
         featureFlags: {},
-        profile: 'core',
         delivery: 'skills',
       });
 
@@ -1764,7 +1757,6 @@ content
     it('should detect commands-only tool configuration', async () => {
       setMockConfig({
         featureFlags: {},
-        profile: 'core',
         delivery: 'commands',
       });
 
@@ -1793,20 +1785,18 @@ content
       consoleSpy.mockRestore();
     });
 
-    it('should remove workflows outside profile during update sync', async () => {
-      // Set core profile (propose, explore, apply, archive)
+    it('should remove workflows not in registry during update sync', async () => {
       setMockConfig({
         featureFlags: {},
-        profile: 'core',
         delivery: 'both',
       });
 
-      // Set up tool with extra workflows beyond core profile
+      // Set up tool with extra workflows not in registry
       const skillsDir = path.join(testDir, '.claude', 'skills');
       await fs.mkdir(path.join(skillsDir, 'openspec-explore'), { recursive: true });
       await fs.writeFile(path.join(skillsDir, 'openspec-explore', 'SKILL.md'), 'old');
 
-      // Add a non-core workflow
+      // Add a removed workflow
       await fs.mkdir(path.join(skillsDir, 'openspec-new-change'), { recursive: true });
       await fs.writeFile(path.join(skillsDir, 'openspec-new-change', 'SKILL.md'), 'old');
       const extraCommandFile = path.join(testDir, '.claude', 'commands', 'opsx', 'new.md');
@@ -1817,7 +1807,7 @@ content
 
       await updateCommand.execute(testDir);
 
-      // Deselected workflow artifacts should be removed for both delivery surfaces.
+      // Removed workflow artifacts should be cleaned up
       expect(await FileSystemUtils.fileExists(
         path.join(skillsDir, 'openspec-new-change', 'SKILL.md')
       )).toBe(false);
@@ -1827,10 +1817,10 @@ content
       const calls = consoleSpy.mock.calls.map(call =>
         call.map(arg => String(arg)).join(' ')
       );
-      const hasDeselectedRemovalNote = calls.some(call =>
-        call.includes('Removed:') && call.includes('skill director')
+      const hasCleanupNote = calls.some(call =>
+        call.includes('废弃工作流残留文件') || (call.includes('Removed:') && call.includes('skill director'))
       );
-      expect(hasDeselectedRemovalNote).toBe(true);
+      expect(hasCleanupNote).toBe(true);
 
       consoleSpy.mockRestore();
     });
@@ -1838,7 +1828,6 @@ content
     it('should keep codex skills-only in both delivery and delete legacy command files', async () => {
       setMockConfig({
         featureFlags: {},
-        profile: 'core',
         delivery: 'both',
       });
 
@@ -1863,7 +1852,6 @@ content
     it('should keep codex skills in commands delivery and remove legacy command files', async () => {
       setMockConfig({
         featureFlags: {},
-        profile: 'core',
         delivery: 'commands',
       });
 
@@ -1883,7 +1871,6 @@ content
     it('should recover codex from legacy command-only installs', async () => {
       setMockConfig({
         featureFlags: {},
-        profile: 'core',
         delivery: 'commands',
       });
 
@@ -1900,7 +1887,6 @@ content
     it('should show codex getting-started guidance with precise managed skill names', async () => {
       setMockConfig({
         featureFlags: {},
-        profile: 'expanded',
         delivery: 'commands',
       });
 
@@ -1911,8 +1897,8 @@ content
       await forceUpdateCommand.execute(testDir);
 
       const calls = consoleSpy.mock.calls.map((call) => call.map((arg) => String(arg)).join(' '));
-      expect(calls.some((call) => call.includes('$openspec-new-change'))).toBe(true);
-      expect(calls.some((call) => call.includes('$openspec-continue-change'))).toBe(true);
+      expect(calls.some((call) => call.includes('$openspec-propose'))).toBe(true);
+      expect(calls.some((call) => call.includes('$openspec-explore'))).toBe(true);
       expect(calls.some((call) => call.includes('$openspec-apply-change'))).toBe(true);
       expect(calls.some((call) => call.includes('/opsx:new'))).toBe(false);
       consoleSpy.mockRestore();

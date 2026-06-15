@@ -11,20 +11,12 @@ import { getCommandSlug } from '../../src/core/shared/index.js';
 import { migrateIfNeeded, scanInstalledWorkflows } from '../../src/core/migration.js';
 
 const CLAUDE_TOOL = AI_TOOLS.find((tool) => tool.value === 'claude') as AIToolOption | undefined;
-const CODEX_TOOL = AI_TOOLS.find((tool) => tool.value === 'codex') as AIToolOption | undefined;
 
 function ensureClaudeTool(): AIToolOption {
   if (!CLAUDE_TOOL) {
     throw new Error('Claude tool definition not found');
   }
   return CLAUDE_TOOL;
-}
-
-function ensureCodexTool(): AIToolOption {
-  if (!CODEX_TOOL) {
-    throw new Error('Codex tool definition not found');
-  }
-  return CODEX_TOOL;
 }
 
 async function writeSkill(projectPath: string, dirName: string): Promise<void> {
@@ -46,17 +38,6 @@ async function writeManagedCommand(projectPath: string, workflowId: string): Pro
   await fsp.writeFile(fullPath, '# command\n', 'utf-8');
 }
 
-async function writeLegacyCodexCommand(workflowId: string): Promise<void> {
-  const codexHome = process.env.CODEX_HOME;
-  if (!codexHome) {
-    throw new Error('CODEX_HOME must be set for Codex migration tests');
-  }
-
-  const promptPath = path.join(path.resolve(codexHome), 'prompts', `opsx-${getCommandSlug(workflowId as Parameters<typeof getCommandSlug>[0])}.md`);
-  await fsp.mkdir(path.dirname(promptPath), { recursive: true });
-  await fsp.writeFile(promptPath, '# codex command\n', 'utf-8');
-}
-
 function readRawConfig(): Record<string, unknown> {
   return JSON.parse(fs.readFileSync(getGlobalConfigPath(), 'utf-8')) as Record<string, unknown>;
 }
@@ -69,13 +50,10 @@ describe('migration', () => {
   beforeEach(async () => {
     projectDir = path.join(os.tmpdir(), `openspec-migration-project-${randomUUID()}`);
     configHome = path.join(os.tmpdir(), `openspec-migration-config-${randomUUID()}`);
-    const codexHome = path.join(os.tmpdir(), `openspec-migration-codex-${randomUUID()}`);
     await fsp.mkdir(projectDir, { recursive: true });
     await fsp.mkdir(configHome, { recursive: true });
-    await fsp.mkdir(codexHome, { recursive: true });
     originalEnv = { ...process.env };
     process.env.XDG_CONFIG_HOME = configHome;
-    process.env.CODEX_HOME = codexHome;
   });
 
   afterEach(async () => {
@@ -84,75 +62,70 @@ describe('migration', () => {
     await fsp.rm(configHome, { recursive: true, force: true });
   });
 
-  it('migrates to custom skills delivery when only managed skills are detected', async () => {
-    await writeSkill(projectDir, 'openspec-explore');
-    await writeSkill(projectDir, 'openspec-apply-change');
-
-    migrateIfNeeded(projectDir, [ensureClaudeTool()]);
-
-    const config = readRawConfig();
-    expect(config.profile).toBe('custom');
-    expect(config.delivery).toBe('skills');
-    expect(config.workflows).toEqual(['explore', 'apply']);
-  });
-
-  it('migrates to custom commands delivery when only managed commands are detected', async () => {
-    await writeManagedCommand(projectDir, 'explore');
-    await writeManagedCommand(projectDir, 'archive');
-
-    migrateIfNeeded(projectDir, [ensureClaudeTool()]);
-
-    const config = readRawConfig();
-    expect(config.profile).toBe('custom');
-    expect(config.delivery).toBe('commands');
-    expect(config.workflows).toEqual(['explore', 'archive']);
-  });
-
-  it('migrates to custom both delivery when managed skills and commands are detected', async () => {
-    await writeSkill(projectDir, 'openspec-explore');
-    await writeManagedCommand(projectDir, 'apply');
-
-    migrateIfNeeded(projectDir, [ensureClaudeTool()]);
-
-    const config = readRawConfig();
-    expect(config.profile).toBe('custom');
-    expect(config.delivery).toBe('both');
-    expect(config.workflows).toEqual(['explore', 'apply']);
-  });
-
-  it('does not migrate when profile is already explicitly configured', async () => {
-    saveGlobalConfig({
+  it('cleans up obsolete profile/workflows fields from config', async () => {
+    // Write raw config with obsolete fields
+    const configPath = getGlobalConfigPath();
+    const configDir = path.dirname(configPath);
+    await fsp.mkdir(configDir, { recursive: true });
+    await fsp.writeFile(configPath, JSON.stringify({
       featureFlags: {},
       profile: 'core',
       delivery: 'both',
-    });
+      workflows: ['explore'],
+    }));
+
     await writeSkill(projectDir, 'openspec-explore');
 
     migrateIfNeeded(projectDir, [ensureClaudeTool()]);
 
     const config = readRawConfig();
-    expect(config.profile).toBe('core');
-    expect(config.delivery).toBe('both');
+    // Profile and workflows fields should be removed
+    expect(config.profile).toBeUndefined();
     expect(config.workflows).toBeUndefined();
+    // Other fields should be preserved
+    expect(config.delivery).toBe('both');
   });
 
-  it('preserves explicit delivery value during migration', async () => {
-    // Raw config has explicit delivery but no profile yet.
-    saveGlobalConfig({
+  it('infers delivery from artifacts when delivery is missing', async () => {
+    const configPath = getGlobalConfigPath();
+    const configDir = path.dirname(configPath);
+    await fsp.mkdir(configDir, { recursive: true });
+    await fsp.writeFile(configPath, JSON.stringify({
+      featureFlags: {},
+      profile: 'custom',
+      workflows: ['explore'],
+    }));
+
+    await writeSkill(projectDir, 'openspec-explore');
+
+    migrateIfNeeded(projectDir, [ensureClaudeTool()]);
+
+    const config = readRawConfig();
+    expect(config.profile).toBeUndefined();
+    expect(config.workflows).toBeUndefined();
+    // Delivery should be inferred as 'skills' since only skills exist
+    expect(config.delivery).toBe('skills');
+  });
+
+  it('does not migrate when no obsolete fields exist', async () => {
+    const configPath = getGlobalConfigPath();
+    const configDir = path.dirname(configPath);
+    await fsp.mkdir(configDir, { recursive: true });
+    await fsp.writeFile(configPath, JSON.stringify({
       featureFlags: {},
       delivery: 'both',
-    });
+    }));
+
     await writeSkill(projectDir, 'openspec-explore');
 
     migrateIfNeeded(projectDir, [ensureClaudeTool()]);
 
     const config = readRawConfig();
-    expect(config.profile).toBe('custom');
+    expect(config.profile).toBeUndefined();
     expect(config.delivery).toBe('both');
-    expect(config.workflows).toEqual(['explore']);
   });
 
-  it('does not migrate when no managed workflow artifacts are detected', async () => {
+  it('does not create config when no config file exists', async () => {
     migrateIfNeeded(projectDir, [ensureClaudeTool()]);
 
     expect(fs.existsSync(getGlobalConfigPath())).toBe(false);
@@ -171,15 +144,12 @@ describe('migration', () => {
     expect(fs.existsSync(getGlobalConfigPath())).toBe(false);
   });
 
-  it('preserves workflows from legacy codex commands but migrates codex to skills delivery', async () => {
-    await writeLegacyCodexCommand('explore');
-    await writeLegacyCodexCommand('archive');
+  it('detects installed workflows across skills and commands', async () => {
+    await writeSkill(projectDir, 'openspec-explore');
+    await writeManagedCommand(projectDir, 'apply');
 
-    migrateIfNeeded(projectDir, [ensureCodexTool()]);
-
-    const config = readRawConfig();
-    expect(config.profile).toBe('custom');
-    expect(config.delivery).toBe('skills');
-    expect(config.workflows).toEqual(['explore', 'archive']);
+    const workflows = scanInstalledWorkflows(projectDir, [ensureClaudeTool()]);
+    expect(workflows).toContain('explore');
+    expect(workflows).toContain('apply');
   });
 });

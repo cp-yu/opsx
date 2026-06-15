@@ -11,12 +11,13 @@ import {
   GLOBAL_CONFIG_DIR_NAME,
   GLOBAL_CONFIG_FILE_NAME
 } from '../../src/core/global-config.js';
-import type { Profile, Delivery } from '../../src/core/global-config.js';
+import type { Delivery } from '../../src/core/global-config.js';
 
 describe('global-config', () => {
   let tempDir: string;
   let originalEnv: NodeJS.ProcessEnv;
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // Create temp directory for tests
@@ -26,8 +27,9 @@ describe('global-config', () => {
     // Save original env
     originalEnv = { ...process.env };
 
-    // Spy on console.error for warning tests
+    // Spy on console for warning tests
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -37,8 +39,9 @@ describe('global-config', () => {
     // Clean up temp directory
     fs.rmSync(tempDir, { recursive: true, force: true });
 
-    // Restore console.error
+    // Restore console
     consoleErrorSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
   });
 
   describe('constants', () => {
@@ -103,10 +106,11 @@ describe('global-config', () => {
 
       // Should contain at least the core default fields
       expect(config).toHaveProperty('featureFlags');
-      expect(config).toHaveProperty('profile');
       expect(config).toHaveProperty('delivery');
       expect(config).toHaveProperty('apply');
       expect(config).toHaveProperty('optimization');
+      expect(config).not.toHaveProperty('profile');
+      expect(config).not.toHaveProperty('workflows');
       expect(config.featureFlags).toEqual({});
       expect(config.apply).toHaveProperty('defaultIsolation');
       expect(config.optimization).toHaveProperty('enabled');
@@ -149,10 +153,11 @@ describe('global-config', () => {
 
       // Should contain at least the core default fields
       expect(config).toHaveProperty('featureFlags');
-      expect(config).toHaveProperty('profile');
       expect(config).toHaveProperty('delivery');
       expect(config).toHaveProperty('apply');
       expect(config).toHaveProperty('optimization');
+      expect(config).not.toHaveProperty('profile');
+      expect(config).not.toHaveProperty('workflows');
       expect(config.featureFlags).toEqual({});
       expect(config.apply).toHaveProperty('defaultIsolation');
       expect(config.optimization).toHaveProperty('enabled');
@@ -210,7 +215,7 @@ describe('global-config', () => {
     });
 
     describe('schema evolution', () => {
-      it('should add default profile and delivery when loading old config without them', () => {
+      it('should add default delivery when loading old config without it', () => {
         process.env.XDG_CONFIG_HOME = tempDir;
         const configDir = path.join(tempDir, 'openspec');
         const configPath = path.join(configDir, 'config.json');
@@ -223,13 +228,13 @@ describe('global-config', () => {
 
         const config = getGlobalConfig();
 
-        expect(config.profile).toBe('core');
         expect(config.delivery).toBe('both');
-        expect(config.workflows).toBeUndefined();
         expect(config.featureFlags?.existingFlag).toBe(true);
+        expect(config).not.toHaveProperty('profile');
+        expect(config).not.toHaveProperty('workflows');
       });
 
-      it('should preserve explicit profile and delivery values from config', () => {
+      it('should remove deprecated profile and workflows fields from loaded config', () => {
         process.env.XDG_CONFIG_HOME = tempDir;
         const configDir = path.join(tempDir, 'openspec');
         const configPath = path.join(configDir, 'config.json');
@@ -244,29 +249,12 @@ describe('global-config', () => {
 
         const config = getGlobalConfig();
 
-        expect(config.profile).toBe('custom');
         expect(config.delivery).toBe('skills');
-        expect(config.workflows).toEqual(['propose', 'review']);
+        expect(config).not.toHaveProperty('profile');
+        expect(config).not.toHaveProperty('workflows');
       });
 
-      it('should round-trip new fields correctly', () => {
-        process.env.XDG_CONFIG_HOME = tempDir;
-        const originalConfig = {
-          featureFlags: { flag1: true },
-          profile: 'custom' as Profile,
-          delivery: 'commands' as Delivery,
-          workflows: ['propose']
-        };
-
-        saveGlobalConfig(originalConfig);
-        const loadedConfig = getGlobalConfig();
-
-        expect(loadedConfig.profile).toBe('custom');
-        expect(loadedConfig.delivery).toBe('commands');
-        expect(loadedConfig.workflows).toEqual(['propose']);
-      });
-
-      it('should default workflows to undefined when not in config', () => {
+      it('should warn when loading config with deprecated fields', () => {
         process.env.XDG_CONFIG_HOME = tempDir;
         const configDir = path.join(tempDir, 'openspec');
         const configPath = path.join(configDir, 'config.json');
@@ -274,13 +262,30 @@ describe('global-config', () => {
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(configPath, JSON.stringify({
           featureFlags: {},
-          profile: 'core',
-          delivery: 'both'
+          profile: 'expanded',
+          workflows: ['propose']
         }));
 
-        const config = getGlobalConfig();
+        getGlobalConfig();
 
-        expect(config.workflows).toBeUndefined();
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('过时的配置字段')
+        );
+      });
+
+      it('should round-trip new fields correctly', () => {
+        process.env.XDG_CONFIG_HOME = tempDir;
+        const originalConfig = {
+          featureFlags: { flag1: true },
+          delivery: 'commands' as Delivery,
+        };
+
+        saveGlobalConfig(originalConfig);
+        const loadedConfig = getGlobalConfig();
+
+        expect(loadedConfig.delivery).toBe('commands');
+        expect(loadedConfig).not.toHaveProperty('profile');
+        expect(loadedConfig).not.toHaveProperty('workflows');
       });
     });
   });

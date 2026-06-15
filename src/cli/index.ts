@@ -113,9 +113,15 @@ program
   .description('Initialize OpenSpec in your project')
   .option('--tools <tools>', toolsOptionDescription)
   .option('--force', 'Auto-cleanup legacy files without prompting')
-  .option('--profile <profile>', 'Override global config profile (core, expanded, or custom)')
   .action(async (targetPath = '.', options?: { tools?: string; force?: boolean; profile?: string }) => {
     try {
+      if (options?.profile) {
+        throw new Error(
+          'The --profile option has been removed. OpenSpec now installs all 5 workflows by default. ' +
+          'Remove --profile from your command and try again.'
+        );
+      }
+
       // Validate that the path is a valid directory
       const resolvedPath = path.resolve(targetPath);
 
@@ -139,7 +145,6 @@ program
       const initCommand = new InitCommand({
         tools: options?.tools,
         force: options?.force,
-        profile: options?.profile,
       });
       await initCommand.execute(targetPath);
     } catch (error) {

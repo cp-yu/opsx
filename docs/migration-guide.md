@@ -8,7 +8,7 @@ OPSX replaces the old phase-locked workflow with a fluid, action-based approach.
 
 | Aspect | Legacy | OPSX |
 |--------|--------|------|
-| **Commands** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` | Default: `/opsx:propose`, `/opsx:apply`, `/opsx:archive` (expanded workflow commands optional) |
+| **Commands** | `/openspec:proposal`, `/openspec:apply`, `/openspec:archive` | `/opsx:propose`, `/opsx:explore`, `/opsx:apply`, `/opsx:archive`, `/opsx:bootstrap-opsx` |
 | **Workflow** | Create all artifacts at once | Create incrementally or all at once—your choice |
 | **Going back** | Awkward phase gates | Natural—update any artifact anytime |
 | **Customization** | Fixed structure | Schema-driven, fully hackable |
@@ -333,38 +333,17 @@ Command availability is profile-dependent:
 | `/opsx:explore` | Think through ideas with no structure |
 | `/opsx:apply` | Implement tasks from tasks.md |
 | `/opsx:archive` | Finalize and archive the change |
-
-**Expanded workflow (custom selection):**
-
-| Command | Purpose |
-|---------|---------|
-| `/opsx:new` | Start a new change scaffold |
-| `/opsx:continue` | Create the next artifact (one at a time) |
-| `/opsx:ff` | Fast-forward—create planning artifacts at once |
-| `/opsx:verify` | Validate implementation matches specs |
-| `/opsx:sync` | Preview/spec-merge without archiving |
-| `/opsx:bulk-archive` | Archive multiple changes at once |
-| `/opsx:onboard` | Guided end-to-end onboarding workflow |
-
-Enable expanded commands with `openspec config profile`, then run `openspec update`.
+| `/opsx:bootstrap-opsx` | Bootstrap project OPSX structure for architecture tracking |
 
 ### Command Mapping from Legacy
 
 | Legacy | OPSX Equivalent |
 |--------|-----------------|
-| `/openspec:proposal` | `/opsx:propose` (default) or `/opsx:new` then `/opsx:ff` (expanded) |
+| `/openspec:proposal` | `/opsx:propose` |
 | `/openspec:apply` | `/opsx:apply` |
 | `/openspec:archive` | `/opsx:archive` |
 
 ### New Capabilities
-
-These capabilities are part of the expanded workflow command set.
-
-**Granular artifact creation:**
-```
-/opsx:continue
-```
-Creates one artifact at a time based on dependencies. Use this when you want to review each step.
 
 **Exploration mode:**
 ```
@@ -603,10 +582,11 @@ project/
 │   └── config.yaml               # NEW: Project configuration
 ├── .claude/
 │   └── skills/                   # NEW: OPSX skills
-│       ├── openspec-propose/     # default core profile
+│       ├── openspec-propose/
 │       ├── openspec-explore/
 │       ├── openspec-apply-change/
-│       └── ...                   # expanded profile adds new/continue/ff/etc.
+│       ├── openspec-archive-change/
+│       └── openspec-bootstrap-opsx/
 ├── CLAUDE.md                     # OpenSpec markers removed, your content preserved
 └── AGENTS.md                     # OpenSpec markers removed, your content preserved
 ```
@@ -617,18 +597,16 @@ project/
 - `openspec/AGENTS.md` — obsolete
 - `openspec/project.md` — migrate to `config.yaml`, then delete
 - OpenSpec marker blocks in `CLAUDE.md`, `AGENTS.md`, etc.
+- **Profile system removed** — `openspec config profile`, `--profile` flag, and `profile`/`workflows` config fields are gone. OpenSpec now installs all 5 workflows by default. Run `openspec update` to auto-clean obsolete config fields and expanded workflow remnants.
 
 ### Command Cheatsheet
 
 ```text
-/opsx:propose      Start quickly (default core profile)
-/opsx:apply        Implement tasks
-/opsx:archive      Finish and archive
-
-# Expanded workflow (if enabled):
-/opsx:new          Scaffold a change
-/opsx:continue     Create next artifact
-/opsx:ff           Create planning artifacts
+/opsx:propose        Start quickly
+/opsx:explore        Think through ideas
+/opsx:apply          Implement tasks
+/opsx:archive        Finish and archive
+/opsx:bootstrap-opsx Map your architecture
 ```
 
 ---

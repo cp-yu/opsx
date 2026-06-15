@@ -24,8 +24,6 @@ export {
 
 export {
   ALL_WORKFLOWS,
-  CORE_WORKFLOWS,
-  EXPANDED_WORKFLOWS,
   WORKFLOW_TO_SKILL_DIR,
   getWorkflowPromptMeta,
   normalizeWorkflowIds,

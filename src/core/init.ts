@@ -39,8 +39,9 @@ import {
   getToolStates,
   type ToolSkillStatus,
 } from './shared/index.js';
-import { getGlobalConfig, type Delivery, type Profile } from './global-config.js';
-import { getProfileWorkflows, type WorkflowId } from './profiles.js';
+import { getGlobalConfig, type Delivery } from './global-config.js';
+import { type WorkflowId } from './workflow-surface.js';
+import { WorkflowManifestRegistry } from './templates/manifest/index.js';
 import { getAvailableTools } from './available-tools.js';
 import { migrateIfNeeded } from './migration.js';
 import {
@@ -72,7 +73,6 @@ type InitCommandOptions = {
   tools?: string;
   force?: boolean;
   interactive?: boolean;
-  profile?: string;
 };
 
 // -----------------------------------------------------------------------------
@@ -83,13 +83,11 @@ export class InitCommand {
   private readonly toolsArg?: string;
   private readonly force: boolean;
   private readonly interactiveOption?: boolean;
-  private readonly profileOverride?: string;
 
   constructor(options: InitCommandOptions = {}) {
     this.toolsArg = options.tools;
     this.force = options.force ?? false;
     this.interactiveOption = options.interactive;
-    this.profileOverride = options.profile;
   }
 
   async execute(targetPath: string): Promise<void> {
@@ -120,8 +118,6 @@ export class InitCommand {
 
     // Validate profile override early so invalid values fail before tool setup.
     // The resolved value is consumed later when generation reads effective config.
-    this.resolveProfileOverride();
-
     const proseLanguage = await this.promptForProseLanguage(projectPath);
 
     // Get tool states before processing
@@ -172,24 +168,6 @@ export class InitCommand {
     if (this.interactiveOption === false) return false;
     if (this.toolsArg !== undefined) return false;
     return isInteractive({ interactive: this.interactiveOption });
-  }
-
-  private resolveProfileOverride(): Profile | undefined {
-    if (this.profileOverride === undefined) {
-      return undefined;
-    }
-
-    if (
-      this.profileOverride === 'core' ||
-      this.profileOverride === 'expanded' ||
-      this.profileOverride === 'custom'
-    ) {
-      return this.profileOverride;
-    }
-
-    throw new Error(
-      `Invalid profile "${this.profileOverride}". Available profiles: core, expanded, custom`
-    );
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -574,12 +552,12 @@ nodes: []
     const failedTools: Array<{ name: string; error: Error }> = [];
     const commandsSkipped: string[] = [];
 
-    // Read global config for profile and delivery settings (use --profile override if set)
+    // Read global config for delivery settings; workflows are fixed from registry.
     const globalConfig = getGlobalConfig();
-    const profile: Profile = this.resolveProfileOverride() ?? globalConfig.profile ?? 'core';
     const delivery: Delivery = globalConfig.delivery ?? 'both';
+    const allWorkflowIds = WorkflowManifestRegistry.getAllWorkflowIds() as unknown as readonly WorkflowId[];
     const workflows = createWorkflowArtifactPlan(
-      getProfileWorkflows(profile, globalConfig.workflows),
+      allWorkflowIds,
       delivery,
       projectPath
     ).workflows;
@@ -792,20 +770,15 @@ nodes: []
       console.log(chalk.dim(`Config: skipped (non-interactive mode)`));
     }
 
-    // Getting started (task 7.6: show propose if in profile)
-    const globalCfg = getGlobalConfig();
-    const activeProfile: Profile = (this.profileOverride as Profile) ?? globalCfg.profile ?? 'core';
-    const activeWorkflows = [...getProfileWorkflows(activeProfile, globalCfg.workflows)];
+    // Getting started
+    const activeWorkflows = [...WorkflowManifestRegistry.getAllWorkflowIds()];
     const guidanceToolId = this.getGuidanceToolId(successfulTools.map((tool) => tool.value));
     console.log();
     if (guidanceToolId && activeWorkflows.includes('propose')) {
       console.log(chalk.bold('Getting started:'));
       console.log(`  Start your first change: ${renderWorkflowInvocation(guidanceToolId, 'propose')} "your idea"`);
-    } else if (guidanceToolId && activeWorkflows.includes('new')) {
-      console.log(chalk.bold('Getting started:'));
-      console.log(`  Start your first change: ${renderWorkflowInvocation(guidanceToolId, 'new')} "your idea"`);
     } else {
-      console.log("Done. Run 'openspec config profile' to configure your workflows.");
+      console.log("Done. Run 'openspec init' to configure your workflows.");
     }
 
     // Bootstrap guidance: only when bootstrap-opsx is in active profile and first-time init

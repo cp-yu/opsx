@@ -73,17 +73,10 @@ export const GlobalConfigSchema = z
       .optional()
       .default({ defaultIsolation: 'ask' }),
     git: GitConfigSchema,
-    profile: z
-      .enum(['core', 'expanded', 'custom'])
-      .optional()
-      .default('core'),
     delivery: z
       .enum(['both', 'skills', 'commands'])
       .optional()
       .default('both'),
-    workflows: z
-      .array(z.string())
-      .optional(),
   })
   .passthrough();
 
@@ -112,11 +105,10 @@ export const DEFAULT_CONFIG: GlobalConfigType = {
       deleteAfterArchive: false,
     },
   },
-  profile: 'core',
   delivery: 'both',
 };
 
-const KNOWN_TOP_LEVEL_KEYS = new Set([...Object.keys(DEFAULT_CONFIG), 'workflows']);
+const KNOWN_TOP_LEVEL_KEYS = new Set(Object.keys(DEFAULT_CONFIG));
 
 /**
  * Validate a config key path for CLI set operations.

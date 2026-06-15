@@ -72,7 +72,7 @@ openspec/
 #### Scenario: 选择要配置的工具
 
 - **WHEN** 用户选择工具并确认
-- **THEN** 为每个声明了 `skillsDir` 的已选工具在 `.<tool>/skills/` 目录下生成 skills
+- **THEN** 为每个声明了 `skillsDir` 的已选工具在 `.<tool>/skills/` 目录下生成固定 5 个工作流的 skills
 - **AND** 仅为仍支持 adapter-backed command generation 的已选工具生成 slash commands
 - **AND** SHALL NOT 生成任何 Codex command 或 prompt 文件
 - **AND** SHALL 将 Codex skills 视为 Codex 唯一生成的 workflow 承载面
@@ -99,49 +99,21 @@ The command SHALL perform safety checks to prevent overwriting existing structur
 
 ### Requirement: Success Output
 
-该命令 SHALL 在初始化成功后提供清晰、可执行的下一步提示，并使用与实际生成 workflow surface 一致的调用语法。
+该命令在成功后 SHALL 显示简洁的摘要，描述已创建的内容及下一步操作。
 
-当 `bootstrap-opsx` workflow 在 active profile 中且非 extend 模式时，成功输出 SHALL 在 getting started 区块之后包含显式的 bootstrap 引导行。
-
-#### Scenario: 为 command-backed surface 显示成功提示
-
-- **WHEN** 初始化成功完成，且至少有一个被创建或刷新的工具暴露了 command-backed workflow surface
-- **THEN** 显示分组摘要：
-  - `"Created: <tools>"` 用于列出新配置的工具
-  - `"Refreshed: <tools>"` 用于列出已存在但本次被刷新的工具
-  - 生成的 skills 与 commands 数量
-- **AND** 显示 getting started 区块，并使用与该工具 surface 匹配的 command 语法展示当前 workflow 入口，例如 `/opsx:propose "your idea"` 或 `/opsx:new "your idea"`
-- **AND** 显示文档与反馈链接
-
-#### Scenario: 为 Codex skills 显示成功提示
-
-- **WHEN** 初始化成功完成，且所有被创建或刷新的 workflow surface 都是 Codex skills
-- **THEN** 显示分组摘要：
-  - `"Created: <tools>"` 用于列出新配置的工具
-  - `"Refreshed: <tools>"` 用于列出已存在但本次被刷新的工具
-  - 生成的 skills 数量
-- **AND** 显示 getting started 区块，并对当前 workflow 入口使用精确的受管 Codex skill 调用形式，例如 `$openspec-propose "your idea"` 或 `$openspec-new-change "your idea"`
-- **AND** 显示给用户的 Codex 调用名 SHALL 使用该 workflow 声明的精确 `skillDirName`
-- **AND** SHALL NOT instruct the user to run `/opsx:*`
-- **AND** 显示文档与反馈链接
-
-#### Scenario: 为 command-backed surface 显示重启提示
-
-- **WHEN** 初始化成功完成，且 command-backed workflow surface 被创建或刷新
-- **THEN** 显示提示，要求用户重启 IDE 以使 slash commands 生效
-
-#### Scenario: 为 skills-only surface 显示重启提示
-
-- **WHEN** 初始化成功完成，且只有 skills-only workflow surface 被创建或刷新
-- **THEN** 显示提示，要求用户重启 IDE 或当前会话以使刷新的 skills 生效
-- **AND** SHALL NOT say slash commands are required
-
-#### Scenario: 显示 bootstrap 引导
+#### Scenario: 显示成功摘要
 
 - **WHEN** 初始化成功完成
-- **AND** `bootstrap-opsx` workflow 在 active profile 中
-- **AND** 当前为非 extend 模式（首次 init）
-- **THEN** SHALL 在 getting started 区块之后显示："Next: run /opsx:bootstrap to map your architecture"
+- **THEN** 显示摘要，包括：
+  - OpenSpec 结构创建确认
+  - 已配置的 AI 工具列表
+  - 为每个工具生成的制品类型（skills / commands / both）
+- **AND** 显示固定的 getting started 引导块，包含 `/opsx:propose <your-idea>` 作为第一步
+
+#### Scenario: Bootstrap workflow 引导
+
+- **WHEN** `bootstrap-opsx` workflow 包含在固定的 5 个工作流中且非 extend 模式时
+- **THEN** 成功输出 SHALL 在 getting started 区块之后包含显式的 bootstrap 引导行
 
 ### Requirement: Exit Codes
 
@@ -239,29 +211,6 @@ The command SHALL support non-interactive operation through command-line options
 - **THEN** fail with exit code 1
 - **AND** instruct to use `--tools all`, `--tools none`, or explicit tool IDs
 
-### Requirement: Generating skills for a tool SHALL preserve workflow-linked bootstrap skill identity
-The command SHALL generate skill directories under `.<tool>/skills/` for workflows included in the active profile while preserving the internal workflow identity for bootstrap.
-
-- **WHEN** a tool is selected during initialization
-- **THEN** create skill directories under `.<tool>/skills/` for workflows included in the active profile
-- **AND** the generated skill set SHALL include `openspec-bootstrap-opsx` when workflow `bootstrap-opsx` is selected
-- **AND** each SKILL.md SHALL contain YAML frontmatter with name and description
-- **AND** each SKILL.md SHALL contain the skill instructions
-
-#### Scenario: Core mode excludes standalone sync surface
-- **WHEN** the active mode is `core`
-- **THEN** generated skills SHALL include only the workflows in the core preset
-- **AND** the generated skill set SHALL NOT include `openspec-sync-specs`
-
-#### Scenario: Expanded mode includes standalone sync surface
-- **WHEN** the active mode is `expanded`
-- **THEN** generated skills SHALL include the expanded workflow set
-- **AND** the generated skill set SHALL include `openspec-sync-specs`
-
-#### Scenario: Bootstrap remains separately selectable
-- **WHEN** the active mode is `expanded`
-- **THEN** initialization SHALL NOT generate `openspec-bootstrap-opsx` unless workflow `bootstrap-opsx` is explicitly selected
-
 ### Requirement: Slash Command Generation SHALL derive bootstrap artifacts from explicit command slug mapping
 
 该命令 SHALL 基于显式的 workflow-to-command-slug 映射为所选 AI 工具生成 opsx slash command 文件，但仅适用于支持 adapter-backed command 制品的工具。
@@ -269,8 +218,8 @@ The command SHALL generate skill directories under `.<tool>/skills/` for workflo
 #### Scenario: 为 command-backed 工具生成斜杠命令
 
 - **WHEN** 某个已选工具支持 adapter-backed command generation
-- **THEN** 使用该工具的 command adapter 为当前 profile 包含的所有 workflow 创建 slash command 文件
-- **AND** 当选择 `bootstrap-opsx` workflow 时，生成的命令集合 SHALL 包含 `/opsx:bootstrap`
+- **THEN** 使用该工具的 command adapter 为固定的 5 个 workflows 创建 slash command 文件
+- **AND** 生成的命令集合 SHALL 包含 `/opsx:propose`, `/opsx:explore`, `/opsx:apply`, `/opsx:archive`, `/opsx:bootstrap`
 - **AND** command 制品路径 SHALL 从显式 workflow-to-command-slug 映射推导，而不是假设 workflow ID 等于文件 basename
 - **AND** 使用工具特定的路径约定，例如 Claude 的 `.claude/commands/opsx/`
 - **AND** 包含工具特定的 frontmatter 格式
@@ -278,7 +227,7 @@ The command SHALL generate skill directories under `.<tool>/skills/` for workflo
 #### Scenario: Codex 使用 skills 而不是斜杠命令文件
 
 - **WHEN** 在初始化过程中选择了 Codex
-- **THEN** 系统 SHALL 在 `.codex/skills/` 下生成 workflow skills
+- **THEN** 系统 SHALL 在 `.codex/skills/` 下生成 5 个 workflow skills
 - **AND** 系统 SHALL NOT 在项目内或全局 Codex prompt 目录下创建任何 command 制品
 - **AND** 最终的 Codex workflow surface SHALL 仅由受管 skills 表示
 
@@ -287,26 +236,6 @@ The command SHALL generate skill directories under `.<tool>/skills/` for workflo
 - **WHEN** 在任意受支持操作系统上生成 bootstrap command 制品
 - **THEN** 路径 SHALL 使用跨平台安全的路径工具构造
 - **AND** 路径敏感的验证 SHALL 使用具备路径感知能力的断言，而不是硬编码分隔符
-
-#### Scenario: Core 模式排除独立 sync 命令
-
-- **WHEN** 初始化时选择了 command-backed 工具
-- **AND** 当前 mode 为 `core`
-- **THEN** 生成的 slash commands SHALL 仅包含 core preset 中的 workflows
-- **AND** 生成的命令集合 SHALL NOT 包含 `/opsx:sync`
-
-#### Scenario: Expanded 模式包含独立 sync 命令
-
-- **WHEN** 初始化时选择了 command-backed 工具
-- **AND** 当前 mode 为 `expanded`
-- **THEN** 生成的 slash commands SHALL 包含 expanded workflow 集合
-- **AND** 生成的命令集合 SHALL 包含 `/opsx:sync`
-
-#### Scenario: Init 模式选择以确定性方式驱动 workflow 输出
-
-- **WHEN** 初始化以显式 mode 选择运行
-- **THEN** 最终生成的 workflow surface SHALL 与所选 mode 精确匹配
-- **AND** 对同一组已选工具重复以相同 mode 初始化时，生成的制品集合 SHALL 收敛为相同结果
 
 ### Requirement: Config File Generation
 
@@ -336,41 +265,6 @@ The command SHALL maintain backward compatibility with the experimental command.
 - **THEN** delegate to `openspec init`
 - **AND** the command SHALL be hidden from help output
 
-### Requirement: Skill generation per tool
-The init command SHALL generate skills based on the active profile, not a fixed set.
-
-#### Scenario: Core profile skill generation
-- **WHEN** user runs init with profile `core`
-- **THEN** the system SHALL generate skills for workflows in CORE_WORKFLOWS constant: propose, explore, apply, archive
-- **THEN** the system SHALL NOT generate skills for workflows outside the profile
-
-#### Scenario: Custom profile skill generation
-- **WHEN** user runs init with profile `custom`
-- **THEN** the system SHALL generate skills only for workflows listed in config `workflows` array
-
-#### Scenario: Propose workflow included in skill templates
-- **WHEN** generating skills
-- **THEN** the system SHALL include the `propose` workflow as an available skill template
-
-### Requirement: Command generation per tool
-The init command SHALL generate commands based on profile AND delivery settings.
-
-#### Scenario: Skills-only delivery
-- **WHEN** delivery is set to `skills`
-- **THEN** the system SHALL NOT generate any command files
-
-#### Scenario: Commands-only delivery
-- **WHEN** delivery is set to `commands`
-- **THEN** the system SHALL NOT generate any skill files
-
-#### Scenario: Both delivery
-- **WHEN** delivery is set to `both`
-- **THEN** the system SHALL generate both skill and command files for profile workflows
-
-#### Scenario: Propose workflow included in command templates
-- **WHEN** generating commands
-- **THEN** the system SHALL include the `propose` workflow as an available command template
-
 ### Requirement: Tool auto-detection
 The init command SHALL detect installed AI tools by scanning for their configuration directories in the project root.
 
@@ -386,62 +280,6 @@ The init command SHALL detect installed AI tools by scanning for their configura
 #### Scenario: No tools detected
 - **WHEN** no tool configuration directories exist in project root
 - **THEN** the system SHALL return an empty list of detected tools
-
-### Requirement: Smart defaults init flow
-The init command SHALL work with sensible defaults and tool confirmation, minimizing required user input.
-
-#### Scenario: Init with detected tools (interactive)
-- **WHEN** user runs `openspec init` interactively and tool directories are detected
-- **THEN** the system SHALL show detected tools pre-selected
-- **THEN** the system SHALL ask for confirmation (not full selection)
-- **THEN** the system SHALL use default profile (`core`) and delivery (`both`)
-
-#### Scenario: Init with no detected tools (interactive)
-- **WHEN** user runs `openspec init` interactively and no tool directories are detected
-- **THEN** the system SHALL prompt for tool selection
-- **THEN** the system SHALL use default profile (`core`) and delivery (`both`)
-
-#### Scenario: Non-interactive with detected tools
-- **WHEN** user runs `openspec init` non-interactively (e.g., in CI)
-- **AND** tool directories are detected
-- **THEN** the system SHALL use detected tools automatically without prompting
-- **THEN** the system SHALL use default profile and delivery
-
-#### Scenario: Non-interactive with no detected tools
-- **WHEN** user runs `openspec init` non-interactively
-- **AND** no tool directories are detected
-- **THEN** the system SHALL fail with exit code 1
-- **AND** display message to use `--tools` flag
-
-#### Scenario: Non-interactive with explicit tools
-- **WHEN** user runs `openspec init --tools claude`
-- **THEN** the system SHALL use specified tools
-- **THEN** the system SHALL NOT prompt for any input
-
-#### Scenario: Interactive with explicit tools
-- **WHEN** user runs `openspec init --tools claude` interactively
-- **THEN** the system SHALL use specified tools (ignoring auto-detection)
-- **THEN** the system SHALL NOT prompt for tool selection
-- **THEN** the system SHALL proceed with default profile and delivery
-
-#### Scenario: Init success message (propose installed)
-- **WHEN** init completes successfully
-- **AND** `propose` is in the active profile
-- **THEN** the system SHALL display a tool-appropriate success message
-- **THEN** for tools using colon syntax (Claude Code): "Start your first change: /opsx:propose \"your idea\""
-- **THEN** for tools using hyphen syntax (Cursor, others): "Start your first change: /opsx-propose \"your idea\""
-
-#### Scenario: Init success message (propose not installed, new installed)
-- **WHEN** init completes successfully
-- **AND** `propose` is NOT in the active profile
-- **AND** `new` is in the active profile
-- **THEN** for tools using colon syntax: "Start your first change: /opsx:new \"your idea\""
-- **THEN** for tools using hyphen syntax: "Start your first change: /opsx-new \"your idea\""
-
-#### Scenario: Init success message (neither propose nor new)
-- **WHEN** init completes successfully
-- **AND** neither `propose` nor `new` is in the active profile
-- **THEN** the system SHALL display: "Done. Run 'openspec config profile' to configure your workflows."
 
 ### Requirement: Init performs migration on existing projects
 The init command SHALL perform one-time migration when re-initializing an existing project, using the same shared migration logic as the update command.
@@ -529,6 +367,35 @@ The init command SHALL show detected tools and ask for confirmation.
 - **THEN** the system SHALL display: "Detected: Claude Code, Cursor"
 - **THEN** the system SHALL show pre-selected checkboxes for confirmation
 - **THEN** the system SHALL allow user to deselect unwanted tools
+
+### Requirement: 固定工作流安装
+
+该命令 SHALL 固定安装 5 个核心工作流，无需用户配置或选择。
+
+#### Scenario: 固定安装 5 个工作流
+
+- **WHEN** 用户运行 `openspec init`
+- **THEN** 系统 SHALL 为所选工具生成以下 5 个工作流的 skills：
+  - `propose`
+  - `explore`
+  - `apply`
+  - `archive`
+  - `bootstrap-opsx`
+- **AND** 系统 SHALL NOT 接受 `--profile` 参数
+- **AND** 系统 SHALL NOT 根据全局配置选择工作流
+
+#### Scenario: 拒绝 profile 参数
+
+- **WHEN** 用户运行 `openspec init --profile <any-value>`
+- **THEN** 系统 SHALL 输出错误消息："--profile 参数已删除。现在固定安装 5 个核心工作流。"
+- **AND** 退出码 SHALL 为 1
+
+#### Scenario: 忽略全局配置中的 profile 字段
+
+- **WHEN** 全局配置文件包含 `profile` 或 `workflows` 字段
+- **THEN** 系统 SHALL 忽略这些字段
+- **AND** 系统 SHALL 输出警告："检测到过时配置字段：profile/workflows。运行 'openspec update' 清理。"
+- **AND** 继续固定安装 5 个工作流
 
 ## Why
 

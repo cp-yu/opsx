@@ -8,7 +8,6 @@ export const GLOBAL_CONFIG_FILE_NAME = 'config.json';
 export const GLOBAL_DATA_DIR_NAME = 'openspec';
 
 // TypeScript types
-export type Profile = 'core' | 'expanded' | 'custom';
 export type Delivery = 'both' | 'skills' | 'commands';
 
 // TypeScript interfaces
@@ -25,9 +24,7 @@ export interface GlobalConfig {
   apply?: {
     defaultIsolation?: 'ask' | 'branch' | 'worktree' | 'none';
   };
-  profile?: Profile;
   delivery?: Delivery;
-  workflows?: string[];
 }
 
 const DEFAULT_CONFIG: GlobalConfig = {
@@ -42,7 +39,6 @@ const DEFAULT_CONFIG: GlobalConfig = {
   apply: {
     defaultIsolation: 'ask',
   },
-  profile: 'core',
   delivery: 'both',
 };
 
@@ -130,6 +126,11 @@ export function getGlobalConfig(): GlobalConfig {
     const content = fs.readFileSync(configPath, 'utf-8');
     const parsed = JSON.parse(content);
 
+    // Warn about deprecated fields
+    if ('profile' in parsed || 'workflows' in parsed) {
+      console.warn('警告：检测到过时的配置字段 (profile/workflows)。运行 "openspec update" 清理这些字段。');
+    }
+
     // Merge with defaults (loaded values take precedence)
     const merged: GlobalConfig = {
       ...DEFAULT_CONFIG,
@@ -153,10 +154,11 @@ export function getGlobalConfig(): GlobalConfig {
       }
     };
 
+    // Remove deprecated fields from merged config
+    delete (merged as any).profile;
+    delete (merged as any).workflows;
+
     // Schema evolution: apply defaults for new fields if not present in loaded config
-    if (parsed.profile === undefined) {
-      merged.profile = DEFAULT_CONFIG.profile;
-    }
     if (parsed.delivery === undefined) {
       merged.delivery = DEFAULT_CONFIG.delivery;
     }

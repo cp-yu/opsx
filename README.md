@@ -102,7 +102,7 @@ For vague or multi-subsystem ideas, start with `/opsx:explore`. Explore now runs
 
 `/opsx:apply` now reads coarse `tasks.md` entries and has the current agent execute pending behavior checks through strict red/green TDD before marking evidence-backed progress. When run on `main` or `master`, it asks whether to create a feature branch, create a worktree, or continue on the current branch.
 
-If you want the `expanded` workflow preset (`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:sync`, `/opsx:bulk-archive`, `/opsx:onboard`), select it with `openspec config profile` and apply with `openspec update`. In the default `core` preset, `/opsx:archive` still exposes only one user-facing command, but it now runs the same full verify gate before archive and then performs spec + OPSX sync inline.
+OpenSpec installs 5 workflows by default: `/opsx:propose`, `/opsx:explore`, `/opsx:apply`, `/opsx:archive`, and `/opsx:bootstrap-opsx`. `/opsx:archive` exposes only one user-facing command, but it runs the same full verify gate before archive and then performs spec + OPSX sync inline.
 
 > [!NOTE]
 > Not sure if your tool is supported? [View the full list](docs/supported-tools.md) – we support 20+ tools and growing.

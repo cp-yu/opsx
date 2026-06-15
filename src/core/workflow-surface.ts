@@ -18,10 +18,6 @@ export type CommandId = WorkflowId;
 
 export const ALL_WORKFLOWS = WorkflowManifestRegistry.getAllWorkflowIds() as unknown as readonly WorkflowId[];
 
-export const CORE_WORKFLOWS = WorkflowManifestRegistry.getWorkflowsForPreset('core') as unknown as readonly WorkflowId[];
-
-export const EXPANDED_WORKFLOWS = WorkflowManifestRegistry.getWorkflowsForPreset('expanded') as unknown as readonly WorkflowId[];
-
 export const SKILL_NAMES = WorkflowManifestRegistry.getSkillNames() as unknown as readonly SkillName[];
 
 export const COMMAND_IDS = ALL_WORKFLOWS;

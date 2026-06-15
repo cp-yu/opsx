@@ -8,12 +8,12 @@ import {
 describe('transformToHyphenCommands', () => {
   describe('basic transformations', () => {
     it('should transform single command reference', () => {
-      expect(transformToHyphenCommands('/opsx:new')).toBe('/opsx-new');
+      expect(transformToHyphenCommands('/opsx:apply')).toBe('/opsx-apply');
     });
 
     it('should transform multiple command references', () => {
-      const input = '/opsx:new and /opsx:apply';
-      const expected = '/opsx-new and /opsx-apply';
+      const input = '/opsx:propose and /opsx:apply';
+      const expected = '/opsx-propose and /opsx-apply';
       expect(transformToHyphenCommands(input)).toBe(expected);
     });
 
@@ -24,8 +24,8 @@ describe('transformToHyphenCommands', () => {
     });
 
     it('should handle backtick-quoted commands', () => {
-      const input = 'Run `/opsx:continue` to proceed';
-      const expected = 'Run `/opsx-continue` to proceed';
+      const input = 'Run `/opsx:explore` to proceed';
+      const expected = 'Run `/opsx-explore` to proceed';
       expect(transformToHyphenCommands(input)).toBe(expected);
     });
   });
@@ -46,36 +46,31 @@ describe('transformToHyphenCommands', () => {
     });
 
     it('should handle multiple occurrences on same line', () => {
-      const input = '/opsx:new /opsx:continue /opsx:apply';
-      const expected = '/opsx-new /opsx-continue /opsx-apply';
+      const input = '/opsx:propose /opsx:explore /opsx:apply';
+      const expected = '/opsx-propose /opsx-explore /opsx-apply';
       expect(transformToHyphenCommands(input)).toBe(expected);
     });
   });
 
   describe('multiline content', () => {
     it('should transform references across multiple lines', () => {
-      const input = `Use /opsx:new to start
-Then /opsx:continue to proceed
+      const input = `Use /opsx:propose to start
+Then /opsx:explore to investigate
 Finally /opsx:apply to implement`;
-      const expected = `Use /opsx-new to start
-Then /opsx-continue to proceed
+      const expected = `Use /opsx-propose to start
+Then /opsx-explore to investigate
 Finally /opsx-apply to implement`;
       expect(transformToHyphenCommands(input)).toBe(expected);
     });
   });
 
-  describe('all known commands', () => {
+  describe('all current registry commands', () => {
     const commands = [
-      'new',
-      'continue',
-      'apply',
-      'ff',
-      'sync',
-      'archive',
-      'bulk-archive',
-      'verify',
+      'propose',
       'explore',
-      'onboard',
+      'apply',
+      'archive',
+      'bootstrap',
     ];
 
     for (const cmd of commands) {
@@ -89,8 +84,7 @@ Finally /opsx-apply to implement`;
 describe('renderWorkflowInvocation', () => {
   it('renders precise codex skill names from the manifest', () => {
     expect(renderWorkflowInvocation('codex', 'propose')).toBe('$openspec-propose');
-    expect(renderWorkflowInvocation('codex', 'new')).toBe('$openspec-new-change');
-    expect(renderWorkflowInvocation('codex', 'continue')).toBe('$openspec-continue-change');
+    expect(renderWorkflowInvocation('codex', 'explore')).toBe('$openspec-explore');
     expect(renderWorkflowInvocation('codex', 'apply')).toBe('$openspec-apply-change');
     expect(renderWorkflowInvocation('codex', 'archive')).toBe('$openspec-archive-change');
   });
@@ -103,9 +97,9 @@ describe('renderWorkflowInvocation', () => {
 
 describe('transformWorkflowReferences', () => {
   it('rewrites only registered workflow references for codex', () => {
-    const input = 'Use /opsx:new, /opsx:continue, and /opsx:apply. Leave /opsx:unknown alone.';
+    const input = 'Use /opsx:propose, /opsx:explore, and /opsx:apply. Leave /opsx:unknown alone.';
     expect(transformWorkflowReferences(input, 'codex')).toBe(
-      'Use $openspec-new-change, $openspec-continue-change, and $openspec-apply-change. Leave /opsx:unknown alone.'
+      'Use $openspec-propose, $openspec-explore, and $openspec-apply-change. Leave /opsx:unknown alone.'
     );
   });
 });

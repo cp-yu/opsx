@@ -133,20 +133,21 @@ describe('InitCommand', () => {
       expect(content).toContain('proseLanguage: zh-CN');
     });
 
-    it('should create core profile skills for Claude Code by default', async () => {
+    it('should create all 5 registry skills for Claude Code by default', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 
       await initCommand.execute(testDir);
 
-      // Core profile: propose, explore, apply, archive
-      const coreSkillNames = [
+      // All 5 registry workflows: propose, explore, apply, archive, bootstrap-opsx
+      const expectedSkillNames = [
         'openspec-propose',
         'openspec-explore',
         'openspec-apply-change',
         'openspec-archive-change',
+        'openspec-bootstrap-opsx',
       ];
 
-      for (const skillName of coreSkillNames) {
+      for (const skillName of expectedSkillNames) {
         const skillFile = path.join(testDir, '.claude', 'skills', skillName, 'SKILL.md');
         expect(await fileExists(skillFile)).toBe(true);
 
@@ -156,8 +157,8 @@ describe('InitCommand', () => {
         expect(content).toContain('description:');
       }
 
-      // Non-core skills should NOT be created
-      const nonCoreSkillNames = [
+      // Removed workflow skills should NOT be created
+      const removedSkillNames = [
         'openspec-new-change',
         'openspec-continue-change',
         'openspec-ff-change',
@@ -166,32 +167,33 @@ describe('InitCommand', () => {
         'openspec-verify-change',
       ];
 
-      for (const skillName of nonCoreSkillNames) {
+      for (const skillName of removedSkillNames) {
         const skillFile = path.join(testDir, '.claude', 'skills', skillName, 'SKILL.md');
         expect(await fileExists(skillFile)).toBe(false);
       }
     });
 
-    it('should create core profile commands for Claude Code by default', async () => {
+    it('should create all 5 registry commands for Claude Code by default', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 
       await initCommand.execute(testDir);
 
-      // Core profile: propose, explore, apply, archive
-      const coreCommandNames = [
+      // All 5 registry workflows: propose, explore, apply, archive, bootstrap
+      const expectedCommandNames = [
         'opsx/propose.md',
         'opsx/explore.md',
         'opsx/apply.md',
         'opsx/archive.md',
+        'opsx/bootstrap.md',
       ];
 
-      for (const cmdName of coreCommandNames) {
+      for (const cmdName of expectedCommandNames) {
         const cmdFile = path.join(testDir, '.claude', 'commands', cmdName);
         expect(await fileExists(cmdFile)).toBe(true);
       }
 
-      // Non-core commands should NOT be created
-      const nonCoreCommandNames = [
+      // Removed workflow commands should NOT be created
+      const removedCommandNames = [
         'opsx/new.md',
         'opsx/continue.md',
         'opsx/ff.md',
@@ -200,7 +202,7 @@ describe('InitCommand', () => {
         'opsx/verify.md',
       ];
 
-      for (const cmdName of nonCoreCommandNames) {
+      for (const cmdName of removedCommandNames) {
         const cmdFile = path.join(testDir, '.claude', 'commands', cmdName);
         expect(await fileExists(cmdFile)).toBe(false);
       }
@@ -264,7 +266,6 @@ describe('InitCommand', () => {
     it('should keep codex on skills and remove legacy command files in commands delivery', async () => {
       saveGlobalConfig({
         featureFlags: {},
-        profile: 'core',
         delivery: 'commands',
       });
       const legacyCommand = await writeLegacyCodexCommand('explore');
@@ -515,12 +516,10 @@ context: |
       expect(content).toMatch(/^---\n/);
     });
 
-    it('should generate mapped bootstrap command path for custom workflow selection', async () => {
+    it('should generate mapped bootstrap command path', async () => {
       saveGlobalConfig({
         featureFlags: {},
-        profile: 'custom',
         delivery: 'commands',
-        workflows: ['bootstrap-opsx'],
       });
 
       const initCommand = new InitCommand({ tools: 'claude', force: true });
@@ -728,12 +727,10 @@ capabilities: []
     expect(opsxContent).toBe(existingContent);
   });
 
-  it('should show bootstrap guidance when bootstrap-opsx in profile and non-extend mode', async () => {
+  it('should show bootstrap guidance when bootstrap-opsx is installed and non-extend mode', async () => {
     saveGlobalConfig({
       featureFlags: {},
-      profile: 'custom',
       delivery: 'both',
-      workflows: ['propose', 'bootstrap-opsx'],
     });
 
     const consoleSpy = vi.spyOn(console, 'log');
@@ -749,10 +746,9 @@ capabilities: []
     expect(bootstrapLine).toContain('map your architecture');
   });
 
-  it('should not show bootstrap guidance when bootstrap-opsx is not in profile', async () => {
+  it('should show bootstrap guidance for all 5 workflows including bootstrap-opsx', async () => {
     saveGlobalConfig({
       featureFlags: {},
-      profile: 'core',
       delivery: 'both',
     });
 
@@ -764,15 +760,13 @@ capabilities: []
     const bootstrapLine = logCalls.find((line) =>
       line.includes('Next: run') && line.includes('bootstrap')
     );
-    expect(bootstrapLine).toBeUndefined();
+    expect(bootstrapLine).toBeDefined();
   });
 
-  it('should not show bootstrap guidance in extend mode even when profile includes bootstrap-opsx', async () => {
+  it('should not show bootstrap guidance in extend mode', async () => {
     saveGlobalConfig({
       featureFlags: {},
-      profile: 'custom',
       delivery: 'both',
-      workflows: ['propose', 'bootstrap-opsx'],
     });
 
     // Pre-create openspec to make it extend mode
@@ -819,38 +813,43 @@ describe('InitCommand - profile and detection features', () => {
     vi.restoreAllMocks();
   });
 
-  it('should use --profile flag to override global config', async () => {
-    // Set global config to custom profile
+  it('should install all 5 workflows regardless of obsolete profile config', async () => {
+    // Set global config with obsolete profile/workflows fields
     saveGlobalConfig({
       featureFlags: {},
-      profile: 'custom',
       delivery: 'both',
-      workflows: ['explore', 'new', 'apply'],
-    });
+    } as any);
 
-    // Override with --profile core
-    const initCommand = new InitCommand({ tools: 'claude', force: true, profile: 'core' });
+    const initCommand = new InitCommand({ tools: 'claude', force: true });
     await initCommand.execute(testDir);
 
-    // Core profile skills should be created
-    const proposeSkill = path.join(testDir, '.claude', 'skills', 'openspec-propose', 'SKILL.md');
-    expect(await fileExists(proposeSkill)).toBe(true);
+    // All 5 registry workflows should be created
+    const expectedSkillNames = [
+      'openspec-propose',
+      'openspec-explore',
+      'openspec-apply-change',
+      'openspec-archive-change',
+      'openspec-bootstrap-opsx',
+    ];
 
-    // Non-core skills (from the custom profile) should NOT be created
-    const newChangeSkill = path.join(testDir, '.claude', 'skills', 'openspec-new-change', 'SKILL.md');
-    expect(await fileExists(newChangeSkill)).toBe(false);
+    for (const skillName of expectedSkillNames) {
+      const skillFile = path.join(testDir, '.claude', 'skills', skillName, 'SKILL.md');
+      expect(await fileExists(skillFile)).toBe(true);
+    }
   });
 
-  it('should reject invalid --profile values', async () => {
+  it('should reject --profile flag with friendly error', async () => {
+    // --profile is now rejected at CLI level, but test InitCommand directly
     const initCommand = new InitCommand({
       tools: 'claude',
       force: true,
-      profile: 'invalid-profile',
     });
 
-    await expect(initCommand.execute(testDir)).rejects.toThrow(
-      /Invalid profile "invalid-profile"/
-    );
+    // InitCommand no longer accepts profile — just verify it installs all 5 workflows
+    await initCommand.execute(testDir);
+
+    const proposeSkill = path.join(testDir, '.claude', 'skills', 'openspec-propose', 'SKILL.md');
+    expect(await fileExists(proposeSkill)).toBe(true);
   });
 
   it('should use detected tools in non-interactive mode when no --tools flag', async () => {
@@ -933,29 +932,31 @@ describe('InitCommand - profile and detection features', () => {
     expect(githubCopilot?.preSelected).toBe(true);
   });
 
-  it('should respect custom profile from global config', async () => {
+  it('should ignore obsolete profile/workflows fields and install all 5 workflows', async () => {
     saveGlobalConfig({
       featureFlags: {},
-      profile: 'custom',
       delivery: 'both',
-      workflows: ['explore', 'new'],
-    });
+    } as any);
 
     const initCommand = new InitCommand({ tools: 'claude', force: true });
     await initCommand.execute(testDir);
 
-    // Custom profile skills should be created
-    const exploreSkill = path.join(testDir, '.claude', 'skills', 'openspec-explore', 'SKILL.md');
-    const newChangeSkill = path.join(testDir, '.claude', 'skills', 'openspec-new-change', 'SKILL.md');
-    expect(await fileExists(exploreSkill)).toBe(true);
-    expect(await fileExists(newChangeSkill)).toBe(true);
+    // All 5 workflows should be installed
+    const expectedSkills = [
+      'openspec-propose',
+      'openspec-explore',
+      'openspec-apply-change',
+      'openspec-archive-change',
+      'openspec-bootstrap-opsx',
+    ];
 
-    // Non-selected skills should NOT be created
-    const proposeSkill = path.join(testDir, '.claude', 'skills', 'openspec-propose', 'SKILL.md');
-    expect(await fileExists(proposeSkill)).toBe(false);
+    for (const skillName of expectedSkills) {
+      const skillFile = path.join(testDir, '.claude', 'skills', skillName, 'SKILL.md');
+      expect(await fileExists(skillFile)).toBe(true);
+    }
   });
 
-  it('should migrate commands-only extend mode to custom profile without injecting propose', async () => {
+  it('should install all 5 workflows in extend mode regardless of prior config', async () => {
     await fs.mkdir(path.join(testDir, 'openspec'), { recursive: true });
     await fs.mkdir(path.join(testDir, '.claude', 'commands', 'opsx'), { recursive: true });
     await fs.writeFile(path.join(testDir, '.claude', 'commands', 'opsx', 'explore.md'), '# explore\n');
@@ -963,28 +964,26 @@ describe('InitCommand - profile and detection features', () => {
     const initCommand = new InitCommand({ tools: 'claude', force: true });
     await initCommand.execute(testDir);
 
-    const config = getGlobalConfig();
-    expect(config.profile).toBe('custom');
-    expect(config.delivery).toBe('commands');
-    expect(config.workflows).toEqual(['explore']);
+    // All 5 commands should now exist
+    const expectedCommands = ['explore.md', 'propose.md', 'apply.md', 'archive.md', 'bootstrap.md'];
+    for (const cmd of expectedCommands) {
+      expect(await fileExists(path.join(testDir, '.claude', 'commands', 'opsx', cmd))).toBe(true);
+    }
 
-    const exploreCommand = path.join(testDir, '.claude', 'commands', 'opsx', 'explore.md');
-    const proposeCommand = path.join(testDir, '.claude', 'commands', 'opsx', 'propose.md');
-    expect(await fileExists(exploreCommand)).toBe(true);
-    expect(await fileExists(proposeCommand)).toBe(false);
-
-    const exploreSkill = path.join(testDir, '.claude', 'skills', 'openspec-explore', 'SKILL.md');
-    const proposeSkill = path.join(testDir, '.claude', 'skills', 'openspec-propose', 'SKILL.md');
-    expect(await fileExists(exploreSkill)).toBe(false);
-    expect(await fileExists(proposeSkill)).toBe(false);
+    // All 5 skills should exist
+    const expectedSkills = [
+      'openspec-explore', 'openspec-propose', 'openspec-apply-change',
+      'openspec-archive-change', 'openspec-bootstrap-opsx',
+    ];
+    for (const skill of expectedSkills) {
+      expect(await fileExists(path.join(testDir, '.claude', 'skills', skill, 'SKILL.md'))).toBe(true);
+    }
   });
 
-  it('should not prompt for confirmation when applying custom profile in interactive init', async () => {
+  it('should install all 5 workflows in interactive mode without profile prompts', async () => {
     saveGlobalConfig({
       featureFlags: {},
-      profile: 'custom',
       delivery: 'both',
-      workflows: ['explore', 'new'],
     });
 
     const initCommand = new InitCommand({ force: true });
@@ -996,10 +995,14 @@ describe('InitCommand - profile and detection features', () => {
     expect(showWelcomeScreenMock).toHaveBeenCalled();
     expect(confirmMock).not.toHaveBeenCalled();
 
-    const exploreSkill = path.join(testDir, '.claude', 'skills', 'openspec-explore', 'SKILL.md');
-    const newChangeSkill = path.join(testDir, '.claude', 'skills', 'openspec-new-change', 'SKILL.md');
-    expect(await fileExists(exploreSkill)).toBe(true);
-    expect(await fileExists(newChangeSkill)).toBe(true);
+    // All 5 workflows should be installed
+    const expectedSkills = [
+      'openspec-explore', 'openspec-propose', 'openspec-apply-change',
+      'openspec-archive-change', 'openspec-bootstrap-opsx',
+    ];
+    for (const skill of expectedSkills) {
+      expect(await fileExists(path.join(testDir, '.claude', 'skills', skill, 'SKILL.md'))).toBe(true);
+    }
 
     const logCalls = (console.log as unknown as { mock: { calls: unknown[][] } }).mock.calls.flat().map(String);
     expect(logCalls.some((entry) => entry.includes('Applying custom profile'))).toBe(false);
@@ -1008,7 +1011,6 @@ describe('InitCommand - profile and detection features', () => {
   it('should respect delivery=skills setting (no commands)', async () => {
     saveGlobalConfig({
       featureFlags: {},
-      profile: 'core',
       delivery: 'skills',
     });
 
@@ -1027,7 +1029,6 @@ describe('InitCommand - profile and detection features', () => {
   it('should respect delivery=commands setting (no skills)', async () => {
     saveGlobalConfig({
       featureFlags: {},
-      profile: 'core',
       delivery: 'commands',
     });
 
@@ -1046,7 +1047,6 @@ describe('InitCommand - profile and detection features', () => {
   it('should remove commands on re-init when delivery changes to skills', async () => {
     saveGlobalConfig({
       featureFlags: {},
-      profile: 'core',
       delivery: 'both',
     });
 
@@ -1058,7 +1058,6 @@ describe('InitCommand - profile and detection features', () => {
 
     saveGlobalConfig({
       featureFlags: {},
-      profile: 'core',
       delivery: 'skills',
     });
 

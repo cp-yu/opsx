@@ -37,30 +37,30 @@ describe('Transform Pipeline', () => {
   describe('command path transforms (scope: both verified for command artifactType)', () => {
     it('should transform opencode command body with preAdapter phase', () => {
       const result = runTransforms(
-        'Use /opsx:new to start and /opsx:apply to implement.',
-        { toolId: 'opencode', workflowId: 'new', artifactType: 'command' },
+        'Use /opsx:propose to start and /opsx:apply to implement.',
+        { toolId: 'opencode', workflowId: 'propose', artifactType: 'command' },
         'preAdapter'
       );
-      expect(result).toBe('Use /opsx-new to start and /opsx-apply to implement.');
+      expect(result).toBe('Use /opsx-propose to start and /opsx-apply to implement.');
     });
 
     it('should transform pi command body with preAdapter phase', () => {
       const result = runTransforms(
-        'Use /opsx:new to start and /opsx:apply to implement.',
-        { toolId: 'pi', workflowId: 'new', artifactType: 'command' },
+        'Use /opsx:propose to start and /opsx:apply to implement.',
+        { toolId: 'pi', workflowId: 'propose', artifactType: 'command' },
         'preAdapter'
       );
-      expect(result).toBe('Use /opsx-new to start and /opsx-apply to implement.');
+      expect(result).toBe('Use /opsx-propose to start and /opsx-apply to implement.');
     });
 
     it('should transform codex command body to dollar-sign format', () => {
       const result = runTransforms(
-        'Use /opsx:new, /opsx:continue, and /opsx:apply.',
-        { toolId: 'codex', workflowId: 'new', artifactType: 'command' },
+        'Use /opsx:propose, /opsx:explore, and /opsx:apply.',
+        { toolId: 'codex', workflowId: 'propose', artifactType: 'command' },
         'preAdapter'
       );
-      expect(result).toContain('$openspec-new-change');
-      expect(result).toContain('$openspec-continue-change');
+      expect(result).toContain('$openspec-propose');
+      expect(result).toContain('$openspec-explore');
       expect(result).toContain('$openspec-apply-change');
     });
 
