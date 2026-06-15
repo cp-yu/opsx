@@ -89,20 +89,20 @@ describe('workflow installation planning', () => {
   });
 
   it('includes shared reference files in planned artifacts', () => {
-    const plan = createToolWorkflowArtifactPlan('claude', ['archive', 'sync'], 'skills', testDir);
+    const plan = createToolWorkflowArtifactPlan('claude', ['archive', 'apply'], 'skills', testDir);
     const artifacts = getPlannedToolArtifacts(testDir, 'claude', plan);
 
     expect(artifacts.skillFiles).toContain(
-      path.join(testDir, '.claude', 'skills', 'openspec-sync-specs', 'SKILL.md')
+      path.join(testDir, '.claude', 'skills', 'openspec-archive-change', 'SKILL.md')
     );
     expect(artifacts.skillFiles).toContain(
-      path.join(testDir, 'openspec', 'references', 'openspec-merge-rules.md')
+      path.join(testDir, '.claude', 'skills', 'openspec-apply-change', 'SKILL.md')
     );
     expect(artifacts.skillFiles).toContain(
       path.join(testDir, 'openspec', 'references', 'openspec-archive-commit-message.md')
     );
     expect(artifacts.skillFiles).toContain(
-      path.join(testDir, 'openspec', 'references', 'openspec-merge-summary-message.md')
+      path.join(testDir, 'openspec', 'references', 'openspec-apply-phase2-optimization.md')
     );
     expect(artifacts.skillFiles).toContain(
       path.join(testDir, 'openspec', 'references', 'openspec-output-protocol.md')
@@ -131,31 +131,16 @@ describe('workflow installation planning', () => {
     await expect(fs.stat(path.join(skillsDir, 'openspec-reviewer', 'SKILL.md'))).resolves.toBeDefined();
   });
 
-  it('writes shared reference files during sync and removes legacy skill references', async () => {
-    const legacyReferencesDir = path.join(
-      testDir,
-      '.claude',
-      'skills',
-      'openspec-sync-specs',
-      'references'
-    );
-    await fs.mkdir(legacyReferencesDir, { recursive: true });
-    await fs.writeFile(path.join(legacyReferencesDir, 'merge-rules.md'), 'stale');
-
+  it('writes shared reference files during sync', async () => {
     const result = await ArtifactSyncEngine.syncOne({
       toolId: 'claude',
       projectPath: testDir,
-      workflows: ['archive', 'sync'],
+      workflows: ['archive'],
       delivery: 'skills',
       version: 'test',
     });
 
     expect(result.error).toBeUndefined();
-    await expect(fs.stat(legacyReferencesDir)).rejects.toThrow();
-    const reference = await fs.readFile(
-      path.join(testDir, 'openspec', 'references', 'openspec-merge-rules.md'),
-      'utf-8'
-    );
     const archiveReference = await fs.readFile(
       path.join(testDir, 'openspec', 'references', 'openspec-archive-commit-message.md'),
       'utf-8'
@@ -164,7 +149,6 @@ describe('workflow installation planning', () => {
       path.join(testDir, 'openspec', 'references', 'openspec-merge-summary-message.md'),
       'utf-8'
     );
-    expect(reference).toContain('Key Principle: Intelligent Merging');
     expect(archiveReference).toContain('git.commitMessage.archive');
     expect(mergeReference).toContain('git.commitMessage.merge');
   });

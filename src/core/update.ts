@@ -29,8 +29,7 @@ import {
   type LegacyDetectionResult,
 } from './legacy-cleanup.js';
 import { isInteractive } from '../utils/interactive.js';
-import { getGlobalConfig, type Delivery } from './global-config.js';
-import { getProfileWorkflows } from './profiles.js';
+import { getGlobalConfig, getGlobalConfigPath, saveGlobalConfig, type Delivery } from './global-config.js';
 import { getAvailableTools } from './available-tools.js';
 import {
   getCommandConfiguredTools,
@@ -46,6 +45,7 @@ import {
 } from './migration.js';
 import { migrateProjectConfigDefaults } from './project-config.js';
 import { ArtifactSyncEngine } from './templates/sync-engine.js';
+import { WorkflowManifestRegistry } from './templates/manifest/index.js';
 
 const require = createRequire(import.meta.url);
 const { version: OPENSPEC_VERSION } = require('../../package.json');
@@ -101,13 +101,18 @@ export class UpdateCommand {
     const detectedTools = getAvailableTools(resolvedProjectPath);
     migrateIfNeededShared(resolvedProjectPath, detectedTools);
 
-    // 3. Read global config for profile/delivery
+    // 3. Read global config; workflows are fixed from registry.
     const globalConfig = getGlobalConfig();
-    const profile = globalConfig.profile ?? 'core';
     const delivery: Delivery = globalConfig.delivery ?? 'both';
-    const profileWorkflows = getProfileWorkflows(profile, globalConfig.workflows);
-    const plan = createWorkflowArtifactPlan(profileWorkflows, delivery, resolvedProjectPath);
+    const allWorkflowIds = WorkflowManifestRegistry.getAllWorkflowIds();
+    const plan = createWorkflowArtifactPlan(allWorkflowIds, delivery, resolvedProjectPath);
     const desiredWorkflows = [...plan.workflows];
+
+    // 3b. Clean up obsolete profile/workflows fields from global config
+    this.cleanupObsoleteConfigFields();
+
+    // 3c. Clean up expanded workflow remnants (7 removed workflows)
+    this.cleanupExpandedWorkflowRemnants(resolvedProjectPath);
 
     // 4. Detect and handle legacy artifacts + upgrade legacy tools using effective config
     const newlyConfiguredTools = await this.handleLegacyCleanup(
@@ -217,9 +222,9 @@ export class UpdateCommand {
       const guidanceToolId = this.getGuidanceToolId(newlyConfiguredTools);
       console.log();
       console.log(chalk.bold('Getting started:'));
-      console.log(`  ${renderWorkflowInvocation(guidanceToolId, 'new')}       Start a new change`);
-      console.log(`  ${renderWorkflowInvocation(guidanceToolId, 'continue')}  Create the next artifact`);
-      console.log(`  ${renderWorkflowInvocation(guidanceToolId, 'apply')}     Implement tasks`);
+      console.log(`  ${renderWorkflowInvocation(guidanceToolId, 'propose')}     Start a new change`);
+      console.log(`  ${renderWorkflowInvocation(guidanceToolId, 'explore')}     Investigate a problem`);
+      console.log(`  ${renderWorkflowInvocation(guidanceToolId, 'apply')}       Implement tasks`);
       console.log();
       console.log(`Learn more: ${chalk.cyan('https://github.com/cp-yu/opsx')}`);
     }
@@ -323,7 +328,7 @@ export class UpdateCommand {
     const extraWorkflows = installedWorkflows.filter((w) => !profileSet.has(w));
 
     if (extraWorkflows.length > 0) {
-      console.log(chalk.dim(`Note: ${extraWorkflows.length} extra workflows not in profile (use \`openspec config profile\` to manage)`));
+      console.log(chalk.dim(`Note: ${extraWorkflows.length} extra workflows installed outside the standard set. Run 'openspec update' to sync.`));
     }
   }
 
@@ -511,5 +516,101 @@ export class UpdateCommand {
     }
 
     return newlyConfigured;
+  }
+
+  /**
+   * Clean up obsolete profile/workflows fields from global config.
+   * Re-saves the config without those fields (getGlobalConfig already strips them).
+   */
+  private cleanupObsoleteConfigFields(): void {
+    const configPath = getGlobalConfigPath();
+    try {
+      if (!fs.existsSync(configPath)) return;
+      const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      if (raw.profile === undefined && raw.workflows === undefined) return;
+      console.warn(chalk.yellow('检测到过时的配置字段 (profile/workflows)，正在自动清理...'));
+      const config = getGlobalConfig();
+      saveGlobalConfig(config);
+      console.log(chalk.dim('已自动清理过时字段。'));
+    } catch {
+      // Silently ignore config cleanup failures
+    }
+  }
+
+  /**
+   * Remove expanded workflow remnants: skill dirs and command files for
+   * the 7 workflows that were removed from the registry.
+   */
+  private cleanupExpandedWorkflowRemnants(projectPath: string): void {
+    const removedSkillDirNames = [
+      'openspec-new-change',
+      'openspec-continue-change',
+      'openspec-ff-change',
+      'openspec-verify-change',
+      'openspec-sync-specs',
+      'openspec-bulk-archive-change',
+      'openspec-onboard',
+    ];
+
+    const removedCommandSlugs = ['new', 'continue', 'ff', 'verify', 'sync', 'bulk-archive', 'onboard'];
+
+    const toolDirs: Array<{ skills: string; commands: string }> = [
+      { skills: '.claude/skills', commands: '.claude/commands/opsx' },
+      { skills: '.cursor/skills', commands: '.cursor/commands' },
+      { skills: '.windsurf/skills', commands: '.windsurf/workflows' },
+      { skills: '.codex/skills', commands: '' },
+      { skills: '.gemini/skills', commands: '.gemini/commands/opsx' },
+      { skills: '.continue/skills', commands: '.continue/prompts' },
+      { skills: '.clinerules/skills', commands: '.clinerules/workflows' },
+    ];
+
+    let cleaned = 0;
+
+    for (const { skills, commands } of toolDirs) {
+      const skillsBase = path.join(projectPath, skills);
+      for (const dirName of removedSkillDirNames) {
+        const skillDir = path.join(skillsBase, dirName);
+        try {
+          if (fs.existsSync(skillDir)) {
+            fs.rmSync(skillDir, { recursive: true, force: true });
+            cleaned++;
+          }
+        } catch {
+          // Ignore errors
+        }
+      }
+
+      if (commands) {
+        const commandsBase = path.join(projectPath, commands);
+        for (const slug of removedCommandSlugs) {
+          // Try multiple extensions
+          for (const ext of ['.md', '.toml', '.prompt', '.prompt.md']) {
+            const cmdFile = path.join(commandsBase, `opsx-${slug}${ext}`);
+            try {
+              if (fs.existsSync(cmdFile)) {
+                fs.rmSync(cmdFile, { force: true });
+                cleaned++;
+              }
+            } catch {
+              // Ignore errors
+            }
+          }
+          // Claude-style flat slug commands
+          const flatCmdFile = path.join(commandsBase, `${slug}.md`);
+          try {
+            if (fs.existsSync(flatCmdFile)) {
+              fs.rmSync(flatCmdFile, { force: true });
+              cleaned++;
+            }
+          } catch {
+            // Ignore errors
+          }
+        }
+      }
+    }
+
+    if (cleaned > 0) {
+      console.log(chalk.dim(`已清理 ${cleaned} 个废弃工作流残留文件。`));
+    }
   }
 }

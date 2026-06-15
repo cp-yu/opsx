@@ -3,25 +3,14 @@ import { WorkflowManifestRegistry } from '../../../src/core/templates/manifest/i
 
 describe('Workflow Manifest', () => {
   describe('completeness', () => {
-    it('should have entries for all core workflows', () => {
-      const coreIds = WorkflowManifestRegistry.getWorkflowsForPreset('core');
-      expect(coreIds).toContain('propose');
-      expect(coreIds).toContain('explore');
-      expect(coreIds).toContain('apply');
-      expect(coreIds).toContain('archive');
-      expect(coreIds.length).toBeGreaterThanOrEqual(4);
-    });
-
-    it('should have entries for all expanded workflows', () => {
-      const expandedIds = WorkflowManifestRegistry.getWorkflowsForPreset('expanded');
-      // Core workflows are also in expanded
-      expect(expandedIds).toContain('new');
-      expect(expandedIds).toContain('continue');
-      expect(expandedIds).toContain('ff');
-      expect(expandedIds).toContain('sync');
-      expect(expandedIds).toContain('verify');
-      expect(expandedIds).toContain('onboard');
-      expect(expandedIds.length).toBeGreaterThanOrEqual(10);
+    it('should have entries for all 5 registry workflows', () => {
+      const ids = WorkflowManifestRegistry.getAllWorkflowIds();
+      expect(ids).toContain('propose');
+      expect(ids).toContain('explore');
+      expect(ids).toContain('apply');
+      expect(ids).toContain('archive');
+      expect(ids).toContain('bootstrap-opsx');
+      expect(ids).toHaveLength(5);
     });
 
     it('should define skillDirName for every entry', () => {
@@ -83,8 +72,8 @@ describe('Workflow Manifest', () => {
       }
     });
 
-    it('should produce at least 12 workflow entries', () => {
-      expect(WorkflowManifestRegistry.entries.length).toBeGreaterThanOrEqual(12);
+    it('should produce exactly 5 workflow entries', () => {
+      expect(WorkflowManifestRegistry.entries.length).toBe(5);
     });
   });
 

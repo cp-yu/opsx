@@ -13,10 +13,6 @@ import {
   createArchiveChangeSkillTemplateForExecutionModel,
   createOpsxArchiveCommandTemplateForExecutionModel,
 } from '../templates/workflows/archive-change.js';
-import {
-  createOpsxVerifyCommandTemplateForExecutionModel,
-  createVerifyChangeSkillTemplateForExecutionModel,
-} from '../templates/workflows/verify-change.js';
 import { resolveVerifyExecutionModel } from '../templates/workflows/verify-execution-model.js';
 import { getReviewerSkillTemplate } from '../templates/workflows/reviewer.js';
 import { getOptimizerSkillTemplate } from '../templates/workflows/optimizer.js';
@@ -67,14 +63,12 @@ const EXECUTION_MODEL_SKILL_TEMPLATES: Partial<
   Record<WorkflowId, (executionModel: ReturnType<typeof resolveVerifyExecutionModel>) => SkillTemplate>
 > = {
   archive: createArchiveChangeSkillTemplateForExecutionModel,
-  verify: createVerifyChangeSkillTemplateForExecutionModel,
 };
 
 const EXECUTION_MODEL_COMMAND_TEMPLATES: Partial<
   Record<WorkflowId, (executionModel: ReturnType<typeof resolveVerifyExecutionModel>) => CommandTemplate>
 > = {
   archive: createOpsxArchiveCommandTemplateForExecutionModel,
-  verify: createOpsxVerifyCommandTemplateForExecutionModel,
 };
 
 /**

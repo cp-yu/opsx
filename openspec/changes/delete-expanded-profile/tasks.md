@@ -172,17 +172,17 @@
 
 #### Checks
 
-- [ ] C1 验证固定安装 5 个工作流
+- [x] C1 验证固定安装 5 个工作流
   - Verifies: `specs/cli-init/spec.md` / Requirement "固定工作流安装" / Scenario "固定安装 5 个工作流"
   - Command: `pnpm test init.test.ts`
   - Expect: init 总是安装 5 个工作流
 
-- [ ] C2 验证拒绝 profile 参数
+- [x] C2 验证拒绝 profile 参数
   - Verifies: `specs/cli-init/spec.md` / Requirement "固定工作流安装" / Scenario "拒绝 profile 参数"
   - Command: `pnpm test init.test.ts`
   - Expect: --profile 参数返回错误和提示消息
 
-- [ ] C3 验证忽略全局配置中的 profile 字段
+- [x] C3 验证忽略全局配置中的 profile 字段
   - Verifies: `specs/cli-init/spec.md` / Requirement "固定工作流安装" / Scenario "忽略全局配置中的 profile 字段"
   - Command: `pnpm test init.test.ts`
   - Expect: 包含 profile 字段时输出警告并继续
@@ -204,17 +204,17 @@
 
 #### Checks
 
-- [ ] C1 验证固定更新 5 个工作流
+- [x] C1 验证固定更新 5 个工作流
   - Verifies: `specs/cli-update/spec.md` / Requirement "固定工作流更新" / Scenario "固定更新 5 个工作流"
   - Command: `pnpm test update.test.ts`
   - Expect: update 总是更新 5 个工作流
 
-- [ ] C2 验证清理过时配置字段
+- [x] C2 验证清理过时配置字段
   - Verifies: `specs/cli-update/spec.md` / Requirement "Update Behavior" / Scenario "清理过时配置字段"
   - Command: `pnpm test update.test.ts`
   - Expect: 检测并删除 profile/workflows 字段，输出警告
 
-- [ ] C3 验证清理 expanded 工作流残留
+- [x] C3 验证清理 expanded 工作流残留
   - Verifies: `specs/cli-update/spec.md` / Requirement "固定工作流更新" / Scenario "清理 expanded 工作流残留"
   - Command: `pnpm test update.test.ts`
   - Expect: 删除 7 个废弃工作流的 skill 目录
@@ -237,12 +237,12 @@
 
 #### Checks
 
-- [ ] C1 验证工作流测试文件已删除
+- [x] C1 验证工作流测试文件已删除
   - Verifies: `specs/ai-workflow-templates/spec.md` / REMOVED Requirement "New Change Workflow Template"
   - Command: `test ! -d test/core/templates/workflows || (find test/core/templates/workflows -name "*.test.ts" | wc -l | grep -q "^0$")`
   - Expect: 工作流测试目录为空或不存在
 
-- [ ] C2 验证 workflow-surface 测试通过
+- [x] C2 验证 workflow-surface 测试通过
   - Verifies: `specs/template-artifact-pipeline/spec.md` / Requirement "Canonical Workflow Manifest" / Scenario "生成制品时使用全部 manifest entries"
   - Command: `pnpm test workflow-surface.test.ts`
   - Expect: 测试通过，验证 5 个工作流
@@ -265,12 +265,12 @@
 
 #### Checks
 
-- [ ] C1 验证 README 不提及 expanded/profile
+- [x] C1 验证 README 不提及 expanded/profile
   - Verifies: `specs/cli-init/spec.md` / Requirement "固定工作流安装" / Scenario "固定安装 5 个工作流"
   - Command: `! grep -i "expanded\|profile preset\|core preset" README.md`
   - Expect: README 不包含 profile 相关内容
 
-- [ ] C2 验证 migration guide 包含删除说明
+- [x] C2 验证 migration guide 包含删除说明
   - Verifies: `specs/cli-update/spec.md` / Requirement "Update Behavior" / Scenario "清理过时配置字段"
   - Command: `grep -q "profile.*删除\|profile.*removed" docs/migration-guide.md`
   - Expect: 包含 profile 删除说明

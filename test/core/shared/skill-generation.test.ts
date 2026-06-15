@@ -9,9 +9,9 @@ import { transformWorkflowReferences } from '../../../src/utils/command-referenc
 
 describe('skill-generation', () => {
   describe('getSkillTemplates', () => {
-    it('should return all 15 skill templates', () => {
+    it('should return all 8 skill templates', () => {
       const templates = getSkillTemplates();
-      expect(templates).toHaveLength(15);
+      expect(templates).toHaveLength(8);
     });
 
     it('should have unique directory names', () => {
@@ -26,21 +26,14 @@ describe('skill-generation', () => {
       const dirNames = templates.map(t => t.dirName);
 
       expect(dirNames).toContain('openspec-explore');
-      expect(dirNames).toContain('openspec-new-change');
-      expect(dirNames).toContain('openspec-continue-change');
       expect(dirNames).toContain('openspec-apply-change');
-      expect(dirNames).toContain('openspec-ff-change');
-      expect(dirNames).toContain('openspec-sync-specs');
       expect(dirNames).toContain('openspec-archive-change');
-      expect(dirNames).toContain('openspec-bulk-archive-change');
-      expect(dirNames).toContain('openspec-verify-change');
-      expect(dirNames).toContain('openspec-onboard');
       expect(dirNames).toContain('openspec-propose');
       expect(dirNames).toContain('openspec-bootstrap-opsx');
       expect(dirNames).toContain('openspec-reviewer');
       expect(dirNames).toContain('openspec-optimizer');
-      expect(dirNames).not.toContain('openspec-implementer');
       expect(dirNames).toContain('openspec-impact-sweeper');
+      expect(dirNames).not.toContain('openspec-implementer');
     });
 
     it('should have valid template structure', () => {
@@ -70,8 +63,6 @@ describe('skill-generation', () => {
       expect(ids).toContain('explore');
       expect(ids).toContain('apply');
       expect(ids).toContain('archive');
-      expect(ids).not.toContain('new');
-      expect(ids).not.toContain('ff');
     });
 
     it('should return all templates when filter is undefined', () => {
@@ -94,26 +85,21 @@ describe('skill-generation', () => {
       expect(filtered[0].dirName).toBe('openspec-propose');
     });
 
-    it('should use tool-specific verify skill templates when available', () => {
-      const defaultVerify = getSkillTemplates(['verify'])[0];
-      const claudeVerify = getSkillTemplates(['verify'], 'claude')[0];
-      const codexVerify = getSkillTemplates(['verify'], 'codex')[0];
+    it('should use tool-specific archive skill templates when available', () => {
       const defaultArchive = getSkillTemplates(['archive'])[0];
       const claudeArchive = getSkillTemplates(['archive'], 'claude')[0];
+      const codexArchive = getSkillTemplates(['archive'], 'codex')[0];
 
-      expect(defaultVerify.template.instructions).toContain("executionMode: 'current-agent-reread'");
-      expect(defaultVerify.template.instructions).not.toContain("executionMode: 'subagent-orchestrated'");
-      expect(claudeVerify.template.instructions).toContain("executionMode: 'subagent-orchestrated'");
-      expect(codexVerify.template.instructions).toContain("executionMode: 'subagent-orchestrated'");
       expect(defaultArchive.template.instructions).toContain('current-agent-reread');
       expect(claudeArchive.template.instructions).toContain('subagent-orchestrated');
+      expect(codexArchive.template.instructions).toContain('subagent-orchestrated');
     });
   });
 
   describe('getCommandTemplates', () => {
-    it('should return all 12 command templates', () => {
+    it('should return all 5 command templates', () => {
       const templates = getCommandTemplates();
-      expect(templates).toHaveLength(12);
+      expect(templates).toHaveLength(5);
     });
 
     it('should have unique IDs', () => {
@@ -128,15 +114,8 @@ describe('skill-generation', () => {
       const ids = templates.map(t => t.id);
 
       expect(ids).toContain('explore');
-      expect(ids).toContain('new');
-      expect(ids).toContain('continue');
       expect(ids).toContain('apply');
-      expect(ids).toContain('ff');
-      expect(ids).toContain('sync');
       expect(ids).toContain('archive');
-      expect(ids).toContain('bulk-archive');
-      expect(ids).toContain('verify');
-      expect(ids).toContain('onboard');
       expect(ids).toContain('propose');
       expect(ids).toContain('bootstrap-opsx');
     });
@@ -156,8 +135,6 @@ describe('skill-generation', () => {
       expect(ids).toContain('explore');
       expect(ids).toContain('apply');
       expect(ids).toContain('archive');
-      expect(ids).not.toContain('new');
-      expect(ids).not.toContain('ff');
     });
 
     it('should return all templates when filter is undefined', () => {
@@ -171,23 +148,19 @@ describe('skill-generation', () => {
       expect(filtered).toHaveLength(0);
     });
 
-    it('should use tool-specific verify command templates when available', () => {
-      const defaultVerify = getCommandTemplates(['verify'])[0];
-      const claudeVerify = getCommandTemplates(['verify'], 'claude')[0];
+    it('should use tool-specific archive command templates when available', () => {
       const defaultArchive = getCommandTemplates(['archive'])[0];
       const claudeArchive = getCommandTemplates(['archive'], 'claude')[0];
 
-      expect(defaultVerify.template.content).toContain("executionMode: 'current-agent-reread'");
-      expect(claudeVerify.template.content).toContain("executionMode: 'subagent-orchestrated'");
       expect(defaultArchive.template.content).toContain('current-agent-reread');
       expect(claudeArchive.template.content).toContain('subagent-orchestrated');
     });
   });
 
   describe('getCommandContents', () => {
-    it('should return all 12 command contents', () => {
+    it('should return all 5 command contents', () => {
       const contents = getCommandContents();
-      expect(contents).toHaveLength(12);
+      expect(contents).toHaveLength(5);
     });
 
     it('should have valid content structure', () => {
@@ -224,7 +197,7 @@ describe('skill-generation', () => {
       const ids = filtered.map(c => c.id);
       expect(ids).toContain('propose');
       expect(ids).toContain('explore');
-      expect(ids).not.toContain('new');
+      expect(ids).not.toContain('archive');
     });
 
     it('should return all contents when filter is undefined', () => {
@@ -233,14 +206,10 @@ describe('skill-generation', () => {
       expect(noFilter).toHaveLength(all.length);
     });
 
-    it('should produce tool-specific verify command content when requested', () => {
-      const defaultVerify = getCommandContents(['verify'])[0];
-      const claudeVerify = getCommandContents(['verify'], 'claude')[0];
+    it('should produce tool-specific archive command content when requested', () => {
       const defaultArchive = getCommandContents(['archive'])[0];
       const claudeArchive = getCommandContents(['archive'], 'claude')[0];
 
-      expect(defaultVerify.body).toContain("executionMode: 'current-agent-reread'");
-      expect(claudeVerify.body).toContain("executionMode: 'subagent-orchestrated'");
       expect(defaultArchive.body).toContain('current-agent-reread');
       expect(claudeArchive.body).toContain('subagent-orchestrated');
     });
@@ -383,7 +352,7 @@ describe('skill-generation', () => {
       const template = {
         name: 'codex-transform',
         description: 'Test codex transform',
-        instructions: 'Use /opsx:new, then /opsx:continue, then /opsx:apply.',
+        instructions: 'Use /opsx:propose, then /opsx:explore, then /opsx:apply.',
       };
 
       const content = generateSkillContent(
@@ -392,11 +361,11 @@ describe('skill-generation', () => {
         (text: string) => transformWorkflowReferences(text, 'codex')
       );
 
-      expect(content).toContain('$openspec-new-change');
-      expect(content).toContain('$openspec-continue-change');
+      expect(content).toContain('$openspec-propose');
+      expect(content).toContain('$openspec-explore');
       expect(content).toContain('$openspec-apply-change');
-      expect(content).not.toContain('/opsx:new');
-      expect(content).not.toContain('/opsx:continue');
+      expect(content).not.toContain('/opsx:propose');
+      expect(content).not.toContain('/opsx:explore');
       expect(content).not.toContain('/opsx:apply');
     });
   });
