@@ -9,16 +9,41 @@ The system SHALL define a canonical workflow manifest as the single source of tr
 
 #### Scenario: Register workflow once
 
-- **WHEN** a workflow (for example `explore`, `ff`, or `onboard`) is added or modified
+- **WHEN** a workflow (for example `explore`, `apply`, or `bootstrap-opsx`) is added or modified
 - **THEN** its canonical definition SHALL be registered once in the workflow manifest
 - **AND** skill/command projections SHALL be derived from that manifest
 - **AND** duplicate hand-maintained lists SHALL NOT be required
 
-#### Scenario: Required skill metadata
+#### Scenario: Manifest 包含固定的 5 个工作流
 
-- **WHEN** defining a workflow skill entry in the manifest
-- **THEN** it SHALL include required metadata fields (`license`, `compatibility`, and `metadata`)
-- **AND** generation SHALL use those values or explicit defaults in a consistent way for all workflows
+- **WHEN** 查询 WorkflowManifestRegistry
+- **THEN** manifest SHALL 包含以下 5 个 entries：
+  - `propose` (modeMembership: ['core'])
+  - `explore` (modeMembership: ['core'])
+  - `apply` (modeMembership: ['core'])
+  - `archive` (modeMembership: ['core'])
+  - `bootstrap-opsx` (modeMembership: [])
+- **AND** manifest SHALL NOT 包含以下已删除的 entries：
+  - `new`
+  - `continue`
+  - `ff`
+  - `verify`
+  - `sync`
+  - `bulk-archive`
+  - `onboard`
+
+#### Scenario: modeMembership 作为标签系统
+
+- **WHEN** 读取 workflow manifest entry 的 `modeMembership` 字段
+- **THEN** 该字段 SHALL 被解释为标签列表，而非 profile 成员标识
+- **AND** 系统 SHALL NOT 使用 `modeMembership` 过滤工作流
+- **AND** 所有 manifest entries 均用于生成制品
+
+#### Scenario: 生成制品时使用全部 manifest entries
+
+- **WHEN** 生成 skill 或 command 制品
+- **THEN** 系统 SHALL 使用 manifest 中的全部 entries
+- **AND** 系统 SHALL NOT 基于 `modeMembership` 值过滤 entries
 
 ### Requirement: Tool Profile Registry
 

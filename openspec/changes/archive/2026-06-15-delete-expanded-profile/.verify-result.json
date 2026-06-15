@@ -1,0 +1,311 @@
+{
+  "timestamp": "2026-06-15T04:52:27.445Z",
+  "result": "PASS_WITH_WARNINGS",
+  "issues": [
+    {
+      "severity": "WARNING",
+      "message": "cli-init spec mandates Chinese error string for --profile rejection but CLI emits English; init.test.ts does not assert at CLI layer. Recommendation: align CLI error message to spec string or relax spec wording."
+    },
+    {
+      "severity": "WARNING",
+      "message": "Pre-existing dead method getWorkflowsForPreset(preset) in registry.ts:122-126 still filters by modeMembership; no caller remains. Pre-existing code, not introduced by this change. Recommendation: remove in a follow-up."
+    }
+  ],
+  "tasksFileHash": "ac289a0591a90a3c2de50339ed6caad18f3d521c5deb8eddfead625e463d752c",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "evidenceFiles": [
+      "openspec/changes/delete-expanded-profile/design.md",
+      "openspec/changes/delete-expanded-profile/opsx-delta.yaml",
+      "openspec/changes/delete-expanded-profile/proposal.md",
+      "openspec/changes/delete-expanded-profile/specs/cli-init/spec.md",
+      "openspec/changes/delete-expanded-profile/specs/global-config/spec.md",
+      "openspec/changes/delete-expanded-profile/specs/template-artifact-pipeline/spec.md",
+      "openspec/changes/delete-expanded-profile/tasks.md",
+      "src/cli/index.ts",
+      "src/commands/config.ts",
+      "src/commands/workflow/instructions.ts",
+      "src/core/config-schema.ts",
+      "src/core/global-config.ts",
+      "src/core/init.ts",
+      "src/core/migration.ts",
+      "src/core/shared/index.ts",
+      "src/core/templates/manifest/registry.ts",
+      "src/core/update.ts",
+      "src/core/workflow-surface.ts",
+      "test/commands/config.test.ts",
+      "test/core/global-config.test.ts",
+      "test/core/init.test.ts",
+      "test/core/migration.test.ts",
+      "test/core/templates/manifest/registry.test.ts",
+      "test/core/update.test.ts",
+      "test/core/workflow-surface.test.ts"
+    ],
+    "evidenceFingerprint": "ff43642c0a23873c9843dc9400a53e6f35f1990d80bc07a191328803e7230d5f",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/delete-expanded-profile/design.md",
+        "hash": "bd3e68687c83eb999789c7389bd530f7c316a8c03806be985abd5ed5e5e844f0"
+      },
+      {
+        "path": "openspec/changes/delete-expanded-profile/opsx-delta.yaml",
+        "hash": "4c47d8c6cd8a3b2df845dcb8dddfa87dbb59c2c8480d9413712a03ab60a65463"
+      },
+      {
+        "path": "openspec/changes/delete-expanded-profile/proposal.md",
+        "hash": "9fde9e902f8f3931b3dffdf9b42cccd06a97173761e73e2a33f6ef5264726ea8"
+      },
+      {
+        "path": "openspec/changes/delete-expanded-profile/specs/cli-init/spec.md",
+        "hash": "99a9e26ebccdb7749535877bdfd5677746e5ae10678168e8fb6b1171a9d548f6"
+      },
+      {
+        "path": "openspec/changes/delete-expanded-profile/specs/global-config/spec.md",
+        "hash": "a65f1fa3c546ceeae84057e8e08e8e8852db5411f1ced1a83c19834f9866e53d"
+      },
+      {
+        "path": "openspec/changes/delete-expanded-profile/specs/template-artifact-pipeline/spec.md",
+        "hash": "ef8405d350310289616a60ca395a6a61bff26bda8a584ef1cc4f132e5d718794"
+      },
+      {
+        "path": "openspec/changes/delete-expanded-profile/tasks.md",
+        "hash": "ac289a0591a90a3c2de50339ed6caad18f3d521c5deb8eddfead625e463d752c"
+      },
+      {
+        "path": "src/cli/index.ts",
+        "hash": "81da2c5aee2a4a803a11efd4c8c9a2828583aecf4016aa25e1c4ee10687bf91d"
+      },
+      {
+        "path": "src/commands/config.ts",
+        "hash": "a50a2c56abf02f13cb497276809cfa185ef946505ed93fb65ce777e136583e57"
+      },
+      {
+        "path": "src/commands/workflow/instructions.ts",
+        "hash": "c870a5c8f0f76c10d6b7527d2a5ca67d83ebd6a885da55d0a89042c9fce90ab0"
+      },
+      {
+        "path": "src/core/config-schema.ts",
+        "hash": "7b5e92e0ebe76719fbc49d8a5dae8e5ec3bbd301f5a6cb01e18d3fb855d50d8b"
+      },
+      {
+        "path": "src/core/global-config.ts",
+        "hash": "be4c86d6fd2fac4ece69b64d6503d7603c0faea0a020c4ae06cda546c4288600"
+      },
+      {
+        "path": "src/core/init.ts",
+        "hash": "f7f81db5ed08b8031e6e72fe990b7f4043cbdd2c7d050b7d48d955a60ec1cf40"
+      },
+      {
+        "path": "src/core/migration.ts",
+        "hash": "11064481ad4a9f650d0d5a92d289dc765922a0e89906ae9937ba4a1d95112292"
+      },
+      {
+        "path": "src/core/shared/index.ts",
+        "hash": "416029795b5f2627b7f848ef228c41f3d75c3ba1cb3b8c2ea2f86d8b037aa2f3"
+      },
+      {
+        "path": "src/core/templates/manifest/registry.ts",
+        "hash": "08b09bb060d1bc48106ef59d3afd34b75949d21b8215233ecbc3e582970caa7e"
+      },
+      {
+        "path": "src/core/update.ts",
+        "hash": "70933bd304316c2202c1bdc9b016e6d8506c675f082242db05a2bd8d3307494a"
+      },
+      {
+        "path": "src/core/workflow-surface.ts",
+        "hash": "c9a4bb697f0cb10029c52bf038a3abfc3f8c152468208b3f4bbd449b3e286ff2"
+      },
+      {
+        "path": "test/commands/config.test.ts",
+        "hash": "26237ac40513219c1461140001a38af0eb13294cfdddd54dddd1fc22fda915f1"
+      },
+      {
+        "path": "test/core/global-config.test.ts",
+        "hash": "6a300fcb253f17f813e8fe6dcd51c9fed255551482202dc175d6ef17d7765f65"
+      },
+      {
+        "path": "test/core/init.test.ts",
+        "hash": "a57ba1ee29a94fbd76593c78160c2fe781234917d139d9bd49b31f282b454389"
+      },
+      {
+        "path": "test/core/migration.test.ts",
+        "hash": "50316fea96b37e6f98ea23bb6ca151cd8e533e75e3eaba6d9b7359d27ad18ab9"
+      },
+      {
+        "path": "test/core/templates/manifest/registry.test.ts",
+        "hash": "ba8ecece7a8f1941f8657c17fb73e25ef26162b723a45a08db75d54c8f0224c0"
+      },
+      {
+        "path": "test/core/update.test.ts",
+        "hash": "04db83bfd8b260157b65a421fa994947d5e171053fdeeccdedba55d70c3c20c7"
+      },
+      {
+        "path": "test/core/workflow-surface.test.ts",
+        "hash": "b0e0147a0d6fcc36dcb7135bec19817f3a140655d1b91348ec25aa29ccab243d"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "16995d860aaa17bc21fef066f336472bce7a7f47"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-15T04:56:55.218Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "Deletion-focused change with surgical edits. Read all 11 in-scope implementation files (registry.ts, init.ts, update.ts, global-config.ts, migration.ts, workflow-surface.ts, shared/index.ts, config-schema.ts, config.ts, manifest/index.ts, manifest/types.ts) against main...HEAD diff. The only structural blemish (dead method getWorkflowsForPreset at registry.ts:122-126) is pre-existing code not introduced by this change, and removing it is not behavior-preserving (deleting cleanly requires retyping modeMembership from WorkflowPreset[] to string[], breaking the exported WorkflowPreset public type surface). New code added by this change (obsolete-field warning/cleanup, cleanupExpandedWorkflowRemnants, migrateIfNeeded rewrite) has distinct observable side effects (different log messages, execution order, delivery inference) that cannot be behavior-preservingly merged or deduplicated. No in-scope, strictly behavior-preserving structural optimization exists."
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-06-15T04:52:27.445Z",
+      "result": "PASS_WITH_WARNINGS",
+      "issues": [
+        {
+          "severity": "WARNING",
+          "message": "cli-init spec mandates Chinese error string for --profile rejection but CLI emits English; init.test.ts does not assert at CLI layer. Recommendation: align CLI error message to spec string or relax spec wording."
+        },
+        {
+          "severity": "WARNING",
+          "message": "Pre-existing dead method getWorkflowsForPreset(preset) in registry.ts:122-126 still filters by modeMembership; no caller remains. Pre-existing code, not introduced by this change. Recommendation: remove in a follow-up."
+        }
+      ],
+      "tasksFileHash": "ac289a0591a90a3c2de50339ed6caad18f3d521c5deb8eddfead625e463d752c",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "evidenceFiles": [
+          "openspec/changes/delete-expanded-profile/design.md",
+          "openspec/changes/delete-expanded-profile/opsx-delta.yaml",
+          "openspec/changes/delete-expanded-profile/proposal.md",
+          "openspec/changes/delete-expanded-profile/specs/cli-init/spec.md",
+          "openspec/changes/delete-expanded-profile/specs/global-config/spec.md",
+          "openspec/changes/delete-expanded-profile/specs/template-artifact-pipeline/spec.md",
+          "openspec/changes/delete-expanded-profile/tasks.md",
+          "src/cli/index.ts",
+          "src/commands/config.ts",
+          "src/commands/workflow/instructions.ts",
+          "src/core/config-schema.ts",
+          "src/core/global-config.ts",
+          "src/core/init.ts",
+          "src/core/migration.ts",
+          "src/core/shared/index.ts",
+          "src/core/templates/manifest/registry.ts",
+          "src/core/update.ts",
+          "src/core/workflow-surface.ts",
+          "test/commands/config.test.ts",
+          "test/core/global-config.test.ts",
+          "test/core/init.test.ts",
+          "test/core/migration.test.ts",
+          "test/core/templates/manifest/registry.test.ts",
+          "test/core/update.test.ts",
+          "test/core/workflow-surface.test.ts"
+        ],
+        "evidenceFingerprint": "ff43642c0a23873c9843dc9400a53e6f35f1990d80bc07a191328803e7230d5f",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/delete-expanded-profile/design.md",
+            "hash": "bd3e68687c83eb999789c7389bd530f7c316a8c03806be985abd5ed5e5e844f0"
+          },
+          {
+            "path": "openspec/changes/delete-expanded-profile/opsx-delta.yaml",
+            "hash": "4c47d8c6cd8a3b2df845dcb8dddfa87dbb59c2c8480d9413712a03ab60a65463"
+          },
+          {
+            "path": "openspec/changes/delete-expanded-profile/proposal.md",
+            "hash": "9fde9e902f8f3931b3dffdf9b42cccd06a97173761e73e2a33f6ef5264726ea8"
+          },
+          {
+            "path": "openspec/changes/delete-expanded-profile/specs/cli-init/spec.md",
+            "hash": "99a9e26ebccdb7749535877bdfd5677746e5ae10678168e8fb6b1171a9d548f6"
+          },
+          {
+            "path": "openspec/changes/delete-expanded-profile/specs/global-config/spec.md",
+            "hash": "a65f1fa3c546ceeae84057e8e08e8e8852db5411f1ced1a83c19834f9866e53d"
+          },
+          {
+            "path": "openspec/changes/delete-expanded-profile/specs/template-artifact-pipeline/spec.md",
+            "hash": "ef8405d350310289616a60ca395a6a61bff26bda8a584ef1cc4f132e5d718794"
+          },
+          {
+            "path": "openspec/changes/delete-expanded-profile/tasks.md",
+            "hash": "ac289a0591a90a3c2de50339ed6caad18f3d521c5deb8eddfead625e463d752c"
+          },
+          {
+            "path": "src/cli/index.ts",
+            "hash": "81da2c5aee2a4a803a11efd4c8c9a2828583aecf4016aa25e1c4ee10687bf91d"
+          },
+          {
+            "path": "src/commands/config.ts",
+            "hash": "a50a2c56abf02f13cb497276809cfa185ef946505ed93fb65ce777e136583e57"
+          },
+          {
+            "path": "src/commands/workflow/instructions.ts",
+            "hash": "c870a5c8f0f76c10d6b7527d2a5ca67d83ebd6a885da55d0a89042c9fce90ab0"
+          },
+          {
+            "path": "src/core/config-schema.ts",
+            "hash": "7b5e92e0ebe76719fbc49d8a5dae8e5ec3bbd301f5a6cb01e18d3fb855d50d8b"
+          },
+          {
+            "path": "src/core/global-config.ts",
+            "hash": "be4c86d6fd2fac4ece69b64d6503d7603c0faea0a020c4ae06cda546c4288600"
+          },
+          {
+            "path": "src/core/init.ts",
+            "hash": "f7f81db5ed08b8031e6e72fe990b7f4043cbdd2c7d050b7d48d955a60ec1cf40"
+          },
+          {
+            "path": "src/core/migration.ts",
+            "hash": "11064481ad4a9f650d0d5a92d289dc765922a0e89906ae9937ba4a1d95112292"
+          },
+          {
+            "path": "src/core/shared/index.ts",
+            "hash": "416029795b5f2627b7f848ef228c41f3d75c3ba1cb3b8c2ea2f86d8b037aa2f3"
+          },
+          {
+            "path": "src/core/templates/manifest/registry.ts",
+            "hash": "08b09bb060d1bc48106ef59d3afd34b75949d21b8215233ecbc3e582970caa7e"
+          },
+          {
+            "path": "src/core/update.ts",
+            "hash": "70933bd304316c2202c1bdc9b016e6d8506c675f082242db05a2bd8d3307494a"
+          },
+          {
+            "path": "src/core/workflow-surface.ts",
+            "hash": "c9a4bb697f0cb10029c52bf038a3abfc3f8c152468208b3f4bbd449b3e286ff2"
+          },
+          {
+            "path": "test/commands/config.test.ts",
+            "hash": "26237ac40513219c1461140001a38af0eb13294cfdddd54dddd1fc22fda915f1"
+          },
+          {
+            "path": "test/core/global-config.test.ts",
+            "hash": "6a300fcb253f17f813e8fe6dcd51c9fed255551482202dc175d6ef17d7765f65"
+          },
+          {
+            "path": "test/core/init.test.ts",
+            "hash": "a57ba1ee29a94fbd76593c78160c2fe781234917d139d9bd49b31f282b454389"
+          },
+          {
+            "path": "test/core/migration.test.ts",
+            "hash": "50316fea96b37e6f98ea23bb6ca151cd8e533e75e3eaba6d9b7359d27ad18ab9"
+          },
+          {
+            "path": "test/core/templates/manifest/registry.test.ts",
+            "hash": "ba8ecece7a8f1941f8657c17fb73e25ef26162b723a45a08db75d54c8f0224c0"
+          },
+          {
+            "path": "test/core/update.test.ts",
+            "hash": "04db83bfd8b260157b65a421fa994947d5e171053fdeeccdedba55d70c3c20c7"
+          },
+          {
+            "path": "test/core/workflow-surface.test.ts",
+            "hash": "b0e0147a0d6fcc36dcb7135bec19817f3a140655d1b91348ec25aa29ccab243d"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "16995d860aaa17bc21fef066f336472bce7a7f47"
+      }
+    }
+  }
+}

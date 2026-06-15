@@ -39,11 +39,14 @@
 **Files**:
 - Modify: `src/core/templates/manifest/registry.ts`
 - Modify: `src/core/templates/skill-templates.ts`
+- Modify: `src/core/shared/skill-generation.ts`（移除 verify-change skill/command 模板 wiring）
 - Test: `test/core/templates/manifest/registry.test.ts`
+- Test: `test/core/shared/skill-generation.test.ts`
 
 **Requirements**:
 - 从 MANIFEST_ENTRIES 数组中移除 7 个 entries
 - 移除对应的 getSkillTemplate 和 getCommandTemplate 导入和函数
+- 从 skill-generation.ts 移除 verify-change 的 skill 与 command execution-model 模板映射
 - modeMembership 保留作为 tag 系统
 
 #### Checks
@@ -67,13 +70,14 @@
 **Files**:
 - Delete: `src/core/profiles.ts`
 - Modify: `src/core/workflow-surface.ts`
+- Modify: `src/core/shared/index.ts`（从 shared barrel 移除 CORE_WORKFLOWS / EXPANDED_WORKFLOWS 再导出）
 - Delete: `test/core/profiles.test.ts`
 
 **Requirements**:
 - 删除 profiles.ts 文件
 - 从 workflow-surface.ts 删除 profile 相关导出
 - 删除 getProfileWorkflows 函数
-- 删除 CORE_WORKFLOWS / EXPANDED_WORKFLOWS 常量
+- 删除 CORE_WORKFLOWS / EXPANDED_WORKFLOWS 常量（含 shared barrel 的再导出）
 
 #### Checks
 
@@ -195,11 +199,14 @@
 
 **Files**:
 - Modify: `src/core/update.ts`
+- Modify: `src/core/migration.ts`（重写 migrateIfNeeded：不再设置 profile='custom'，改为清理过时 profile/workflows 字段）
 - Test: `test/core/update.test.ts`
+- Test: `test/core/migration.test.ts`
 
 **Requirements**:
 - 固定从 WorkflowManifestRegistry 获取所有工作流
 - 自动清理全局配置中的 profile/workflows 字段
+- migrateIfNeeded 改为仅在存在过时字段时清理（不再写入 profile/workflows）
 - 删除不在固定列表中的 skill 文件
 
 #### Checks

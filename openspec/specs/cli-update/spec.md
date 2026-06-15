@@ -9,12 +9,32 @@ capabilities:
 As a developer using OpenSpec, I want to update the OpenSpec instructions in my project when new versions are released, so that I can benefit from improvements to AI agent instructions.
 ## Requirements
 ### Requirement: Update Behavior
-The update command SHALL update OpenSpec instruction files to the latest templates in a team-friendly manner.
 
-#### Scenario: Running update command
-- **WHEN** a user runs `openspec update`
-- **THEN** replace `openspec/AGENTS.md` with the latest template
-- **AND** if a root-level stub (`AGENTS.md`/`CLAUDE.md`) exists, refresh it so it points to `@/openspec/AGENTS.md`
+该命令 SHALL 根据全局配置刷新项目中的 OpenSpec 指令文件。
+
+#### Scenario: 刷新现有工具制品
+
+- **WHEN** 项目中已配置 AI 工具
+- **THEN** 检测已安装的工具目录
+- **AND** 为检测到的每个工具重新生成固定的 5 个工作流制品
+- **AND** 使用相同的模板生成逻辑
+- **AND** 显示更新摘要，列出刷新的工具
+
+#### Scenario: 清理过时配置字段
+
+- **WHEN** 全局配置包含 `profile` 或 `workflows` 字段
+- **THEN** 自动删除这些字段
+- **AND** 保存清理后的配置
+- **AND** 输出警告："已移除过时配置字段：profile, workflows"
+- **AND** 输出提示："现在固定安装 5 个核心工作流：propose, explore, apply, archive, bootstrap-opsx"
+
+#### Scenario: 项目配置默认值迁移
+
+- **WHEN** 项目 `openspec/config.yaml` 缺少功能性默认值
+- **THEN** 以 missing-only 方式补齐默认值
+- **AND** SHALL NOT 覆盖用户已设置的值
+- **AND** 删除陈旧的 `git.merge.messageFrom`, `git.autoCommit` 与 `commitMessage.convention` 节点
+- **AND** 补齐新的 git 功能性默认结构
 
 ### Requirement: Prerequisites
 
@@ -258,60 +278,6 @@ The update command SHALL treat a tool as configured if it has either generated s
 - **THEN** the tool SHALL still be treated as configured
 - **THEN** the system SHALL apply profile and delivery sync for that tool
 
-### Requirement: One-time migration for existing users
-The update command SHALL detect existing users (no `profile` in global config + existing workflows) and migrate them to `custom` profile before applying updates.
-
-#### Scenario: First update after upgrade (existing user)
-- **WHEN** user runs `openspec update`
-- **AND** global config does not contain a `profile` field
-- **AND** project has existing workflow files installed
-- **THEN** the system SHALL scan installed workflows across all tool directories in the project
-- **THEN** the system SHALL only match workflow names present in `ALL_WORKFLOWS` constant (ignoring user-created custom skills)
-- **THEN** the system SHALL take the union of detected workflow names across all tools
-- **THEN** the system SHALL write to global config: `profile: "custom"`, `delivery: "both"`, `workflows: [<detected>]`
-- **THEN** the system SHALL display: "Migrated: custom profile with <count> workflows (<workflow-names>)"
-- **THEN** the system SHALL display: "New in this version: /opsx:propose (combines new + ff). Try 'openspec config profile core' for the streamlined 4-workflow experience."
-- **THEN** the system SHALL proceed with normal update logic (using the migrated config)
-- **THEN** the result SHALL be template refresh only (no workflows added or removed)
-
-#### Scenario: Migration with partial workflows (user manually removed some)
-- **WHEN** user runs `openspec update`
-- **AND** global config does not contain a `profile` field
-- **AND** project has fewer than the original 10 workflows installed
-- **THEN** the system SHALL migrate with only the workflows that are actually present
-- **THEN** the migrated `workflows` array SHALL reflect the user's current state, not the original set
-
-#### Scenario: Migration with multiple tools having different workflow sets
-- **WHEN** user runs `openspec update`
-- **AND** project has multiple tools configured (e.g., Claude Code, Cursor)
-- **AND** different tools have different workflows installed
-- **THEN** the system SHALL take the union of all detected workflows across all tools
-- **THEN** the migrated `workflows` array SHALL include any workflow that exists in at least one tool
-
-#### Scenario: No migration needed (profile already set)
-- **WHEN** user runs `openspec update`
-- **AND** global config already contains a `profile` field
-- **THEN** the system SHALL NOT perform migration
-- **THEN** the system SHALL proceed with normal update logic using existing config
-
-#### Scenario: No migration needed (no existing workflows)
-- **WHEN** user runs `openspec update`
-- **AND** global config does not contain a `profile` field
-- **AND** project has no existing workflow files
-- **THEN** the system SHALL NOT perform migration
-- **THEN** the system SHALL use `core` profile defaults
-
-#### Scenario: Migration is idempotent
-- **WHEN** user runs `openspec update` multiple times
-- **THEN** migration SHALL only occur on the first run (when `profile` field is absent)
-- **THEN** subsequent runs SHALL use the existing global config without re-scanning
-
-#### Scenario: Non-interactive migration
-- **WHEN** user runs `openspec update` non-interactively (e.g., in CI)
-- **AND** migration is triggered
-- **THEN** the system SHALL perform migration without prompting
-- **THEN** the system SHALL display the migration summary to stdout
-
 ### Requirement: Update detects new tool directories
 The update command SHALL notify the user if new AI tool directories are detected that aren't currently configured.
 
@@ -433,6 +399,35 @@ The update command SHALL remove workflow files that are no longer selected in th
 - **WHEN** `openspec update` migrates `openspec/config.yaml` or `openspec/config.yml` on Windows
 - **THEN** the command SHALL build config paths with Node.js path utilities
 - **AND** SHALL remove obsolete git fields and add new defaults with the same behavior as Unix systems
+
+### Requirement: 固定工作流更新
+
+该命令 SHALL 固定更新 5 个核心工作流，无需读取 profile 配置。
+
+#### Scenario: 固定更新 5 个工作流
+
+- **WHEN** 用户运行 `openspec update`
+- **THEN** 系统 SHALL 为所有检测到的工具固定更新以下 5 个工作流：
+  - `propose`
+  - `explore`
+  - `apply`
+  - `archive`
+  - `bootstrap-opsx`
+- **AND** 系统 SHALL NOT 读取全局配置中的 `profile` 或 `workflows` 字段
+- **AND** 系统 SHALL 删除不在固定 5 个工作流列表中的 skill 文件
+
+#### Scenario: 清理 expanded 工作流残留
+
+- **WHEN** 项目中存在已废弃的 expanded 工作流 skill 文件
+- **THEN** 系统 SHALL 删除以下 skill 目录：
+  - `openspec-new-change`
+  - `openspec-continue-change`
+  - `openspec-ff-change`
+  - `openspec-verify-change`
+  - `openspec-sync-specs`
+  - `openspec-bulk-archive-change`
+  - `openspec-onboard`
+- **AND** 输出清理摘要："已清理 7 个废弃工作流"
 
 ## Edge Cases
 

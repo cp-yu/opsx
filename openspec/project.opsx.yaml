@@ -91,7 +91,7 @@ capabilities:
     intent: Reviewer/Optimizer subagent 自主文件读取与测试执行能力定义，包括 Read+Bash 工具权限、安全约束和 L1 测试策略
     type: capability
   - id: cap.ai.template-artifact-pipeline
-    intent: "统一的 artifact 生成管线，包含 WorkflowManifest、ToolProfileRegistry、transform 管线和 ArtifactSyncEngine。transform 管线的 scope: 'both' 语义对 skill 和 command 两种产出均实际生效。reference 文件经共享引擎单副本写入 openspec/references/，不再按工具 skill 目录复制"
+    intent: 统一的 artifact 生成管线，基于固定的 5 个工作流 manifest entries 生成制品，modeMembership 作为标签系统而非 profile 过滤条件
     type: capability
   - id: cap.ai.tool-adapters
     intent: 为支持的 AI 工具提供工具元数据与适配器注册；其中 Codex 通过显式工具元数据声明为 skills-only，不再注册 command adapter
@@ -105,7 +105,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 提供 AI workflow 模板和 spec-driven artifact instructions；explore/propose/apply 三个核心工作流统一注入 OPSX 共享上下文（启动阶段整读 openspec/project.opsx.yaml 获取 project intent/scope 与全局结构，CLI 点查询作为节点细节补充）；archive workflow 模板在 CLI 归档后由 agent 无条件继续 git 流程，按 git.commitMessage.* 路径覆盖路由读取 openspec/references/ 下的 commit message 模板，实现边界为"残余 diff 提交（如有）→ 无条件 semantic boundary commit（完整 change 总结）→ OpenSpec/docs 归档制品提交"的顺序语义；tasks artifact instructions 定义三类验证锚点合约（Verifies/REMOVED 变体/Preserves）、Delete 文件标签与删除/重构任务转换规则
+    intent: 提供 5 个核心工作流的 AI workflow 模板（propose, explore, apply, archive, bootstrap-opsx）
     type: capability
   - id: cap.apply.branch-isolation
     intent: Apply 阶段分支隔离策略由 apply.defaultIsolation 驱动；main/master 上仅 ask 模式询问用户，branch/worktree/none 配置直接执行并持久化 .apply-isolation.json。
@@ -174,7 +174,7 @@ capabilities:
     intent: 管理 OpenSpec CLI 的 shell 补全，通过运行时反射 Commander.js 命令树自动派生补全数据，不再依赖静态 COMMAND_REGISTRY
     type: capability
   - id: cap.cli.config
-    intent: 查看和修改全局 OpenSpec 配置，查询包含 git.commitMessage 路径覆盖与 merge/branch 字段结构的归一化项目配置
+    intent: 查看和修改全局 OpenSpec 配置（不含 profile 子命令），查询归一化项目配置
     status: active
     type: capability
   - id: cap.cli.feedback
@@ -182,7 +182,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.init
-    intent: 在项目中初始化 OpenSpec 并生成按 profile 选择的工具制品；首次 init 自动生成 OPSX 骨架文件，并创建包含 schema、optimization、apply.defaultIsolation 与 git merge/branch 功能性默认值（不含 autoCommit 与 commitMessage convention）的 openspec/config.yaml。
+    intent: 在项目中初始化 OpenSpec，固定安装 5 个核心工作流（propose, explore, apply, archive, bootstrap-opsx），无需 profile 配置
     status: active
     type: capability
   - id: cap.cli.init-opsx-skeleton
@@ -233,7 +233,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.update
-    intent: 刷新 OpenSpec 指令文件并重新生成已配置 AI 工具的制品；对 openspec/config.yaml 或 config.yml 执行项目配置默认值迁移，删除陈旧 git.merge.messageFrom、git.autoCommit 与 commitMessage convention 节点并补齐新 git 功能性默认值；将 reference 文件物化到 openspec/references/ 并清理 skill 目录残留 references/。
+    intent: 刷新 OpenSpec 指令文件，固定更新 5 个核心工作流，自动清理过时的 profile/workflows 配置字段和废弃工作流残留
     status: active
     type: capability
   - id: cap.cli.validate
@@ -252,7 +252,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.config.global
-    intent: 加载和验证用户全局配置（~/.config/openspec/）
+    intent: 加载和验证用户全局配置，配置结构不再包含 profile 和 workflows 字段
     status: active
     type: capability
   - id: cap.config.migration
