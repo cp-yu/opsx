@@ -91,7 +91,7 @@ capabilities:
     intent: Reviewer/Optimizer subagent 自主文件读取与测试执行能力定义，包括 Read+Bash 工具权限、安全约束和 L1 测试策略
     type: capability
   - id: cap.ai.template-artifact-pipeline
-    intent: 统一的 artifact 生成管线，基于固定的 5 个工作流 manifest entries 生成制品，modeMembership 作为标签系统而非 profile 过滤条件
+    intent: 统一的 artifact 生成管线，基于固定的 6 个工作流 manifest entries 生成制品，modeMembership 作为标签系统而非 profile 过滤条件
     type: capability
   - id: cap.ai.tool-adapters
     intent: 为支持的 AI 工具提供工具元数据与适配器注册；其中 Codex 通过显式工具元数据声明为 skills-only，不再注册 command adapter
@@ -105,7 +105,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.workflow-templates
-    intent: 提供 5 个核心工作流的 AI workflow 模板（propose, explore, apply, archive, bootstrap-opsx）
+    intent: 提供 6 个核心工作流的 AI workflow 模板（propose, explore, apply, archive, bootstrap-opsx, snack）
     type: capability
   - id: cap.apply.branch-isolation
     intent: Apply 阶段分支隔离策略由 apply.defaultIsolation 驱动；main/master 上仅 ask 模式询问用户，branch/worktree/none 配置直接执行并持久化 .apply-isolation.json。
@@ -400,4 +400,16 @@ capabilities:
     type: capability
   - id: cap.cli.completion-introspect
     intent: 从 Commander.js 命令树运行时反射派生 CommandDefinition[]，通过 POSITIONAL_TYPE_MAP 补充补全语义注解，消除静态 COMMAND_REGISTRY 的手工同步负担
+    type: capability
+  - id: cap.ai.snack-skill
+    intent: snack skill 提供代码优先的轻量级同步工作流，从 git diff 自动生成 specs 和 OPSX delta，支持多次调用更新同一 change
+    status: active
+    type: capability
+  - id: cap.ai.snack-skill-generation
+    intent: 将 snack skill 纳入 skill 生成管线，与现有 5 个核心工作流一致
+    status: active
+    type: capability
+  - id: cap.ai.snack-workflow-manifest
+    intent: 在 WorkflowManifestRegistry 中注册 snack 工作流，使其成为第 6 个核心工作流
+    status: active
     type: capability
