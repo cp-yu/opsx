@@ -72,6 +72,7 @@ export interface VerificationContext {
   skippedEvidenceFiles?: string[];
   gitHeadCommit?: string;
   gitDiffSummary?: string;
+  timestamp?: string;
 }
 
 export interface OptimizationAttempt {

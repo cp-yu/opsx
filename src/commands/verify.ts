@@ -330,6 +330,8 @@ async function handleVerification(
     );
     current.verificationContext.evidenceFingerprint = evidence.hash;
     current.verificationContext.evidenceFingerprintEntries = evidence.entries;
+    current.verificationContext.gitHeadCommit = await getGitHead(projectRoot);
+    current.verificationContext.timestamp = new Date().toISOString();
     await writeVerifyResult(changeDir, current);
     writeOutput(options, { ok: true, result: current }, 'Phase 2 完成 (优化+验证通过)。可进入 sync/archive');
     return 0;
