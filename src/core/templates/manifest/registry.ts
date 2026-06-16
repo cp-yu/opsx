@@ -16,6 +16,7 @@ import {
   getOpsxProposeCommandTemplate,
   getBootstrapOpsxSkillTemplate,
   getOpsxBootstrapCommandTemplate,
+  getSnackSkillTemplate,
 } from '../skill-templates.js';
 
 import type { WorkflowManifestEntry, WorkflowPreset } from './types.js';
@@ -89,6 +90,18 @@ const MANIFEST_ENTRIES: readonly WorkflowManifestEntry[] = [
     },
     getSkillTemplate: getBootstrapOpsxSkillTemplate,
     getCommandTemplate: getOpsxBootstrapCommandTemplate,
+  },
+  {
+    workflowId: 'snack',
+    modeMembership: ['core'],
+    skillDirName: 'openspec-snack',
+    skillName: 'openspec-snack',
+    commandSlug: 'snack',
+    promptMeta: {
+      name: 'Snack sync',
+      description: 'Quick sync from code to specs',
+    },
+    getSkillTemplate: getSnackSkillTemplate,
   },
 ];
 
