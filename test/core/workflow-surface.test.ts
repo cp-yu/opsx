@@ -15,24 +15,26 @@ import {
 import * as workflowSurface from '../../src/core/workflow-surface.js';
 
 describe('workflow-surface', () => {
-  describe('固定的 5 个工作流', () => {
-    it('ALL_WORKFLOWS 应包含固定的 5 个工作流', () => {
+  describe('固定的 6 个工作流', () => {
+    it('ALL_WORKFLOWS 应包含固定的 6 个工作流', () => {
       expect(ALL_WORKFLOWS).toEqual([
         'propose',
         'explore',
         'apply',
         'archive',
         'bootstrap-opsx',
+        'snack',
       ]);
     });
 
-    it('SKILL_NAMES 应包含 5 个 skill 名称', () => {
-      expect(SKILL_NAMES).toHaveLength(5);
+    it('SKILL_NAMES 应包含 6 个 skill 名称', () => {
+      expect(SKILL_NAMES).toHaveLength(6);
       expect(SKILL_NAMES).toContain('openspec-propose');
       expect(SKILL_NAMES).toContain('openspec-explore');
       expect(SKILL_NAMES).toContain('openspec-apply-change');
       expect(SKILL_NAMES).toContain('openspec-archive-change');
       expect(SKILL_NAMES).toContain('openspec-bootstrap-opsx');
+      expect(SKILL_NAMES).toContain('openspec-snack');
     });
 
     it('COMMAND_IDS 与 ALL_WORKFLOWS 一致', () => {
@@ -92,8 +94,8 @@ describe('workflow-surface', () => {
       expect(surface.skillDirName).toBe('openspec-propose');
     });
 
-    it('getWorkflowSurfaces 无过滤器返回全部 5 个', () => {
-      expect(getWorkflowSurfaces()).toHaveLength(5);
+    it('getWorkflowSurfaces 无过滤器返回全部 6 个', () => {
+      expect(getWorkflowSurfaces()).toHaveLength(6);
     });
 
     it('getWorkflowSurfaces 按过滤器筛选', () => {

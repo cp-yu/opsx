@@ -3,14 +3,15 @@ import { WorkflowManifestRegistry } from '../../../src/core/templates/manifest/i
 
 describe('Workflow Manifest', () => {
   describe('completeness', () => {
-    it('should have entries for all 5 registry workflows', () => {
+    it('should have entries for all 6 registry workflows', () => {
       const ids = WorkflowManifestRegistry.getAllWorkflowIds();
       expect(ids).toContain('propose');
       expect(ids).toContain('explore');
       expect(ids).toContain('apply');
       expect(ids).toContain('archive');
       expect(ids).toContain('bootstrap-opsx');
-      expect(ids).toHaveLength(5);
+      expect(ids).toContain('snack');
+      expect(ids).toHaveLength(6);
     });
 
     it('should define skillDirName for every entry', () => {
@@ -45,9 +46,14 @@ describe('Workflow Manifest', () => {
       }
     });
 
-    it('should produce command getter with required fields', () => {
-      for (const entry of WorkflowManifestRegistry.entries) {
-        const cmd = entry.getCommandTemplate();
+    it('should produce command getter with required fields for entries that have one', () => {
+      const withCommands = WorkflowManifestRegistry.entries.filter(
+        (entry) => entry.getCommandTemplate !== undefined
+      );
+      // snack is skill-only; at least the 5 core+bootstrap workflows ship commands
+      expect(withCommands.length).toBeGreaterThanOrEqual(5);
+      for (const entry of withCommands) {
+        const cmd = entry.getCommandTemplate!();
         expect(cmd.name).toBeTruthy();
         expect(cmd.description).toBeTruthy();
         expect(cmd.category).toBeTruthy();
@@ -72,8 +78,8 @@ describe('Workflow Manifest', () => {
       }
     });
 
-    it('should produce exactly 5 workflow entries', () => {
-      expect(WorkflowManifestRegistry.entries.length).toBe(5);
+    it('should produce exactly 6 workflow entries', () => {
+      expect(WorkflowManifestRegistry.entries.length).toBe(6);
     });
   });
 

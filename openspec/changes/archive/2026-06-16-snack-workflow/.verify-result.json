@@ -1,0 +1,257 @@
+{
+  "timestamp": "2026-06-16T15:04:27.410Z",
+  "result": "PASS_WITH_WARNINGS",
+  "issues": [
+    {
+      "severity": "WARNING",
+      "requirement": "Unaccounted Changes",
+      "task": "Task 1",
+      "message": "6 个下游测试文件更新了 5->6 工作流计数断言；现已全部声明在 Task 1 Files 块中，归属闭环但属本变更驱动的机械性测试改动。",
+      "recommendation": "无需修复。归属已闭环。仅作为变更足迹说明：本变更触发的 6 个测试文件（init/update/manifest/registry/workflow-surface/tool-detection）的 5->6 断言更新已在 Task 1 Files 显式声明，建议在 archive 时保留该声明以维持归因完整性。",
+      "evidenceCitations": [
+        "openspec/changes/snack-workflow/tasks.md:6-13",
+        "test/core/init.test.ts:136-175",
+        "test/core/update.test.ts:1581-1614",
+        "test/core/templates/manifest/registry.test.ts:5-21",
+        "test/core/templates/manifest.test.ts:6-15",
+        "test/core/workflow-surface.test.ts:18-43",
+        "test/core/shared/tool-detection.test.ts:32-42"
+      ]
+    }
+  ],
+  "tasksFileHash": "942887a9c2e82e7e8d747b5f6ba85a3afcc88bcb4e31f05a4c1c6bc871a8541d",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "evidenceFiles": [
+      "openspec/changes/snack-workflow/design.md",
+      "openspec/changes/snack-workflow/opsx-delta.yaml",
+      "openspec/changes/snack-workflow/proposal.md",
+      "openspec/changes/snack-workflow/specs/snack-skill-generation/spec.md",
+      "openspec/changes/snack-workflow/specs/snack-skill/spec.md",
+      "openspec/changes/snack-workflow/specs/snack-workflow-manifest/spec.md",
+      "openspec/changes/snack-workflow/tasks.md",
+      "src/core/templates/manifest/registry.ts",
+      "src/core/templates/skill-templates.ts",
+      "src/core/templates/workflows/snack.ts",
+      "test/core/init.test.ts",
+      "test/core/shared/skill-generation.test.ts",
+      "test/core/shared/tool-detection.test.ts",
+      "test/core/templates/manifest.test.ts",
+      "test/core/templates/manifest/registry.test.ts",
+      "test/core/update.test.ts",
+      "test/core/workflow-surface.test.ts",
+      "test/integration/snack-workflow.test.ts"
+    ],
+    "evidenceFingerprint": "5a309fa64e26f688f0c22b3a713f865dc4fd44a6e9ff9e189cb129b42d550c25",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/snack-workflow/design.md",
+        "hash": "db2d81dbb33d46d81c3a1e6643d00757bc932d9fdd00c3f5c44d038e3296d9a0"
+      },
+      {
+        "path": "openspec/changes/snack-workflow/opsx-delta.yaml",
+        "hash": "e6fa0120d81b8961f99968eaea1ed038210146e37b5808c09f32a046fb178e4f"
+      },
+      {
+        "path": "openspec/changes/snack-workflow/proposal.md",
+        "hash": "4c1c25af9cc7434014316c17cb9eabc5f1835aa002eaa0395c67bf890fdeaad6"
+      },
+      {
+        "path": "openspec/changes/snack-workflow/specs/snack-skill-generation/spec.md",
+        "hash": "6862ab3bf2e722d969fde683142d9f4e849f885f9cd0967197c43b5f8b03c3c0"
+      },
+      {
+        "path": "openspec/changes/snack-workflow/specs/snack-skill/spec.md",
+        "hash": "475489de51e1a532dc6240a758a2c4bb1f683fd9e7852496789aeb6b7a50ea73"
+      },
+      {
+        "path": "openspec/changes/snack-workflow/specs/snack-workflow-manifest/spec.md",
+        "hash": "2c2acdd86b462861a5503e620c9bfbe18118cffb2b3cbb6d42f8a53bcf7681b6"
+      },
+      {
+        "path": "openspec/changes/snack-workflow/tasks.md",
+        "hash": "942887a9c2e82e7e8d747b5f6ba85a3afcc88bcb4e31f05a4c1c6bc871a8541d"
+      },
+      {
+        "path": "src/core/templates/manifest/registry.ts",
+        "hash": "07a797f2279035becdb7d10c6654f6908cd5e659da714c54b0145c5112463e07"
+      },
+      {
+        "path": "src/core/templates/skill-templates.ts",
+        "hash": "3803d0f2e5dc371386969ebc757d63d133227963d3156365608aacb4acdda0bf"
+      },
+      {
+        "path": "src/core/templates/workflows/snack.ts",
+        "hash": "7c1673af8bad8b6f4bed7913fff7f85741c42187955c84d7fee0c6998b79515c"
+      },
+      {
+        "path": "test/core/init.test.ts",
+        "hash": "aae8fb3fd3e0ed7142de3930d05f5615d75e7feaf4d6fe0abfd4db5dfdb2616a"
+      },
+      {
+        "path": "test/core/shared/skill-generation.test.ts",
+        "hash": "ff4bdf62a0a0140538915d34fcd48732d22504cdb39600735bc7c4b2dd0e915f"
+      },
+      {
+        "path": "test/core/shared/tool-detection.test.ts",
+        "hash": "d891aa685bbf31d92f366b8625da9a18f293fff66b8364700194c7ce9e175c22"
+      },
+      {
+        "path": "test/core/templates/manifest.test.ts",
+        "hash": "80a196c3548eb45ac9926a7c30b7737de72f23ab5b378894c90b3c0acbe5f980"
+      },
+      {
+        "path": "test/core/templates/manifest/registry.test.ts",
+        "hash": "72a7efa836256b614172c7f68d70f94273535a0b08cf854f83fa3c04a806041b"
+      },
+      {
+        "path": "test/core/update.test.ts",
+        "hash": "5eed7c24de6f196f740d77e113972e1bd2312740ab956458d18f258600778671"
+      },
+      {
+        "path": "test/core/workflow-surface.test.ts",
+        "hash": "a93d062b7d76472ff8695cc8d785d02e556d6035752d6d9d43d6f79c0d5ab31d"
+      },
+      {
+        "path": "test/integration/snack-workflow.test.ts",
+        "hash": "85e3d6f6aa41fe4617d815ad5977f89c03f728c394f707122d7e8f553462b4cf"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "1703d836e1ae289a4ee92bcb7bfd68db0b7de482"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-16T15:07:54.934Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "All three base-scope implementation files are already clean and conform to the established manifest+template+facade architecture. No behavior-preserving structural improvement is available. Per openspec-output-protocol.md Response A."
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-06-16T15:04:27.410Z",
+      "result": "PASS_WITH_WARNINGS",
+      "issues": [
+        {
+          "severity": "WARNING",
+          "requirement": "Unaccounted Changes",
+          "task": "Task 1",
+          "message": "6 个下游测试文件更新了 5->6 工作流计数断言；现已全部声明在 Task 1 Files 块中，归属闭环但属本变更驱动的机械性测试改动。",
+          "recommendation": "无需修复。归属已闭环。仅作为变更足迹说明：本变更触发的 6 个测试文件（init/update/manifest/registry/workflow-surface/tool-detection）的 5->6 断言更新已在 Task 1 Files 显式声明，建议在 archive 时保留该声明以维持归因完整性。",
+          "evidenceCitations": [
+            "openspec/changes/snack-workflow/tasks.md:6-13",
+            "test/core/init.test.ts:136-175",
+            "test/core/update.test.ts:1581-1614",
+            "test/core/templates/manifest/registry.test.ts:5-21",
+            "test/core/templates/manifest.test.ts:6-15",
+            "test/core/workflow-surface.test.ts:18-43",
+            "test/core/shared/tool-detection.test.ts:32-42"
+          ]
+        }
+      ],
+      "tasksFileHash": "942887a9c2e82e7e8d747b5f6ba85a3afcc88bcb4e31f05a4c1c6bc871a8541d",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "evidenceFiles": [
+          "openspec/changes/snack-workflow/design.md",
+          "openspec/changes/snack-workflow/opsx-delta.yaml",
+          "openspec/changes/snack-workflow/proposal.md",
+          "openspec/changes/snack-workflow/specs/snack-skill-generation/spec.md",
+          "openspec/changes/snack-workflow/specs/snack-skill/spec.md",
+          "openspec/changes/snack-workflow/specs/snack-workflow-manifest/spec.md",
+          "openspec/changes/snack-workflow/tasks.md",
+          "src/core/templates/manifest/registry.ts",
+          "src/core/templates/skill-templates.ts",
+          "src/core/templates/workflows/snack.ts",
+          "test/core/init.test.ts",
+          "test/core/shared/skill-generation.test.ts",
+          "test/core/shared/tool-detection.test.ts",
+          "test/core/templates/manifest.test.ts",
+          "test/core/templates/manifest/registry.test.ts",
+          "test/core/update.test.ts",
+          "test/core/workflow-surface.test.ts",
+          "test/integration/snack-workflow.test.ts"
+        ],
+        "evidenceFingerprint": "5a309fa64e26f688f0c22b3a713f865dc4fd44a6e9ff9e189cb129b42d550c25",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/snack-workflow/design.md",
+            "hash": "db2d81dbb33d46d81c3a1e6643d00757bc932d9fdd00c3f5c44d038e3296d9a0"
+          },
+          {
+            "path": "openspec/changes/snack-workflow/opsx-delta.yaml",
+            "hash": "e6fa0120d81b8961f99968eaea1ed038210146e37b5808c09f32a046fb178e4f"
+          },
+          {
+            "path": "openspec/changes/snack-workflow/proposal.md",
+            "hash": "4c1c25af9cc7434014316c17cb9eabc5f1835aa002eaa0395c67bf890fdeaad6"
+          },
+          {
+            "path": "openspec/changes/snack-workflow/specs/snack-skill-generation/spec.md",
+            "hash": "6862ab3bf2e722d969fde683142d9f4e849f885f9cd0967197c43b5f8b03c3c0"
+          },
+          {
+            "path": "openspec/changes/snack-workflow/specs/snack-skill/spec.md",
+            "hash": "475489de51e1a532dc6240a758a2c4bb1f683fd9e7852496789aeb6b7a50ea73"
+          },
+          {
+            "path": "openspec/changes/snack-workflow/specs/snack-workflow-manifest/spec.md",
+            "hash": "2c2acdd86b462861a5503e620c9bfbe18118cffb2b3cbb6d42f8a53bcf7681b6"
+          },
+          {
+            "path": "openspec/changes/snack-workflow/tasks.md",
+            "hash": "942887a9c2e82e7e8d747b5f6ba85a3afcc88bcb4e31f05a4c1c6bc871a8541d"
+          },
+          {
+            "path": "src/core/templates/manifest/registry.ts",
+            "hash": "07a797f2279035becdb7d10c6654f6908cd5e659da714c54b0145c5112463e07"
+          },
+          {
+            "path": "src/core/templates/skill-templates.ts",
+            "hash": "3803d0f2e5dc371386969ebc757d63d133227963d3156365608aacb4acdda0bf"
+          },
+          {
+            "path": "src/core/templates/workflows/snack.ts",
+            "hash": "7c1673af8bad8b6f4bed7913fff7f85741c42187955c84d7fee0c6998b79515c"
+          },
+          {
+            "path": "test/core/init.test.ts",
+            "hash": "aae8fb3fd3e0ed7142de3930d05f5615d75e7feaf4d6fe0abfd4db5dfdb2616a"
+          },
+          {
+            "path": "test/core/shared/skill-generation.test.ts",
+            "hash": "ff4bdf62a0a0140538915d34fcd48732d22504cdb39600735bc7c4b2dd0e915f"
+          },
+          {
+            "path": "test/core/shared/tool-detection.test.ts",
+            "hash": "d891aa685bbf31d92f366b8625da9a18f293fff66b8364700194c7ce9e175c22"
+          },
+          {
+            "path": "test/core/templates/manifest.test.ts",
+            "hash": "80a196c3548eb45ac9926a7c30b7737de72f23ab5b378894c90b3c0acbe5f980"
+          },
+          {
+            "path": "test/core/templates/manifest/registry.test.ts",
+            "hash": "72a7efa836256b614172c7f68d70f94273535a0b08cf854f83fa3c04a806041b"
+          },
+          {
+            "path": "test/core/update.test.ts",
+            "hash": "5eed7c24de6f196f740d77e113972e1bd2312740ab956458d18f258600778671"
+          },
+          {
+            "path": "test/core/workflow-surface.test.ts",
+            "hash": "a93d062b7d76472ff8695cc8d785d02e556d6035752d6d9d43d6f79c0d5ab31d"
+          },
+          {
+            "path": "test/integration/snack-workflow.test.ts",
+            "hash": "85e3d6f6aa41fe4617d815ad5977f89c03f728c394f707122d7e8f553462b4cf"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "1703d836e1ae289a4ee92bcb7bfd68db0b7de482"
+      }
+    }
+  }
+}

@@ -528,3 +528,18 @@ relations:
   - from: cap.cli.completion
     type: depends_on
     to: cap.cli.completion-introspect
+  - from: cap.ai.snack-skill
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.snack-skill-generation
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.snack-workflow-manifest
+    type: contains
+    to: dom.ai-integration
+  - from: cap.ai.snack-skill-generation
+    type: depends_on
+    to: cap.ai.template-artifact-pipeline
+  - from: cap.ai.snack-workflow-manifest
+    type: depends_on
+    to: cap.ai.template-artifact-pipeline

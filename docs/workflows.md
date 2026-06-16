@@ -341,7 +341,6 @@ A common question: when is updating an existing change okay, and when should you
 - Same intent, refined execution
 - Scope narrows (MVP first, rest later)
 - Learning-driven corrections (codebase isn't what you expected)
-- Design tweaks based on implementation discoveries
 
 **Start a new change when:**
 

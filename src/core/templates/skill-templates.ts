@@ -11,6 +11,7 @@ export { getApplyChangeSkillTemplate, getOpsxApplyCommandTemplate } from './work
 export { getArchiveChangeSkillTemplate, getOpsxArchiveCommandTemplate } from './workflows/archive-change.js';
 export { getOpsxProposeSkillTemplate, getOpsxProposeCommandTemplate } from './workflows/propose.js';
 export { getBootstrapOpsxSkillTemplate, getOpsxBootstrapCommandTemplate } from './workflows/bootstrap-opsx.js';
+export { getSnackSkillTemplate } from './workflows/snack.js';
 export { getReviewerSkillTemplate } from './workflows/reviewer.js';
 export { getOptimizerSkillTemplate } from './workflows/optimizer.js';
 export { getImpactSweeperSkillTemplate } from './workflows/impact-sweeper.js';
