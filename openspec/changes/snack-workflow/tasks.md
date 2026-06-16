@@ -123,12 +123,12 @@
 
 #### Checks
 
-- [ ] C11 验证 init 安装 6 个工作流
+- [x] C11 验证 init 安装 6 个工作流
   - Verifies: `specs/snack-workflow-manifest/spec.md` / Requirement "6 个工作流架构" / Scenario "init 安装 6 个工作流"
   - Command: `pnpm test test/integration/snack-workflow.test.ts`
   - Expect: 测试通过，验证 6 个 skill 目录存在
 
-- [ ] C12 验证 update 刷新 snack skill
+- [x] C12 验证 update 刷新 snack skill
   - Verifies: `specs/snack-workflow-manifest/spec.md` / Requirement "6 个工作流架构" / Scenario "update 刷新 6 个工作流"
   - Command: `pnpm test test/integration/snack-workflow.test.ts`
   - Expect: 测试通过，验证 snack skill 文件被正确刷新

@@ -1578,7 +1578,7 @@ More user content after markers.
       expect(exists).toBe(true);
     });
 
-    it('should install all 5 registry workflows when upgrading legacy tools', async () => {
+    it('should install all 6 registry workflows when upgrading legacy tools', async () => {
       setMockConfig({
         featureFlags: {},
         delivery: 'both',
@@ -1593,11 +1593,11 @@ More user content after markers.
       const forceUpdateCommand = new UpdateCommand({ force: true });
       await forceUpdateCommand.execute(testDir);
 
-      // All 5 registry workflows should be installed
+      // All 6 registry workflows should be installed (snack is skill-only)
       const skillsDir = path.join(testDir, '.claude', 'skills');
       const expectedSkills = [
         'openspec-explore', 'openspec-propose', 'openspec-apply-change',
-        'openspec-archive-change', 'openspec-bootstrap-opsx',
+        'openspec-archive-change', 'openspec-bootstrap-opsx', 'openspec-snack',
       ];
       for (const skill of expectedSkills) {
         expect(await FileSystemUtils.fileExists(
@@ -1615,7 +1615,7 @@ More user content after markers.
   });
 
   describe('profile-aware updates', () => {
-    it('should install all 5 registry workflows regardless of config', async () => {
+    it('should install all 6 registry workflows regardless of config', async () => {
       // Obsolete profile/workflows in config are now ignored
       setMockConfig({
         featureFlags: {},
@@ -1629,10 +1629,10 @@ More user content after markers.
 
       await updateCommand.execute(testDir);
 
-      // All 5 registry workflows should be created
+      // All 6 registry workflows should be created (snack is skill-only)
       const expectedSkills = [
         'openspec-explore', 'openspec-propose', 'openspec-apply-change',
-        'openspec-archive-change', 'openspec-bootstrap-opsx',
+        'openspec-archive-change', 'openspec-bootstrap-opsx', 'openspec-snack',
       ];
       for (const skill of expectedSkills) {
         expect(await FileSystemUtils.fileExists(

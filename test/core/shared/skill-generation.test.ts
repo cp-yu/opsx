@@ -9,9 +9,9 @@ import { transformWorkflowReferences } from '../../../src/utils/command-referenc
 
 describe('skill-generation', () => {
   describe('getSkillTemplates', () => {
-    it('should return all 8 skill templates', () => {
+    it('should return all 9 skill templates', () => {
       const templates = getSkillTemplates();
-      expect(templates).toHaveLength(8);
+      expect(templates).toHaveLength(9);
     });
 
     it('should have unique directory names', () => {

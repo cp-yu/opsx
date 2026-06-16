@@ -133,18 +133,19 @@ describe('InitCommand', () => {
       expect(content).toContain('proseLanguage: zh-CN');
     });
 
-    it('should create all 5 registry skills for Claude Code by default', async () => {
+    it('should create all 6 registry skills for Claude Code by default', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 
       await initCommand.execute(testDir);
 
-      // All 5 registry workflows: propose, explore, apply, archive, bootstrap-opsx
+      // All 6 registry workflows: propose, explore, apply, archive, bootstrap-opsx, snack
       const expectedSkillNames = [
         'openspec-propose',
         'openspec-explore',
         'openspec-apply-change',
         'openspec-archive-change',
         'openspec-bootstrap-opsx',
+        'openspec-snack',
       ];
 
       for (const skillName of expectedSkillNames) {
@@ -813,7 +814,7 @@ describe('InitCommand - profile and detection features', () => {
     vi.restoreAllMocks();
   });
 
-  it('should install all 5 workflows regardless of obsolete profile config', async () => {
+  it('should install all 6 workflows regardless of obsolete profile config', async () => {
     // Set global config with obsolete profile/workflows fields
     saveGlobalConfig({
       featureFlags: {},
@@ -823,13 +824,14 @@ describe('InitCommand - profile and detection features', () => {
     const initCommand = new InitCommand({ tools: 'claude', force: true });
     await initCommand.execute(testDir);
 
-    // All 5 registry workflows should be created
+    // All 6 registry workflows should be created
     const expectedSkillNames = [
       'openspec-propose',
       'openspec-explore',
       'openspec-apply-change',
       'openspec-archive-change',
       'openspec-bootstrap-opsx',
+      'openspec-snack',
     ];
 
     for (const skillName of expectedSkillNames) {
@@ -932,7 +934,7 @@ describe('InitCommand - profile and detection features', () => {
     expect(githubCopilot?.preSelected).toBe(true);
   });
 
-  it('should ignore obsolete profile/workflows fields and install all 5 workflows', async () => {
+  it('should ignore obsolete profile/workflows fields and install all 6 workflows', async () => {
     saveGlobalConfig({
       featureFlags: {},
       delivery: 'both',
@@ -941,13 +943,14 @@ describe('InitCommand - profile and detection features', () => {
     const initCommand = new InitCommand({ tools: 'claude', force: true });
     await initCommand.execute(testDir);
 
-    // All 5 workflows should be installed
+    // All 6 workflows should be installed
     const expectedSkills = [
       'openspec-propose',
       'openspec-explore',
       'openspec-apply-change',
       'openspec-archive-change',
       'openspec-bootstrap-opsx',
+      'openspec-snack',
     ];
 
     for (const skillName of expectedSkills) {
@@ -956,7 +959,7 @@ describe('InitCommand - profile and detection features', () => {
     }
   });
 
-  it('should install all 5 workflows in extend mode regardless of prior config', async () => {
+  it('should install all 6 workflows in extend mode regardless of prior config', async () => {
     await fs.mkdir(path.join(testDir, 'openspec'), { recursive: true });
     await fs.mkdir(path.join(testDir, '.claude', 'commands', 'opsx'), { recursive: true });
     await fs.writeFile(path.join(testDir, '.claude', 'commands', 'opsx', 'explore.md'), '# explore\n');
@@ -964,23 +967,23 @@ describe('InitCommand - profile and detection features', () => {
     const initCommand = new InitCommand({ tools: 'claude', force: true });
     await initCommand.execute(testDir);
 
-    // All 5 commands should now exist
+    // snack is skill-only: 5 commands (propose, explore, apply, archive, bootstrap)
     const expectedCommands = ['explore.md', 'propose.md', 'apply.md', 'archive.md', 'bootstrap.md'];
     for (const cmd of expectedCommands) {
       expect(await fileExists(path.join(testDir, '.claude', 'commands', 'opsx', cmd))).toBe(true);
     }
 
-    // All 5 skills should exist
+    // All 6 skills should exist (includes skill-only snack)
     const expectedSkills = [
       'openspec-explore', 'openspec-propose', 'openspec-apply-change',
-      'openspec-archive-change', 'openspec-bootstrap-opsx',
+      'openspec-archive-change', 'openspec-bootstrap-opsx', 'openspec-snack',
     ];
     for (const skill of expectedSkills) {
       expect(await fileExists(path.join(testDir, '.claude', 'skills', skill, 'SKILL.md'))).toBe(true);
     }
   });
 
-  it('should install all 5 workflows in interactive mode without profile prompts', async () => {
+  it('should install all 6 workflows in interactive mode without profile prompts', async () => {
     saveGlobalConfig({
       featureFlags: {},
       delivery: 'both',
@@ -995,10 +998,10 @@ describe('InitCommand - profile and detection features', () => {
     expect(showWelcomeScreenMock).toHaveBeenCalled();
     expect(confirmMock).not.toHaveBeenCalled();
 
-    // All 5 workflows should be installed
+    // All 6 workflows should be installed
     const expectedSkills = [
       'openspec-explore', 'openspec-propose', 'openspec-apply-change',
-      'openspec-archive-change', 'openspec-bootstrap-opsx',
+      'openspec-archive-change', 'openspec-bootstrap-opsx', 'openspec-snack',
     ];
     for (const skill of expectedSkills) {
       expect(await fileExists(path.join(testDir, '.claude', 'skills', skill, 'SKILL.md'))).toBe(true);

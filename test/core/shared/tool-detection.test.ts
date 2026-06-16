@@ -31,19 +31,21 @@ describe('tool-detection', () => {
 
   describe('SKILL_NAMES', () => {
     it('should contain all skill names matching COMMAND_IDS', () => {
-      expect(SKILL_NAMES).toHaveLength(5);
+      expect(SKILL_NAMES).toHaveLength(6);
       expect(SKILL_NAMES).toContain('openspec-explore');
       expect(SKILL_NAMES).toContain('openspec-apply-change');
       expect(SKILL_NAMES).toContain('openspec-archive-change');
       expect(SKILL_NAMES).toContain('openspec-propose');
       expect(SKILL_NAMES).toContain('openspec-bootstrap-opsx');
+      expect(SKILL_NAMES).toContain('openspec-snack');
     });
   });
 
   describe('command slug mapping', () => {
     it('should expose all command workflow ids', () => {
-      expect(COMMAND_IDS).toHaveLength(5);
+      expect(COMMAND_IDS).toHaveLength(6);
       expect(COMMAND_IDS).toContain('bootstrap-opsx');
+      expect(COMMAND_IDS).toContain('snack');
     });
 
     it('should map bootstrap workflow id to bootstrap command slug', () => {
