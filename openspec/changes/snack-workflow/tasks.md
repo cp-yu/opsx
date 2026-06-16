@@ -5,6 +5,12 @@
 **Files**:
 - Modify: `src/core/templates/manifest/registry.ts`
 - Test: `test/core/templates/manifest/registry.test.ts`
+- Test: `test/core/templates/manifest.test.ts`
+- Test: `test/core/workflow-surface.test.ts`
+- Test: `test/core/init.test.ts`
+- Test: `test/core/update.test.ts`
+- Test: `test/core/shared/skill-generation.test.ts`
+- Test: `test/core/shared/tool-detection.test.ts`
 
 **Requirements**:
 - 在 MANIFEST_ENTRIES 数组中添加 snack entry
