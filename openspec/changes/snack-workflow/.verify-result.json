@@ -112,8 +112,15 @@
     "gitHeadCommit": "8844c4ea4eb5f6eaddfd09d39f3f1e802c8e1700"
   },
   "optimization": {
-    "status": "PENDING_VERIFICATION",
-    "attempts": [],
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-16T14:43:11.974Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "Optimizer analyzed registry.ts, snack.ts, skill-templates.ts, and the two test files. The change is a small skill-only addition reusing shared OPSX fragments (OPSX_SHARED_CONTEXT, OPSX_CLI_QUERY_CONTEXT, OPSX_GENERATE_DELTA, ARTIFACT_DOC_LANGUAGE_CONTRACT); deduplication already lives at the fragment layer. Entries are declarative manifest data with unique literals; no extractable boilerplate, no shallow modules, no dead code. No behavior-preserving optimization opportunities found."
+      }
+    ],
     "baseline": {
       "timestamp": "2026-06-16T11:35:54.333Z",
       "result": "PASS_WITH_WARNINGS",
