@@ -31,9 +31,9 @@ skill 生成管线 SHALL 包含 snack skill，与现有 5 个核心工作流（p
 
 ### Requirement: snack skill 描述
 
-snack skill description SHALL 为 "Create a lightweight change-lite (no tasks). Use for quick spec-only changes or when code is already written. Supports doc-first (spec → code) or code-first (code → spec) workflows."
+snack skill description SHALL 为 "Quick code-first sync: generate or update proposal + specs + simplified design from git diff when the code is already written. Use after iterative coding to back-fill specs and OPSX delta without redoing propose→apply. Does not generate tasks.md."
 
 #### Scenario: skill description 用于触发检测
 
 - **WHEN** AI 工具加载 skill 列表
-- **THEN** snack skill 的 description 清晰表达其适用场景（代码已完成、快速同步）
+- **THEN** snack skill 的 description 清晰表达其适用场景（代码已完成、从 git diff 反向同步 specs 与 OPSX delta，不生成 tasks.md）

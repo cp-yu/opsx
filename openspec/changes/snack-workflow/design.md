@@ -105,11 +105,11 @@ if (hasNewExports || hasDeletedExports || hasNewFiles) {
     description: 'Quick sync from code to specs',
   },
   getSkillTemplate: getSnackSkillTemplate,
-  getCommandTemplate: getOpsxSnackCommandTemplate,
+  // 不提供 getCommandTemplate：snack 为 skill-only 工作流
 }
 ```
 
-**影响**：init/update 安装 6 个工作流而非 5 个
+**影响**：init/update 安装 6 个工作流而非 5 个；snack 不生成 command 文件
 
 ## Risks / Trade-offs
 
@@ -150,8 +150,8 @@ if (hasNewExports || hasDeletedExports || hasNewFiles) {
 无需迁移。snack 是新增工作流，不影响现有 5 个工作流。
 
 **部署步骤**：
-1. 实现 `getSnackSkillTemplate` 和 `getOpsxSnackCommandTemplate` 函数
-2. 在 `WorkflowManifestRegistry.MANIFEST_ENTRIES` 添加 snack entry
+1. 实现 `getSnackSkillTemplate` 函数（snack 为 skill-only，无 command 模板）
+2. 在 `WorkflowManifestRegistry.MANIFEST_ENTRIES` 添加 snack entry（不含 `getCommandTemplate`）
 3. 运行 `openspec update` 生成 snack skill 文件
 4. 验证 skill 文件长度 ≤ 200 行
 

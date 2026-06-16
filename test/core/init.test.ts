@@ -174,12 +174,12 @@ describe('InitCommand', () => {
       }
     });
 
-    it('should create all 5 registry commands for Claude Code by default', async () => {
+    it('should create 5 command templates for Claude Code (snack is skill-only)', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 
       await initCommand.execute(testDir);
 
-      // All 5 registry workflows: propose, explore, apply, archive, bootstrap
+      // 5 command templates: propose, explore, apply, archive, bootstrap (snack is skill-only)
       const expectedCommandNames = [
         'opsx/propose.md',
         'opsx/explore.md',

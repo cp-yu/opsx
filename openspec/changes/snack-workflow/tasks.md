@@ -4,6 +4,7 @@
 
 **Files**:
 - Modify: `src/core/templates/manifest/registry.ts`
+- Test: `test/core/templates/manifest/registry.test.ts`
 
 **Requirements**:
 - 在 MANIFEST_ENTRIES 数组中添加 snack entry
@@ -20,19 +21,19 @@
 
 - [x] C2 验证 6 个工作流架构
   - Verifies: `specs/snack-workflow-manifest/spec.md` / Requirement "6 个工作流架构" / Scenario "init 安装 6 个工作流"
-  - Command: `pnpm test src/core/templates/manifest/registry.ts`
+  - Command: `pnpm test test/core/templates/manifest/registry.test.ts`
   - Expect: registry 测试通过，MANIFEST_ENTRIES.length === 6
 
 ### Task 2: 实现 snack skill 模板函数
 
-**Goal**: 实现 getSnackSkillTemplate 和 getOpsxSnackCommandTemplate 函数，生成 snack skill 文件
+**Goal**: 实现 getSnackSkillTemplate 函数，生成 snack skill 文件（snack 为 skill-only，不实现 command 模板）
 
 **Files**:
 - Modify: `src/core/templates/skill-templates.ts`
 
 **Requirements**:
 - getSnackSkillTemplate 返回 snack skill 内容（包含 OPSX 上下文加载、git diff 分析、specs 生成逻辑）
-- getOpsxSnackCommandTemplate 返回 command 模板或 undefined（snack 为 skill-only）
+- snack 为 skill-only，不提供 getCommandTemplate（与 specs/snack-workflow-manifest/spec.md 一致）
 - skill 文件 instructions 不超过 200 行
 - 包含明确说明不生成 tasks.md 的逻辑
 - 复用 explore/propose/apply 的共享 OPSX 上下文片段
@@ -132,3 +133,11 @@
   - Verifies: `specs/snack-workflow-manifest/spec.md` / Requirement "6 个工作流架构" / Scenario "update 刷新 6 个工作流"
   - Command: `pnpm test test/integration/snack-workflow.test.ts`
   - Expect: 测试通过，验证 snack skill 文件被正确刷新
+
+## Remediation
+
+- [x] [artifact_fix] Requirement "snack skill 描述" — 实现中 description 已按代码优先语义重写，但 `specs/snack-skill-generation/spec.md` 仍是 change-lite 占位文案，spec↔code 矛盾。更新 spec Requirement 文本与描述场景，使其与 `src/core/templates/workflows/snack.ts` 的 description 逐字一致。
+- [x] [artifact_fix] Requirement "WorkflowManifestRegistry 注册 snack" / Scenario "snack 出现在 workflow 列表" — 该场景声明 `openspec list` 输出 workflow 列表，但 ListCommand 仅枚举 changes，list 行为变更超出本变更范围。删除该 Scenario。
+- [x] [artifact_fix] 设计一致性 / 决策 5 — `design.md` 与 `tasks.md` Task 2 残留不存在的 `getOpsxSnackCommandTemplate`，且 design manifest 示例含 `getCommandTemplate` 键，与 skill-only 决策冲突。清理全部提及，对齐 spec/registry。
+- [x] [artifact_fix] 规格外改动 — `test/core/templates/manifest/registry.test.ts` 已修改但未在 Task 1 Files 声明，且 C2 Command 路径指向不存在的 `src/.../registry.ts`。Task 1 Files 追加该测试文件，C2 Command 改为 `test/core/templates/manifest/registry.test.ts`。
+- [x] [code_fix] Requirement "snack skill 纳入生成管线" / Scenario "skill 文件长度验证" — instructions ≤200 行上限无自动化断言。在 `test/integration/snack-workflow.test.ts` 的 init/update 用例追加 SKILL.md instructions 行数 ≤200 断言。

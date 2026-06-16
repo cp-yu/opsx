@@ -102,6 +102,8 @@ describe('snack workflow integration', () => {
     expect(snackSkill).toContain('git diff');
     expect(snackSkill).toContain('code-map');
     expect(snackSkill).toMatch(/不生成|Do NOT generate `tasks.md`/);
+    // instructions portion (after YAML frontmatter) must stay <= 200 lines
+    expect(instructionLineCount(snackSkill)).toBeLessThanOrEqual(200);
   });
 
   it('update refreshes the snack skill file in place', async () => {
@@ -117,6 +119,7 @@ describe('snack workflow integration', () => {
     expect(refreshed).not.toBe('STALE CONTENT');
     expect(refreshed).toContain('name: openspec-snack');
     expect(refreshed).toContain('git diff');
+    expect(instructionLineCount(refreshed)).toBeLessThanOrEqual(200);
   });
 });
 
@@ -127,4 +130,11 @@ async function fileExists(filePath: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+// Count lines of the instructions body, i.e. everything after the YAML frontmatter.
+function instructionLineCount(skillContent: string): number {
+  const match = skillContent.match(/^---\n[\s\S]*?\n---\n/);
+  const body = match ? skillContent.slice(match[0].length) : skillContent;
+  return body.split('\n').length;
 }
