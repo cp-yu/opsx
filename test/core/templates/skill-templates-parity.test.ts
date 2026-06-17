@@ -19,7 +19,7 @@ import {
 import { generateSkillContent } from '../../../src/core/shared/skill-generation.js';
 
 const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
-  getExploreSkillTemplate: 'ff05a05ed74f328abdac6978ffde41b7a2e470dd7798d37777898593718df64a',
+  getExploreSkillTemplate: '3f5345e6c004c333a9fd62bb85cb4df34276a55e473b73c7b1374ed8743473e2',
   getApplyChangeSkillTemplate: 'b0d17aa511eaae20291485dd694c6f686dfb060a87e4231cc150cf9cb12a35d9',
   getOpsxExploreCommandTemplate: 'c314312cdb1b3d266eb9b7445433ccd4eaf9b55163dba721fc785d931014d83d',
   getOpsxApplyCommandTemplate: '163aafb92030a51ae2af2efaa269a995f7e2859761531bf05b9bad58dfab4e8c',
@@ -34,7 +34,7 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
 };
 
 const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
-  'openspec-explore': '108a72ebdf0b4e297bf6c04a82e160b387e06b6c358dd551ffe7d7acaa757571',
+  'openspec-explore': 'a5b73918e5c08b1b226bdf650a5590314272e3619662585cd38f2dc45566f99d',
   'openspec-apply-change': '45b1e9afaf7d7afa7b609dd938bba48ee34d9c04ee92ef4e5406fba728eb9b02',
   'openspec-archive-change': '1b54037bf392825b97164da31ebfcdc968d941044455cd18eb556b74032fdc02',
   'openspec-propose': 'aaef35e945d218256c12037e37326b0a2d169a75394da663781c91893f35d8ad',

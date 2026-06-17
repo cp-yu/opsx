@@ -210,7 +210,7 @@ You: [reads codebase]
 
 **User is stuck mid-implementation:**
 \`\`\`
-User: 调用 /opsx:explore add-auth-system
+User: Exploring add-auth-system
       The OAuth integration is more complex than expected
 
 You: [reads change artifacts]
@@ -221,7 +221,7 @@ You: [reads change artifacts]
 
      [draws diagram, explores options, suggests paths]
 
-     调用 \`$openspec-propose <change-name>\` 以生成或更新 design.md。
+     Call openspec-propose to update design.md with this insight.
 \`\`\`
 
 **User wants to compare options:**
@@ -269,13 +269,13 @@ You: That changes everything.
 **Open questions**: [if any remain]
 
 **Next steps** (if ready):
-- 调用 \`$openspec-propose <change-name>\` 以生成制品
+- Call openspec-propose to create artifacts from the Design Summary
 - Keep exploring: just keep talking
 \`\`\`
 
 Discovery might:
 
-- **Flow into a proposal**: "Ready to start? 调用 \`$openspec-propose <change-name>\` 以生成制品。"
+- **Flow into a proposal**: "Ready to start? Call openspec-propose to create artifacts."
 - **Just provide clarity**: User has what they need, moves on
 - **Continue later**: "We can pick this up anytime"
 

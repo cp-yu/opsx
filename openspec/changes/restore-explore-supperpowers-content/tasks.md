@@ -70,17 +70,17 @@
 
 #### Checks
 
-- [ ] C6 验证 reference 内容契约测试通过
+- [x] C6 验证 reference 内容契约测试通过
   - Verifies: `specs/explore-brainstorming/spec.md` / Requirement "Explore 通过 referenceFiles 暴示 superpowers 行为引导" / Scenario "explore 声明 supperpowers-style reference"
   - Command: `pnpm test test/core/templates/explore-template.test.ts`
   - Expect: 新增 reference 断言与既有断言全部通过
 
-- [ ] C7 验证生成产物刷新
+- [x] C7 验证生成产物刷新
   - Verifies: `specs/explore-brainstorming/spec.md` / Requirement "Explore 通过 referenceFiles 暴示 superpowers 行为引导" / Scenario "主 instructions 保持精简并指向 reference"
   - Command: `openspec update && test -f openspec/references/openspec-explore-supperpowers-style.md`
   - Expect: reference 文件物化成功，`.claude/skills/openspec-explore/` 刷新无 STALE
 
-- [ ] C8 验证全量测试套件无回归
+- [x] C8 验证全量测试套件无回归
   - Preserves: `openspec/specs/skill-template-length-check/spec.md` / Requirement "测试验证所有生成 skill 文件行数限制" / Scenario "所有模板均未超标"
   - Command: `pnpm test`
   - Expect: 全量测试通过，无长度超标、无 explore 相关回归

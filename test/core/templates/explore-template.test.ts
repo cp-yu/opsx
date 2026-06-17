@@ -136,8 +136,8 @@ describe('explore supperpowers-style reference', () => {
     expect(ref?.content).not.toContain('I can create a change proposal');
     expect(ref?.content).not.toContain('Updated design.md');
 
-    // Should route to propose
-    expect(ref?.content).toContain('$openspec-propose');
+    // Should route to propose (generic form, not tool-specific syntax)
+    expect(ref?.content).toContain('openspec-propose');
   });
 
   it('reference content does not duplicate main instructions mechanisms', () => {
