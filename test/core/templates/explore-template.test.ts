@@ -113,3 +113,60 @@ describe('explore template impact sweeps', () => {
     }
   });
 });
+
+describe('explore supperpowers-style reference', () => {
+  it('declares supperpowers-style reference with four topics', () => {
+    const template = getExploreSkillTemplate();
+    const ref = (template.referenceFiles || []).find(f => f.path === 'references/explore-supperpowers-style.md');
+
+    expect(ref).toBeDefined();
+    expect(ref?.content).toContain('## The Stance');
+    expect(ref?.content).toContain('## What You Might Do');
+    expect(ref?.content).toContain('## Handling Different Entry Points');
+    expect(ref?.content).toContain('## What We Figured Out');
+  });
+
+  it('reference content routes to propose instead of direct writes', () => {
+    const template = getExploreSkillTemplate();
+    const ref = (template.referenceFiles || []).find(f => f.path === 'references/explore-supperpowers-style.md');
+
+    expect(ref).toBeDefined();
+    // Should NOT contain old direct-write phrasing
+    expect(ref?.content).not.toContain('Want me to create a proposal');
+    expect(ref?.content).not.toContain('I can create a change proposal');
+    expect(ref?.content).not.toContain('Updated design.md');
+
+    // Should route to propose (generic form, not tool-specific syntax)
+    expect(ref?.content).toContain('openspec-propose');
+  });
+
+  it('reference content does not duplicate main instructions mechanisms', () => {
+    const template = getExploreSkillTemplate();
+    const ref = (template.referenceFiles || []).find(f => f.path === 'references/explore-supperpowers-style.md');
+
+    expect(ref).toBeDefined();
+    // Should NOT contain sweeper delegation protocol details
+    expect(ref?.content).not.toContain('openspec-impact-sweeper');
+    // Should NOT contain brainstorming checklist numbered flow
+    expect(ref?.content).not.toContain('Explore MUST run this sequence');
+    // Should NOT contain Future Capture Target routing table
+    expect(ref?.content).not.toContain('Future Capture Target');
+  });
+
+  it('reference content is self-contained without template variables', () => {
+    const template = getExploreSkillTemplate();
+    const ref = (template.referenceFiles || []).find(f => f.path === 'references/explore-supperpowers-style.md');
+
+    expect(ref).toBeDefined();
+    expect(ref?.content).not.toMatch(/\$\{[^}]+\}/);
+  });
+
+  it('reference content is within 500 line limit', () => {
+    const template = getExploreSkillTemplate();
+    const ref = (template.referenceFiles || []).find(f => f.path === 'references/explore-supperpowers-style.md');
+
+    expect(ref).toBeDefined();
+    const lineCount = ref?.content.trim().split('\n').length || 0;
+    expect(lineCount).toBeLessThanOrEqual(500);
+  });
+});

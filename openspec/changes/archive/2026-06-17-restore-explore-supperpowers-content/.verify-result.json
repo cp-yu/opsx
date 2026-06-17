@@ -1,0 +1,150 @@
+{
+  "timestamp": "2026-06-17T02:39:56.244Z",
+  "result": "PASS_WITH_WARNINGS",
+  "issues": [
+    {
+      "severity": "WARNING",
+      "requirement": "Explore 通过 referenceFiles 暴露 superpowers 行为引导",
+      "task": "Task 3",
+      "message": "Unaccounted change: test/core/templates/skill-templates-parity.test.ts updates hash expectations",
+      "summary": "This is mechanically necessary test maintenance (hash updates) triggered by explore template changes. Consider adding parity test to Task 3 Files section for completeness.",
+      "recommendation": "Consider adding skill-templates-parity.test.ts to Task 3 Files section for artifact completeness",
+      "evidenceCitations": [
+        "test/core/templates/skill-templates-parity.test.ts:22-24",
+        "test/core/templates/skill-templates-parity.test.ts:37"
+      ]
+    }
+  ],
+  "tasksFileHash": "1c709824bf13e3e0b7db7d968433c979a5fd9e816221fae9eb18af188ef3a9c9",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "evidenceFiles": [
+      "openspec/changes/restore-explore-supperpowers-content/design.md",
+      "openspec/changes/restore-explore-supperpowers-content/proposal.md",
+      "openspec/changes/restore-explore-supperpowers-content/specs/explore-brainstorming/spec.md",
+      "openspec/changes/restore-explore-supperpowers-content/tasks.md",
+      "openspec/references/openspec-explore-supperpowers-style.md",
+      "src/core/templates/workflows/explore.ts",
+      "test/core/templates/explore-template.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts"
+    ],
+    "evidenceFingerprint": "a9169c861943035ef87ace8d72fe610eda46a138f6e5de344ccf3774449b715f",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/restore-explore-supperpowers-content/design.md",
+        "hash": "54599a547bcc1019ee4347267eb6c22888abc6ec1cb0a211352a8bd081e9e75c"
+      },
+      {
+        "path": "openspec/changes/restore-explore-supperpowers-content/proposal.md",
+        "hash": "b52b39c832880ee56b64d0248bb8e3126ed152f61d6b48c4423f51473cf94eb3"
+      },
+      {
+        "path": "openspec/changes/restore-explore-supperpowers-content/specs/explore-brainstorming/spec.md",
+        "hash": "76c6484845ff3a87c8ceed50568ac888d45202852e52d919d96fa6088038c4f8"
+      },
+      {
+        "path": "openspec/changes/restore-explore-supperpowers-content/tasks.md",
+        "hash": "1c709824bf13e3e0b7db7d968433c979a5fd9e816221fae9eb18af188ef3a9c9"
+      },
+      {
+        "path": "openspec/references/openspec-explore-supperpowers-style.md",
+        "hash": "29280f90cb02ce0a873ad97fbaee6026406a0c8baaf24e3e930866c807930401"
+      },
+      {
+        "path": "src/core/templates/workflows/explore.ts",
+        "hash": "ce8ddeaa430993ffda6c185983d4b1c1238373893d7c863037c4e3e3c27081c8"
+      },
+      {
+        "path": "test/core/templates/explore-template.test.ts",
+        "hash": "eb502148997c9051feb5e982d8d1e01ea8ad4630fc9ae8d36f8cfd256b91c55e"
+      },
+      {
+        "path": "test/core/templates/skill-templates-parity.test.ts",
+        "hash": "89781448dbbbd9b33ccb848e703daa702cb569fe6b82cc621c8160cf5772da5b"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "6a14dacdb1181dfab9b10a374bdb1214d01f472a",
+    "gitDiffSummary": "git diff main...HEAD --name-only identified 7 changed files. Attribution universe: Task 1 Files (src/core/templates/workflows/explore.ts), Task 2 Files (src/core/templates/workflows/explore.ts), Task 3 Files (test/core/templates/explore-template.test.ts, .claude/skills/openspec-explore/, openspec/references/openspec-explore-supperpowers-style.md), plus change artifacts. One unaccounted file: test/core/templates/skill-templates-parity.test.ts contains mechanically necessary hash updates triggered by template changes."
+  },
+  "optimization": {
+    "status": "SKIPPED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-17T02:42:33.718Z",
+        "type": "optimization",
+        "status": "SKIPPED"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-06-17T02:39:56.244Z",
+      "result": "PASS_WITH_WARNINGS",
+      "issues": [
+        {
+          "severity": "WARNING",
+          "requirement": "Explore 通过 referenceFiles 暴露 superpowers 行为引导",
+          "task": "Task 3",
+          "message": "Unaccounted change: test/core/templates/skill-templates-parity.test.ts updates hash expectations",
+          "summary": "This is mechanically necessary test maintenance (hash updates) triggered by explore template changes. Consider adding parity test to Task 3 Files section for completeness.",
+          "recommendation": "Consider adding skill-templates-parity.test.ts to Task 3 Files section for artifact completeness",
+          "evidenceCitations": [
+            "test/core/templates/skill-templates-parity.test.ts:22-24",
+            "test/core/templates/skill-templates-parity.test.ts:37"
+          ]
+        }
+      ],
+      "tasksFileHash": "1c709824bf13e3e0b7db7d968433c979a5fd9e816221fae9eb18af188ef3a9c9",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "evidenceFiles": [
+          "openspec/changes/restore-explore-supperpowers-content/design.md",
+          "openspec/changes/restore-explore-supperpowers-content/proposal.md",
+          "openspec/changes/restore-explore-supperpowers-content/specs/explore-brainstorming/spec.md",
+          "openspec/changes/restore-explore-supperpowers-content/tasks.md",
+          "openspec/references/openspec-explore-supperpowers-style.md",
+          "src/core/templates/workflows/explore.ts",
+          "test/core/templates/explore-template.test.ts",
+          "test/core/templates/skill-templates-parity.test.ts"
+        ],
+        "evidenceFingerprint": "a9169c861943035ef87ace8d72fe610eda46a138f6e5de344ccf3774449b715f",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/restore-explore-supperpowers-content/design.md",
+            "hash": "54599a547bcc1019ee4347267eb6c22888abc6ec1cb0a211352a8bd081e9e75c"
+          },
+          {
+            "path": "openspec/changes/restore-explore-supperpowers-content/proposal.md",
+            "hash": "b52b39c832880ee56b64d0248bb8e3126ed152f61d6b48c4423f51473cf94eb3"
+          },
+          {
+            "path": "openspec/changes/restore-explore-supperpowers-content/specs/explore-brainstorming/spec.md",
+            "hash": "76c6484845ff3a87c8ceed50568ac888d45202852e52d919d96fa6088038c4f8"
+          },
+          {
+            "path": "openspec/changes/restore-explore-supperpowers-content/tasks.md",
+            "hash": "1c709824bf13e3e0b7db7d968433c979a5fd9e816221fae9eb18af188ef3a9c9"
+          },
+          {
+            "path": "openspec/references/openspec-explore-supperpowers-style.md",
+            "hash": "29280f90cb02ce0a873ad97fbaee6026406a0c8baaf24e3e930866c807930401"
+          },
+          {
+            "path": "src/core/templates/workflows/explore.ts",
+            "hash": "ce8ddeaa430993ffda6c185983d4b1c1238373893d7c863037c4e3e3c27081c8"
+          },
+          {
+            "path": "test/core/templates/explore-template.test.ts",
+            "hash": "eb502148997c9051feb5e982d8d1e01ea8ad4630fc9ae8d36f8cfd256b91c55e"
+          },
+          {
+            "path": "test/core/templates/skill-templates-parity.test.ts",
+            "hash": "89781448dbbbd9b33ccb848e703daa702cb569fe6b82cc621c8160cf5772da5b"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "6a14dacdb1181dfab9b10a374bdb1214d01f472a",
+        "gitDiffSummary": "git diff main...HEAD --name-only identified 7 changed files. Attribution universe: Task 1 Files (src/core/templates/workflows/explore.ts), Task 2 Files (src/core/templates/workflows/explore.ts), Task 3 Files (test/core/templates/explore-template.test.ts, .claude/skills/openspec-explore/, openspec/references/openspec-explore-supperpowers-style.md), plus change artifacts. One unaccounted file: test/core/templates/skill-templates-parity.test.ts contains mechanically necessary hash updates triggered by template changes."
+      }
+    }
+  }
+}
