@@ -1,0 +1,36 @@
+schema_version: 1
+ADDED:
+  capabilities: []
+  relations: []
+
+MODIFIED:
+  domains:
+    - id: dom.ai-integration
+      intent: 多工具 AI 支持 — 为 25+ AI 工具生成特定工具的技能文件和面向 Agent 的 workflow skills
+      boundary: 拥有工具元数据、技能定义和 skills-only workflow surface。不拥有核心规约/变更逻辑。
+  capabilities:
+    - id: cap.ai.command-generation
+      intent: 历史 command generation 不再作为 active workflow delivery surface；workflow 制品由 skills-only 管线生成，内部 skill 不暴露为用户可调用 workflow。
+    - id: cap.ai.command-slugs
+      intent: 历史 command slug 不再驱动 active workflow artifact 生成、检测或清理；用户可调用 workflow 引用通过 skill surface 元数据渲染。
+    - id: cap.ai.skill-generation
+      intent: AI 技能文件生成是唯一受管 workflow surface，包含 workflow skills 与 reviewer、optimizer、impact-sweeper 等内部 subagent skills；不生成 openspec-implementer。
+    - id: cap.ai.template-artifact-pipeline
+      intent: 统一的 skills-only artifact 生成管线，基于固定 workflow manifest entries 生成 skill 制品，modeMembership 作为标签系统而非 profile 过滤条件。
+    - id: cap.ai.tool-adapters
+      intent: 为支持的 AI 工具提供 skills 路径、transform 与 invocation guidance 元数据；不再维护 adapter-backed command generation 能力。
+    - id: cap.ai.tool-invocation-references
+      intent: 基于共享 workflow surface 元数据渲染不同 AI 工具的用户可调用 skill 引用；没有精确工具语法时使用中性 skill invocation 文案。
+    - id: cap.cli.init
+      intent: 在项目中初始化 OpenSpec，固定安装 workflow skills，无需 profile 或 delivery 配置，且不生成 slash command workflow artifacts。
+    - id: cap.cli.update
+      intent: 刷新 OpenSpec skills，固定更新 workflow skills，自动清理过时的 profile/workflows/delivery 配置字段，不生成、刷新或清理旧 command workflow artifacts。
+    - id: cap.config.global
+      intent: 加载和验证用户全局配置，配置结构不再包含 profile、workflows 或 delivery 字段。
+    - id: cap.config.schema-validation
+      intent: 使用 Zod Schema 验证配置结构，并拒绝 active delivery 配置语义。
+    - id: cap.verify.execution-model-selection
+      intent: verify / archive full verify 固定使用 subagent-orchestrated skeleton，不再按工具选择 current-agent-reread fallback。
+
+REMOVED:
+  capabilities: []

@@ -11,7 +11,6 @@ import {
   GLOBAL_CONFIG_DIR_NAME,
   GLOBAL_CONFIG_FILE_NAME
 } from '../../src/core/global-config.js';
-import type { Delivery } from '../../src/core/global-config.js';
 
 describe('global-config', () => {
   let tempDir: string;
@@ -106,11 +105,11 @@ describe('global-config', () => {
 
       // Should contain at least the core default fields
       expect(config).toHaveProperty('featureFlags');
-      expect(config).toHaveProperty('delivery');
       expect(config).toHaveProperty('apply');
       expect(config).toHaveProperty('optimization');
       expect(config).not.toHaveProperty('profile');
       expect(config).not.toHaveProperty('workflows');
+      expect(config).not.toHaveProperty('delivery');
       expect(config.featureFlags).toEqual({});
       expect(config.apply).toHaveProperty('defaultIsolation');
       expect(config.optimization).toHaveProperty('enabled');
@@ -153,11 +152,11 @@ describe('global-config', () => {
 
       // Should contain at least the core default fields
       expect(config).toHaveProperty('featureFlags');
-      expect(config).toHaveProperty('delivery');
       expect(config).toHaveProperty('apply');
       expect(config).toHaveProperty('optimization');
       expect(config).not.toHaveProperty('profile');
       expect(config).not.toHaveProperty('workflows');
+      expect(config).not.toHaveProperty('delivery');
       expect(config.featureFlags).toEqual({});
       expect(config.apply).toHaveProperty('defaultIsolation');
       expect(config.optimization).toHaveProperty('enabled');
@@ -215,7 +214,7 @@ describe('global-config', () => {
     });
 
     describe('schema evolution', () => {
-      it('should add default delivery when loading old config without it', () => {
+      it('should not include delivery when loading old config without it', () => {
         process.env.XDG_CONFIG_HOME = tempDir;
         const configDir = path.join(tempDir, 'openspec');
         const configPath = path.join(configDir, 'config.json');
@@ -228,13 +227,13 @@ describe('global-config', () => {
 
         const config = getGlobalConfig();
 
-        expect(config.delivery).toBe('both');
+        expect(config).not.toHaveProperty('delivery');
         expect(config.featureFlags?.existingFlag).toBe(true);
         expect(config).not.toHaveProperty('profile');
         expect(config).not.toHaveProperty('workflows');
       });
 
-      it('should remove deprecated profile and workflows fields from loaded config', () => {
+      it('should remove deprecated profile, workflows, and delivery fields from loaded config', () => {
         process.env.XDG_CONFIG_HOME = tempDir;
         const configDir = path.join(tempDir, 'openspec');
         const configPath = path.join(configDir, 'config.json');
@@ -249,7 +248,7 @@ describe('global-config', () => {
 
         const config = getGlobalConfig();
 
-        expect(config.delivery).toBe('skills');
+        expect(config).not.toHaveProperty('delivery');
         expect(config).not.toHaveProperty('profile');
         expect(config).not.toHaveProperty('workflows');
       });
@@ -273,17 +272,34 @@ describe('global-config', () => {
         );
       });
 
-      it('should round-trip new fields correctly', () => {
+      it('should warn when loading config with delivery field', () => {
+        process.env.XDG_CONFIG_HOME = tempDir;
+        const configDir = path.join(tempDir, 'openspec');
+        const configPath = path.join(configDir, 'config.json');
+
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(configPath, JSON.stringify({
+          featureFlags: {},
+          delivery: 'skills'
+        }));
+
+        getGlobalConfig();
+
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('过时的配置字段')
+        );
+      });
+
+      it('should round-trip config without delivery', () => {
         process.env.XDG_CONFIG_HOME = tempDir;
         const originalConfig = {
           featureFlags: { flag1: true },
-          delivery: 'commands' as Delivery,
         };
 
         saveGlobalConfig(originalConfig);
         const loadedConfig = getGlobalConfig();
 
-        expect(loadedConfig.delivery).toBe('commands');
+        expect(loadedConfig).not.toHaveProperty('delivery');
         expect(loadedConfig).not.toHaveProperty('profile');
         expect(loadedConfig).not.toHaveProperty('workflows');
       });
