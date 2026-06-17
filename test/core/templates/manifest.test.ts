@@ -50,8 +50,8 @@ describe('Workflow Manifest', () => {
       const withCommands = WorkflowManifestRegistry.entries.filter(
         (entry) => entry.getCommandTemplate !== undefined
       );
-      // snack is skill-only; at least the 5 core+bootstrap workflows ship commands
-      expect(withCommands.length).toBeGreaterThanOrEqual(5);
+      // explore and snack are skill-only; other workflows may still keep legacy command factories.
+      expect(withCommands.length).toBeGreaterThanOrEqual(4);
       for (const entry of withCommands) {
         const cmd = entry.getCommandTemplate!();
         expect(cmd.name).toBeTruthy();

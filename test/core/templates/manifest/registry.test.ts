@@ -43,12 +43,14 @@ describe('WorkflowManifestRegistry', () => {
     });
   });
 
-  describe('snack skill-only entry', () => {
-    it('snack should register skill template but no command template', () => {
-      const entry = WorkflowManifestRegistry.get('snack');
-      expect(entry).toBeDefined();
-      expect(entry?.getSkillTemplate).toBeDefined();
-      expect(entry?.getCommandTemplate).toBeUndefined();
+  describe('skill-only entries', () => {
+    it('explore and snack should register skill templates but no command templates', () => {
+      for (const workflowId of ['explore', 'snack']) {
+        const entry = WorkflowManifestRegistry.get(workflowId);
+        expect(entry).toBeDefined();
+        expect(entry?.getSkillTemplate).toBeDefined();
+        expect(entry?.getCommandTemplate).toBeUndefined();
+      }
     });
   });
 

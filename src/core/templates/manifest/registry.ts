@@ -7,7 +7,6 @@
 
 import {
   getExploreSkillTemplate,
-  getOpsxExploreCommandTemplate,
   getApplyChangeSkillTemplate,
   getOpsxApplyCommandTemplate,
   getArchiveChangeSkillTemplate,
@@ -50,7 +49,6 @@ const MANIFEST_ENTRIES: readonly WorkflowManifestEntry[] = [
       description: 'Investigate a problem before implementation',
     },
     getSkillTemplate: getExploreSkillTemplate,
-    getCommandTemplate: getOpsxExploreCommandTemplate,
   },
   {
     workflowId: 'apply',
