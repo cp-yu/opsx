@@ -1,0 +1,258 @@
+{
+  "timestamp": "2026-06-17T13:43:32.962Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "50902e22351d9fa9220453d52214eb703ed3f29d550c47ca28b1ac676ac2a4c0",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      "openspec/specs/cli-init/spec.md",
+      "openspec/specs/cli-update/spec.md",
+      "openspec/specs/global-config/spec.md",
+      "openspec/specs/profiles/spec.md",
+      "src/commands/config.ts",
+      "src/core/config-schema.ts",
+      "src/core/config.ts",
+      "src/core/global-config.ts",
+      "src/core/init.ts",
+      "src/core/migration.ts",
+      "src/core/profile-sync-drift.ts",
+      "src/core/shared/index.ts",
+      "src/core/shared/skill-generation.ts",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "src/core/templates/sync-engine.ts",
+      "src/core/templates/tool-profile/registry.ts",
+      "src/core/templates/tool-profile/types.ts",
+      "src/core/templates/workflows/archive-change.ts",
+      "src/core/templates/workflows/verify-execution-model.ts",
+      "src/core/update.ts",
+      "src/core/workflow-installation.ts",
+      "src/utils/command-references.ts"
+    ],
+    "evidenceFingerprint": "7fbd163de25d95a1fca8d9b21c0667b7476375c257cc7a59a02736a9636d62d2",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/specs/cli-init/spec.md",
+        "hash": "b3698237a71a81052659bb20fcf2d679917266066a2dbe9a1bc41085be90c71e"
+      },
+      {
+        "path": "openspec/specs/cli-update/spec.md",
+        "hash": "b8c28692b7ab656acee1fd258e1ee7991699502b62a5965765f3a785312cb8f3"
+      },
+      {
+        "path": "openspec/specs/global-config/spec.md",
+        "hash": "0614c5947e41586e6f9a91567000e7024247f0b463fbe08911ad49518278e86a"
+      },
+      {
+        "path": "openspec/specs/profiles/spec.md",
+        "hash": "73befdd6e408117ca1220b40899c5f6f8b54aafa2abba7e1ed02f06998da2a40"
+      },
+      {
+        "path": "src/commands/config.ts",
+        "hash": "e05dfa86e69a85f64d77ebeb65c2bed664436ff24eed57de5391b65a55a98f45"
+      },
+      {
+        "path": "src/core/config-schema.ts",
+        "hash": "2904d3234bb28fa1fb4cdb4dd2d4b0cfb889c4c3f5eeccc0e1692e1919ecdd57"
+      },
+      {
+        "path": "src/core/config.ts",
+        "hash": "78599a7883ab922f3529cb16bc3e6ca7bd48e422aeef71c4308c8000b99d5e24"
+      },
+      {
+        "path": "src/core/global-config.ts",
+        "hash": "a2c5c0507f0258783c8fa61f09677a0d747be6dc02b4cce8f4ded090d7b7defa"
+      },
+      {
+        "path": "src/core/init.ts",
+        "hash": "4726403976abea2565c696178f2351ee15d6c9a59a8561623674df6695805bc3"
+      },
+      {
+        "path": "src/core/migration.ts",
+        "hash": "11c8ad648bfba0a412badd06580cbbf37b32418b6702d7e58c6c991844df3d19"
+      },
+      {
+        "path": "src/core/profile-sync-drift.ts",
+        "hash": "9de7a61623057ff83a52664837c21cb17165c3bd65629fc51d3d619ad4b50b97"
+      },
+      {
+        "path": "src/core/shared/index.ts",
+        "hash": "72187015b64c474f63032d4b534d90587cb89f94b8dd56b381bbf0aed5faaf89"
+      },
+      {
+        "path": "src/core/shared/skill-generation.ts",
+        "hash": "8d522191c0b8c8871ecc2513ac57093dd2acfab221f0c20cf0da27625274cd16"
+      },
+      {
+        "path": "src/core/templates/fragments/opsx-fragments.ts",
+        "hash": "93837254021e8afbc3abd841287490a4c4e06e7d637d5f4ba0e8682fc4aa4bff"
+      },
+      {
+        "path": "src/core/templates/sync-engine.ts",
+        "hash": "ff595ad401e07f36df76913c7fa21adbfbcf21b767eb62345a06ada79dec84d7"
+      },
+      {
+        "path": "src/core/templates/tool-profile/registry.ts",
+        "hash": "131a54b31042ed58aeca8317bbd6fb804d9c6770d1c0705ea0ff26b475b7690a"
+      },
+      {
+        "path": "src/core/templates/tool-profile/types.ts",
+        "hash": "8f1c0eb4b27b317ecf4fe229efe3a5af8d148b17b1885e6f0feee70d2b0fe229"
+      },
+      {
+        "path": "src/core/templates/workflows/archive-change.ts",
+        "hash": "83702e9226f9805dfc9df0b4b8b43259806d27e73cf3285c617de8d7b512df97"
+      },
+      {
+        "path": "src/core/templates/workflows/verify-execution-model.ts",
+        "hash": "396dccdbd576b6ab2ef7485b1395850ab6eae86c228298c5612021dd28fa87c1"
+      },
+      {
+        "path": "src/core/update.ts",
+        "hash": "c4b3a9ebc0dae4c17db5fdcab5f7b1cbae084bd9ff244b3280bfc5b705b23a49"
+      },
+      {
+        "path": "src/core/workflow-installation.ts",
+        "hash": "f06ce23c7c0c849f76c025e39c5a68ef39fc3f57f93e186dc02504b22ec90dfa"
+      },
+      {
+        "path": "src/utils/command-references.ts",
+        "hash": "194d25a00c5d6f67a21f3865112ed9bcfdfcd5ccaa02b4493e6fda0cecf6cc99"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "7d2ab936aa34deaed9eecf8773ebdea8b34f9aa2"
+  },
+  "optimization": {
+    "status": "PENDING_VERIFICATION",
+    "attempts": [],
+    "baseline": {
+      "timestamp": "2026-06-17T13:43:32.962Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "50902e22351d9fa9220453d52214eb703ed3f29d550c47ca28b1ac676ac2a4c0",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          "openspec/specs/cli-init/spec.md",
+          "openspec/specs/cli-update/spec.md",
+          "openspec/specs/global-config/spec.md",
+          "openspec/specs/profiles/spec.md",
+          "src/commands/config.ts",
+          "src/core/config-schema.ts",
+          "src/core/config.ts",
+          "src/core/global-config.ts",
+          "src/core/init.ts",
+          "src/core/migration.ts",
+          "src/core/profile-sync-drift.ts",
+          "src/core/shared/index.ts",
+          "src/core/shared/skill-generation.ts",
+          "src/core/templates/fragments/opsx-fragments.ts",
+          "src/core/templates/sync-engine.ts",
+          "src/core/templates/tool-profile/registry.ts",
+          "src/core/templates/tool-profile/types.ts",
+          "src/core/templates/workflows/archive-change.ts",
+          "src/core/templates/workflows/verify-execution-model.ts",
+          "src/core/update.ts",
+          "src/core/workflow-installation.ts",
+          "src/utils/command-references.ts"
+        ],
+        "evidenceFingerprint": "7fbd163de25d95a1fca8d9b21c0667b7476375c257cc7a59a02736a9636d62d2",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/specs/cli-init/spec.md",
+            "hash": "b3698237a71a81052659bb20fcf2d679917266066a2dbe9a1bc41085be90c71e"
+          },
+          {
+            "path": "openspec/specs/cli-update/spec.md",
+            "hash": "b8c28692b7ab656acee1fd258e1ee7991699502b62a5965765f3a785312cb8f3"
+          },
+          {
+            "path": "openspec/specs/global-config/spec.md",
+            "hash": "0614c5947e41586e6f9a91567000e7024247f0b463fbe08911ad49518278e86a"
+          },
+          {
+            "path": "openspec/specs/profiles/spec.md",
+            "hash": "73befdd6e408117ca1220b40899c5f6f8b54aafa2abba7e1ed02f06998da2a40"
+          },
+          {
+            "path": "src/commands/config.ts",
+            "hash": "e05dfa86e69a85f64d77ebeb65c2bed664436ff24eed57de5391b65a55a98f45"
+          },
+          {
+            "path": "src/core/config-schema.ts",
+            "hash": "2904d3234bb28fa1fb4cdb4dd2d4b0cfb889c4c3f5eeccc0e1692e1919ecdd57"
+          },
+          {
+            "path": "src/core/config.ts",
+            "hash": "78599a7883ab922f3529cb16bc3e6ca7bd48e422aeef71c4308c8000b99d5e24"
+          },
+          {
+            "path": "src/core/global-config.ts",
+            "hash": "a2c5c0507f0258783c8fa61f09677a0d747be6dc02b4cce8f4ded090d7b7defa"
+          },
+          {
+            "path": "src/core/init.ts",
+            "hash": "4726403976abea2565c696178f2351ee15d6c9a59a8561623674df6695805bc3"
+          },
+          {
+            "path": "src/core/migration.ts",
+            "hash": "11c8ad648bfba0a412badd06580cbbf37b32418b6702d7e58c6c991844df3d19"
+          },
+          {
+            "path": "src/core/profile-sync-drift.ts",
+            "hash": "9de7a61623057ff83a52664837c21cb17165c3bd65629fc51d3d619ad4b50b97"
+          },
+          {
+            "path": "src/core/shared/index.ts",
+            "hash": "72187015b64c474f63032d4b534d90587cb89f94b8dd56b381bbf0aed5faaf89"
+          },
+          {
+            "path": "src/core/shared/skill-generation.ts",
+            "hash": "8d522191c0b8c8871ecc2513ac57093dd2acfab221f0c20cf0da27625274cd16"
+          },
+          {
+            "path": "src/core/templates/fragments/opsx-fragments.ts",
+            "hash": "93837254021e8afbc3abd841287490a4c4e06e7d637d5f4ba0e8682fc4aa4bff"
+          },
+          {
+            "path": "src/core/templates/sync-engine.ts",
+            "hash": "ff595ad401e07f36df76913c7fa21adbfbcf21b767eb62345a06ada79dec84d7"
+          },
+          {
+            "path": "src/core/templates/tool-profile/registry.ts",
+            "hash": "131a54b31042ed58aeca8317bbd6fb804d9c6770d1c0705ea0ff26b475b7690a"
+          },
+          {
+            "path": "src/core/templates/tool-profile/types.ts",
+            "hash": "8f1c0eb4b27b317ecf4fe229efe3a5af8d148b17b1885e6f0feee70d2b0fe229"
+          },
+          {
+            "path": "src/core/templates/workflows/archive-change.ts",
+            "hash": "83702e9226f9805dfc9df0b4b8b43259806d27e73cf3285c617de8d7b512df97"
+          },
+          {
+            "path": "src/core/templates/workflows/verify-execution-model.ts",
+            "hash": "396dccdbd576b6ab2ef7485b1395850ab6eae86c228298c5612021dd28fa87c1"
+          },
+          {
+            "path": "src/core/update.ts",
+            "hash": "c4b3a9ebc0dae4c17db5fdcab5f7b1cbae084bd9ff244b3280bfc5b705b23a49"
+          },
+          {
+            "path": "src/core/workflow-installation.ts",
+            "hash": "f06ce23c7c0c849f76c025e39c5a68ef39fc3f57f93e186dc02504b22ec90dfa"
+          },
+          {
+            "path": "src/utils/command-references.ts",
+            "hash": "194d25a00c5d6f67a21f3865112ed9bcfdfcd5ccaa02b4493e6fda0cecf6cc99"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "7d2ab936aa34deaed9eecf8773ebdea8b34f9aa2"
+      }
+    }
+  }
+}
