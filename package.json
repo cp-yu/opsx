@@ -1,6 +1,6 @@
 {
   "name": "@fission-ai/openspec",
-  "version": "1.2.0-cpyu.9",
+  "version": "1.4.1-cpyu.1",
   "description": "AI-native system for spec-driven development",
   "keywords": [
     "openspec",

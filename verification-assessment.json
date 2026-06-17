@@ -150,7 +150,7 @@
           "evidence": [
             "test/integration/reviewer-strictness.test.ts - all 5 integration tests pass",
             "test/skills/ - all skill tests pass",
-            ".claude/skills/openspec-reviewer/SKILL.md metadata shows generatedBy: 1.2.0-cpyu.9",
+            ".claude/skills/openspec-reviewer/SKILL.md metadata shows generatedBy: 1.4.1-cpyu.1",
             "test/core/templates/skill-templates-parity.test.ts included in Files declaration"
           ]
         },
