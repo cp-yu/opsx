@@ -208,13 +208,20 @@ async function verifyStatus(changeName: string, options: VerifyCommandOptions): 
     options,
     { ok, freshness, archiveCompatibility },
     ok
-      ? 'Verify gate passed.'
+      ? formatVerifyStatusSuccess(freshness.details)
       : formatVerifyGateFailure(freshness, archiveCompatibility, {
           changeName,
           command: 'sync',
         })
   );
   return ok ? 0 : 1;
+}
+
+function formatVerifyStatusSuccess(details: string[]): string {
+  if (details.length === 0) {
+    return 'Verify gate passed.';
+  }
+  return ['Verify gate passed.', '', 'Warnings:', ...details.map((detail) => `  - ${detail}`)].join('\n');
 }
 
 async function handleOptimization(

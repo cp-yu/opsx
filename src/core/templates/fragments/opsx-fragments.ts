@@ -122,9 +122,10 @@ A verify result is considered **FRESH** if ALL of the following hold:
 A verify result is considered **STALE** if ANY of the following hold:
 - \`verificationContext.evidenceFiles\` is missing or the file list changed
 - \`verificationContext.evidenceFingerprint\` does not match the recomputed fingerprint
-- \`verificationContext.gitHeadCommit\` does not match the current HEAD (if recorded)
 - \`verificationContext.contractVersion\` is missing or not \`"1.0"\`
 - \`result\` is not \`PASS\` or \`PASS_WITH_WARNINGS\`
+
+If \`verificationContext.gitHeadCommit\` does not match the current HEAD, report it as a warning only. File evidence hashes are the hard freshness signal.
 
 **Optimization metadata compatibility**:
 - \`optimization\` metadata is advisory for archive gating, not part of the freshness hash inputs

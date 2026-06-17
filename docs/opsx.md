@@ -221,7 +221,7 @@ OpenSpec now treats verification as a single contract rather than an optional ex
 - Claude Code and Codex should execute verify with a clean-context reviewer subagent
 - Other tools must explicitly re-read change artifacts, git evidence, and final file contents before judging
 - Git diff is only an investigation aid; final file contents are the authoritative evidence
-- Archive freshness checks use persisted verification context such as `evidenceFiles`, `evidenceFingerprint`, `contractVersion`, and optional `gitHeadCommit`
+- Archive freshness checks use persisted verification context such as `evidenceFiles`, `evidenceFingerprint`, and `contractVersion`; optional `gitHeadCommit` drift is a warning
 
 ## When to Update vs. Start Fresh
 

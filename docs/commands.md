@@ -505,7 +505,7 @@ AI:  ✓ Synced specs to openspec/specs/ui/spec.md
 
 **Tips:**
 - Archive will not skip verification anymore; missing or stale verify evidence forces a full verify run
-- Freshness is based on `tasksFileHash`, `verificationContext.evidenceFingerprint`, `contractVersion`, and optional `gitHeadCommit`
+- Freshness is based on `verificationContext.evidenceFingerprint`, `contractVersion`, and result status; optional `gitHeadCommit` drift is reported as a warning
 - In `core`, archive is the built-in verify + sync path; in `expanded`, `/opsx:sync` stays available if you want to sync earlier
 - Archived changes are preserved for history
 

@@ -83,13 +83,12 @@
   - **FRESH** 当且仅当 ALL of:
     - `verificationContext.evidenceFingerprint` 匹配重新计算的 fingerprint
     - `verificationContext.contractVersion` 是 "1.0"
-    - `verificationContext.gitHeadCommit` 匹配当前 HEAD（如果记录了）
     - `result` 是 `PASS` 或 `PASS_WITH_WARNINGS`
   - **STALE** 当 ANY of:
     - `evidenceFiles` 列表发生变化（文件增删）
     - `evidenceFingerprint` 不匹配
-    - `gitHeadCommit` 不匹配
     - `contractVersion` 缺失或不是 "1.0"
+- **AND** `gitHeadCommit` 不匹配时 SHALL 作为 warning 报告，不单独导致 STALE
 - **AND** 具体规则见 `prompts.md` 中的 `VERIFY_FRESHNESS_RULES`
 
 #### Scenario: 跨平台路径处理

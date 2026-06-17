@@ -99,13 +99,21 @@ describe('openspec verify command', () => {
     expect(status.stdout).toContain('- src/a.ts');
   });
 
-  it('reports git HEAD transitions when freshness becomes stale from new commits', async () => {
+  it('reports git HEAD transitions as warnings without making freshness stale', async () => {
     await runCLI([
       'verify',
       'phase1',
       'c1',
       '--input',
       JSON.stringify({ result: 'PASS', issues: [], evidenceFiles: ['src/a.ts'] }),
+    ], { cwd: tempDir });
+    await runCLI([
+      'verify',
+      'phase2',
+      'c1',
+      '--type=optimization',
+      '--input',
+      JSON.stringify({ status: 'NO_OPTIMIZATION_NEEDED', summary: 'No optimization needed' }),
     ], { cwd: tempDir });
 
     const phase1Result = JSON.parse(
@@ -120,10 +128,11 @@ describe('openspec verify command', () => {
       await execFileAsync('git', ['rev-parse', 'HEAD'], { cwd: tempDir })
     ).stdout.trim();
 
-    expect(status.exitCode).toBe(1);
-    expect(status.stdout).toContain('Git HEAD:');
+    expect(status.exitCode).toBe(0);
+    expect(status.stdout).toContain('Verify gate passed.');
+    expect(status.stdout).toContain('Warnings:');
     expect(status.stdout).toContain(
-      `${phase1Result.verificationContext.gitHeadCommit} → ${currentHead}`
+      `gitHeadCommit changed: ${phase1Result.verificationContext.gitHeadCommit} → ${currentHead}`
     );
   });
 

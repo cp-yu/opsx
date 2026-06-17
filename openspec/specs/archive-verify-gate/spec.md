@@ -60,9 +60,9 @@
 - **THEN** 系统 SHALL 判定为 FRESH 当且仅当 ALL of:
   - `verificationContext.evidenceFingerprint` 匹配重新计算的 fingerprint
   - `verificationContext.contractVersion` 是 "1.0"
-  - `verificationContext.gitHeadCommit` 匹配当前 HEAD（如果记录了）
   - `result` 是 `PASS` 或 `PASS_WITH_WARNINGS`
 - **AND** `tasksFileHash` 不参与 FRESH/STALE 判定
+- **AND** `gitHeadCommit` 不匹配时 SHALL 作为 warning 报告，不单独导致 STALE
 - **AND** `optimization` 字段存在与否不影响 FRESH/STALE 判定
 
 #### Scenario: Fresh 但 optimization 不可复用

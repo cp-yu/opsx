@@ -1,7 +1,9 @@
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { execFile } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
+import { promisify } from 'util';
 import {
   checkArchiveCompatibility,
   checkFreshness,
@@ -10,6 +12,8 @@ import {
   refreshVerifyEvidenceAfterSync,
 } from '../../../src/core/verify/freshness.js';
 import type { VerifyResult } from '../../../src/core/verify/types.js';
+
+const execFileAsync = promisify(execFile);
 
 describe('verify freshness engine', () => {
   let tempDir: string;
@@ -116,6 +120,42 @@ describe('verify freshness engine', () => {
     const stale = await checkFreshness(changeDir, changeDir);
     expect(stale.status).toBe('STALE');
     expect(stale.details.some((detail) => detail.startsWith('evidenceFingerprint mismatch'))).toBe(true);
+  });
+
+  it('keeps freshness fresh when only gitHeadCommit changes', async () => {
+    const changeDir = path.join(tempDir, 'openspec', 'changes', 'c1');
+    await fs.mkdir(path.join(changeDir, 'src'), { recursive: true });
+    const tasksPath = path.join(changeDir, 'tasks.md');
+    await fs.writeFile(tasksPath, '- [x] task\n', 'utf-8');
+    await fs.writeFile(path.join(changeDir, 'src', 'a.ts'), 'a', 'utf-8');
+    await execFileAsync('git', ['init'], { cwd: changeDir });
+    await execFileAsync('git', ['config', 'user.name', 'OpenSpec Test'], { cwd: changeDir });
+    await execFileAsync('git', ['config', 'user.email', 'test@example.com'], { cwd: changeDir });
+    await execFileAsync('git', ['add', '.'], { cwd: changeDir });
+    await execFileAsync('git', ['commit', '-m', 'init'], { cwd: changeDir });
+
+    const result: VerifyResult = {
+      timestamp: new Date().toISOString(),
+      result: 'PASS',
+      issues: [],
+      tasksFileHash: (await computeTasksFileHash(tasksPath))!,
+      verificationContext: {
+        contractVersion: '1.0',
+        evidenceFiles: ['src/a.ts'],
+        evidenceFingerprint: (await computeEvidenceFingerprint(['src/a.ts'], changeDir)).hash,
+        gitHeadCommit: 'recorded-head',
+      },
+      optimization: { status: 'NOT_NEEDED', attempts: [] },
+    };
+    await fs.writeFile(path.join(changeDir, '.verify-result.json'), JSON.stringify(result), 'utf-8');
+
+    const freshness = await checkFreshness(changeDir, changeDir);
+
+    expect(freshness.status).toBe('FRESH');
+    expect(freshness.checks.gitHeadCommit).toBe(false);
+    expect(freshness.details).toEqual([
+      expect.stringContaining('gitHeadCommit changed: recorded-head'),
+    ]);
   });
 
   it('refreshes matching evidence entries after sync and keeps freshness fresh', async () => {

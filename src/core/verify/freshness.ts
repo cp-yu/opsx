@@ -187,7 +187,12 @@ export async function checkFreshness(
     details.push('result must be PASS or PASS_WITH_WARNINGS');
   }
 
-  const fresh = Object.values(baseChecks).every(Boolean);
+  const fresh =
+    baseChecks.fileExists &&
+    baseChecks.tasksFileHash &&
+    baseChecks.evidenceFingerprint &&
+    baseChecks.contractVersion &&
+    baseChecks.resultAcceptable;
   return {
     status: fresh ? 'FRESH' : 'STALE',
     verifyResult: result,
