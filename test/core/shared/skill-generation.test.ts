@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { parse as parseYaml } from 'yaml';
 import {
   getSkillTemplates,
   getCommandTemplates,
@@ -232,14 +233,33 @@ describe('skill-generation', () => {
       const content = generateSkillContent(template, '0.23.0');
 
       expect(content).toMatch(/^---\n/);
-      expect(content).toContain('name: test-skill');
-      expect(content).toContain('description: Test description');
-      expect(content).toContain('license: MIT');
-      expect(content).toContain('compatibility: Test compatibility');
-      expect(content).toContain('author: test-author');
+      expect(content).toContain('name: "test-skill"');
+      expect(content).toContain('description: "Test description"');
+      expect(content).toContain('license: "MIT"');
+      expect(content).toContain('compatibility: "Test compatibility"');
+      expect(content).toContain('author: "test-author"');
       expect(content).toContain('version: "2.0"');
       expect(content).toContain('generatedBy: "0.23.0"');
       expect(content).toContain('Test instructions');
+    });
+
+    it('should escape YAML-sensitive frontmatter values', () => {
+      const template = {
+        name: 'test-skill',
+        description: 'Quick code-first sync: generate specs from "git diff"',
+        instructions: 'Test instructions',
+        compatibility: 'Line 1\nLine 2',
+      };
+
+      const content = generateSkillContent(template, '0.23.0');
+      const frontmatter = content.match(/^---\n([\s\S]*?)\n---\n/)?.[1];
+
+      expect(frontmatter).toBeDefined();
+      expect(parseYaml(frontmatter!)).toMatchObject({
+        name: 'test-skill',
+        description: 'Quick code-first sync: generate specs from "git diff"',
+        compatibility: 'Line 1\nLine 2',
+      });
     });
 
     it('should use default values for optional fields', () => {
@@ -251,9 +271,9 @@ describe('skill-generation', () => {
 
       const content = generateSkillContent(template, '0.24.0');
 
-      expect(content).toContain('license: MIT');
-      expect(content).toContain('compatibility: Requires openspec CLI.');
-      expect(content).toContain('author: openspec');
+      expect(content).toContain('license: "MIT"');
+      expect(content).toContain('compatibility: "Requires openspec CLI."');
+      expect(content).toContain('author: "openspec"');
       expect(content).toContain('version: "1.0"');
       expect(content).toContain('generatedBy: "0.24.0"');
     });

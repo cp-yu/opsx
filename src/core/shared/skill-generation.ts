@@ -180,6 +180,14 @@ export function getCommandContents(
   }));
 }
 
+function escapeYamlString(value: string): string {
+  return `"${value
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')}"`;
+}
+
 /**
  * Generates skill file content with YAML frontmatter.
  *
@@ -197,14 +205,14 @@ export function generateSkillContent(
     : template.instructions;
 
   return `---
-name: ${template.name}
-description: ${template.description}
-license: ${template.license || 'MIT'}
-compatibility: ${template.compatibility || 'Requires openspec CLI.'}
+name: ${escapeYamlString(template.name)}
+description: ${escapeYamlString(template.description)}
+license: ${escapeYamlString(template.license || 'MIT')}
+compatibility: ${escapeYamlString(template.compatibility || 'Requires openspec CLI.')}
 metadata:
-  author: ${template.metadata?.author || 'openspec'}
-  version: "${template.metadata?.version || '1.0'}"
-  generatedBy: "${generatedByVersion}"
+  author: ${escapeYamlString(template.metadata?.author || 'openspec')}
+  version: ${escapeYamlString(template.metadata?.version || '1.0')}
+  generatedBy: ${escapeYamlString(generatedByVersion)}
 ---
 
 ${instructions}

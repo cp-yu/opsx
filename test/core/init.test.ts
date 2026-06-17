@@ -440,7 +440,7 @@ context: |
 
       // Should have YAML frontmatter
       expect(content).toMatch(/^---\n/);
-      expect(content).toContain('name: openspec-explore');
+      expect(readSkillFrontmatter(content)).toMatchObject({ name: 'openspec-explore' });
       expect(content).toContain('description:');
       expect(content).toContain('license:');
       expect(content).toContain('compatibility:');
@@ -466,7 +466,7 @@ context: |
       const skillFile = path.join(testDir, '.claude', 'skills', 'openspec-propose', 'SKILL.md');
       const content = await fs.readFile(skillFile, 'utf-8');
 
-      expect(content).toContain('name: openspec-propose');
+      expect(readSkillFrontmatter(content)).toMatchObject({ name: 'openspec-propose' });
     });
 
     it('should include apply-change skill instructions', async () => {
@@ -476,7 +476,7 @@ context: |
       const skillFile = path.join(testDir, '.claude', 'skills', 'openspec-apply-change', 'SKILL.md');
       const content = await fs.readFile(skillFile, 'utf-8');
 
-      expect(content).toContain('name: openspec-apply-change');
+      expect(readSkillFrontmatter(content)).toMatchObject({ name: 'openspec-apply-change' });
       expect(content).toMatch(/preserve.*canonical|template.*heading/i);
     });
 
@@ -1090,4 +1090,9 @@ async function directoryExists(dirPath: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+function readSkillFrontmatter(skillContent: string): unknown {
+  const match = skillContent.match(/^---\n([\s\S]*?)\n---\n/);
+  return parseYaml(match?.[1] ?? '');
 }

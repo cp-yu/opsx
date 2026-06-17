@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
+import { parse as parseYaml } from 'yaml';
 
 import { InitCommand } from '../../src/core/init.js';
 import { UpdateCommand } from '../../src/core/update.js';
@@ -123,7 +124,7 @@ describe('snack workflow integration', () => {
 
     const refreshed = await fs.readFile(staleSkill, 'utf-8');
     expect(refreshed).not.toBe('STALE CONTENT');
-    expect(refreshed).toContain('name: openspec-snack');
+    expect(readSkillFrontmatter(refreshed)).toMatchObject({ name: 'openspec-snack' });
     expect(refreshed).toContain('git diff');
     expect(refreshed).toContain('openspec instructions proposal');
     expect(refreshed).toContain('openspec validate "<name>" --type change --json');
@@ -145,4 +146,9 @@ function instructionLineCount(skillContent: string): number {
   const match = skillContent.match(/^---\n[\s\S]*?\n---\n/);
   const body = match ? skillContent.slice(match[0].length) : skillContent;
   return body.split('\n').length;
+}
+
+function readSkillFrontmatter(skillContent: string): unknown {
+  const match = skillContent.match(/^---\n([\s\S]*?)\n---\n/);
+  return parseYaml(match?.[1] ?? '');
 }

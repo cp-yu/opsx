@@ -39,6 +39,11 @@ function resetMockConfig() {
   mockState.config = { featureFlags: {}, delivery: 'both' };
 }
 
+function readSkillFrontmatter(skillContent: string): unknown {
+  const match = skillContent.match(/^---\n([\s\S]*?)\n---\n/);
+  return parseYaml(match?.[1] ?? '');
+}
+
 describe('UpdateCommand', () => {
   let testDir: string;
   let updateCommand: UpdateCommand;
@@ -304,9 +309,11 @@ Old instructions content
         path.join(exploreSkillDir, 'SKILL.md'),
         'utf-8'
       );
-      expect(updatedSkill).toContain('name: openspec-explore');
+      expect(readSkillFrontmatter(updatedSkill)).toMatchObject({
+        name: 'openspec-explore',
+        license: 'MIT',
+      });
       expect(updatedSkill).not.toContain('Old instructions content');
-      expect(updatedSkill).toContain('license: MIT');
 
       // Check console output
       expect(consoleSpy).toHaveBeenCalledWith(
@@ -486,14 +493,14 @@ Old instructions content
         path.join(claudeSkillsDir, 'openspec-explore', 'SKILL.md'),
         'utf-8'
       );
-      expect(claudeSkill).toContain('name: openspec-explore');
+      expect(readSkillFrontmatter(claudeSkill)).toMatchObject({ name: 'openspec-explore' });
 
       // Verify Cursor skills updated
       const cursorSkill = await fs.readFile(
         path.join(cursorSkillsDir, 'openspec-explore', 'SKILL.md'),
         'utf-8'
       );
-      expect(cursorSkill).toContain('name: openspec-explore');
+      expect(readSkillFrontmatter(cursorSkill)).toMatchObject({ name: 'openspec-explore' });
 
       consoleSpy.mockRestore();
     });

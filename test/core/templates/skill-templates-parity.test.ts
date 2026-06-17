@@ -34,11 +34,11 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
 };
 
 const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
-  'openspec-explore': 'a5b73918e5c08b1b226bdf650a5590314272e3619662585cd38f2dc45566f99d',
-  'openspec-apply-change': '45b1e9afaf7d7afa7b609dd938bba48ee34d9c04ee92ef4e5406fba728eb9b02',
-  'openspec-archive-change': '1b54037bf392825b97164da31ebfcdc968d941044455cd18eb556b74032fdc02',
-  'openspec-propose': 'aaef35e945d218256c12037e37326b0a2d169a75394da663781c91893f35d8ad',
-  'openspec-impact-sweeper': 'c166f8b42feda796304938e089ffb7aed65658b99a61fee8ee7c9e9d84a09f3a',
+  'openspec-explore': '8085851698e8ef97d35e321537adbb1487c5d2d3af08cbfbb814a0f8adb31250',
+  'openspec-apply-change': '739edd115f3b95ad5110236bac5c3259582c41a6ad64fe4740890bc1f69d3fff',
+  'openspec-archive-change': '36c805d25a0823f2726f5fc0ea6bf84064837b53600a7d338b8faf71b1ebbdc3',
+  'openspec-propose': '1ef1e646393505241c43cb3b0fa470f2403350fd8c1738e455c92a0ad41bf2c1',
+  'openspec-impact-sweeper': '4a82789ac5265770bb0fabb93b5c677cb5f2654c6499b0922ffd05c63a5d5283',
 };
 
 function stableStringify(value: unknown): string {
