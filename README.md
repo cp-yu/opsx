@@ -105,6 +105,9 @@ For vague or multi-subsystem ideas, start with `/opsx:explore`. Explore now runs
 OpenSpec installs 5 workflows by default: `/opsx:propose`, `/opsx:explore`, `/opsx:apply`, `/opsx:archive`, and `/opsx:bootstrap-opsx`. `/opsx:archive` exposes only one user-facing command, but it runs the same full verify gate before archive and then performs spec + OPSX sync inline.
 
 > [!NOTE]
+> OpenSpec's managed workflow surface is **skills-only**. `openspec init` and `openspec update` install and refresh skill files under `.<tool>/skills/`. Slash command files may still exist from older installations; they remain on disk as legacy artifacts and OpenSpec no longer generates, refreshes, or removes them.
+
+> [!NOTE]
 > Not sure if your tool is supported? [View the full list](docs/supported-tools.md) – we support 20+ tools and growing.
 >
 > Also works with Nix. [See installation options](docs/installation.md).

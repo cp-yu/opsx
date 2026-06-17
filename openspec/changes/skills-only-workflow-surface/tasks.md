@@ -156,12 +156,12 @@
 
 #### Checks
 
-- [ ] C11 Verify change specs validate
+- [x] C11 Verify change specs validate
   - Verifies: `specs/profiles/spec.md` / REMOVED Requirement "Delivery is independent of profile"
   - Command: `openspec validate skills-only-workflow-surface --type change --json`
   - Expect: change-local specs、tasks 和 opsx-delta 结构有效
 
-- [ ] C12 Verify docs/spec 更新完成
+- [x] C12 Verify docs/spec 更新完成
   - Verifies: `specs/cli-init/spec.md` / Requirement "Success Output" / Scenario "显示成功摘要"
   - Evidence: 人工检查 active specs、docs 和 README 已描述 skills-only workflow surface，且未修改 archive specs
   - Expect: active prose 与设计一致，不新增 docs/spec grep 测试
