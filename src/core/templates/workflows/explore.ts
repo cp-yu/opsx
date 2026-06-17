@@ -11,7 +11,7 @@ const IMPACT_SWEEP_GUIDANCE = `### Impact Sweeps
 
 Invoke \`openspec-impact-sweeper\` when the user introduces a new module, workflow, command, configuration key, project concept, or unfamiliar domain term, or when preparing to say the discussion is ready for proposal/change artifacts.
 
-Use a subagent, not direct reading, for \`openspec-impact-sweeper\`. Do not read \`openspec-impact-sweeper/SKILL.md\` directly in the main agent. Ask the subagent to run the impact sweep with \`projectRoot\`, \`concept\`, optional \`optionalChangeName\`, optional \`knownUserTerms\`, and optional \`focus\`. Treat each new concept as an independent sweep, even if another concept was already swept earlier in the conversation. After the subagent returns the JSON report path, read that JSON report and interpret the findings in the explore conversation.
+Do not read \`openspec-impact-sweeper/SKILL.md\` in the main agent. \`openspec-impact-sweeper\` is a skill. Spawn a subagent and instruct it to read and execute the \`openspec-impact-sweeper\` skill, run the impact sweep with \`projectRoot\`, \`concept\`, optional \`optionalChangeName\`, optional \`knownUserTerms\`, and optional \`focus\`, and return only the JSON report path. Treat each new concept as an independent sweep, even if another concept was already swept earlier in the conversation. After the subagent returns the JSON report path, read that JSON report and interpret the findings in the explore conversation.
 
 If the report contains terminology observations, decide before impact questions:
 - If related specs use terms but none equals the user's term, ask: "你使用了'{userInput}'，相关 specs 中发现：\\n  - '{term1}'（{count1} 处，见 {specs1}）\\n是否指同一概念？"
@@ -66,7 +66,7 @@ When artifact generation is appropriate, instruct the user to call \`$openspec-p
 
 User selection of an option, confirmation of a design section, or statements such as "可以", "就这样", "选 2", or "拆成多个文件" confirm design direction only. They are not authorization to modify files.
 
-Only the \`openspec-impact-sweeper\` subagent may write its JSON report under \`openspec/sweeper/\`; the main explore agent may only read and interpret that report. The sweeper report write is an internal subagent exception and does not grant the main explore agent permission to create or modify project files or OpenSpec artifacts.`;
+Only the subagent running the \`openspec-impact-sweeper\` skill may write its JSON report under \`openspec/sweeper/\`; the main explore agent may only read and interpret that report. The sweeper report write is an internal subagent exception and does not grant the main explore agent permission to create or modify project files or OpenSpec artifacts.`;
 
 const ACTIVE_CHANGE_CAPTURE_GUIDANCE = `### Capture Boundary for Existing Changes
 
@@ -301,15 +301,15 @@ For detailed behavioral guidance including stance, action space, entry point han
 
 ## Skill Delegation Protocol
 
-**Internal Skills** — The following skills are subagent-only and MUST NOT be read directly by this agent:
-- \`openspec-impact-sweeper\` — Use a subagent, not direct reading
+**Internal Skills** — The following skill must NOT be invoked or read directly by this agent:
+- \`openspec-impact-sweeper\` — it is a skill; delegate it to a subagent (see Impact Sweeps)
 
 Do not read \`openspec-impact-sweeper/SKILL.md\` directly in the main agent.
 
 ## Hard Rules
 
 - Explore is read-only for the main agent. Do not create, edit, delete, format, regenerate, or patch any project file or OpenSpec artifact.
-- Only the \`openspec-impact-sweeper\` subagent may write its JSON report under \`openspec/sweeper/\`; the main explore agent may only read and interpret that report.
+- Only the subagent running the \`openspec-impact-sweeper\` skill may write its JSON report under \`openspec/sweeper/\`; the main explore agent may only read and interpret that report.
 - The sweeper report write is an internal subagent exception and does not grant the main explore agent permission to create or modify project files or OpenSpec artifacts.
 - User selection of an option, confirmation of a design section, or statements such as "可以", "就这样", "选 2", or "拆成多个文件" confirm design direction only. They are not authorization to modify files.
 - Ask one clarification question at a time; do not auto-capture decisions into artifacts.
@@ -337,7 +337,7 @@ ${OPSX_NAVIGATION_GUIDANCE}
 
 ## Impact Sweeps
 
-Invoke \`openspec-impact-sweeper\` when the user introduces a new module, workflow, command, configuration key, project concept, or unfamiliar domain term, or when preparing to say the discussion is ready for proposal/change artifacts. Use a subagent, not direct reading, for \`openspec-impact-sweeper\`. Do not read \`openspec-impact-sweeper/SKILL.md\` directly in the main agent. Ask the subagent to run the impact sweep with \`projectRoot\`, \`concept\`, optional \`optionalChangeName\`, optional \`knownUserTerms\`, and optional \`focus\`. Treat each new concept as an independent sweep, even if another concept was already swept earlier in the conversation. After the subagent returns the JSON report path, read that JSON report and interpret the findings in the explore conversation.
+Invoke \`openspec-impact-sweeper\` when the user introduces a new module, workflow, command, configuration key, project concept, or unfamiliar domain term, or when preparing to say the discussion is ready for proposal/change artifacts. Do not read \`openspec-impact-sweeper/SKILL.md\` in the main agent. \`openspec-impact-sweeper\` is a skill. Spawn a subagent and instruct it to read and execute the \`openspec-impact-sweeper\` skill, run the impact sweep with \`projectRoot\`, \`concept\`, optional \`optionalChangeName\`, optional \`knownUserTerms\`, and optional \`focus\`, and return only the JSON report path. Treat each new concept as an independent sweep, even if another concept was already swept earlier in the conversation. After the subagent returns the JSON report path, read that JSON report and interpret the findings in the explore conversation.
 
 If the report contains terminology observations, decide before impact questions. When the user confirms the terms mean the same concept, record that term group and continue the explore flow. When the user chooses a canonical term, record that canonical term. When the user says the terms are different concepts, record the rejected term group. For any recorded same-concept, canonical-term, or rejected term group, do not ask again for that same group. Do not claim proposal readiness until those scope-affecting questions are resolved or explicitly deferred by the user.
 
@@ -472,7 +472,7 @@ When things crystallize, you might offer a summary - but it's optional. Sometime
 ## Guardrails
 
 - **Don't write** - Never create or modify project files or OpenSpec artifacts in explore.
-- **Sweeper exception only** - Only \`openspec-impact-sweeper\` may write its JSON report under \`openspec/sweeper/\`; the main explore agent only reads and interprets it.
+- **Sweeper exception only** - Only the subagent running \`openspec-impact-sweeper\` may write its JSON report under \`openspec/sweeper/\`; the main explore agent only reads and interprets it.
 - **Don't fake understanding** - If something is unclear, dig deeper
 - **Don't rush** - Discovery is thinking time, not task time
 - **Do follow the brainstorming checklist** - Complete the six steps before proposal readiness

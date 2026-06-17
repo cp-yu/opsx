@@ -184,8 +184,9 @@ Explore main agent SHALL 保持只读。它 SHALL 检查文件、搜索代码、
 #### Scenario: Impact sweeper 是 explore 唯一写例外
 
 - **WHEN** explore 需要影响面发现
-- **THEN** main explore agent SHALL 以 subagent 方式调用 `openspec-impact-sweeper`
-- **AND** 只有该 subagent MAY 在 `openspec/sweeper/` 下写入 JSON report
+- **THEN** main explore agent SHALL spawn 一个子代理，并指示该子代理读取并执行 `openspec-impact-sweeper` skill
+- **AND** SHALL NOT 将 `openspec-impact-sweeper` 作为 `subagent_type` 传给 Agent 工具，因其是 skill 而非注册 agent type
+- **AND** 只有运行该 skill 的子代理 MAY 在 `openspec/sweeper/` 下写入 JSON report
 - **AND** main explore agent SHALL 只读取并解释该 report
 
 ### Requirement: 设计确认不是写入授权
