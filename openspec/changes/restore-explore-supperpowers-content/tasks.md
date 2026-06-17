@@ -14,12 +14,12 @@
 
 #### Checks
 
-- [ ] C1 验证常量定义且内容覆盖四个主题
+- [x] C1 验证常量定义且内容覆盖四个主题
   - Verifies: `specs/explore-brainstorming/spec.md` / Requirement "Explore 通过 referenceFiles 暴露 superpowers 行为引导" / Scenario "explore 声明 supperpowers-style reference"
   - Command: `node -e "const t=require('./dist/...'); const c=t.getExploreSkillTemplate(); const r=(c.referenceFiles||[]).find(f=>f.path.includes('explore-supperpowers-style')); console.log(['## The Stance','## What You Might Do','## Handling Different Entry Points','## What We Figured Out'].every(s=>r&&r.content.includes(s)))"`
   - Expect: 输出 `true`，四个主题标题均存在于 reference 内容中
 
-- [ ] C2 验证内容无只读边界冲突措辞
+- [x] C2 验证内容无只读边界冲突措辞
   - Verifies: `specs/explore-brainstorming/spec.md` / Requirement "Explore 通过 referenceFiles 暴示 superpowers 行为引导" / Scenario "reference 内容路由到 propose 而非直接写入"
   - Command: `pnpm test test/core/templates/explore-template.test.ts`
   - Expect: explore 模板测试通过；reference 内容不包含 `Want me to create a proposal`、`I can create a change proposal`、`Updated design.md`
