@@ -101,6 +101,12 @@ describe('snack workflow integration', () => {
     );
     expect(snackSkill).toContain('git diff');
     expect(snackSkill).toContain('code-map');
+    expect(snackSkill).toContain('openspec instructions proposal');
+    expect(snackSkill).toContain('openspec instructions specs');
+    expect(snackSkill).toContain('openspec instructions design');
+    expect(snackSkill).toContain('openspec validate "<name>" --type change --json');
+    expect(snackSkill).toContain('  • 继续开发: `openspec sync "<change-name>" --no-verify`');
+    expect(snackSkill).toContain('修正分支 1：审查 change → 手动编辑 specs → sync → archive');
     expect(snackSkill).toMatch(/不生成|Do NOT generate `tasks.md`/);
     // instructions portion (after YAML frontmatter) must stay <= 200 lines
     expect(instructionLineCount(snackSkill)).toBeLessThanOrEqual(200);
@@ -119,6 +125,8 @@ describe('snack workflow integration', () => {
     expect(refreshed).not.toBe('STALE CONTENT');
     expect(refreshed).toContain('name: openspec-snack');
     expect(refreshed).toContain('git diff');
+    expect(refreshed).toContain('openspec instructions proposal');
+    expect(refreshed).toContain('openspec validate "<name>" --type change --json');
     expect(instructionLineCount(refreshed)).toBeLessThanOrEqual(200);
   });
 });

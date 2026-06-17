@@ -1,0 +1,94 @@
+{
+  "timestamp": "2026-06-17T06:52:55.466Z",
+  "result": "PASS_WITH_WARNINGS",
+  "issues": [],
+  "tasksFileHash": "f271cea23429d065fe4d5ae3710cd98890aec58504f5c513d55c26ace27cabfe",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "reviewer-subagent",
+    "evidenceFiles": [
+      ".claude/skills/openspec-snack/SKILL.md",
+      "openspec/changes/fix-openspec-snack-template-compliance/specs/snack-skill/spec.md",
+      "openspec/changes/fix-openspec-snack-template-compliance/tasks.md",
+      "src/core/templates/workflows/snack.ts",
+      "test/integration/snack-workflow.test.ts"
+    ],
+    "evidenceFingerprint": "58250dc7b8b62dfef8f9d0baf87deb6660953f10faa38d4357a00f6b170883c8",
+    "evidenceFingerprintEntries": [
+      {
+        "path": ".claude/skills/openspec-snack/SKILL.md",
+        "hash": "c06dc6943f1e15248042fd9dd7c5ff08e8834492c04702a4d048a8f7b17c9d55"
+      },
+      {
+        "path": "openspec/changes/fix-openspec-snack-template-compliance/specs/snack-skill/spec.md",
+        "hash": "f38a3356b2df432a6b9041337073e0b63ae7fa849231febb227fb7a29495877f"
+      },
+      {
+        "path": "openspec/changes/fix-openspec-snack-template-compliance/tasks.md",
+        "hash": "f271cea23429d065fe4d5ae3710cd98890aec58504f5c513d55c26ace27cabfe"
+      },
+      {
+        "path": "src/core/templates/workflows/snack.ts",
+        "hash": "7bae3ffb98ad00b8cb276a89ca76a218c7c4fe302daadadcbac7a392d5d4c82f"
+      },
+      {
+        "path": "test/integration/snack-workflow.test.ts",
+        "hash": "21db59166fa74ed5dd2b3987b0d497eb845ab3426db24fa37f12e70196fe9bd4"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "a628a43656c8863476c15643e677fc1480fa0572"
+  },
+  "optimization": {
+    "status": "SKIPPED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-17T06:53:36.835Z",
+        "type": "optimization",
+        "status": "SKIPPED"
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-06-17T06:52:55.466Z",
+      "result": "PASS_WITH_WARNINGS",
+      "issues": [],
+      "tasksFileHash": "f271cea23429d065fe4d5ae3710cd98890aec58504f5c513d55c26ace27cabfe",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "reviewer-subagent",
+        "evidenceFiles": [
+          ".claude/skills/openspec-snack/SKILL.md",
+          "openspec/changes/fix-openspec-snack-template-compliance/specs/snack-skill/spec.md",
+          "openspec/changes/fix-openspec-snack-template-compliance/tasks.md",
+          "src/core/templates/workflows/snack.ts",
+          "test/integration/snack-workflow.test.ts"
+        ],
+        "evidenceFingerprint": "58250dc7b8b62dfef8f9d0baf87deb6660953f10faa38d4357a00f6b170883c8",
+        "evidenceFingerprintEntries": [
+          {
+            "path": ".claude/skills/openspec-snack/SKILL.md",
+            "hash": "c06dc6943f1e15248042fd9dd7c5ff08e8834492c04702a4d048a8f7b17c9d55"
+          },
+          {
+            "path": "openspec/changes/fix-openspec-snack-template-compliance/specs/snack-skill/spec.md",
+            "hash": "f38a3356b2df432a6b9041337073e0b63ae7fa849231febb227fb7a29495877f"
+          },
+          {
+            "path": "openspec/changes/fix-openspec-snack-template-compliance/tasks.md",
+            "hash": "f271cea23429d065fe4d5ae3710cd98890aec58504f5c513d55c26ace27cabfe"
+          },
+          {
+            "path": "src/core/templates/workflows/snack.ts",
+            "hash": "7bae3ffb98ad00b8cb276a89ca76a218c7c4fe302daadadcbac7a392d5d4c82f"
+          },
+          {
+            "path": "test/integration/snack-workflow.test.ts",
+            "hash": "21db59166fa74ed5dd2b3987b0d497eb845ab3426db24fa37f12e70196fe9bd4"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "a628a43656c8863476c15643e677fc1480fa0572"
+      }
+    }
+  }
+}
