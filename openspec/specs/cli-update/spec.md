@@ -57,9 +57,11 @@ The update command SHALL handle file updates in a predictable and safe manner.
 - **AND** if a root-level stub exists, update the managed block content so it keeps directing teammates to `@/openspec/AGENTS.md`
 
 ### Requirement: Tool-Agnostic Updates
+
 The update command SHALL refresh OpenSpec-managed skills in a predictable manner while respecting each team's chosen tooling.
 
 #### Scenario: Updating files
+
 - **WHEN** updating files
 - **THEN** completely replace `openspec/AGENTS.md` with the latest template
 - **AND** create or refresh the root-level `AGENTS.md` stub using the managed marker block, even if the file was previously absent
@@ -75,33 +77,29 @@ The update command SHALL always update the core OpenSpec files and display an AS
 - **THEN** replace `openspec/AGENTS.md` with the latest template
 - **AND** if a root-level stub exists, refresh it so it still directs contributors to `@/openspec/AGENTS.md`
 
-### Requirement: Slash Command Updates
-
-**Reason**: OpenSpec update no longer maintains slash command workflow artifacts.
-**Migration**: Use generated workflow skills. Existing command files may remain on disk and are outside update maintenance.
-
-### Requirement: Archive Command Argument Support
-
-**Reason**: Archive slash command templates are no longer generated or refreshed by OpenSpec.
-**Migration**: Invoke the archive workflow skill and provide the change ID through the tool's skill interaction model.
-
 ### Requirement: 工具感知的更新提示
+
 `openspec update` SHALL 使用已刷新 workflow skills 的调用语义来展示 onboarding 与 restart guidance。
 
 #### Scenario: 刷新 Codex skills 时显示精确的 skill 调用名
+
 - **WHEN** `openspec update` 刷新或新配置了受管的 Codex workflow skills
 - **THEN** 所有 getting-started 或 onboarding guidance SHALL 使用精确的受管 Codex skill 调用名，例如 `$openspec-propose`、`$openspec-new-change`、`$openspec-continue-change` 与 `$openspec-apply-change`
 - **AND** 显示给用户的 Codex 引用 SHALL 使用 workflow 的 `skillDirName`，而不是 command slug
 - **AND** SHALL NOT tell the user to run `/opsx:*`
 
 #### Scenario: skills-only 重启提示避免 slash-command 文案
-- **WHEN** `openspec update` 完成时仅刷新了 skills-only workflow surface
+
+- **WHEN** `openspec update` 完成时刷新了 workflow skills
 - **THEN** 所有 restart guidance SHALL 描述为刷新的 skills 或 workflow files 生效
 - **AND** SHALL NOT mention slash commands taking effect
 
-#### Scenario: command-backed onboarding 保持 command 语法
-- **WHEN** `openspec update` 为 command-backed workflow surface 输出 onboarding guidance
-- **THEN** 这些 guidance SHALL 对被引用的 workflow 入口继续使用该工具原本的 command 语法
+#### Scenario: 无精确 skill 调用语法时使用中性文案
+
+- **WHEN** `openspec update` 为没有精确 skill invocation metadata 的工具输出 onboarding guidance
+- **THEN** guidance SHALL 使用中性 skill invocation 文案
+- **AND** SHALL reference the explicit `skillDirName`
+- **AND** SHALL NOT fall back to command syntax
 
 ### Requirement: Update respects global profile config
 
@@ -143,11 +141,6 @@ The update command SHALL refresh the fixed workflow skill set and SHALL ignore r
 - **THEN** the system SHALL display a summary of added or updated skills
 - **AND** the system SHALL list affected tools
 - **AND** the summary SHALL NOT report command files as generated, refreshed, or removed
-
-### Requirement: Update respects delivery setting
-
-**Reason**: The `delivery` setting is removed.
-**Migration**: `openspec update` always refreshes skills and ignores stale `delivery` fields.
 
 ### Requirement: Update detects configured tools from skills or commands
 

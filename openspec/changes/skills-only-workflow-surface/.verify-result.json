@@ -30,15 +30,15 @@
       "src/core/workflow-installation.ts",
       "src/utils/command-references.ts"
     ],
-    "evidenceFingerprint": "7fbd163de25d95a1fca8d9b21c0667b7476375c257cc7a59a02736a9636d62d2",
+    "evidenceFingerprint": "b800207f62427e7176dd64fc1001f46c249171c6e7f68d23a7a22fbe1a441cf0",
     "evidenceFingerprintEntries": [
       {
         "path": "openspec/specs/cli-init/spec.md",
-        "hash": "b3698237a71a81052659bb20fcf2d679917266066a2dbe9a1bc41085be90c71e"
+        "hash": "8370669508d1e46d52671f8580c98cafa367b281048d808bf918e9604ed6c9a9"
       },
       {
         "path": "openspec/specs/cli-update/spec.md",
-        "hash": "b8c28692b7ab656acee1fd258e1ee7991699502b62a5965765f3a785312cb8f3"
+        "hash": "6d6c1d7f73845c2e0b42654f4b971e35f72177458fde2cb72a64b06876416250"
       },
       {
         "path": "openspec/specs/global-config/spec.md",
@@ -46,7 +46,7 @@
       },
       {
         "path": "openspec/specs/profiles/spec.md",
-        "hash": "73befdd6e408117ca1220b40899c5f6f8b54aafa2abba7e1ed02f06998da2a40"
+        "hash": "c332ef2455f960660372ae0d3e69a8e66777d3772294a0c017b424f7952132bb"
       },
       {
         "path": "src/commands/config.ts",
@@ -125,8 +125,15 @@
     "gitHeadCommit": "7d2ab936aa34deaed9eecf8773ebdea8b34f9aa2"
   },
   "optimization": {
-    "status": "PENDING_VERIFICATION",
-    "attempts": [],
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-17T13:59:21.225Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "Optimizer subagent found no behavior-preserving optimization opportunities within the change scope. Three Phase 1 WARNINGs (orphaned command-generation module, manifest commandSlug fields, tasks.md file references) are all intentionally out of scope per proposal Non-Goals. Other candidates (duplicated resolveEffectiveWorkflows, similar plan factories, schema-evolution reassignment, test-only supportsSkills) failed safety filters (cross-module circular import risk, behavior-affecting object identity change, public-export removal)."
+      }
+    ],
     "baseline": {
       "timestamp": "2026-06-17T13:43:32.962Z",
       "result": "PASS",
