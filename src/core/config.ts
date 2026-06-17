@@ -15,7 +15,6 @@ export interface AIToolOption {
   available: boolean;
   successLabel?: string;
   skillsDir?: string; // e.g., '.claude' - /skills suffix per Agent Skills spec
-  supportsCommandGeneration?: boolean;
   detectionPaths?: string[]; // Override skillsDir for auto-detection; any path existing triggers detection
 }
 
@@ -25,7 +24,7 @@ export const AI_TOOLS: AIToolOption[] = [
   { name: 'Auggie (Augment CLI)', value: 'auggie', available: true, successLabel: 'Auggie', skillsDir: '.augment' },
   { name: 'Claude Code', value: 'claude', available: true, successLabel: 'Claude Code', skillsDir: '.claude' },
   { name: 'Cline', value: 'cline', available: true, successLabel: 'Cline', skillsDir: '.cline' },
-  { name: 'Codex', value: 'codex', available: true, successLabel: 'Codex', skillsDir: '.codex', supportsCommandGeneration: false },
+  { name: 'Codex', value: 'codex', available: true, successLabel: 'Codex', skillsDir: '.codex' },
   { name: 'CodeBuddy Code (CLI)', value: 'codebuddy', available: true, successLabel: 'CodeBuddy Code', skillsDir: '.codebuddy' },
   { name: 'Continue', value: 'continue', available: true, successLabel: 'Continue (VS Code / JetBrains / Cli)', skillsDir: '.continue' },
   { name: 'CoStrict', value: 'costrict', available: true, successLabel: 'CoStrict', skillsDir: '.cospec' },
@@ -47,42 +46,6 @@ export const AI_TOOLS: AIToolOption[] = [
   { name: 'AGENTS.md (works with Amp, VS Code, …)', value: 'agents', available: false, successLabel: 'your AGENTS.md-compatible assistant' }
 ];
 
-export const COMMAND_BACKED_TOOL_IDS = new Set<string>([
-  'amazon-q',
-  'antigravity',
-  'auggie',
-  'claude',
-  'cline',
-  'codebuddy',
-  'continue',
-  'costrict',
-  'crush',
-  'cursor',
-  'factory',
-  'gemini',
-  'github-copilot',
-  'iflow',
-  'kilocode',
-  'kiro',
-  'opencode',
-  'pi',
-  'qoder',
-  'qwen',
-  'roocode',
-  'windsurf',
-]);
-
 export function getAITool(toolId: string): AIToolOption | undefined {
   return AI_TOOLS.find((tool) => tool.value === toolId);
-}
-
-export function toolSupportsCommandGeneration(toolOrId: string | AIToolOption): boolean {
-  const tool = typeof toolOrId === 'string' ? getAITool(toolOrId) : toolOrId;
-  if (!tool) {
-    return false;
-  }
-  if (tool.supportsCommandGeneration !== undefined) {
-    return tool.supportsCommandGeneration;
-  }
-  return COMMAND_BACKED_TOOL_IDS.has(tool.value);
 }

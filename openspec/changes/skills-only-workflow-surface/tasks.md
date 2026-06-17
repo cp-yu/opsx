@@ -88,17 +88,17 @@
 
 #### Checks
 
-- [ ] C6 Verify command-generation requirements removed
+- [x] C6 Verify command-generation requirements removed
   - Verifies: `specs/command-generation/spec.md` / REMOVED Requirement "Command generator function"
   - Command: `npm test -- test/core/shared/skill-generation.test.ts test/core/templates/skill-templates-parity.test.ts`
   - Expect: workflow projections 仍生成 skills，且 active command content generation 不再参与
 
-- [ ] C7 Verify command support metadata 不再驱动生成
+- [x] C7 Verify command support metadata 不再驱动生成
   - Verifies: `specs/ai-tool-paths/spec.md` / Requirement "显式的 command-generation 支持元数据" / Scenario "回退行为保持确定性"
   - Command: `npm test -- test/core/workflow-installation.test.ts`
   - Expect: 所有具备 `skillsDir` 的工具走 skills-only 行为，不执行 command support fallback
 
-- [ ] C8 Verify internal skills 保持内部
+- [x] C8 Verify internal skills 保持内部
   - Verifies: `specs/internal-skill-installation/spec.md` / Requirement "内部 skill 不产 slash command" / Scenario "列出 commands 不包含内部 skill"
   - Command: `npm test -- test/core/shared/skill-generation.test.ts`
   - Expect: reviewer/optimizer/impact-sweeper 仅作为 internal subagent skills 安装，不暴露为用户 workflow entries

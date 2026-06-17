@@ -19,9 +19,8 @@ import {
   LEGACY_CONFIG_FILES,
   LEGACY_SLASH_COMMAND_PATHS,
 } from '../../src/core/legacy-cleanup.js';
-import { OPENSPEC_MARKERS } from '../../src/core/config.js';
+import { OPENSPEC_MARKERS, AI_TOOLS } from '../../src/core/config.js';
 import { CommandAdapterRegistry } from '../../src/core/command-generation/registry.js';
-import { toolSupportsCommandGeneration } from '../../src/core/config.js';
 
 describe('legacy-cleanup', () => {
   let testDir: string;
@@ -932,11 +931,13 @@ ${OPENSPEC_MARKERS.end}`);
       });
     });
 
-    it('should only include tools that are still command-backed or require legacy codex cleanup', () => {
-      const registeredTools = new Set(CommandAdapterRegistry.getAll().map(adapter => adapter.toolId));
+    it('should only include tools with a legacy slash command path or legacy codex cleanup', () => {
+      // Skills-only surface: the legacy paths remain only for historical file cleanup.
+      // We just verify every entry corresponds to a known AI tool.
+      const knownToolIds = new Set(AI_TOOLS.map((t) => t.value));
 
       for (const tool of Object.keys(LEGACY_SLASH_COMMAND_PATHS)) {
-        expect(registeredTools.has(tool) || !toolSupportsCommandGeneration(tool)).toBe(true);
+        expect(knownToolIds.has(tool)).toBe(true);
       }
 
       // Pi was never a pre-1.0 legacy tool

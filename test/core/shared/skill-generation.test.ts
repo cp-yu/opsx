@@ -2,8 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 import {
   getSkillTemplates,
-  getCommandTemplates,
-  getCommandContents,
   generateSkillContent,
 } from '../../../src/core/shared/skill-generation.js';
 import { transformWorkflowReferences } from '../../../src/utils/command-references.js';
@@ -97,122 +95,11 @@ describe('skill-generation', () => {
     });
   });
 
-  describe('getCommandTemplates', () => {
-    it('should return all 5 command templates', () => {
-      const templates = getCommandTemplates();
-      expect(templates).toHaveLength(5);
-    });
-
-    it('should have unique IDs', () => {
-      const templates = getCommandTemplates();
-      const ids = templates.map(t => t.id);
-      const uniqueIds = new Set(ids);
-      expect(uniqueIds.size).toBe(templates.length);
-    });
-
-    it('should include all expected commands', () => {
-      const templates = getCommandTemplates();
-      const ids = templates.map(t => t.id);
-
-      expect(ids).toContain('explore');
-      expect(ids).toContain('apply');
-      expect(ids).toContain('archive');
-      expect(ids).toContain('propose');
-      expect(ids).toContain('bootstrap-opsx');
-    });
-
-    it('should preserve workflow id while exposing mapped bootstrap command slug', () => {
-      const bootstrap = getCommandTemplates().find(t => t.id === 'bootstrap-opsx');
-      expect(bootstrap).toBeDefined();
-      expect(bootstrap?.id).toBe('bootstrap-opsx');
-      expect(bootstrap?.commandSlug).toBe('bootstrap');
-    });
-
-    it('should filter by workflow IDs when provided', () => {
-      const filtered = getCommandTemplates(['propose', 'explore', 'apply', 'archive']);
-      expect(filtered).toHaveLength(4);
-      const ids = filtered.map(t => t.id);
-      expect(ids).toContain('propose');
-      expect(ids).toContain('explore');
-      expect(ids).toContain('apply');
-      expect(ids).toContain('archive');
-    });
-
-    it('should return all templates when filter is undefined', () => {
-      const all = getCommandTemplates();
-      const noFilter = getCommandTemplates(undefined);
-      expect(noFilter).toHaveLength(all.length);
-    });
-
-    it('should return empty array when filter matches nothing', () => {
-      const filtered = getCommandTemplates(['nonexistent']);
-      expect(filtered).toHaveLength(0);
-    });
-
-    it('should use tool-specific archive command templates when available', () => {
-      const defaultArchive = getCommandTemplates(['archive'])[0];
-      const claudeArchive = getCommandTemplates(['archive'], 'claude')[0];
-
-      expect(defaultArchive.template.content).toContain('current-agent-reread');
-      expect(claudeArchive.template.content).toContain('subagent-orchestrated');
-    });
-  });
-
-  describe('getCommandContents', () => {
-    it('should return all 5 command contents', () => {
-      const contents = getCommandContents();
-      expect(contents).toHaveLength(5);
-    });
-
-    it('should have valid content structure', () => {
-      const contents = getCommandContents();
-
-      for (const content of contents) {
-        expect(content.id).toBeTruthy();
-        expect(content.commandSlug).toBeTruthy();
-        expect(content.name).toBeTruthy();
-        expect(content.description).toBeTruthy();
-        expect(content.body).toBeTruthy();
-      }
-    });
-
-    it('should have matching IDs with command templates', () => {
-      const templates = getCommandTemplates();
-      const contents = getCommandContents();
-
-      const templateIds = templates.map(t => t.id).sort();
-      const contentIds = contents.map(c => c.id).sort();
-
-      expect(contentIds).toEqual(templateIds);
-    });
-
-    it('should map bootstrap workflow to bootstrap command slug', () => {
-      const bootstrap = getCommandContents().find(c => c.id === 'bootstrap-opsx');
-      expect(bootstrap).toBeDefined();
-      expect(bootstrap?.commandSlug).toBe('bootstrap');
-    });
-
-    it('should filter by workflow IDs when provided', () => {
-      const filtered = getCommandContents(['propose', 'explore']);
-      expect(filtered).toHaveLength(2);
-      const ids = filtered.map(c => c.id);
-      expect(ids).toContain('propose');
-      expect(ids).toContain('explore');
-      expect(ids).not.toContain('archive');
-    });
-
-    it('should return all contents when filter is undefined', () => {
-      const all = getCommandContents();
-      const noFilter = getCommandContents(undefined);
-      expect(noFilter).toHaveLength(all.length);
-    });
-
-    it('should produce tool-specific archive command content when requested', () => {
-      const defaultArchive = getCommandContents(['archive'])[0];
-      const claudeArchive = getCommandContents(['archive'], 'claude')[0];
-
-      expect(defaultArchive.body).toContain('current-agent-reread');
-      expect(claudeArchive.body).toContain('subagent-orchestrated');
+  describe('getSkillTemplates (skills-only surface)', () => {
+    it('should not expose command templates or contents as active surface', async () => {
+      const mod = await import('../../../src/core/shared/skill-generation.js');
+      expect((mod as Partial<typeof mod>).getCommandTemplates).toBeUndefined();
+      expect((mod as Partial<typeof mod>).getCommandContents).toBeUndefined();
     });
   });
 

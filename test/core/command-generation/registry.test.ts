@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { CommandAdapterRegistry } from '../../../src/core/command-generation/registry.js';
-import { AI_TOOLS, toolSupportsCommandGeneration } from '../../../src/core/config.js';
 
 describe('command-generation/registry', () => {
   describe('get', () => {
@@ -105,16 +104,12 @@ describe('command-generation/registry', () => {
       }
     });
 
-    it('should stay aligned with tool capability metadata', () => {
-      const expectedCommandTools = AI_TOOLS
-        .filter((tool) => toolSupportsCommandGeneration(tool))
-        .map((tool) => tool.value)
-        .sort();
-      const registeredTools = CommandAdapterRegistry.getAll()
-        .map((adapter) => adapter.toolId)
-        .sort();
-
-      expect(registeredTools).toEqual(expectedCommandTools);
+    it('legacy registry remains available for legacy cleanup but is not used by active workflow generation', () => {
+      // Active workflow surface is skills-only; CommandAdapterRegistry is preserved
+      // only for legacy file detection. toolSupportsCommandGeneration has been
+      // removed from the active config surface.
+      const adapters = CommandAdapterRegistry.getAll();
+      expect(adapters.length).toBeGreaterThan(0);
     });
   });
 });
