@@ -88,24 +88,16 @@ Example offers:
 - "This is observable behavior for \`specs/<capability>/spec.md\`; include it in the Design Summary, then call \`$openspec-propose <change-name>\` or the appropriate non-explore workflow."
 - "This changes scope for \`proposal.md\`; include it in the Design Summary, then call \`$openspec-propose <change-name>\` or the appropriate non-explore workflow."`;
 
-const EXPLORE_SUPPERPOWERS_STYLE_REFERENCE = `# Superpowers-Style Explore 行为引导
-
-这份文档展开 explore 主 instructions 的行为清单，提供具体姿态说明、动作空间、入口点处理示例和收束模板。
-
----
-
-## The Stance
+const EXPLORE_STANCE_SECTION = `## The Stance
 
 - **Curious, not prescriptive** - Ask questions that emerge naturally, don't follow a script
 - **Open threads, not interrogations** - Surface multiple interesting directions and let the user follow what resonates. Don't funnel them through a single path of questions.
 - **Visual** - Use ASCII diagrams liberally when they'd help clarify thinking
 - **Adaptive** - Follow interesting threads, pivot when new information emerges
 - **Patient** - Don't rush to conclusions, let the shape of the problem emerge
-- **Grounded** - Explore the actual codebase when relevant, don't just theorize
+- **Grounded** - Explore the actual codebase when relevant, don't just theorize`;
 
----
-
-## What You Might Do
+const EXPLORE_WHAT_YOU_MIGHT_DO_SECTION = `## What You Might Do
 
 Depending on what the user brings, you might:
 
@@ -148,7 +140,19 @@ Depending on what the user brings, you might:
 **Surface risks and unknowns**
 - Identify what could go wrong
 - Find gaps in understanding
-- Suggest spikes or investigations
+- Suggest spikes or investigations`;
+
+const EXPLORE_SUPPERPOWERS_STYLE_REFERENCE = `# Superpowers-Style Explore 行为引导
+
+这份文档展开 explore 主 instructions 的行为清单，提供具体姿态说明、动作空间、入口点处理示例和收束模板。
+
+---
+
+${EXPLORE_STANCE_SECTION}
+
+---
+
+${EXPLORE_WHAT_YOU_MIGHT_DO_SECTION}
 
 ---
 
@@ -379,61 +383,11 @@ ${EXPLORE_READ_ONLY_BOUNDARY}
 
 ---
 
-## The Stance
-
-- **Curious, not prescriptive** - Ask questions that emerge naturally, don't follow a script
-- **Open threads, not interrogations** - Surface multiple interesting directions and let the user follow what resonates. Don't funnel them through a single path of questions.
-- **Visual** - Use ASCII diagrams liberally when they'd help clarify thinking
-- **Adaptive** - Follow interesting threads, pivot when new information emerges
-- **Patient** - Don't rush to conclusions, let the shape of the problem emerge
-- **Grounded** - Explore the actual codebase when relevant, don't just theorize
+${EXPLORE_STANCE_SECTION}
 
 ---
 
-## What You Might Do
-
-Depending on what the user brings, you might:
-
-**Explore the problem space**
-- Ask clarifying questions that emerge from what they said
-- Challenge assumptions
-- Reframe the problem
-- Find analogies
-
-**Investigate the codebase**
-- Map existing architecture relevant to the discussion
-- Find integration points
-- Identify patterns already in use
-- Surface hidden complexity
-
-**Compare options**
-- Brainstorm multiple approaches
-- Build comparison tables
-- Sketch tradeoffs
-- Recommend a path (if asked)
-
-**Visualize**
-\`\`\`
-┌─────────────────────────────────────────┐
-│     Use ASCII diagrams liberally        │
-├─────────────────────────────────────────┤
-│                                         │
-│      ┌────────┐         ┌────────┐      │
-│      │ State  │────────▶│ State  │      │
-│      │   A    │         │   B    │      │
-│      └────────┘         └────────┘      │
-│                                         │
-│   System diagrams, state machines,      │
-│   data flows, architecture sketches,    │
-│   dependency graphs, comparison tables  │
-│                                         │
-└─────────────────────────────────────────┘
-\`\`\`
-
-**Surface risks and unknowns**
-- Identify what could go wrong
-- Find gaps in understanding
-- Suggest spikes or investigations
+${EXPLORE_WHAT_YOU_MIGHT_DO_SECTION}
 
 ---
 
