@@ -39,17 +39,17 @@
 
 #### Checks
 
-- [ ] C3 验证 referenceFiles 注册正确
+- [x] C3 验证 referenceFiles 注册正确
   - Verifies: `specs/explore-brainstorming/spec.md` / Requirement "Explore 通过 referenceFiles 暴示 superpowers 行为引导" / Scenario "explore 声明 supperpowers-style reference"
   - Command: `node -e "const {getExploreSkillTemplate}=require('./dist/core/templates/skill-templates.js'); const t=getExploreSkillTemplate(); const r=(t.referenceFiles||[]).find(f=>f.path==='references/explore-supperpowers-style.md'); console.log(!!r && r.path==='references/explore-supperpowers-style.md')"`
   - Expect: 输出 `true`
 
-- [ ] C4 验证主 instructions 保持精简且长度合规
+- [x] C4 验证主 instructions 保持精简且长度合规
   - Verifies: `specs/explore-brainstorming/spec.md` / Requirement "Explore 通过 referenceFiles 暴示 superpowers 行为引导" / Scenario "主 instructions 保持精简并指向 reference"
   - Command: `pnpm test test/skills/skill-template-length-validation.test.ts`
   - Expect: 长度校验通过，openspec-explore 主 SKILL.md ≤200 行、reference ≤500 行
 
-- [ ] C5 验证现有 explore 模板断言不破坏
+- [x] C5 验证现有 explore 模板断言不破坏
   - Preserves: `openspec/specs/explore-brainstorming/spec.md` / Requirement "Explore 主代理保持只读" / Scenario "Explore 不写入制品"
   - Command: `pnpm test test/core/templates/explore-template.test.ts`
   - Expect: 所有 explore-template 断言通过（sweeper 委托、brainstorming checklist、只读边界、Future Capture Target 路由等短语仍存在）
