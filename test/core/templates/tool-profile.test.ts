@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { ToolProfileRegistry } from '../../../src/core/templates/tool-profile/index.js';
-import { CommandAdapterRegistry } from '../../../src/core/command-generation/index.js';
 import { AI_TOOLS } from '../../../src/core/config.js';
 
 describe('Tool Profile Registry', () => {
@@ -28,26 +27,16 @@ describe('Tool Profile Registry', () => {
     });
   });
 
-  describe('consistency', () => {
-    it('should have command adapter ID match registered adapters', () => {
+  describe('consistency (skills-only)', () => {
+    it('should not track command adapter IDs', () => {
       for (const profile of ToolProfileRegistry.profiles) {
-        if (profile.commandAdapterId) {
-          expect(CommandAdapterRegistry.has(profile.commandAdapterId)).toBe(true);
-        }
+        expect((profile as Record<string, unknown>).commandAdapterId).toBeUndefined();
       }
     });
 
-    it('should ensure tools with commands have a registered adapter', () => {
-      const commandTools = ToolProfileRegistry.getToolsWithCommands();
-      for (const toolId of commandTools) {
-        expect(CommandAdapterRegistry.has(toolId)).toBe(true);
-      }
-    });
-
-    it('should ensure codex has no command adapter', () => {
-      const codex = ToolProfileRegistry.get('codex');
-      expect(codex).toBeDefined();
-      expect(codex!.commandAdapterId).toBeUndefined();
+    it('should not expose command capability helpers', () => {
+      expect((ToolProfileRegistry as Record<string, unknown>).supportsCommands).toBeUndefined();
+      expect((ToolProfileRegistry as Record<string, unknown>).getToolsWithCommands).toBeUndefined();
     });
 
     it('should ensure all tools with skillsDir have skills capability', () => {
@@ -57,17 +46,10 @@ describe('Tool Profile Registry', () => {
       }
     });
 
-    it('should expose correct capabilities for representative tools', () => {
+    it('should expose skills capability for representative tools', () => {
       expect(ToolProfileRegistry.supportsSkills('claude')).toBe(true);
-      expect(ToolProfileRegistry.supportsCommands('claude')).toBe(true);
       expect(ToolProfileRegistry.supportsSkills('cursor')).toBe(true);
-      expect(ToolProfileRegistry.supportsCommands('cursor')).toBe(true);
       expect(ToolProfileRegistry.supportsSkills('codex')).toBe(true);
-      expect(ToolProfileRegistry.supportsCommands('codex')).toBe(false);
-    });
-
-    it('should have at least 22 tools with command support', () => {
-      expect(ToolProfileRegistry.getToolsWithCommands().length).toBeGreaterThanOrEqual(22);
     });
 
     it('should have at least 24 tools with skills support', () => {

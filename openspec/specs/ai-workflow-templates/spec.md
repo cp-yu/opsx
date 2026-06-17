@@ -4,9 +4,10 @@
 此规约记录变更 add-subagent-skills 引入的行为，请在后续同步或归档前补全正式 Purpose。
 ## Requirements
 ### Requirement: 内部 subagent skill 引用替换内联 fragment
-verify/apply/archive 三个模板中 spawn reviewer subagent 的步骤 SHALL 从传递内联 fragment 文本改为 invoke 对应的 `openspec-reviewer` skill。Spawn optimizer subagent 的步骤 SHALL 从传递内联 fragment 文本改为 invoke 对应的 `openspec-optimizer` skill。
 
-模板中的 invoke 指令 SHALL 使用工具适配的 skill 名称引用（如 Claude Code 使用 `openspec-reviewer`，Codex 使用 `$openspec-reviewer`），利用 `cap.ai.tool-invocation-references` 的现有变换管线。
+verify/apply/archive 三个模板中 spawn reviewer subagent 的步骤 SHALL invoke 对应的 `openspec-reviewer` skill。Spawn optimizer subagent 的步骤 SHALL invoke 对应的 `openspec-optimizer` skill。
+
+模板中的 invoke 指令 SHALL 使用工具适配的 skill 名称引用，利用 `cap.ai.tool-invocation-references` 的现有变换管线。
 
 #### Scenario: Propose 模板包含 spec 发现指令
 
@@ -22,13 +23,14 @@ verify/apply/archive 三个模板中 spawn reviewer subagent 的步骤 SHALL 从
 - **AND** SHALL 指示 LLM 确认是否需要同步更新 delta spec
 
 #### Scenario: Verify 模板 spawn reviewer subagent
-- **WHEN** verify 模板在 subagent-orchestrated 模式下执行 Phase 1
-- **AND** 当前 AI 工具支持 subagent skill invoke
+
+- **WHEN** verify 模板执行 Phase 1
 - **THEN** 模板 SHALL 指示顶层 agent spawn clean-context subagent 并 invoke `openspec-reviewer` skill
 - **AND** SHALL 同时传递显式证据包作为 subagent 的输入上下文
 - **AND** SHALL NOT 内联输出验证协议、严重性阈值或证据标准的文本
 
 #### Scenario: Apply 模板 Phase 2 的 optimizer subagent
+
 - **WHEN** apply 模板执行 Phase 2 优化循环
 - **AND** 需要 spawn optimizer subagent
 - **THEN** 模板 SHALL 指示主 agent spawn subagent 并 invoke `openspec-optimizer` skill
@@ -44,34 +46,26 @@ verify/apply/archive 模板 SHALL NOT 在模板 body 中内联 reviewer 或 opti
 - **THEN** 改进后模板 SHALL NOT 包含 reviewer 的验证维度列表、severity 定义、或输出 JSON schema
 - **AND** 改进后模板 SHALL 保留 evidence 包组装和 subagent spawn 指令
 
-### Requirement: 向后兼容 reread 模式
-`current-agent-reread` 执行模式 SHALL 不受影响。不支持 subagent skill invoke 的工具 SHALL 继续使用 reread 骨架，无需加载内部 skill 文件。
-
-#### Scenario: Reread 模式不尝试 invoke 内部 skill
-- **WHEN** 当前工具不支持 clean-context subagent verify
-- **THEN** 系统 SHALL 使用 reread 骨架
-- **AND** SHALL NOT 尝试 invoke 不存在或不可用的 openspec-reviewer/optimizer skill
-
 ### Requirement: Verify template 包含 coordinator 角色和 mode label
 
 verify-change template（`buildVerifyIntro`）SHALL 在编号步骤开始前包含显式 coordinator role declaration 和 mode label reference table。
 
 role declaration SHALL 将 coordinator、reviewer subagent、optimizer subagent 和 CLI 定义为职责互不重叠的独立角色。
 
-mode label table SHALL 列出 `verify-prompt-orchestration` capability 中定义的全部 10 个 mode label 及其对应 phase 和 trigger。
+mode label table SHALL 列出 `verify-prompt-orchestration` capability 中定义的全部 mode label 及其对应 phase 和 trigger。
 
 #### Scenario: Verify prompt 组装时包含角色声明
 
-- **WHEN** 使用 `SUBAGENT_VERIFY_EXECUTION_MODEL` 调用 `createVerifyChangeSkillTemplateForExecutionModel`
+- **WHEN** verify prompt is assembled
 - **THEN** 生成的 skill instructions SHALL 以 coordinator role declaration 开头
 - **AND** SHALL 包含 mode label reference table
 - **AND** 现有 `"Verify that an implementation matches..."` 文本 SHALL 跟在这些新增内容之后
 
 #### Scenario: Reread mode 同样接收角色和 mode label
 
-- **WHEN** 使用 `REREAD_VERIFY_EXECUTION_MODEL` 调用 `createVerifyChangeSkillTemplateForExecutionModel`
-- **THEN** 生成的 skill instructions SHALL 同样包含 coordinator role 和 mode label table
-- **AND** reread-specific clean-context protocol SHALL 保持不变
+- **WHEN** verify prompt is assembled for any supported tool
+- **THEN** 生成的 skill instructions SHALL 包含 coordinator role 和 mode label table
+- **AND** SHALL use subagent orchestration instructions
 
 ### Requirement: Verify template 对 subagent 使用明确 delegation 指令
 

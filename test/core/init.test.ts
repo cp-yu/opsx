@@ -174,13 +174,13 @@ describe('InitCommand', () => {
       }
     });
 
-    it('should create 5 command templates for Claude Code (snack is skill-only)', async () => {
+    it('should NOT create slash command templates for Claude Code (skills-only)', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 
       await initCommand.execute(testDir);
 
-      // 5 command templates: propose, explore, apply, archive, bootstrap (snack is skill-only)
-      const expectedCommandNames = [
+      // Skills-only: no slash command files are generated
+      const slashCommandNames = [
         'opsx/propose.md',
         'opsx/explore.md',
         'opsx/apply.md',
@@ -188,22 +188,7 @@ describe('InitCommand', () => {
         'opsx/bootstrap.md',
       ];
 
-      for (const cmdName of expectedCommandNames) {
-        const cmdFile = path.join(testDir, '.claude', 'commands', cmdName);
-        expect(await fileExists(cmdFile)).toBe(true);
-      }
-
-      // Removed workflow commands should NOT be created
-      const removedCommandNames = [
-        'opsx/new.md',
-        'opsx/continue.md',
-        'opsx/ff.md',
-        'opsx/sync.md',
-        'opsx/bulk-archive.md',
-        'opsx/verify.md',
-      ];
-
-      for (const cmdName of removedCommandNames) {
+      for (const cmdName of slashCommandNames) {
         const cmdFile = path.join(testDir, '.claude', 'commands', cmdName);
         expect(await fileExists(cmdFile)).toBe(false);
       }
@@ -250,24 +235,24 @@ describe('InitCommand', () => {
       );
     });
 
-    it('should keep command-backed init guidance on slash commands', async () => {
+    it('should keep skills-only init guidance for Claude Code', async () => {
       const consoleSpy = vi.spyOn(console, 'log');
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 
       await initCommand.execute(testDir);
 
+      // Skills-only: guidance uses neutral skill invocation (no /opsx:*)
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('/opsx:propose "your idea"')
+        expect.stringContaining('refreshed skills to take effect')
       );
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(consoleSpy).not.toHaveBeenCalledWith(
         expect.stringContaining('slash commands to take effect')
       );
     });
 
-    it('should keep codex on skills and remove legacy command files in commands delivery', async () => {
+    it('should keep codex on skills and not remove legacy command files (skills-only surface)', async () => {
       saveGlobalConfig({
         featureFlags: {},
-        delivery: 'commands',
       });
       const legacyCommand = await writeLegacyCodexCommand('explore');
       const initCommand = new InitCommand({ tools: 'codex', force: true });
@@ -277,7 +262,8 @@ describe('InitCommand', () => {
       expect(await fileExists(
         path.join(testDir, '.codex', 'skills', 'openspec-explore', 'SKILL.md')
       )).toBe(true);
-      expect(await fileExists(legacyCommand)).toBe(false);
+      // Skills-only: legacy command files are not actively removed
+      expect(await fileExists(legacyCommand)).toBe(true);
     });
 
     it('should create skills for multiple tools at once', async () => {
@@ -492,43 +478,30 @@ context: |
     });
   });
 
-  describe('command generation', () => {
-    it('should generate Claude Code commands with correct format', async () => {
+  describe('command generation (skills-only)', () => {
+    it('should NOT generate Claude Code slash commands (skills-only)', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
       await initCommand.execute(testDir);
 
       const cmdFile = path.join(testDir, '.claude', 'commands', 'opsx', 'explore.md');
-      const content = await fs.readFile(cmdFile, 'utf-8');
-
-      // Claude commands use YAML frontmatter
-      expect(content).toMatch(/^---\n/);
-      expect(content).toContain('name:');
-      expect(content).toContain('description:');
+      expect(await fileExists(cmdFile)).toBe(false);
     });
 
-    it('should generate Cursor commands with correct format', async () => {
+    it('should NOT generate Cursor commands (skills-only)', async () => {
       const initCommand = new InitCommand({ tools: 'cursor', force: true });
       await initCommand.execute(testDir);
 
       const cmdFile = path.join(testDir, '.cursor', 'commands', 'opsx-explore.md');
-      expect(await fileExists(cmdFile)).toBe(true);
-
-      const content = await fs.readFile(cmdFile, 'utf-8');
-      expect(content).toMatch(/^---\n/);
+      expect(await fileExists(cmdFile)).toBe(false);
     });
 
-    it('should generate mapped bootstrap command path', async () => {
-      saveGlobalConfig({
-        featureFlags: {},
-        delivery: 'commands',
-      });
-
+    it('should NOT generate mapped bootstrap command path (skills-only)', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
       await initCommand.execute(testDir);
 
       const bootstrapCmd = path.join(testDir, '.claude', 'commands', 'opsx', getCommandSlug('bootstrap-opsx') + '.md');
       const legacyBootstrapCmd = path.join(testDir, '.claude', 'commands', 'opsx', 'bootstrap-opsx.md');
-      expect(await fileExists(bootstrapCmd)).toBe(true);
+      expect(await fileExists(bootstrapCmd)).toBe(false);
       expect(await fileExists(legacyBootstrapCmd)).toBe(false);
     });
   });
@@ -563,53 +536,49 @@ context: |
     });
   });
 
-  describe('tool-specific adapters', () => {
-    it('should generate Gemini CLI commands as TOML files', async () => {
+  describe('tool-specific skills (skills-only, no adapters)', () => {
+    it('should NOT generate Gemini CLI command TOML files', async () => {
       const initCommand = new InitCommand({ tools: 'gemini', force: true });
       await initCommand.execute(testDir);
 
       const cmdFile = path.join(testDir, '.gemini', 'commands', 'opsx', 'explore.toml');
-      expect(await fileExists(cmdFile)).toBe(true);
+      expect(await fileExists(cmdFile)).toBe(false);
 
-      const content = await fs.readFile(cmdFile, 'utf-8');
-      expect(content).toContain('description =');
-      expect(content).toContain('prompt =');
+      // Skills still generated
+      const skillFile = path.join(testDir, '.gemini', 'skills', 'openspec-explore', 'SKILL.md');
+      expect(await fileExists(skillFile)).toBe(true);
     });
 
-    it('should generate Windsurf commands', async () => {
+    it('should NOT generate Windsurf command workflows', async () => {
       const initCommand = new InitCommand({ tools: 'windsurf', force: true });
       await initCommand.execute(testDir);
 
       const cmdFile = path.join(testDir, '.windsurf', 'workflows', 'opsx-explore.md');
-      expect(await fileExists(cmdFile)).toBe(true);
+      expect(await fileExists(cmdFile)).toBe(false);
     });
 
-    it('should generate Continue prompt files', async () => {
+    it('should NOT generate Continue prompt files', async () => {
       const initCommand = new InitCommand({ tools: 'continue', force: true });
       await initCommand.execute(testDir);
 
       const cmdFile = path.join(testDir, '.continue', 'prompts', 'opsx-explore.prompt');
-      expect(await fileExists(cmdFile)).toBe(true);
-
-      const content = await fs.readFile(cmdFile, 'utf-8');
-      expect(content).toContain('name: opsx-explore');
-      expect(content).toContain('invokable: true');
+      expect(await fileExists(cmdFile)).toBe(false);
     });
 
-    it('should generate Cline workflow files', async () => {
+    it('should NOT generate Cline workflow files', async () => {
       const initCommand = new InitCommand({ tools: 'cline', force: true });
       await initCommand.execute(testDir);
 
       const cmdFile = path.join(testDir, '.clinerules', 'workflows', 'opsx-explore.md');
-      expect(await fileExists(cmdFile)).toBe(true);
+      expect(await fileExists(cmdFile)).toBe(false);
     });
 
-    it('should generate GitHub Copilot prompt files', async () => {
+    it('should NOT generate GitHub Copilot prompt files', async () => {
       const initCommand = new InitCommand({ tools: 'github-copilot', force: true });
       await initCommand.execute(testDir);
 
       const cmdFile = path.join(testDir, '.github', 'prompts', 'opsx-explore.prompt.md');
-      expect(await fileExists(cmdFile)).toBe(true);
+      expect(await fileExists(cmdFile)).toBe(false);
     });
   });
 });
@@ -731,7 +700,6 @@ capabilities: []
   it('should show bootstrap guidance when bootstrap-opsx is installed and non-extend mode', async () => {
     saveGlobalConfig({
       featureFlags: {},
-      delivery: 'both',
     });
 
     const consoleSpy = vi.spyOn(console, 'log');
@@ -743,14 +711,14 @@ capabilities: []
       line.includes('Next: run') && line.includes('bootstrap')
     );
     expect(bootstrapLine).toBeDefined();
-    expect(bootstrapLine).toContain('/opsx:bootstrap');
+    // Skills-only surface: claude uses neutral skill invocation guidance
+    expect(bootstrapLine).toContain('invoke the openspec-bootstrap-opsx skill');
     expect(bootstrapLine).toContain('map your architecture');
   });
 
   it('should show bootstrap guidance for all 5 workflows including bootstrap-opsx', async () => {
     saveGlobalConfig({
       featureFlags: {},
-      delivery: 'both',
     });
 
     const consoleSpy = vi.spyOn(console, 'log');
@@ -767,7 +735,6 @@ capabilities: []
   it('should not show bootstrap guidance in extend mode', async () => {
     saveGlobalConfig({
       featureFlags: {},
-      delivery: 'both',
     });
 
     // Pre-create openspec to make it extend mode
@@ -879,9 +846,13 @@ describe('InitCommand - profile and detection features', () => {
     // Legacy files should be cleaned up automatically
     expect(await fileExists(path.join(legacyDir, 'opsx-propose.md'))).toBe(false);
 
-    // New commands should be at the correct plural path
+    // Skills-only: no slash command directory is generated
     const newCommandsDir = path.join(testDir, '.opencode', 'commands');
-    expect(await directoryExists(newCommandsDir)).toBe(true);
+    expect(await directoryExists(newCommandsDir)).toBe(false);
+
+    // Skills should be generated instead
+    const skillFile = path.join(testDir, '.opencode', 'skills', 'openspec-explore', 'SKILL.md');
+    expect(await fileExists(skillFile)).toBe(true);
   });
 
   it('should preselect configured tools but not directory-detected tools in extend mode', async () => {
@@ -934,11 +905,15 @@ describe('InitCommand - profile and detection features', () => {
     expect(githubCopilot?.preSelected).toBe(true);
   });
 
-  it('should ignore obsolete profile/workflows fields and install all 6 workflows', async () => {
-    saveGlobalConfig({
+  it('should ignore obsolete profile/workflows/delivery fields and install all 6 workflows', async () => {
+    // Obsolete fields are stored as raw JSON; type cast bypasses the typed API for the test.
+    const obsoleteConfig = {
       featureFlags: {},
+      profile: 'core',
+      workflows: ['explore'],
       delivery: 'both',
-    } as any);
+    } as unknown as Parameters<typeof saveGlobalConfig>[0];
+    saveGlobalConfig(obsoleteConfig);
 
     const initCommand = new InitCommand({ tools: 'claude', force: true });
     await initCommand.execute(testDir);
@@ -959,19 +934,23 @@ describe('InitCommand - profile and detection features', () => {
     }
   });
 
-  it('should install all 6 workflows in extend mode regardless of prior config', async () => {
+  it('should install all 6 workflows in extend mode regardless of prior config (skills-only)', async () => {
     await fs.mkdir(path.join(testDir, 'openspec'), { recursive: true });
+    // Pre-existing legacy command file remains on disk under skills-only surface
     await fs.mkdir(path.join(testDir, '.claude', 'commands', 'opsx'), { recursive: true });
-    await fs.writeFile(path.join(testDir, '.claude', 'commands', 'opsx', 'explore.md'), '# explore\n');
+    const legacyExploreCmd = path.join(testDir, '.claude', 'commands', 'opsx', 'explore.md');
+    await fs.writeFile(legacyExploreCmd, '# explore\n');
 
     const initCommand = new InitCommand({ tools: 'claude', force: true });
     await initCommand.execute(testDir);
 
-    // snack is skill-only: 5 commands (propose, explore, apply, archive, bootstrap)
-    const expectedCommands = ['explore.md', 'propose.md', 'apply.md', 'archive.md', 'bootstrap.md'];
-    for (const cmd of expectedCommands) {
-      expect(await fileExists(path.join(testDir, '.claude', 'commands', 'opsx', cmd))).toBe(true);
+    // Skills-only: no new slash commands are generated (only explore.md was pre-existing)
+    const newCommands = ['propose.md', 'apply.md', 'archive.md', 'bootstrap.md'];
+    for (const cmd of newCommands) {
+      expect(await fileExists(path.join(testDir, '.claude', 'commands', 'opsx', cmd))).toBe(false);
     }
+    // Legacy explore.md remains (skills-only surface does not actively clean command files)
+    expect(await fileExists(legacyExploreCmd)).toBe(true);
 
     // All 6 skills should exist (includes skill-only snack)
     const expectedSkills = [
@@ -986,7 +965,6 @@ describe('InitCommand - profile and detection features', () => {
   it('should install all 6 workflows in interactive mode without profile prompts', async () => {
     saveGlobalConfig({
       featureFlags: {},
-      delivery: 'both',
     });
 
     const initCommand = new InitCommand({ force: true });
@@ -1011,11 +989,12 @@ describe('InitCommand - profile and detection features', () => {
     expect(logCalls.some((entry) => entry.includes('Applying custom profile'))).toBe(false);
   });
 
-  it('should respect delivery=skills setting (no commands)', async () => {
-    saveGlobalConfig({
+  it('should always generate skills only (no commands) regardless of stale delivery setting', async () => {
+    const obsoleteConfig = {
       featureFlags: {},
       delivery: 'skills',
-    });
+    } as unknown as Parameters<typeof saveGlobalConfig>[0];
+    saveGlobalConfig(obsoleteConfig);
 
     const initCommand = new InitCommand({ tools: 'claude', force: true });
     await initCommand.execute(testDir);
@@ -1024,50 +1003,44 @@ describe('InitCommand - profile and detection features', () => {
     const skillFile = path.join(testDir, '.claude', 'skills', 'openspec-explore', 'SKILL.md');
     expect(await fileExists(skillFile)).toBe(true);
 
+    // Commands should NOT exist (skills-only surface)
+    const cmdFile = path.join(testDir, '.claude', 'commands', 'opsx', 'explore.md');
+    expect(await fileExists(cmdFile)).toBe(false);
+  });
+
+  it('should always generate skills only even when stale delivery=commands is present', async () => {
+    const obsoleteConfig = {
+      featureFlags: {},
+      delivery: 'commands',
+    } as unknown as Parameters<typeof saveGlobalConfig>[0];
+    saveGlobalConfig(obsoleteConfig);
+
+    const initCommand = new InitCommand({ tools: 'claude', force: true });
+    await initCommand.execute(testDir);
+
+    // Skills should exist (skills-only ignores stale delivery=commands)
+    const skillFile = path.join(testDir, '.claude', 'skills', 'openspec-explore', 'SKILL.md');
+    expect(await fileExists(skillFile)).toBe(true);
+
     // Commands should NOT exist
     const cmdFile = path.join(testDir, '.claude', 'commands', 'opsx', 'explore.md');
     expect(await fileExists(cmdFile)).toBe(false);
   });
 
-  it('should respect delivery=commands setting (no skills)', async () => {
-    saveGlobalConfig({
-      featureFlags: {},
-      delivery: 'commands',
-    });
-
-    const initCommand = new InitCommand({ tools: 'claude', force: true });
-    await initCommand.execute(testDir);
-
-    // Skills should NOT exist
-    const skillFile = path.join(testDir, '.claude', 'skills', 'openspec-explore', 'SKILL.md');
-    expect(await fileExists(skillFile)).toBe(false);
-
-    // Commands should exist
-    const cmdFile = path.join(testDir, '.claude', 'commands', 'opsx', 'explore.md');
-    expect(await fileExists(cmdFile)).toBe(true);
-  });
-
-  it('should remove commands on re-init when delivery changes to skills', async () => {
-    saveGlobalConfig({
-      featureFlags: {},
-      delivery: 'both',
-    });
-
+  it('should NOT remove existing command files on re-init (skills-only, no cleanup)', async () => {
     const initCommand1 = new InitCommand({ tools: 'claude', force: true });
     await initCommand1.execute(testDir);
 
+    // Manually drop a stale command file (simulating legacy state)
     const cmdFile = path.join(testDir, '.claude', 'commands', 'opsx', 'explore.md');
-    expect(await fileExists(cmdFile)).toBe(true);
-
-    saveGlobalConfig({
-      featureFlags: {},
-      delivery: 'skills',
-    });
+    await fs.mkdir(path.dirname(cmdFile), { recursive: true });
+    await fs.writeFile(cmdFile, '# stale\n');
 
     const initCommand2 = new InitCommand({ tools: 'claude', force: true });
     await initCommand2.execute(testDir);
 
-    expect(await fileExists(cmdFile)).toBe(false);
+    // Skills-only: OpenSpec does not actively clean up legacy command files
+    expect(await fileExists(cmdFile)).toBe(true);
 
     const skillFile = path.join(testDir, '.claude', 'skills', 'openspec-explore', 'SKILL.md');
     expect(await fileExists(skillFile)).toBe(true);

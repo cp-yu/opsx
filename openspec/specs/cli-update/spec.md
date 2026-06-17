@@ -10,23 +10,24 @@ As a developer using OpenSpec, I want to update the OpenSpec instructions in my 
 ## Requirements
 ### Requirement: Update Behavior
 
-该命令 SHALL 根据全局配置刷新项目中的 OpenSpec 指令文件。
+该命令 SHALL 根据全局配置刷新项目中的 OpenSpec skills 指令文件。
 
 #### Scenario: 刷新现有工具制品
 
 - **WHEN** 项目中已配置 AI 工具
-- **THEN** 检测已安装的工具目录
-- **AND** 为检测到的每个工具重新生成固定的 5 个工作流制品
+- **THEN** 检测已安装的工具 skills 目录
+- **AND** 为检测到的每个工具重新生成固定 workflow skills
 - **AND** 使用相同的模板生成逻辑
 - **AND** 显示更新摘要，列出刷新的工具
+- **AND** SHALL NOT refresh slash command workflow artifacts
 
 #### Scenario: 清理过时配置字段
 
-- **WHEN** 全局配置包含 `profile` 或 `workflows` 字段
+- **WHEN** 全局配置包含 `profile`、`workflows` 或 `delivery` 字段
 - **THEN** 自动删除这些字段
 - **AND** 保存清理后的配置
-- **AND** 输出警告："已移除过时配置字段：profile, workflows"
-- **AND** 输出提示："现在固定安装 5 个核心工作流：propose, explore, apply, archive, bootstrap-opsx"
+- **AND** 输出警告："已移除过时配置字段：profile, workflows, delivery"
+- **AND** 输出提示："现在固定安装 workflow skills"
 
 #### Scenario: 项目配置默认值迁移
 
@@ -56,14 +57,17 @@ The update command SHALL handle file updates in a predictable and safe manner.
 - **AND** if a root-level stub exists, update the managed block content so it keeps directing teammates to `@/openspec/AGENTS.md`
 
 ### Requirement: Tool-Agnostic Updates
-The update command SHALL refresh OpenSpec-managed files in a predictable manner while respecting each team's chosen tooling.
+
+The update command SHALL refresh OpenSpec-managed skills in a predictable manner while respecting each team's chosen tooling.
 
 #### Scenario: Updating files
+
 - **WHEN** updating files
 - **THEN** completely replace `openspec/AGENTS.md` with the latest template
 - **AND** create or refresh the root-level `AGENTS.md` stub using the managed marker block, even if the file was previously absent
-- **AND** update only the OpenSpec-managed sections inside existing AI tool files, leaving user-authored content untouched
-- **AND** avoid creating new native-tool configuration files (slash commands, CLAUDE.md, etc.) unless they already exist
+- **AND** update OpenSpec-managed skill files for configured AI tools
+- **AND** avoid creating new native-tool configuration files such as slash commands or CLAUDE.md unless they are part of existing non-workflow OpenSpec behavior
+- **AND** SHALL NOT refresh existing slash command workflow files
 
 ### Requirement: Core Files Always Updated
 The update command SHALL always update the core OpenSpec files and display an ASCII-safe success message.
@@ -73,210 +77,82 @@ The update command SHALL always update the core OpenSpec files and display an AS
 - **THEN** replace `openspec/AGENTS.md` with the latest template
 - **AND** if a root-level stub exists, refresh it so it still directs contributors to `@/openspec/AGENTS.md`
 
-### Requirement: Slash Command Updates
-
-`update` 命令 SHALL 为已配置工具刷新现有的 slash command 文件而不创建新文件，同时排除受支持 OpenSpec 表面为 skills-only 的工具。
-
-#### Scenario: 更新 Antigravity 的斜杠命令
-- **WHEN** `.agent/workflows/` 中存在 `openspec-proposal.md`、`openspec-apply.md` 和 `openspec-archive.md`
-- **THEN** 刷新每个文件中由 OpenSpec 管理的部分，使 workflow 文案与其他工具保持一致，同时保留现有仅含 `description` 的 frontmatter
-- **AND** 在 update 期间跳过创建任何缺失的 workflow 文件，与 Windsurf 及其他 IDE 的行为保持一致
-
-#### Scenario: 更新 Claude Code 的斜杠命令
-- **WHEN** `.claude/commands/openspec/` 中存在 `proposal.md`、`apply.md` 和 `archive.md`
-- **THEN** 使用共享模板刷新每个文件
-- **AND** 确保模板包含对应 workflow 阶段的指令
-
-#### Scenario: 更新 CodeBuddy Code 的斜杠命令
-- **WHEN** `.codebuddy/commands/openspec/` 中存在 `proposal.md`、`apply.md` 和 `archive.md`
-- **THEN** 使用共享的 CodeBuddy 模板刷新每个文件，该模板包含 `description` 与 `argument-hint` 字段的 YAML frontmatter
-- **AND** 对 `argument-hint` 参数使用方括号格式，例如 `[change-id]`
-- **AND** 保留 OpenSpec managed markers 之外的所有用户自定义内容
-
-#### Scenario: 更新 Cline 的斜杠命令
-- **WHEN** `.clinerules/workflows/` 中存在 `openspec-proposal.md`、`openspec-apply.md` 和 `openspec-archive.md`
-- **THEN** 使用共享模板刷新每个文件
-- **AND** 包含 Cline 特有的 Markdown heading frontmatter
-- **AND** 确保模板包含对应 workflow 阶段的指令
-
-#### Scenario: 更新 Continue 的斜杠命令
-- **WHEN** `.continue/prompts/` 中存在 `openspec-proposal.prompt`、`openspec-apply.prompt` 和 `openspec-archive.prompt`
-- **THEN** 使用共享模板刷新每个文件
-- **AND** 确保模板包含对应 workflow 阶段的指令
-
-#### Scenario: 更新 Crush 的斜杠命令
-- **WHEN** `.crush/commands/` 中存在 `openspec/proposal.md`、`openspec/apply.md` 和 `openspec/archive.md`
-- **THEN** 使用共享模板刷新每个文件
-- **AND** 包含带 OpenSpec category 和 tags 的 Crush 专用 frontmatter
-- **AND** 确保模板包含对应 workflow 阶段的指令
-
-#### Scenario: 更新 Cursor 的斜杠命令
-- **WHEN** `.cursor/commands/` 中存在 `openspec-proposal.md`、`openspec-apply.md` 和 `openspec-archive.md`
-- **THEN** 使用共享模板刷新每个文件
-- **AND** 确保模板包含对应 workflow 阶段的指令
-
-#### Scenario: 更新 Factory Droid 的斜杠命令
-- **WHEN** `.factory/commands/` 中存在 `openspec-proposal.md`、`openspec-apply.md` 和 `openspec-archive.md`
-- **THEN** 使用共享的 Factory 模板刷新每个文件，该模板包含 `description` 与 `argument-hint` 字段的 YAML frontmatter
-- **AND** 确保模板正文保留 `$ARGUMENTS` 占位符，使用户输入继续传递给 droid
-- **AND** 仅更新 OpenSpec managed markers 内的内容，不触碰未受管备注
-- **AND** 在 update 期间跳过创建缺失文件
-
-#### Scenario: 更新 OpenCode 的斜杠命令
-- **WHEN** `.opencode/command/` 中存在 `openspec-proposal.md`、`openspec-apply.md` 和 `openspec-archive.md`
-- **THEN** 使用共享模板刷新每个文件
-- **AND** 确保模板包含对应 workflow 阶段的指令
-- **AND** 确保 archive command 在 frontmatter 中包含 `$ARGUMENTS` 占位符，以接收 change ID 参数
-
-#### Scenario: 更新 Windsurf 的斜杠命令
-- **WHEN** `.windsurf/workflows/` 中存在 `openspec-proposal.md`、`openspec-apply.md` 和 `openspec-archive.md`
-- **THEN** 使用包裹在 OpenSpec markers 中的共享模板刷新每个文件
-- **AND** 确保模板包含对应 workflow 阶段的指令
-- **AND** 跳过创建缺失文件，因为 update 命令只刷新已经存在的文件
-
-#### Scenario: 更新 Kilo Code 的斜杠命令
-- **WHEN** `.kilocode/workflows/` 中存在 `openspec-proposal.md`、`openspec-apply.md` 和 `openspec-archive.md`
-- **THEN** 使用包裹在 OpenSpec markers 中的共享模板刷新每个文件
-- **AND** 确保模板包含对应 workflow 阶段的指令
-- **AND** 跳过创建缺失文件，因为 update 命令只刷新已经存在的文件
-
-#### Scenario: 更新 Codex 时保持仅使用 skills
-- **WHEN** 用户在配置为使用 Codex 的项目中运行 `openspec update`
-- **THEN** 在 `.codex/skills/` 下存在受管 skills 时刷新它们
-- **AND** SHALL NOT 刷新、创建或要求任何 Codex command 或 prompt 文件
-- **AND** SHALL 将缺失的 Codex command 文件视为预期行为，而不是“跳过刷新”的条件
-
-#### Scenario: 更新 GitHub Copilot 的斜杠命令
-- **WHEN** `.github/prompts/` 中存在 `openspec-proposal.prompt.md`、`openspec-apply.prompt.md` 和 `openspec-archive.prompt.md`
-- **THEN** 在保留 YAML frontmatter 的同时使用共享模板刷新每个文件
-- **AND** 仅更新 markers 之间由 OpenSpec 管理的代码块
-- **AND** 确保模板包含对应 workflow 阶段的指令
-
-#### Scenario: 更新 Gemini CLI 的斜杠命令
-- **WHEN** `.gemini/commands/openspec/` 中存在 `proposal.toml`、`apply.toml` 和 `archive.toml`
-- **THEN** 使用共享的 proposal/apply/archive 模板刷新每个文件的正文
-- **AND** 仅替换 `prompt = """` 代码块内 `<!-- OPENSPEC:START -->` 与 `<!-- OPENSPEC:END -->` markers 之间的内容，以保持 TOML 外层结构如 `description`、`prompt` 不变
-- **AND** 在 update 期间跳过创建缺失的 `.toml` 文件，只刷新原本就存在的 Gemini commands
-
-#### Scenario: 更新 iFlow CLI 的斜杠命令
-- **WHEN** `.iflow/commands/` 中存在 `openspec-proposal.md`、`openspec-apply.md` 和 `openspec-archive.md`
-- **THEN** 使用共享模板刷新每个文件
-- **AND** 保留包含 `name`、`id`、`category`、`description` 字段的 YAML frontmatter
-- **AND** 仅更新 markers 之间由 OpenSpec 管理的代码块
-- **AND** 确保模板包含对应 workflow 阶段的指令
-
-#### Scenario: 缺失斜杠命令文件
-- **WHEN** 某个工具缺少 slash command 文件
-- **THEN** 在 update 期间不创建新文件
-
-### Requirement: Archive Command Argument Support
-The archive slash command template SHALL support optional change ID arguments for tools that support `$ARGUMENTS` placeholder.
-
-#### Scenario: Archive command with change ID argument
-- **WHEN** a user invokes `/openspec:archive <change-id>` with a change ID
-- **THEN** the template SHALL instruct the AI to validate the provided change ID against `openspec list`
-- **AND** use the provided change ID for archiving if valid
-- **AND** fail fast if the provided change ID doesn't match an archivable change
-
-#### Scenario: Archive command without argument (backward compatibility)
-- **WHEN** a user invokes `/openspec:archive` without providing a change ID
-- **THEN** the template SHALL instruct the AI to identify the change ID from context or by running `openspec list`
-- **AND** proceed with the existing behavior (maintaining backward compatibility)
-
-#### Scenario: OpenCode archive template generation
-- **WHEN** generating the OpenCode archive slash command file
-- **THEN** include the `$ARGUMENTS` placeholder in the frontmatter
-- **AND** wrap it in a clear structure like `<ChangeId>\n  $ARGUMENTS\n</ChangeId>` to indicate the expected argument
-- **AND** include validation steps in the template body to check if the change ID is valid
-
 ### Requirement: 工具感知的更新提示
-`openspec update` SHALL 使用已刷新 workflow surface 的实际调用语法来展示 onboarding 与 restart guidance。
+
+`openspec update` SHALL 使用已刷新 workflow skills 的调用语义来展示 onboarding 与 restart guidance。
 
 #### Scenario: 刷新 Codex skills 时显示精确的 skill 调用名
+
 - **WHEN** `openspec update` 刷新或新配置了受管的 Codex workflow skills
 - **THEN** 所有 getting-started 或 onboarding guidance SHALL 使用精确的受管 Codex skill 调用名，例如 `$openspec-propose`、`$openspec-new-change`、`$openspec-continue-change` 与 `$openspec-apply-change`
 - **AND** 显示给用户的 Codex 引用 SHALL 使用 workflow 的 `skillDirName`，而不是 command slug
 - **AND** SHALL NOT tell the user to run `/opsx:*`
 
 #### Scenario: skills-only 重启提示避免 slash-command 文案
-- **WHEN** `openspec update` 完成时仅刷新了 skills-only workflow surface
+
+- **WHEN** `openspec update` 完成时刷新了 workflow skills
 - **THEN** 所有 restart guidance SHALL 描述为刷新的 skills 或 workflow files 生效
 - **AND** SHALL NOT mention slash commands taking effect
 
-#### Scenario: command-backed onboarding 保持 command 语法
-- **WHEN** `openspec update` 为 command-backed workflow surface 输出 onboarding guidance
-- **THEN** 这些 guidance SHALL 对被引用的 workflow 入口继续使用该工具原本的 command 语法
+#### Scenario: 无精确 skill 调用语法时使用中性文案
+
+- **WHEN** `openspec update` 为没有精确 skill invocation metadata 的工具输出 onboarding guidance
+- **THEN** guidance SHALL 使用中性 skill invocation 文案
+- **AND** SHALL reference the explicit `skillDirName`
+- **AND** SHALL NOT fall back to command syntax
 
 ### Requirement: Update respects global profile config
-The update command SHALL read global config and apply profile settings to the project.
+
+The update command SHALL refresh the fixed workflow skill set and SHALL ignore removed global profile, workflow, and delivery settings.
 
 #### Scenario: Update adds missing workflows from config
+
 - **WHEN** user runs `openspec update`
 - **AND** global config specifies workflows not currently installed in the project
-- **THEN** the system SHALL generate skill/command files for missing workflows
-- **THEN** the system SHALL display: "Added: <workflow-names>"
+- **THEN** the system SHALL ignore the removed workflows setting
+- **AND** generate missing fixed workflow skill files
+- **AND** display added skill workflows when applicable
 
 #### Scenario: Update refreshes existing workflows
+
 - **WHEN** user runs `openspec update`
 - **AND** workflows are already installed in the project
-- **THEN** the system SHALL refresh those workflow files with latest templates
-- **THEN** the system SHALL display: "Updated: <workflow-names>"
+- **THEN** the system SHALL refresh those workflow skill files with latest templates
+- **AND** display refreshed workflow names when applicable
 
 #### Scenario: Update with no changes needed
+
 - **WHEN** user runs `openspec update`
-- **AND** installed workflows match global config
+- **AND** installed skills match the fixed workflow set
 - **AND** all templates are current
-- **AND** delivery setting matches installed files
 - **THEN** the system SHALL display: "Already up to date."
 
 #### Scenario: Profile or delivery drift with current templates
+
 - **WHEN** user runs `openspec update`
 - **AND** workflow templates are current for the installed skills
-- **AND** project files do not match current profile and/or delivery config
-- **THEN** the system SHALL treat this as an update-required state (not "Already up to date.")
-- **THEN** the system SHALL add/remove files to match current profile and delivery settings
+- **AND** global config contains removed profile, workflows, or delivery fields
+- **THEN** the system SHALL treat stale config cleanup as an update-required state
+- **AND** SHALL NOT add or remove command files
 
 #### Scenario: Update summary output
+
 - **WHEN** update completes with changes
-- **THEN** the system SHALL display a summary:
-  - "Added: propose, explore" (new workflows installed)
-  - "Updated: apply, archive" (existing workflows refreshed)
-  - "Removed: 4 command files" (if delivery changed)
-- **THEN** the system SHALL list affected tools: "Tools: Claude Code, Cursor"
-
-### Requirement: Update respects delivery setting
-The update command SHALL add or remove files based on the delivery setting.
-
-#### Scenario: Delivery changed to skills-only
-- **WHEN** user runs `openspec update`
-- **AND** global config specifies `delivery: skills`
-- **AND** project has command files installed
-- **THEN** the system SHALL delete command files for workflows in the profile
-- **THEN** the system SHALL generate/update skill files only
-- **THEN** the system SHALL display: "Removed: <count> command files (delivery: skills)"
-
-#### Scenario: Delivery changed to commands-only
-- **WHEN** user runs `openspec update`
-- **AND** global config specifies `delivery: commands`
-- **AND** project has skill files installed
-- **THEN** the system SHALL delete skill directories for workflows in the profile
-- **THEN** the system SHALL generate/update command files only
-- **THEN** the system SHALL display: "Removed: <count> skill directories (delivery: commands)"
-
-#### Scenario: Delivery is both
-- **WHEN** user runs `openspec update`
-- **AND** global config specifies `delivery: both`
-- **THEN** the system SHALL generate/update both skill and command files
+- **THEN** the system SHALL display a summary of added or updated skills
+- **AND** the system SHALL list affected tools
+- **AND** the summary SHALL NOT report command files as generated, refreshed, or removed
 
 ### Requirement: Update detects configured tools from skills or commands
-The update command SHALL treat a tool as configured if it has either generated skill files or generated command files.
+
+The update command SHALL treat a tool as configured only when it has generated OpenSpec skill files.
 
 #### Scenario: Commands-only installation
+
 - **WHEN** user runs `openspec update`
 - **AND** a tool has generated OpenSpec command files
-- **AND** that tool has no OpenSpec skill files (commands-only delivery)
-- **THEN** the tool SHALL still be treated as configured
-- **THEN** the system SHALL apply profile and delivery sync for that tool
+- **AND** that tool has no OpenSpec skill files
+- **THEN** the tool SHALL NOT be treated as configured from command files alone
+- **AND** the system SHALL NOT refresh or remove those command files
 
 ### Requirement: Update detects new tool directories
 The update command SHALL notify the user if new AI tool directories are detected that aren't currently configured.
@@ -310,20 +186,24 @@ The update command SHALL only run inside an initialized OpenSpec project.
 - **THEN** the system SHALL exit with code 1
 
 ### Requirement: Extra workflows synchronized to active profile
-The update command SHALL remove workflow files that are no longer selected in the current profile.
+
+The update command SHALL remove managed skill workflow files that are no longer part of the fixed workflow set.
 
 #### Scenario: Deselected workflows from previous profile
+
 - **WHEN** user runs `openspec update`
-- **AND** project has workflows not in current profile (e.g., user switched from custom to core or deselected workflows via `openspec config profile`)
-- **THEN** the system SHALL delete skill and command workflow files for deselected workflows (respecting active delivery mode)
-- **THEN** the system SHALL keep only workflows currently selected in profile
+- **AND** project has managed skill workflows not in the fixed workflow set
+- **THEN** the system SHALL delete those managed skill workflow files
+- **AND** the system SHALL keep only workflows currently selected by the fixed manifest
+- **AND** SHALL NOT delete command workflow files
 
 #### Scenario: Delivery change with extra workflows
+
 - **WHEN** user runs `openspec update`
-- **AND** delivery changed (e.g., `both` → `skills`)
-- **AND** project has extra workflows not in current profile
-- **THEN** the system SHALL delete files for extra workflows that match the removed delivery type
-- **THEN** for example: if switching to `skills`, all command files are deleted (including for extra workflows)
+- **AND** global config contains a removed `delivery` field
+- **AND** project has extra managed skill workflows not in the fixed workflow set
+- **THEN** the system SHALL delete only managed skill files for extra workflows
+- **AND** SHALL NOT delete command files because delivery cleanup is not supported
 
 ### Requirement: Migrate project config defaults
 

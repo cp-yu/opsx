@@ -59,19 +59,19 @@ The system SHALL handle paths correctly across operating systems.
 
 ### Requirement: 显式的 command-generation 支持元数据
 
-`AIToolOption` 接口 SHALL 允许工具元数据声明是否支持 adapter-backed command generation。
+`AIToolOption` SHALL NOT expose adapter-backed command generation support as an active workflow delivery capability.
 
 #### Scenario: Codex 声明不支持 adapter-backed commands
 
 - **WHEN** 在 `AI_TOOLS` 中查找 `codex` 工具
-- **THEN** 元数据 SHALL 显式表明 Codex 不支持 adapter-backed command generation
-- **AND** 调用方 SHALL 使用该元数据，而不是从历史行为中推断 Codex 的 command 支持能力
+- **THEN** Codex SHALL be treated the same as other tools for skills-only workflow generation
+- **AND** 调用方 SHALL NOT branch on Codex command support capability
 
 #### Scenario: 回退行为保持确定性
 
-- **WHEN** 某个工具未声明显式的 command-generation 支持元数据
-- **THEN** 系统 SHALL 通过一个确定性的共享 helper 解析 command generation 行为
-- **AND** 该 helper SHALL 继续使用显式列表或 registry 查找，而不是模式匹配
+- **WHEN** 某个工具未声明 command-generation 支持元数据
+- **THEN** 系统 SHALL use skills-only generation behavior
+- **AND** SHALL NOT resolve command generation behavior through helper fallback, registry lookup, pattern matching, or historical inference
 
 ### Requirement: Codex skill 路径保持项目本地化
 

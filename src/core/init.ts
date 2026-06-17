@@ -18,15 +18,11 @@ import {
   AI_TOOLS,
   OPENSPEC_DIR_NAME,
   AIToolOption,
-  toolSupportsCommandGeneration,
 } from './config.js';
 import { PALETTE } from './styles/palette.js';
 import { isInteractive } from '../utils/interactive.js';
 import { serializeConfig } from './config-prompts.js';
 import { readProjectConfig } from './project-config.js';
-import {
-  CommandAdapterRegistry,
-} from './command-generation/index.js';
 import {
   detectLegacyArtifacts,
   cleanupLegacyArtifacts,
@@ -39,13 +35,11 @@ import {
   getToolStates,
   type ToolSkillStatus,
 } from './shared/index.js';
-import { getGlobalConfig, type Delivery } from './global-config.js';
 import { type WorkflowId } from './workflow-surface.js';
 import { WorkflowManifestRegistry } from './templates/manifest/index.js';
 import { getAvailableTools } from './available-tools.js';
 import { migrateIfNeeded } from './migration.js';
 import {
-  createToolWorkflowArtifactPlan,
   createWorkflowArtifactPlan,
 } from './workflow-installation.js';
 import { isMap, parseDocument } from 'yaml';
@@ -552,13 +546,10 @@ nodes: []
     const failedTools: Array<{ name: string; error: Error }> = [];
     const commandsSkipped: string[] = [];
 
-    // Read global config for delivery settings; workflows are fixed from registry.
-    const globalConfig = getGlobalConfig();
-    const delivery: Delivery = globalConfig.delivery ?? 'both';
+    // Workflows are fixed from registry; skills-only surface.
     const allWorkflowIds = WorkflowManifestRegistry.getAllWorkflowIds() as unknown as readonly WorkflowId[];
     const workflows = createWorkflowArtifactPlan(
       allWorkflowIds,
-      delivery,
       projectPath
     ).workflows;
 
@@ -567,7 +558,6 @@ nodes: []
       toolId: tool.value,
       projectPath,
       workflows,
-      delivery,
       version: OPENSPEC_VERSION,
     }));
 
@@ -589,23 +579,11 @@ nodes: []
       }
     }
 
-    // Detect tools with no adapter (commands skipped)
-    const commandsSkippedSet = new Set<string>();
-    for (const tool of tools) {
-      const result = summary.results.find((r) => r.toolId === tool.value);
-      if (result && !result.error && !CommandAdapterRegistry.get(tool.value)) {
-        const plan = createToolWorkflowArtifactPlan(tool.value, workflows, delivery, projectPath);
-        if (plan.shouldGenerateCommands) {
-          commandsSkippedSet.add(tool.value);
-        }
-      }
-    }
-
     return {
       createdTools,
       refreshedTools,
       failedTools,
-      commandsSkipped: [...commandsSkippedSet],
+      commandsSkipped,
       generatedSkillCount: summary.totalSkillsWritten,
       generatedCommandCount: summary.totalCommandsWritten,
       removedCommandCount: summary.totalCommandsRemoved,
@@ -723,18 +701,13 @@ nodes: []
       console.log(`Refreshed: ${results.refreshedTools.map((t) => t.name).join(', ')}`);
     }
 
-    // Show counts (respecting profile filter)
+    // Show counts (skills-only)
     const successfulTools = [...results.createdTools, ...results.refreshedTools];
     if (successfulTools.length > 0) {
       const toolDirs = [...new Set(successfulTools.map((t) => t.skillsDir))].join(', ');
       const skillCount = results.generatedSkillCount;
-      const commandCount = results.generatedCommandCount;
-      if (skillCount > 0 && commandCount > 0) {
-        console.log(`${skillCount} skills and ${commandCount} commands in ${toolDirs}/`);
-      } else if (skillCount > 0) {
+      if (skillCount > 0) {
         console.log(`${skillCount} skills in ${toolDirs}/`);
-      } else if (commandCount > 0) {
-        console.log(`${commandCount} commands in ${toolDirs}/`);
       }
     }
 
@@ -743,15 +716,9 @@ nodes: []
       console.log(chalk.red(`Failed: ${results.failedTools.map((f) => `${f.name} (${f.error.message})`).join(', ')}`));
     }
 
-    // Show skipped commands
-    if (results.commandsSkipped.length > 0) {
-      console.log(chalk.dim(`Commands skipped for: ${results.commandsSkipped.join(', ')} (no adapter)`));
-    }
-    if (results.removedCommandCount > 0) {
-      console.log(chalk.dim(`Removed: ${results.removedCommandCount} command files (delivery: skills)`));
-    }
+    // Show removed skills (from deselected workflows)
     if (results.removedSkillCount > 0) {
-      console.log(chalk.dim(`Removed: ${results.removedSkillCount} skill directories (delivery: commands)`));
+      console.log(chalk.dim(`Removed: ${results.removedSkillCount} skill directories (no longer in workflow manifest)`));
     }
 
     // Config status
@@ -797,18 +764,14 @@ nodes: []
     // Restart instruction if any tools were configured
     if (results.createdTools.length > 0 || results.refreshedTools.length > 0) {
       console.log();
-      if (guidanceToolId && toolSupportsCommandGeneration(guidanceToolId)) {
-        console.log(chalk.white('Restart your IDE for slash commands to take effect.'));
-      } else {
-        console.log(chalk.white('Restart your IDE or current session for refreshed skills to take effect.'));
-      }
+      console.log(chalk.white('Restart your IDE or current session for refreshed skills to take effect.'));
     }
 
     console.log();
   }
 
   private getGuidanceToolId(toolIds: readonly string[]): string | undefined {
-    return toolIds.find((toolId) => toolSupportsCommandGeneration(toolId)) ?? toolIds[0];
+    return toolIds[0];
   }
 
   private startSpinner(text: string) {

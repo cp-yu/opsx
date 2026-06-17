@@ -8,9 +8,9 @@ project:
     - path: .
 domains:
   - id: dom.ai-integration
-    intent: 多工具 AI 支持 — 为 25+ AI 工具生成特定工具的技能文件、斜杠命令和面向 Agent 的工作流
+    intent: 多工具 AI 支持 — 为 25+ AI 工具生成特定工具的技能文件和面向 Agent 的 workflow skills
     type: domain
-    boundary: 拥有工具适配器注册表和技能定义。不拥有核心规约/变更逻辑。
+    boundary: 拥有工具元数据、技能定义和 skills-only workflow surface。不拥有核心规约/变更逻辑。
   - id: dom.apply
     intent: apply 命令作为编译步骤，集成实现、验证、优化的完整生命周期。确保 apply 输出即验证过的制品
     type: domain
@@ -55,11 +55,11 @@ capabilities:
     intent: 面向 Agent 的 verify gate 提示词指引系统。VERIFY_SIMPLE_CHANGE_FAST_PATH 从"允许 master agent 自主跳过"改为"强制委托 optimizer subagent"语义。共享片段（状态机流程图、JSON schema 速查表、CLI 错误恢复决策树）中 OPTIMIZATION_PROPOSED 行补全 --files 参数，错误恢复增加 FILES_REQUIRED 条目。apply-change 模板 Phase 2 命令模板同步补全 --files
     type: capability
   - id: cap.ai.command-generation
-    intent: WorkflowManifestEntry.getCommandTemplate 改为 optional，命令生成管线跳过 skill-only 条目；内部 skill 不暴露为可用命令或出现在补全列表中
+    intent: 历史 command generation 不再作为 active workflow delivery surface；workflow 制品由 skills-only 管线生成，内部 skill 不暴露为用户可调用 workflow。
     status: active
     type: capability
   - id: cap.ai.command-slugs
-    intent: 建立内部 workflow ID 到外部用户命令 slug 的映射，使生成、检测、迁移和清理命令制品时都遵循同一套命名契约
+    intent: 历史 command slug 不再驱动 active workflow artifact 生成、检测或清理；用户可调用 workflow 引用通过 skill surface 元数据渲染。
     type: capability
   - id: cap.ai.explore-brainstorming
     intent: Explore 阶段的 brainstorming 流程，包含 6 步 checklist、一次一问纪律、2-3 方案对比、Design Summary 生成；main explore agent 严格 read-only，用户设计确认不构成文件写入授权；已有 change 的 insight 仅分类为 future capture target，不在 explore 中更新 artifacts；superpowers 风格行为引导（对话姿态、动作空间、入口点示例、收束模板）通过 referenceFiles 暴露为展开版手册，与只读边界与 propose 路由保持一致
@@ -84,21 +84,21 @@ capabilities:
     intent: Phase 1 验证审查 subagent skill。元规则从"不确定时降级"反转为"不确定时升级"，Correctness/Coherence trigger 强化（spec 偏离和设计违背升为 CRITICAL），新增 Cleanliness 维度检测，summary schema 扩展包含 cleanliness 指标。判定模式按 Check 锚点类型分派：Verifies 普通 requirement 执行存在性判定，REMOVED 锚点执行缺失性判定（残留即 CRITICAL），Preserves 锚点执行双支等价性判定（行为不变 ∧ 旧形态消失）；Completeness 对 Files Delete 声明与 git diff 逐项核对
     type: capability
   - id: cap.ai.skill-generation
-    intent: AI 技能文件生成，包含 reviewer、optimizer、impact-sweeper 等仍被 workflow 引用的内部 skill；不生成 openspec-implementer，并通过显式 managed stale skill name 清理旧生成残留。
+    intent: AI 技能文件生成是唯一受管 workflow surface，包含 workflow skills 与 reviewer、optimizer、impact-sweeper 等内部 subagent skills；不生成 openspec-implementer。
     status: active
     type: capability
   - id: cap.ai.subagent-self-read
     intent: Reviewer/Optimizer subagent 自主文件读取与测试执行能力定义，包括 Read+Bash 工具权限、安全约束和 L1 测试策略
     type: capability
   - id: cap.ai.template-artifact-pipeline
-    intent: 统一的 artifact 生成管线，基于固定的 6 个工作流 manifest entries 生成制品，modeMembership 作为标签系统而非 profile 过滤条件
+    intent: 统一的 skills-only artifact 生成管线，基于固定 workflow manifest entries 生成 skill 制品，modeMembership 作为标签系统而非 profile 过滤条件。
     type: capability
   - id: cap.ai.tool-adapters
-    intent: 为支持的 AI 工具提供工具元数据与适配器注册；其中 Codex 通过显式工具元数据声明为 skills-only，不再注册 command adapter
+    intent: 为支持的 AI 工具提供 skills 路径、transform 与 invocation guidance 元数据；不再维护 adapter-backed command generation 能力。
     status: active
     type: capability
   - id: cap.ai.tool-invocation-references
-    intent: 基于共享 workflow surface 元数据渲染不同 AI 工具的用户可调用 workflow 引用，其中 Codex 使用精确的 `$openspec-*` skill 名称
+    intent: 基于共享 workflow surface 元数据渲染不同 AI 工具的用户可调用 skill 引用；没有精确工具语法时使用中性 skill invocation 文案。
     type: capability
   - id: cap.ai.verify-writeback
     intent: 验证结果回写 tasks.md（unmark 未真正完成的任务）并生成分类 remediation 清单（code_fix / artifact_fix），同时让 write-back prose 遵守统一 runtime projection
@@ -182,11 +182,11 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.init
-    intent: 在项目中初始化 OpenSpec，固定安装 5 个核心工作流（propose, explore, apply, archive, bootstrap-opsx），无需 profile 配置
+    intent: 在项目中初始化 OpenSpec，固定安装 workflow skills，无需 profile 或 delivery 配置，且不生成 slash command workflow artifacts。
     status: active
     type: capability
   - id: cap.cli.init-opsx-skeleton
-    intent: init 命令首次运行时自动生成三个最小化 OPSX 骨架文件（project.opsx.yaml、project.opsx.relations.yaml、project.opsx.code-map.yaml），并在成功提示中显式引导用户运行 /opsx:bootstrap 完成架构映射
+    intent: init 命令首次运行时自动生成三个最小化 OPSX 骨架文件（project.opsx.yaml、project.opsx.relations.yaml、project.opsx.code-map.yaml），并在成功提示中显式引导用户运行 bootstrap-opsx skill 完成架构映射
     status: active
     type: capability
   - id: cap.cli.instructions
@@ -233,7 +233,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.cli.update
-    intent: 刷新 OpenSpec 指令文件，固定更新 5 个核心工作流，自动清理过时的 profile/workflows 配置字段和废弃工作流残留
+    intent: 刷新 OpenSpec skills，固定更新 workflow skills，自动清理过时的 profile/workflows/delivery 配置字段，不生成、刷新或清理旧 command workflow artifacts。
     status: active
     type: capability
   - id: cap.cli.validate
@@ -252,7 +252,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.config.global
-    intent: 加载和验证用户全局配置，配置结构不再包含 profile 和 workflows 字段
+    intent: 加载和验证用户全局配置，配置结构不再包含 profile、workflows 或 delivery 字段。
     status: active
     type: capability
   - id: cap.config.migration
@@ -264,7 +264,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.config.schema-validation
-    intent: 使用 Zod Schema 验证配置结构
+    intent: 使用 Zod Schema 验证配置结构，并拒绝 active delivery 配置语义。
     status: active
     type: capability
   - id: cap.opsx.atomic-write
@@ -359,7 +359,7 @@ capabilities:
     intent: 强制 optimizer subagent 调用约束——CLI 层 runtime enforcement（summary 非空校验）+ prompt 层协议约束（VERIFY_SIMPLE_CHANGE_FAST_PATH 重写为强制委托语义），确保 Phase 2 判断权始终归属 optimizer subagent
     type: capability
   - id: cap.verify.execution-model-selection
-    intent: 为 verify / archive full verify 按 execution model 选择模板骨架；支持 clean-context subagent 的工具使用 orchestration-only verify skeleton，不支持的工具继续使用 current-agent-reread skeleton
+    intent: verify / archive full verify 固定使用 subagent-orchestrated skeleton，不再按工具选择 current-agent-reread fallback。
     status: active
     type: capability
   - id: cap.verify.freshness-engine

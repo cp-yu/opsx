@@ -4,9 +4,10 @@
 此规约记录变更 add-subagent-skills 引入的行为，请在后续同步或归档前补全正式 Purpose。
 ## Requirements
 ### Requirement: 内部 skill 模板注册
+
 系统 SHALL 在 `src/core/shared/skill-generation.ts` 中提供 `INTERNAL_SKILL_TEMPLATES` 常量数组，包含仍被 workflow 引用的内部 skill 模板函数引用。该数组 SHALL include `openspec-reviewer` and `openspec-optimizer`, MAY include other active non-coding internal skills such as `openspec-impact-sweeper`, and SHALL NOT include `openspec-implementer`.
 
-`getSkillTemplates()` SHALL 合并 workflow surface 技能和内部技能两个来源。`getCommandTemplates()` SHALL 仅使用 workflow surface，MUST NOT 包含内部技能。
+`getSkillTemplates()` SHALL 合并 workflow surface 技能和内部技能两个来源。内部 skill SHALL NOT be exposed as user-facing workflow entries.
 
 内部 skill 模板的 `SkillTemplate.metadata` SHALL 包含 `type: 'subagent'` 标记 when the skill is used as a subagent.
 
@@ -18,19 +19,22 @@
 - **AND** SHALL 指示将受影响 cap 的关联 specs 写入报告的 `mustCheck` 字段
 
 #### Scenario: Init 时安装 core preset 包含内部 skill
-- **WHEN** 用户执行 `openspec init` 选择 core preset
+
+- **WHEN** 用户执行 `openspec init`
 - **AND** 目标 AI 工具具有 skillsDir（如 Claude Code、Codex、Pi）
-- **THEN** 系统 SHALL 安装所有 core workflow skills + active internal skills
+- **THEN** 系统 SHALL 安装所有 workflow skills + active internal skills
 - **AND** 每个内部 skill SHALL 写入到 `path.join(projectPath, tool.skillsDir, 'skills', skillDirName, 'SKILL.md')`
 - **AND** installed internal skill directory names SHALL NOT include `openspec-implementer`
 
 #### Scenario: Update 时刷新内部 skill
+
 - **WHEN** 用户执行 `openspec update`
 - **THEN** 系统 SHALL 重新生成并写入 active internal skill files
 - **AND** SHALL 覆盖已有 managed files
 - **AND** SHALL NOT regenerate `openspec-implementer`
 
 #### Scenario: 内部 skill 列表显式排除 implementer
+
 - **WHEN** `getSkillTemplates()` builds the internal skill set
 - **THEN** the explicit internal skill list SHALL NOT contain `openspec-implementer`
 - **AND** the implementation SHALL NOT remove it through directory scanning, glob filtering, or regex matching
@@ -55,18 +59,19 @@
 - **AND** installed internal skill directory names SHALL NOT include `openspec-implementer`
 
 ### Requirement: 内部 skill 不产 slash command
-内部 skill 条目 SHALL NOT 注册到 `WorkflowManifestRegistry`。命令生成管线（`getCommandTemplates()` 和 `getCommandContents()`）SHALL 跳过内部 skill 条目。
 
-`WorkflowManifestEntry` 的 `getCommandTemplate` 字段 SHALL 改为 optional（`getCommandTemplate?: () => CommandTemplate`），以支持将来的 skill-only workflow 条目。
+内部 skill 条目 SHALL NOT 注册到 `WorkflowManifestRegistry`，也 SHALL NOT produce user-facing workflow skills.
 
 #### Scenario: 列出 commands 不包含内部 skill
-- **WHEN** 系统生成全部可用 command 列表
+
+- **WHEN** 系统生成全部用户可调用 workflow surface 列表
 - **THEN** 列表 SHALL NOT 包含 `openspec-reviewer` 或 `openspec-optimizer`
-- **AND** 这些 skill 不存在对应的斜杠命令
+- **AND** 这些 skill SHALL remain internal subagent skills only
 
 #### Scenario: Skill-only workflow entry 不阻断 command 生成
-- **WHEN** manifest 中存在 `getCommandTemplate` 为 undefined 的 entry
-- **THEN** command 生成管线 SHALL 跳过该 entry
+
+- **WHEN** manifest contains workflow entries without command template metadata
+- **THEN** skill generation SHALL continue
 - **AND** SHALL NOT 抛出异常
 
 ### Requirement: 安装路径使用 path.join() 构建

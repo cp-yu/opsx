@@ -14,7 +14,7 @@ import { FileSystemUtils } from '../utils/file-system.js';
 import {
   renderWorkflowInvocation,
 } from '../utils/command-references.js';
-import { AI_TOOLS, OPENSPEC_DIR_NAME, toolSupportsCommandGeneration } from './config.js';
+import { AI_TOOLS, OPENSPEC_DIR_NAME } from './config.js';
 import {
   getToolVersionStatus,
   getToolsWithSkillsDir,
@@ -29,10 +29,9 @@ import {
   type LegacyDetectionResult,
 } from './legacy-cleanup.js';
 import { isInteractive } from '../utils/interactive.js';
-import { getGlobalConfig, getGlobalConfigPath, saveGlobalConfig, type Delivery } from './global-config.js';
+import { getGlobalConfig, getGlobalConfigPath, saveGlobalConfig } from './global-config.js';
 import { getAvailableTools } from './available-tools.js';
 import {
-  getCommandConfiguredTools,
   getConfiguredToolsForProfileSync,
   getToolsNeedingProfileSync,
 } from './profile-sync-drift.js';
@@ -101,27 +100,24 @@ export class UpdateCommand {
     const detectedTools = getAvailableTools(resolvedProjectPath);
     migrateIfNeededShared(resolvedProjectPath, detectedTools);
 
-    // 3. Read global config; workflows are fixed from registry.
-    const globalConfig = getGlobalConfig();
-    const delivery: Delivery = globalConfig.delivery ?? 'both';
+    // 3. Workflows are fixed from registry; skills-only surface.
     const allWorkflowIds = WorkflowManifestRegistry.getAllWorkflowIds();
-    const plan = createWorkflowArtifactPlan(allWorkflowIds, delivery, resolvedProjectPath);
+    const plan = createWorkflowArtifactPlan(allWorkflowIds, resolvedProjectPath);
     const desiredWorkflows = [...plan.workflows];
 
-    // 3b. Clean up obsolete profile/workflows fields from global config
+    // 3b. Clean up obsolete profile/workflows/delivery fields from global config
     this.cleanupObsoleteConfigFields();
 
     // 3c. Clean up expanded workflow remnants (7 removed workflows)
     this.cleanupExpandedWorkflowRemnants(resolvedProjectPath);
 
-    // 4. Detect and handle legacy artifacts + upgrade legacy tools using effective config
+    // 4. Detect and handle legacy artifacts + upgrade legacy tools
     const newlyConfiguredTools = await this.handleLegacyCleanup(
       resolvedProjectPath,
-      desiredWorkflows,
-      delivery
+      desiredWorkflows
     );
 
-    // 5. Find configured tools
+    // 5. Find configured tools (skills-only surface)
     const configuredTools = getConfiguredToolsForProfileSync(resolvedProjectPath);
 
     if (configuredTools.length === 0 && newlyConfiguredTools.length === 0) {
@@ -131,25 +127,18 @@ export class UpdateCommand {
     }
 
     // 6. Check version status for all configured tools
-    const commandConfiguredTools = getCommandConfiguredTools(resolvedProjectPath);
-    const commandConfiguredSet = new Set(commandConfiguredTools);
-    const toolStatuses = configuredTools.map((toolId) => {
-      const status = getToolVersionStatus(resolvedProjectPath, toolId, OPENSPEC_VERSION);
-      if (!status.configured && commandConfiguredSet.has(toolId)) {
-        return { ...status, configured: true };
-      }
-      return status;
-    });
+    const toolStatuses = configuredTools.map((toolId) =>
+      getToolVersionStatus(resolvedProjectPath, toolId, OPENSPEC_VERSION)
+    );
     const statusByTool = new Map(toolStatuses.map((status) => [status.toolId, status] as const));
 
-    // 7. Smart update detection
+    // 7. Smart update detection (skills-only drift)
     const toolsNeedingVersionUpdate = toolStatuses
       .filter((s) => s.needsUpdate)
       .map((s) => s.toolId);
     const toolsNeedingConfigSync = getToolsNeedingProfileSync(
       resolvedProjectPath,
       desiredWorkflows,
-      delivery,
       configuredTools
     );
     const toolsToUpdateSet = new Set<string>([
@@ -176,15 +165,13 @@ export class UpdateCommand {
     }
     console.log();
 
-    // 9. Determine what to generate based on delivery
-    // 10. Update tools (all if force, otherwise only those needing update)
+    // 9. Update tools (all if force, otherwise only those needing update)
     const toolsToUpdate = this.force ? configuredTools : [...toolsToUpdateSet];
 
     const syncRequests = toolsToUpdate.map((toolId) => ({
       toolId,
       projectPath: resolvedProjectPath,
       workflows: desiredWorkflows,
-      delivery,
       version: OPENSPEC_VERSION,
     }));
 
@@ -210,9 +197,6 @@ export class UpdateCommand {
     if (failedTools.length > 0) {
       console.log(chalk.red(`✗ Failed: ${failedTools.map(f => `${f.name} (${f.error})`).join(', ')}`));
     }
-    if (summary.totalCommandsRemoved > 0) {
-      console.log(chalk.dim(`Removed: ${summary.totalCommandsRemoved} command files`));
-    }
     if (summary.totalSkillsRemoved > 0) {
       console.log(chalk.dim(`Removed: ${summary.totalSkillsRemoved} skill directories`));
     }
@@ -230,7 +214,6 @@ export class UpdateCommand {
     }
 
     const configuredAndNewTools = [...new Set([...configuredTools, ...newlyConfiguredTools])];
-    const affectedToolIds = [...new Set([...toolsToUpdate, ...newlyConfiguredTools])];
 
     // 13. Detect new tool directories not currently configured
     this.detectNewTools(resolvedProjectPath, configuredAndNewTools);
@@ -245,15 +228,11 @@ export class UpdateCommand {
     }
 
     console.log();
-    if (affectedToolIds.some((toolId) => toolSupportsCommandGeneration(toolId))) {
-      console.log(chalk.dim('Restart your IDE for slash commands to take effect.'));
-    } else {
-      console.log(chalk.dim('Restart your IDE or current session for refreshed skills to take effect.'));
-    }
+    console.log(chalk.dim('Restart your IDE or current session for refreshed skills to take effect.'));
   }
 
   private getGuidanceToolId(toolIds: readonly string[]): string {
-    return toolIds.find((toolId) => toolSupportsCommandGeneration(toolId)) ?? toolIds[0] ?? 'codex';
+    return toolIds[0] ?? 'codex';
   }
 
   /**
@@ -339,8 +318,7 @@ export class UpdateCommand {
    */
   private async handleLegacyCleanup(
     projectPath: string,
-    desiredWorkflows: readonly string[],
-    delivery: Delivery
+    desiredWorkflows: readonly string[]
   ): Promise<string[]> {
     // Detect legacy artifacts
     const detection = await detectLegacyArtifacts(projectPath);
@@ -360,7 +338,7 @@ export class UpdateCommand {
       // --force flag: proceed with cleanup automatically
       await this.performLegacyCleanup(projectPath, detection);
       // Then upgrade legacy tools to new skills
-      return this.upgradeLegacyTools(projectPath, detection, canPrompt, desiredWorkflows, delivery);
+      return this.upgradeLegacyTools(projectPath, detection, canPrompt, desiredWorkflows);
     }
 
     if (!canPrompt) {
@@ -381,7 +359,7 @@ export class UpdateCommand {
     if (shouldCleanup) {
       await this.performLegacyCleanup(projectPath, detection);
       // Then upgrade legacy tools to new skills
-      return this.upgradeLegacyTools(projectPath, detection, canPrompt, desiredWorkflows, delivery);
+      return this.upgradeLegacyTools(projectPath, detection, canPrompt, desiredWorkflows);
     } else {
       console.log(chalk.dim('Skipping legacy cleanup. Continuing with skill update...'));
       console.log();
@@ -416,8 +394,7 @@ export class UpdateCommand {
     projectPath: string,
     detection: LegacyDetectionResult,
     canPrompt: boolean,
-    desiredWorkflows: readonly string[],
-    delivery: Delivery
+    desiredWorkflows: readonly string[]
   ): Promise<string[]> {
     // Get tools that had legacy artifacts
     const legacyTools = getToolsFromLegacyArtifacts(detection);
@@ -487,14 +464,13 @@ export class UpdateCommand {
       }
     }
 
-    // Create skills/commands for selected tools using effective profile+delivery.
-    const plan = createWorkflowArtifactPlan(desiredWorkflows, delivery, projectPath);
+    // Create skills for selected tools using fixed workflow set.
+    const plan = createWorkflowArtifactPlan(desiredWorkflows, projectPath);
 
     const syncRequests = selectedTools.map((toolId) => ({
       toolId,
       projectPath,
       workflows: [...plan.workflows],
-      delivery,
       version: OPENSPEC_VERSION,
     }));
 
@@ -519,7 +495,7 @@ export class UpdateCommand {
   }
 
   /**
-   * Clean up obsolete profile/workflows fields from global config.
+   * Clean up obsolete profile/workflows/delivery fields from global config.
    * Re-saves the config without those fields (getGlobalConfig already strips them).
    */
   private cleanupObsoleteConfigFields(): void {
@@ -527,8 +503,8 @@ export class UpdateCommand {
     try {
       if (!fs.existsSync(configPath)) return;
       const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-      if (raw.profile === undefined && raw.workflows === undefined) return;
-      console.warn(chalk.yellow('检测到过时的配置字段 (profile/workflows)，正在自动清理...'));
+      if (raw.profile === undefined && raw.workflows === undefined && raw.delivery === undefined) return;
+      console.warn(chalk.yellow('检测到过时的配置字段 (profile/workflows/delivery)，正在自动清理...'));
       const config = getGlobalConfig();
       saveGlobalConfig(config);
       console.log(chalk.dim('已自动清理过时字段。'));

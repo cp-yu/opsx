@@ -57,7 +57,7 @@ openspec/
 
 ### Requirement: AI Tool Configuration
 
-该命令 SHALL 通过可搜索的多选交互为 AI 编码助手配置 skills 与 slash commands，同时尊重仅支持 skills 的工具。
+该命令 SHALL 通过可搜索的多选交互为 AI 编码助手配置 skills。OpenSpec SHALL NOT 在初始化期间生成 slash command workflow artifacts。
 
 #### Scenario: 提示选择 AI 工具
 
@@ -72,10 +72,8 @@ openspec/
 #### Scenario: 选择要配置的工具
 
 - **WHEN** 用户选择工具并确认
-- **THEN** 为每个声明了 `skillsDir` 的已选工具在 `.<tool>/skills/` 目录下生成固定 5 个工作流的 skills
-- **AND** 仅为仍支持 adapter-backed command generation 的已选工具生成 slash commands
-- **AND** SHALL NOT 生成任何 Codex command 或 prompt 文件
-- **AND** SHALL 将 Codex skills 视为 Codex 唯一生成的 workflow 承载面
+- **THEN** 为每个声明了 `skillsDir` 的已选工具在 `.<tool>/skills/` 目录下生成固定 workflow skills
+- **AND** SHALL NOT 生成任何 slash command、prompt command 或 adapter-backed command 制品
 - **AND** 使用默认 schema 设置创建 `openspec/config.yaml`
 
 ### Requirement: Interactive Mode
@@ -107,12 +105,14 @@ The command SHALL perform safety checks to prevent overwriting existing structur
 - **THEN** 显示摘要，包括：
   - OpenSpec 结构创建确认
   - 已配置的 AI 工具列表
-  - 为每个工具生成的制品类型（skills / commands / both）
-- **AND** 显示固定的 getting started 引导块，包含 `/opsx:propose <your-idea>` 作为第一步
+  - 为每个工具生成的 skills
+- **AND** 显示固定的 getting started 引导块，使用 skill invocation guidance 作为第一步
+- **AND** SHALL NOT 将 `/opsx:*` 作为 getting started 入口
+- **AND** SHALL NOT 展示 commands 或 both 作为生成制品类型
 
 #### Scenario: Bootstrap workflow 引导
 
-- **WHEN** `bootstrap-opsx` workflow 包含在固定的 5 个工作流中且非 extend 模式时
+- **WHEN** `bootstrap-opsx` workflow 包含在固定工作流中且非 extend 模式时
 - **THEN** 成功输出 SHALL 在 getting started 区块之后包含显式的 bootstrap 引导行
 
 ### Requirement: Exit Codes
@@ -177,19 +177,21 @@ The command SHALL support non-interactive operation through command-line options
 
 - **WHEN** run with `--tools all`
 - **THEN** automatically select every available AI tool without prompting
-- **AND** proceed with skill and command generation
+- **AND** proceed with skill generation
+- **AND** SHALL NOT generate command artifacts
 
 #### Scenario: Select specific tools non-interactively
 
 - **WHEN** run with `--tools claude,cursor`
 - **THEN** parse the comma-separated tool IDs
-- **AND** generate skills and commands for specified tools only
+- **AND** generate skills for specified tools only
+- **AND** SHALL NOT generate command artifacts
 
 #### Scenario: Skip tool configuration non-interactively
 
 - **WHEN** run with `--tools none`
 - **THEN** create only the openspec directory structure
-- **AND** skip skill and command generation
+- **AND** skip skill generation
 - **AND** create config only when config creation conditions are met
 
 #### Scenario: Invalid tool specification
@@ -210,32 +212,6 @@ The command SHALL support non-interactive operation through command-line options
 - **WHEN** user runs `openspec init` without `--tools`
 - **THEN** fail with exit code 1
 - **AND** instruct to use `--tools all`, `--tools none`, or explicit tool IDs
-
-### Requirement: Slash Command Generation SHALL derive bootstrap artifacts from explicit command slug mapping
-
-该命令 SHALL 基于显式的 workflow-to-command-slug 映射为所选 AI 工具生成 opsx slash command 文件，但仅适用于支持 adapter-backed command 制品的工具。
-
-#### Scenario: 为 command-backed 工具生成斜杠命令
-
-- **WHEN** 某个已选工具支持 adapter-backed command generation
-- **THEN** 使用该工具的 command adapter 为固定的 5 个 workflows 创建 slash command 文件
-- **AND** 生成的命令集合 SHALL 包含 `/opsx:propose`, `/opsx:explore`, `/opsx:apply`, `/opsx:archive`, `/opsx:bootstrap`
-- **AND** command 制品路径 SHALL 从显式 workflow-to-command-slug 映射推导，而不是假设 workflow ID 等于文件 basename
-- **AND** 使用工具特定的路径约定，例如 Claude 的 `.claude/commands/opsx/`
-- **AND** 包含工具特定的 frontmatter 格式
-
-#### Scenario: Codex 使用 skills 而不是斜杠命令文件
-
-- **WHEN** 在初始化过程中选择了 Codex
-- **THEN** 系统 SHALL 在 `.codex/skills/` 下生成 5 个 workflow skills
-- **AND** 系统 SHALL NOT 在项目内或全局 Codex prompt 目录下创建任何 command 制品
-- **AND** 最终的 Codex workflow surface SHALL 仅由受管 skills 表示
-
-#### Scenario: Bootstrap 命令路径具备跨平台安全性
-
-- **WHEN** 在任意受支持操作系统上生成 bootstrap command 制品
-- **THEN** 路径 SHALL 使用跨平台安全的路径工具构造
-- **AND** 路径敏感的验证 SHALL 使用具备路径感知能力的断言，而不是硬编码分隔符
 
 ### Requirement: Config File Generation
 
@@ -297,67 +273,55 @@ The init command SHALL perform one-time migration when re-initializing an existi
 - **THEN** the system SHALL use `core` profile defaults
 
 ### Requirement: Init respects global config
-The init command SHALL read and apply settings from global config.
+
+The init command SHALL read global config values that still exist and SHALL ignore removed workflow selection fields.
 
 #### Scenario: User has profile preference
+
 - **WHEN** global config contains `profile: "custom"` with custom workflows
-- **THEN** init SHALL install custom profile workflows
+- **THEN** init SHALL ignore the profile value
+- **AND** init SHALL continue fixed workflow installation
 
 #### Scenario: User has delivery preference
-- **WHEN** global config contains `delivery: "skills"`
-- **THEN** init SHALL install only skill files, not commands
+
+- **WHEN** global config contains `delivery: "skills"`, `delivery: "commands"`, or `delivery: "both"`
+- **THEN** init SHALL ignore the delivery value
+- **AND** init SHALL install skills only
+- **AND** init SHALL NOT remove existing command files
 
 #### Scenario: Override via flags
+
 - **WHEN** user runs `openspec init --profile core`
-- **THEN** the system SHALL use the flag value instead of config value
-- **THEN** the system SHALL NOT update the global config
+- **THEN** the system SHALL reject the flag according to fixed workflow installation behavior
 
 #### Scenario: Invalid profile override
+
 - **WHEN** user runs `openspec init --profile <invalid>`
-- **AND** `<invalid>` is not one of `core` or `custom`
-- **THEN** the system SHALL exit with code 1
-- **THEN** the system SHALL display a validation error listing allowed profile values
-
-### Requirement: Init applies configured profile without confirmation
-The init command SHALL apply the resolved profile (`--profile` override or global config) directly without prompting for confirmation.
-
-#### Scenario: Init with custom profile (interactive)
-- **WHEN** user runs `openspec init` interactively
-- **AND** global config specifies `profile: "custom"` with workflows
-- **THEN** the system SHALL proceed directly using the custom profile workflows
-- **AND** the system SHALL NOT show a profile confirmation prompt
-
-#### Scenario: Non-interactive init with custom profile
-- **WHEN** user runs `openspec init` non-interactively
-- **AND** global config specifies a custom profile
-- **THEN** the system SHALL proceed without confirmation
-
-#### Scenario: Init with core profile
-- **WHEN** user runs `openspec init` interactively
-- **AND** profile is `core` (default)
-- **THEN** the system SHALL proceed directly without a profile confirmation prompt
+- **THEN** the system SHALL reject the flag according to fixed workflow installation behavior
 
 ### Requirement: Init preserves existing workflows
-The init command SHALL NOT remove workflows that are already installed, but SHALL respect delivery setting.
+
+The init command SHALL NOT remove workflows that are already installed, and SHALL refresh the fixed skill workflow set.
 
 #### Scenario: Existing custom installation
-- **WHEN** user has custom profile with extra workflows and runs `openspec init` with core profile
-- **THEN** the system SHALL NOT remove extra workflows
-- **THEN** the system SHALL regenerate core workflow files, overwriting existing content with latest templates
+
+- **WHEN** user has extra workflow skills and runs `openspec init`
+- **THEN** the system SHALL NOT remove extra workflow skills
+- **AND** the system SHALL regenerate fixed workflow skill files, overwriting existing managed skill content with latest templates
 
 #### Scenario: Init with different delivery setting
-- **WHEN** user runs `openspec init` on existing project
-- **AND** delivery setting differs from what's installed (e.g., was `both`, now `skills`)
-- **THEN** the system SHALL generate files matching current delivery setting
-- **THEN** the system SHALL delete files that don't match delivery (e.g., commands removed if `skills`)
-- **THEN** this applies to all workflows, including extras not in profile
 
-#### Scenario: Re-init applies delivery cleanup even when templates are current
+- **WHEN** user runs `openspec init` on existing project
+- **AND** global config contains any `delivery` value
+- **THEN** the system SHALL generate skills only
+- **AND** the system SHALL NOT delete command files because delivery cleanup is not supported
+
+#### Scenario: Re-init with current templates
+
 - **WHEN** user runs `openspec init` on an existing project
-- **AND** existing files are already on current template versions
-- **AND** delivery changed since the previous init
-- **THEN** the system SHALL still remove files that no longer match delivery
-- **THEN** for example, switching from `both` to `skills` SHALL remove generated command files
+- **AND** existing skill files are already on current template versions
+- **THEN** the system SHALL keep the project skills-only managed surface current
+- **AND** the system SHALL NOT perform command file cleanup
 
 ### Requirement: Init tool confirmation UX
 The init command SHALL show detected tools and ask for confirmation.

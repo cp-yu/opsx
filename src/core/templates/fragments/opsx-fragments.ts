@@ -226,30 +226,6 @@ export const VERIFY_REVIEWER_SUBAGENT_CONTRACT = `
 `.trim();
 
 /**
- * Fragment: Clean-context verify protocol for tools without subagents
- * Used in: verify-change
- */
-export const CLEAN_CONTEXT_VERIFY_PROTOCOL_REREAD = `
-**Clean-Context Verification Protocol**:
-
-Execute verification in the current agent with an explicit re-read protocol.
-
-**Before making ANY verification judgment**:
-1. Re-read all change artifacts from disk: \`proposal.md\`, \`specs/\`, \`design.md\`, \`tasks.md\`
-2. Re-run git commands: \`git status\`, \`git diff\`, \`git log -5 --oneline\`
-3. Re-read the final file contents for candidate implementation files identified from git evidence
-4. Re-read prior \`.verify-result.json\` if it exists
-
-**Important**:
-- Treat implementation conversation history as non-authoritative background context
-- Base all judgments ONLY on freshly read evidence
-- Follow the step-by-step objective verification protocol before assigning severity
-
-**Record in verify result**:
-- \`executionMode: 'current-agent-reread'\`
-`.trim();
-
-/**
  * Fragment: Phase 2 optimization protocol for tools with subagents
  * Used in: verify-change
  */

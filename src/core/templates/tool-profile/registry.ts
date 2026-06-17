@@ -1,11 +1,11 @@
 /**
  * Tool Profile Registry.
  *
- * Maps every AI tool to its generation capabilities.
- * Derived from the canonical AI_TOOLS list and command adapter registrations.
+ * Maps every AI tool to its skill generation capabilities.
+ * Skills-only workflow surface: command adapter metadata is no longer tracked.
  */
 
-import { AI_TOOLS, COMMAND_BACKED_TOOL_IDS } from '../../config.js';
+import { AI_TOOLS } from '../../config.js';
 import type { ToolProfile } from './types.js';
 
 // ---------------------------------------------------------------------------
@@ -22,12 +22,6 @@ export const TRANSFORM_IDS = {
 // Build profiles from AI_TOOLS
 // ---------------------------------------------------------------------------
 
-function resolveCommandAdapterId(toolId: string): string | undefined {
-  if (toolId === 'codex') return undefined;
-  if (COMMAND_BACKED_TOOL_IDS.has(toolId)) return toolId;
-  return undefined;
-}
-
 function resolveTransforms(toolId: string): string[] {
   const transforms: string[] = [];
   if (toolId === 'codex') transforms.push(TRANSFORM_IDS.CODEX_COMMAND_REFS);
@@ -43,7 +37,6 @@ function buildProfiles(): ToolProfile[] {
       toolId: t.value,
       name: t.name,
       skillsDir: t.skillsDir,
-      commandAdapterId: resolveCommandAdapterId(t.value),
       transforms: resolveTransforms(t.value),
     }));
 }
@@ -70,17 +63,8 @@ export const ToolProfileRegistry = {
     return PROFILES.filter((p) => p.skillsDir).map((p) => p.toolId);
   },
 
-  getToolsWithCommands(): string[] {
-    return PROFILES.filter((p) => p.commandAdapterId).map((p) => p.toolId);
-  },
-
   supportsSkills(toolId: string): boolean {
     const profile = BY_ID.get(toolId);
     return profile?.skillsDir !== undefined;
-  },
-
-  supportsCommands(toolId: string): boolean {
-    const profile = BY_ID.get(toolId);
-    return profile?.commandAdapterId !== undefined;
   },
 } as const;

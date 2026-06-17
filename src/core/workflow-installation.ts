@@ -1,9 +1,6 @@
 import * as fs from 'fs';
-import os from 'os';
 import path from 'path';
-import { CommandAdapterRegistry } from './command-generation/index.js';
-import { AI_TOOLS, getAITool, toolSupportsCommandGeneration } from './config.js';
-import type { Delivery } from './global-config.js';
+import { AI_TOOLS, getAITool } from './config.js';
 import {
   ALL_WORKFLOWS,
   getCommandSlug,
@@ -12,13 +9,9 @@ import {
 } from './workflow-surface.js';
 import {
   getSkillTemplates,
-  getCommandTemplates,
-  getCommandContents,
   getManagedSkillDirNames,
   type SkillTemplateEntry,
-  type CommandTemplateEntry,
 } from './shared/skill-generation.js';
-import type { CommandContent } from './command-generation/index.js';
 import { collectSharedReferenceFiles } from './templates/sync-engine.js';
 
 export { MANAGED_STALE_INTERNAL_SKILL_DIR_NAMES } from './shared/skill-generation.js';
@@ -26,21 +19,10 @@ export { MANAGED_STALE_INTERNAL_SKILL_DIR_NAMES } from './shared/skill-generatio
 export interface WorkflowArtifactPlan {
   workflows: readonly WorkflowId[];
   managedWorkflows: readonly WorkflowId[];
-  delivery: Delivery;
   shouldGenerateSkills: boolean;
-  shouldGenerateCommands: boolean;
   skillTemplates: SkillTemplateEntry[];
-  commandTemplates: CommandTemplateEntry[];
-  commandContents: CommandContent[];
   expectedSkillDirNames: string[];
-  expectedCommandSlugs: string[];
   managedSkillDirNames: string[];
-  managedCommandSlugs: string[];
-}
-
-export interface ToolWorkflowDelivery {
-  shouldGenerateSkills: boolean;
-  shouldGenerateCommands: boolean;
 }
 
 export function resolveEffectiveWorkflows(
@@ -63,129 +45,46 @@ export function resolveEffectiveWorkflows(
 
 export function createWorkflowArtifactPlan(
   workflows: readonly string[],
-  delivery: Delivery,
   projectPath?: string
 ): WorkflowArtifactPlan {
   const normalizedWorkflows = projectPath
     ? resolveEffectiveWorkflows(projectPath, workflows)
     : normalizeWorkflowIds(workflows);
-  const shouldGenerateSkills = delivery !== 'commands';
-  const shouldGenerateCommands = delivery !== 'skills';
-  const skillTemplates = shouldGenerateSkills ? getSkillTemplates(normalizedWorkflows) : [];
-  const commandTemplates = shouldGenerateCommands ? getCommandTemplates(normalizedWorkflows) : [];
-  const commandContents = shouldGenerateCommands ? getCommandContents(normalizedWorkflows) : [];
+  const skillTemplates = getSkillTemplates(normalizedWorkflows);
 
   return {
     workflows: normalizedWorkflows,
     managedWorkflows: ALL_WORKFLOWS,
-    delivery,
-    shouldGenerateSkills,
-    shouldGenerateCommands,
+    shouldGenerateSkills: true,
     skillTemplates,
-    commandTemplates,
-    commandContents,
     expectedSkillDirNames: skillTemplates.map((entry) => entry.dirName),
-    expectedCommandSlugs: commandTemplates.map((entry) => entry.commandSlug),
     managedSkillDirNames: getManagedSkillDirNames(),
-    managedCommandSlugs: ALL_WORKFLOWS.map((workflowId) => getCommandSlug(workflowId)),
-  };
-}
-
-export function resolveToolWorkflowDelivery(
-  toolId: string,
-  delivery: Delivery
-): ToolWorkflowDelivery {
-  const supportsCommands = toolSupportsCommandGeneration(toolId);
-  const keepsSkillsWithoutCommands = toolId === 'codex';
-
-  return {
-    shouldGenerateSkills: delivery !== 'commands' || keepsSkillsWithoutCommands,
-    shouldGenerateCommands: delivery !== 'skills' && supportsCommands,
   };
 }
 
 export function createToolWorkflowArtifactPlan(
   toolId: string,
   workflows: readonly string[],
-  delivery: Delivery,
   projectPath?: string
 ): WorkflowArtifactPlan {
   const normalizedWorkflows = projectPath
     ? resolveEffectiveWorkflows(projectPath, workflows)
     : normalizeWorkflowIds(workflows);
-  const effectiveDelivery = resolveToolWorkflowDelivery(toolId, delivery);
-  const skillTemplates = effectiveDelivery.shouldGenerateSkills
-    ? getSkillTemplates(normalizedWorkflows, toolId)
-    : [];
-  const commandTemplates = effectiveDelivery.shouldGenerateCommands
-    ? getCommandTemplates(normalizedWorkflows, toolId)
-    : [];
-  const commandContents = effectiveDelivery.shouldGenerateCommands
-    ? getCommandContents(normalizedWorkflows, toolId)
-    : [];
+  const skillTemplates = getSkillTemplates(normalizedWorkflows, toolId);
 
   return {
     workflows: normalizedWorkflows,
     managedWorkflows: ALL_WORKFLOWS,
-    delivery,
-    shouldGenerateSkills: effectiveDelivery.shouldGenerateSkills,
-    shouldGenerateCommands: effectiveDelivery.shouldGenerateCommands,
+    shouldGenerateSkills: true,
     skillTemplates,
-    commandTemplates,
-    commandContents,
     expectedSkillDirNames: skillTemplates.map((entry) => entry.dirName),
-    expectedCommandSlugs: commandTemplates.map((entry) => entry.commandSlug),
     managedSkillDirNames: getManagedSkillDirNames(),
-    managedCommandSlugs: ALL_WORKFLOWS.map((workflowId) => getCommandSlug(workflowId)),
   };
 }
 
 export interface PlannedToolArtifacts {
   skillFiles: string[];
   commandFiles: string[];
-}
-
-function getLegacyCodexCommandHome(): string {
-  const envHome = process.env.CODEX_HOME;
-  return path.resolve(envHome ? envHome : path.join(os.homedir(), '.codex'));
-}
-
-export function getLegacyManagedCommandFiles(
-  toolId: string,
-  commandSlugs: readonly string[]
-): string[] {
-  if (toolId !== 'codex') {
-    return [];
-  }
-
-  return commandSlugs.map((commandSlug) =>
-    path.join(getLegacyCodexCommandHome(), 'prompts', `opsx-${commandSlug}.md`)
-  );
-}
-
-export function getManagedCommandFiles(
-  projectPath: string,
-  toolId: string,
-  commandSlugs: readonly string[],
-  options?: { includeLegacyFiles?: boolean }
-): string[] {
-  const files: string[] = [];
-
-  if (toolSupportsCommandGeneration(toolId)) {
-    const adapter = CommandAdapterRegistry.get(toolId);
-    if (adapter) {
-      for (const commandSlug of commandSlugs) {
-        const commandPath = adapter.getFilePath(commandSlug);
-        files.push(path.isAbsolute(commandPath) ? commandPath : path.join(projectPath, commandPath));
-      }
-    }
-  }
-
-  if (options?.includeLegacyFiles) {
-    files.push(...getLegacyManagedCommandFiles(toolId, commandSlugs));
-  }
-
-  return files;
 }
 
 export function getPlannedToolArtifacts(
@@ -208,10 +107,5 @@ export function getPlannedToolArtifacts(
   });
   skillFiles.push(...referenceFiles);
 
-  if (!toolSupportsCommandGeneration(toolId)) {
-    return { skillFiles, commandFiles: [] };
-  }
-  const commandFiles = getManagedCommandFiles(projectPath, toolId, plan.expectedCommandSlugs);
-
-  return { skillFiles, commandFiles };
+  return { skillFiles, commandFiles: [] };
 }

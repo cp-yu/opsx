@@ -64,22 +64,7 @@ export function registerConfigCommand(program: Command): void {
       if (options.json) {
         console.log(JSON.stringify(config, null, 2));
       } else {
-        // Read raw config to determine which values are explicit vs defaults
-        const configPath = getGlobalConfigPath();
-        let rawConfig: Record<string, unknown> = {};
-        try {
-          if (fs.existsSync(configPath)) {
-            rawConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-          }
-        } catch {
-          // If reading fails, treat all as defaults
-        }
-
         console.log(formatValueYaml(config));
-
-        const deliverySource = rawConfig.delivery !== undefined ? '(explicit)' : '(default)';
-        console.log(`\nDelivery settings:`);
-        console.log(`  delivery: ${config.delivery} ${deliverySource}`);
       }
     });
 

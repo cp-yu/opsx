@@ -73,10 +73,6 @@ export const GlobalConfigSchema = z
       .optional()
       .default({ defaultIsolation: 'ask' }),
     git: GitConfigSchema,
-    delivery: z
-      .enum(['both', 'skills', 'commands'])
-      .optional()
-      .default('both'),
   })
   .passthrough();
 
@@ -105,7 +101,6 @@ export const DEFAULT_CONFIG: GlobalConfigType = {
       deleteAfterArchive: false,
     },
   },
-  delivery: 'both',
 };
 
 const KNOWN_TOP_LEVEL_KEYS = new Set(Object.keys(DEFAULT_CONFIG));

@@ -227,9 +227,9 @@ describe('config key validation', () => {
     expect(validateConfigKeyPath('featureFlags.someFlag.extra').valid).toBe(false);
   });
 
-  it('allows delivery key', async () => {
+  it('rejects delivery key (removed field)', async () => {
     const { validateConfigKeyPath } = await import('../../src/core/config-schema.js');
-    expect(validateConfigKeyPath('delivery').valid).toBe(true);
+    expect(validateConfigKeyPath('delivery').valid).toBe(false);
   });
 
   it('rejects workflows key (removed field)', async () => {
@@ -259,10 +259,10 @@ describe('config key validation', () => {
 });
 
 describe('config schema validation', () => {
-  it('config schema should reject invalid delivery values', async () => {
+  it('config schema should accept config without delivery', async () => {
     const { validateConfig } = await import('../../src/core/config-schema.js');
 
-    const result = validateConfig({ featureFlags: {}, delivery: 'invalid' });
-    expect(result.success).toBe(false);
+    const result = validateConfig({ featureFlags: {} });
+    expect(result.success).toBe(true);
   });
 });

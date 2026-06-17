@@ -24,7 +24,7 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getOpsxExploreCommandTemplate: 'c314312cdb1b3d266eb9b7445433ccd4eaf9b55163dba721fc785d931014d83d',
   getOpsxApplyCommandTemplate: '163aafb92030a51ae2af2efaa269a995f7e2859761531bf05b9bad58dfab4e8c',
   getArchiveChangeSkillTemplate: '6a5aa47359d02be48e8f579920f581468237eb4e4cf9883c277b62cf1e64e892',
-  getOpsxArchiveCommandTemplate: '35b6279e0aa01b5c4f064a71c87e251691ed85257baf6bdf5b65abb484c228fa',
+  getOpsxArchiveCommandTemplate: 'a1f8a43c237f1bc70b176d1d0a95dc4d1546f624daea1c16306ad894e32b2ed8',
   getOpsxProposeSkillTemplate: 'a5f80a3236a21fcd8eca9a49d3eab0fe134c027e2b1b228d57ad5fe9d8590695',
   getOpsxProposeCommandTemplate: 'c8310e675940a0f33d7d21abfa6acfa55a32472008430d5647638729b6ef830c',
   getFeedbackSkillTemplate: 'd7d83c5f7fc2b92fe8f4588a5bf2d9cb315e4c73ec19bcd5ef28270906319a0d',
@@ -36,7 +36,7 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
 const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-explore': '8085851698e8ef97d35e321537adbb1487c5d2d3af08cbfbb814a0f8adb31250',
   'openspec-apply-change': '739edd115f3b95ad5110236bac5c3259582c41a6ad64fe4740890bc1f69d3fff',
-  'openspec-archive-change': '36c805d25a0823f2726f5fc0ea6bf84064837b53600a7d338b8faf71b1ebbdc3',
+  'openspec-archive-change': '53d847674d9ea4b80a8fb191071032f06d0ed3f14c66d13ee7a7b516ca0526b0',
   'openspec-propose': '1ef1e646393505241c43cb3b0fa470f2403350fd8c1738e455c92a0ad41bf2c1',
   'openspec-impact-sweeper': '4a82789ac5265770bb0fabb93b5c677cb5f2654c6499b0922ffd05c63a5d5283',
 };

@@ -2,23 +2,15 @@
  * Shared Artifact Sync Engine.
  *
  * Single orchestration engine for planning, rendering, transforming,
- * and writing skill/command artifacts. Used by init, update, and
- * legacy-upgrade entry points to eliminate duplicated write loops.
+ * and writing skill artifacts. Skills-only workflow surface.
  */
 
 import path from 'path';
-import os from 'os';
 import * as fs from 'fs';
 import { FileSystemUtils } from '../../utils/file-system.js';
 import {
-  generateCommands,
-  CommandAdapterRegistry,
-} from '../command-generation/index.js';
-import type { CommandContent } from '../command-generation/index.js';
-import {
   generateSkillContent,
   getSkillTemplates,
-  getCommandContents,
   getManagedSkillDirNames,
 } from '../shared/skill-generation.js';
 import type { SkillTemplateEntry } from '../shared/skill-generation.js';
@@ -26,13 +18,10 @@ import type { SkillTemplate } from './types.js';
 import { runTransforms } from './transforms/index.js';
 import {
   ALL_WORKFLOWS,
-  getCommandSlug,
   normalizeWorkflowIds,
   type WorkflowId,
 } from '../workflow-surface.js';
 import { ToolProfileRegistry } from './tool-profile/index.js';
-import type { Delivery } from '../global-config.js';
-import { toolSupportsCommandGeneration } from '../config.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -42,7 +31,6 @@ export interface ArtifactSyncRequest {
   toolId: string;
   projectPath: string;
   workflows: readonly string[];
-  delivery: Delivery;
   version: string;
 }
 
@@ -87,22 +75,13 @@ export interface SharedReferenceFile {
   content: string;
 }
 
-interface CommandWriteEntry {
-  content: CommandContent;
-}
-
 interface ToolSyncPlan {
   toolId: string;
   toolName: string;
   skillsDir: string;
-  shouldGenerateSkills: boolean;
-  shouldGenerateCommands: boolean;
   skillEntries: SkillWriteEntry[];
-  commandEntries: CommandWriteEntry[];
   expectedSkillDirNames: string[];
-  expectedCommandSlugs: string[];
   managedSkillDirNames: string[];
-  managedCommandSlugs: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -133,18 +112,7 @@ function buildPlan(request: ArtifactSyncRequest): ToolSyncPlan | null {
 
   const normalizedWorkflows = resolveEffectiveWorkflows(request.projectPath, request.workflows);
 
-  const supportsCommands = toolSupportsCommandGeneration(request.toolId);
-  const keepsSkillsWithoutCommands = request.toolId === 'codex';
-
-  const shouldGenerateSkills = request.delivery !== 'commands' || keepsSkillsWithoutCommands;
-  const shouldGenerateCommands = request.delivery !== 'skills' && supportsCommands;
-
-  const skillTemplates = shouldGenerateSkills
-    ? getSkillTemplates(normalizedWorkflows, request.toolId)
-    : [];
-  const commandContents = shouldGenerateCommands
-    ? getCommandContents(normalizedWorkflows, request.toolId)
-    : [];
+  const skillTemplates = getSkillTemplates(normalizedWorkflows, request.toolId);
 
   const skillEntries: SkillWriteEntry[] = skillTemplates.map((entry) => ({
     template: entry.template,
@@ -152,22 +120,13 @@ function buildPlan(request: ArtifactSyncRequest): ToolSyncPlan | null {
     workflowId: entry.workflowId,
   }));
 
-  const commandEntries: CommandWriteEntry[] = commandContents.map((content) => ({
-    content,
-  }));
-
   return {
     toolId: request.toolId,
     toolName: profile.name,
     skillsDir: profile.skillsDir,
-    shouldGenerateSkills,
-    shouldGenerateCommands,
     skillEntries,
-    commandEntries,
     expectedSkillDirNames: skillEntries.map((e) => e.dirName),
-    expectedCommandSlugs: commandEntries.map((e) => e.content.commandSlug),
     managedSkillDirNames: getManagedSkillDirNames(),
-    managedCommandSlugs: ALL_WORKFLOWS.map((workflowId) => getCommandSlug(workflowId)),
   };
 }
 
@@ -273,37 +232,6 @@ async function writeSkills(
   return written;
 }
 
-async function writeCommands(
-  projectPath: string,
-  toolId: string,
-  entries: CommandWriteEntry[]
-): Promise<number> {
-  const adapter = CommandAdapterRegistry.get(toolId);
-  if (!adapter || entries.length === 0) return 0;
-
-  // Apply preAdapter transforms to each command body.
-  // `entry.content.id` is the WorkflowId (see getCommandContents mapping).
-  const contents: CommandContent[] = entries.map((entry) => ({
-    ...entry.content,
-    body: runTransforms(entry.content.body, {
-      toolId,
-      workflowId: entry.content.id,
-      artifactType: 'command',
-    }, 'preAdapter'),
-  }));
-
-  const generated = generateCommands(contents, adapter);
-  let written = 0;
-
-  for (const cmd of generated) {
-    const commandFile = path.isAbsolute(cmd.path) ? cmd.path : path.join(projectPath, cmd.path);
-    await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
-    written++;
-  }
-
-  return written;
-}
-
 async function removeUnselectedSkillDirs(
   projectPath: string,
   skillsDir: string,
@@ -330,106 +258,6 @@ async function removeUnselectedSkillDirs(
   return removed;
 }
 
-async function removeAllSkillDirs(
-  projectPath: string,
-  skillsDir: string,
-  managed: readonly string[]
-): Promise<number> {
-  const baseDir = path.join(projectPath, skillsDir, 'skills');
-  let removed = 0;
-
-  for (const dirName of managed) {
-    const skillDir = path.join(baseDir, dirName);
-    try {
-      if (fs.existsSync(skillDir)) {
-        await fs.promises.rm(skillDir, { recursive: true, force: true });
-        removed++;
-      }
-    } catch {
-      // Ignore errors
-    }
-  }
-
-  return removed;
-}
-
-function getLegacyCodexCommandFiles(commandSlugs: readonly string[]): string[] {
-  const envHome = process.env.CODEX_HOME;
-  const codexHome = path.resolve(envHome || path.join(os.homedir(), '.codex'));
-  return commandSlugs.map((commandSlug) =>
-    path.join(codexHome, 'prompts', `opsx-${commandSlug}.md`)
-  );
-}
-
-function getManagedCommandFiles(
-  projectPath: string,
-  toolId: string,
-  commandSlugs: readonly string[]
-): string[] {
-  const files: string[] = [];
-  if (toolSupportsCommandGeneration(toolId)) {
-    const adapter = CommandAdapterRegistry.get(toolId);
-    if (adapter) {
-      for (const commandSlug of commandSlugs) {
-        const commandPath = adapter.getFilePath(commandSlug);
-        files.push(path.isAbsolute(commandPath) ? commandPath : path.join(projectPath, commandPath));
-      }
-    }
-  }
-  // Include legacy codex files for cleanup
-  if (toolId === 'codex') {
-    files.push(...getLegacyCodexCommandFiles(commandSlugs));
-  }
-  return files;
-}
-
-async function removeUnselectedCommandFiles(
-  projectPath: string,
-  toolId: string,
-  expected: readonly string[],
-  managed: readonly string[]
-): Promise<number> {
-  const expectedSet = new Set(expected);
-  let removed = 0;
-
-  for (const commandSlug of managed) {
-    if (expectedSet.has(commandSlug)) continue;
-    const files = getManagedCommandFiles(projectPath, toolId, [commandSlug]);
-    for (const fullPath of files) {
-      try {
-        if (fs.existsSync(fullPath)) {
-          await fs.promises.unlink(fullPath);
-          removed++;
-        }
-      } catch {
-        // Ignore errors
-      }
-    }
-  }
-
-  return removed;
-}
-
-async function removeAllCommandFiles(
-  projectPath: string,
-  toolId: string,
-  managed: readonly string[]
-): Promise<number> {
-  let removed = 0;
-  const files = getManagedCommandFiles(projectPath, toolId, managed);
-  for (const fullPath of files) {
-    try {
-      if (fs.existsSync(fullPath)) {
-        await fs.promises.unlink(fullPath);
-        removed++;
-      }
-    } catch {
-      // Ignore errors
-    }
-  }
-  return removed;
-}
-
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -453,60 +281,27 @@ export const ArtifactSyncEngine = {
     }
 
     try {
-      let skillsWritten = 0;
-      let commandsWritten = 0;
-      let skillsRemoved = 0;
-      let commandsRemoved = 0;
-
-      if (plan.shouldGenerateSkills) {
-        skillsWritten = await writeSkills(
-          request.projectPath,
-          plan.skillsDir,
-          request.toolId,
-          plan.skillEntries,
-          request.version
-        );
-        skillsRemoved = await removeUnselectedSkillDirs(
-          request.projectPath,
-          plan.skillsDir,
-          plan.expectedSkillDirNames,
-          plan.managedSkillDirNames
-        );
-      } else {
-        skillsRemoved = await removeAllSkillDirs(
-          request.projectPath,
-          plan.skillsDir,
-          plan.managedSkillDirNames
-        );
-      }
-
-      if (plan.shouldGenerateCommands) {
-        commandsWritten = await writeCommands(
-          request.projectPath,
-          request.toolId,
-          plan.commandEntries
-        );
-        commandsRemoved = await removeUnselectedCommandFiles(
-          request.projectPath,
-          request.toolId,
-          plan.expectedCommandSlugs,
-          plan.managedCommandSlugs
-        );
-      } else {
-        commandsRemoved = await removeAllCommandFiles(
-          request.projectPath,
-          request.toolId,
-          plan.managedCommandSlugs
-        );
-      }
+      const skillsWritten = await writeSkills(
+        request.projectPath,
+        plan.skillsDir,
+        request.toolId,
+        plan.skillEntries,
+        request.version
+      );
+      const skillsRemoved = await removeUnselectedSkillDirs(
+        request.projectPath,
+        plan.skillsDir,
+        plan.expectedSkillDirNames,
+        plan.managedSkillDirNames
+      );
 
       return {
         toolId: request.toolId,
         toolName: plan.toolName,
         skillsWritten,
-        commandsWritten,
+        commandsWritten: 0,
         skillsRemoved,
-        commandsRemoved,
+        commandsRemoved: 0,
       };
     } catch (error) {
       return {
