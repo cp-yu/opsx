@@ -84,14 +84,16 @@ describe('skill-generation', () => {
       expect(filtered[0].dirName).toBe('openspec-propose');
     });
 
-    it('should use tool-specific archive skill templates when available', () => {
+    it('should always use subagent-orchestrated archive skeleton (skills-only)', () => {
       const defaultArchive = getSkillTemplates(['archive'])[0];
       const claudeArchive = getSkillTemplates(['archive'], 'claude')[0];
       const codexArchive = getSkillTemplates(['archive'], 'codex')[0];
 
-      expect(defaultArchive.template.instructions).toContain('current-agent-reread');
+      expect(defaultArchive.template.instructions).toContain('subagent-orchestrated');
       expect(claudeArchive.template.instructions).toContain('subagent-orchestrated');
       expect(codexArchive.template.instructions).toContain('subagent-orchestrated');
+      // Skills-only surface: no tool falls back to current-agent-reread
+      expect(defaultArchive.template.instructions).not.toContain('current-agent-reread');
     });
   });
 

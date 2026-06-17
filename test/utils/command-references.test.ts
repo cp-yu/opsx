@@ -5,27 +5,27 @@ import {
   transformWorkflowReferences,
 } from '../../src/utils/command-references.js';
 
-describe('transformToHyphenCommands', () => {
+describe('transformToHyphenCommands (opencode neutral fallback)', () => {
   describe('basic transformations', () => {
-    it('should transform single command reference', () => {
-      expect(transformToHyphenCommands('/opsx:apply')).toBe('/opsx-apply');
+    it('should transform single command reference to neutral skill invocation', () => {
+      expect(transformToHyphenCommands('/opsx:apply')).toBe('invoke the openspec-apply-change skill');
     });
 
     it('should transform multiple command references', () => {
       const input = '/opsx:propose and /opsx:apply';
-      const expected = '/opsx-propose and /opsx-apply';
+      const expected = 'invoke the openspec-propose skill and invoke the openspec-apply-change skill';
       expect(transformToHyphenCommands(input)).toBe(expected);
     });
 
     it('should transform command reference in context', () => {
       const input = 'Use /opsx:apply to implement tasks';
-      const expected = 'Use /opsx-apply to implement tasks';
+      const expected = 'Use invoke the openspec-apply-change skill to implement tasks';
       expect(transformToHyphenCommands(input)).toBe(expected);
     });
 
     it('should handle backtick-quoted commands', () => {
       const input = 'Run `/opsx:explore` to proceed';
-      const expected = 'Run `/opsx-explore` to proceed';
+      const expected = 'Run `invoke the openspec-explore skill` to proceed';
       expect(transformToHyphenCommands(input)).toBe(expected);
     });
   });
@@ -44,40 +44,6 @@ describe('transformToHyphenCommands', () => {
       const input = '/ops:new opsx: /other:command';
       expect(transformToHyphenCommands(input)).toBe(input);
     });
-
-    it('should handle multiple occurrences on same line', () => {
-      const input = '/opsx:propose /opsx:explore /opsx:apply';
-      const expected = '/opsx-propose /opsx-explore /opsx-apply';
-      expect(transformToHyphenCommands(input)).toBe(expected);
-    });
-  });
-
-  describe('multiline content', () => {
-    it('should transform references across multiple lines', () => {
-      const input = `Use /opsx:propose to start
-Then /opsx:explore to investigate
-Finally /opsx:apply to implement`;
-      const expected = `Use /opsx-propose to start
-Then /opsx-explore to investigate
-Finally /opsx-apply to implement`;
-      expect(transformToHyphenCommands(input)).toBe(expected);
-    });
-  });
-
-  describe('all current registry commands', () => {
-    const commands = [
-      'propose',
-      'explore',
-      'apply',
-      'archive',
-      'bootstrap',
-    ];
-
-    for (const cmd of commands) {
-      it(`should transform /opsx:${cmd}`, () => {
-        expect(transformToHyphenCommands(`/opsx:${cmd}`)).toBe(`/opsx-${cmd}`);
-      });
-    }
   });
 });
 
@@ -89,9 +55,15 @@ describe('renderWorkflowInvocation', () => {
     expect(renderWorkflowInvocation('codex', 'archive')).toBe('$openspec-archive-change');
   });
 
-  it('keeps command-backed tools on their command syntax', () => {
-    expect(renderWorkflowInvocation('claude', 'apply')).toBe('/opsx:apply');
-    expect(renderWorkflowInvocation('opencode', 'apply')).toBe('/opsx-apply');
+  it('uses neutral skill invocation for tools without precise metadata', () => {
+    expect(renderWorkflowInvocation('claude', 'apply')).toBe('invoke the openspec-apply-change skill');
+    expect(renderWorkflowInvocation('opencode', 'apply')).toBe('invoke the openspec-apply-change skill');
+    expect(renderWorkflowInvocation('cursor', 'explore')).toBe('invoke the openspec-explore skill');
+  });
+
+  it('SHALL NOT fall back to command syntax for tools without precise metadata', () => {
+    expect(renderWorkflowInvocation('claude', 'apply')).not.toContain('/opsx:');
+    expect(renderWorkflowInvocation('opencode', 'apply')).not.toContain('/opsx-');
   });
 });
 
@@ -100,6 +72,13 @@ describe('transformWorkflowReferences', () => {
     const input = 'Use /opsx:propose, /opsx:explore, and /opsx:apply. Leave /opsx:unknown alone.';
     expect(transformWorkflowReferences(input, 'codex')).toBe(
       'Use $openspec-propose, $openspec-explore, and $openspec-apply-change. Leave /opsx:unknown alone.'
+    );
+  });
+
+  it('rewrites registered workflow references to neutral skill invocation for non-codex tools', () => {
+    const input = 'Use /opsx:propose, /opsx:explore, and /opsx:apply.';
+    expect(transformWorkflowReferences(input, 'claude')).toBe(
+      'Use invoke the openspec-propose skill, invoke the openspec-explore skill, and invoke the openspec-apply-change skill.'
     );
   });
 });

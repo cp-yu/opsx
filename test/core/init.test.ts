@@ -700,7 +700,6 @@ capabilities: []
   it('should show bootstrap guidance when bootstrap-opsx is installed and non-extend mode', async () => {
     saveGlobalConfig({
       featureFlags: {},
-      delivery: 'both',
     });
 
     const consoleSpy = vi.spyOn(console, 'log');
@@ -712,14 +711,14 @@ capabilities: []
       line.includes('Next: run') && line.includes('bootstrap')
     );
     expect(bootstrapLine).toBeDefined();
-    expect(bootstrapLine).toContain('/opsx:bootstrap');
+    // Skills-only surface: claude uses neutral skill invocation guidance
+    expect(bootstrapLine).toContain('invoke the openspec-bootstrap-opsx skill');
     expect(bootstrapLine).toContain('map your architecture');
   });
 
   it('should show bootstrap guidance for all 5 workflows including bootstrap-opsx', async () => {
     saveGlobalConfig({
       featureFlags: {},
-      delivery: 'both',
     });
 
     const consoleSpy = vi.spyOn(console, 'log');
@@ -736,7 +735,6 @@ capabilities: []
   it('should not show bootstrap guidance in extend mode', async () => {
     saveGlobalConfig({
       featureFlags: {},
-      delivery: 'both',
     });
 
     // Pre-create openspec to make it extend mode

@@ -1,7 +1,9 @@
 /**
- * Command Reference Utilities
+ * Workflow Reference Utilities
  *
  * Utilities for rendering workflow references to tool-specific invocation formats.
+ * Skills-only workflow surface: tools without precise skill invocation metadata
+ * receive a neutral skill invocation phrase rather than command syntax.
  */
 
 import { getWorkflowSurfaces, type WorkflowId } from '../core/workflow-surface.js';
@@ -18,18 +20,27 @@ const REGISTERED_WORKFLOW_REFERENCES: readonly RegisteredWorkflowReference[] = g
   })
 );
 
+/**
+ * Tools with precise, known skill invocation syntax.
+ * Lookup is explicit; tools not in this map fall back to neutral text.
+ */
+const PRECISE_SKILL_INVOCATION_TOOLS = new Set<string>(['codex']);
+
+/**
+ * Render a workflow invocation for a specific tool.
+ *
+ * - Codex uses `$<skillDirName>` (precise skill invocation metadata).
+ * - Other tools without precise metadata use a neutral skill invocation phrase
+ *   that references the explicit skill directory name.
+ */
 export function renderWorkflowInvocation(toolId: string, workflowId: WorkflowId): string {
   const workflow = getWorkflowSurfaces([workflowId])[0];
 
-  if (toolId === 'codex') {
+  if (PRECISE_SKILL_INVOCATION_TOOLS.has(toolId)) {
     return `$${workflow.skillDirName}`;
   }
 
-  if (toolId === 'opencode') {
-    return `/opsx-${workflow.commandSlug}`;
-  }
-
-  return `/opsx:${workflow.commandSlug}`;
+  return `invoke the ${workflow.skillDirName} skill`;
 }
 
 export function transformWorkflowReferences(text: string, toolId: string): string {
@@ -47,15 +58,10 @@ export function transformWorkflowReferences(text: string, toolId: string): strin
 }
 
 /**
- * Transforms colon-based command references to hyphen-based format.
- * Converts `/opsx:` patterns to `/opsx-` for tools that use hyphen syntax.
+ * Returns the neutral skill invocation phrase for opencode-style transforms.
  *
- * @param text - The text containing command references
- * @returns Text with command references transformed to hyphen format
- *
- * @example
- * transformToHyphenCommands('/opsx:new') // returns '/opsx-new'
- * transformToHyphenCommands('Use /opsx:apply to implement') // returns 'Use /opsx-apply to implement'
+ * Skills-only surface: opencode lacks precise metadata, so we emit a neutral
+ * skill invocation phrase instead of `/opsx-*` command syntax.
  */
 export function transformToHyphenCommands(text: string): string {
   return transformWorkflowReferences(text, 'opencode');

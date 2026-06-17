@@ -126,12 +126,12 @@
 
 #### Checks
 
-- [ ] C9 Verify subagent skeleton 固定选择
+- [x] C9 Verify subagent skeleton 固定选择
   - Verifies: `specs/verify-execution-model-selection/spec.md` / Requirement "Verify template selection follows execution model" / Scenario "不支持 clean-context subagent 的工具选择 reread skeleton", Scenario "选择逻辑使用显式 lookup"
   - Command: `npm test -- test/core/templates/verify-change.test.ts test/core/templates/archive-change.test.ts`
   - Expect: 所有工具生成 subagent-orchestrated instructions，输出不包含 current-agent-reread skeleton
 
-- [ ] C10 Verify workflow 引用使用 skill guidance
+- [x] C10 Verify workflow 引用使用 skill guidance
   - Verifies: `specs/tool-invocation-references/spec.md` / Requirement "Workflow 引用 SHALL 通过显式工具表面元数据渲染" / Scenario "无精确 skill 调用语法时使用中性文案"
   - Command: `npm test -- test/core/tool-invocation-references.test.ts test/core/update.test.ts`
   - Expect: 非 Codex 工具不回退 `/opsx:*` guidance，缺少 metadata 时显示中性 skill invocation 文案
