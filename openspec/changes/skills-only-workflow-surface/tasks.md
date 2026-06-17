@@ -52,17 +52,17 @@
 
 #### Checks
 
-- [ ] C3 Verify init skills-only generation
+- [x] C3 Verify init skills-only generation
   - Verifies: `specs/cli-init/spec.md` / Requirement "AI Tool Configuration" / Scenario "选择要配置的工具"
   - Command: `npm test -- test/core/init.test.ts test/core/workflow-installation.test.ts`
   - Expect: 初始化为所选工具写入 skills，且不生成 slash command artifacts
 
-- [ ] C4 Verify update skills-only refresh
+- [x] C4 Verify update skills-only refresh
   - Verifies: `specs/cli-update/spec.md` / Requirement "Update Behavior" / Scenario "刷新现有工具制品"
   - Command: `npm test -- test/core/update.test.ts test/core/profile-sync-drift.test.ts`
   - Expect: update 刷新已配置 skills，不把 command-only files 视为配置来源
 
-- [ ] C5 Verify 不主动清理旧 command 文件
+- [x] C5 Verify 不主动清理旧 command 文件
   - Verifies: `specs/cli-update/spec.md` / Requirement "Update detects configured tools from skills or commands" / Scenario "Commands-only installation"
   - Command: `npm test -- test/core/update.test.ts`
   - Expect: 仅存在旧 command files 的工具不被刷新，旧 command files 不被删除

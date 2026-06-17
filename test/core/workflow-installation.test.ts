@@ -6,7 +6,6 @@ import { randomUUID } from 'crypto';
 import {
   createToolWorkflowArtifactPlan,
   createWorkflowArtifactPlan,
-  getManagedCommandFiles,
   getPlannedToolArtifacts,
   MANAGED_STALE_INTERNAL_SKILL_DIR_NAMES,
   resolveEffectiveWorkflows,
@@ -59,17 +58,15 @@ describe('workflow installation planning', () => {
       'bootstrap-opsx',
     ]);
 
-    const plan = createWorkflowArtifactPlan(['propose', 'explore', 'apply', 'archive'], 'both', testDir);
+    const plan = createWorkflowArtifactPlan(['propose', 'explore', 'apply', 'archive'], testDir);
     expect(plan.workflows).toContain('bootstrap-opsx');
     expect(plan.expectedSkillDirNames).toContain('openspec-bootstrap-opsx');
-    expect(plan.expectedCommandSlugs).toContain('bootstrap');
   });
 
-  it('treats codex as skills-only even when delivery is commands', () => {
-    const plan = createToolWorkflowArtifactPlan('codex', ['propose', 'explore'], 'commands', testDir);
+  it('treats codex as skills-only (always skills-only)', () => {
+    const plan = createToolWorkflowArtifactPlan('codex', ['propose', 'explore'], testDir);
 
     expect(plan.shouldGenerateSkills).toBe(true);
-    expect(plan.shouldGenerateCommands).toBe(false);
     expect(plan.expectedSkillDirNames).toEqual([
       'openspec-propose',
       'openspec-explore',
@@ -77,19 +74,18 @@ describe('workflow installation planning', () => {
       'openspec-optimizer',
       'openspec-impact-sweeper',
     ]);
-    expect(plan.expectedCommandSlugs).toEqual([]);
   });
 
   it('tracks stale internal skill directories by explicit name', () => {
     expect(MANAGED_STALE_INTERNAL_SKILL_DIR_NAMES).toEqual(['openspec-implementer']);
 
-    const plan = createToolWorkflowArtifactPlan('claude', ['propose', 'explore'], 'both', testDir);
+    const plan = createToolWorkflowArtifactPlan('claude', ['propose', 'explore'], testDir);
     expect(plan.managedSkillDirNames).toContain('openspec-implementer');
     expect(plan.expectedSkillDirNames).not.toContain('openspec-implementer');
   });
 
   it('includes shared reference files in planned artifacts', () => {
-    const plan = createToolWorkflowArtifactPlan('claude', ['archive', 'apply'], 'skills', testDir);
+    const plan = createToolWorkflowArtifactPlan('claude', ['archive', 'apply'], testDir);
     const artifacts = getPlannedToolArtifacts(testDir, 'claude', plan);
 
     expect(artifacts.skillFiles).toContain(
@@ -107,6 +103,8 @@ describe('workflow installation planning', () => {
     expect(artifacts.skillFiles).toContain(
       path.join(testDir, 'openspec', 'references', 'openspec-output-protocol.md')
     );
+    // Skills-only: no command files are planned
+    expect(artifacts.commandFiles).toEqual([]);
   });
 
   it('removes only explicitly managed stale implementer skill directories during sync', async () => {
@@ -120,7 +118,6 @@ describe('workflow installation planning', () => {
       toolId: 'claude',
       projectPath: testDir,
       workflows: ['propose', 'explore'],
-      delivery: 'both',
       version: 'test',
     });
 
@@ -136,7 +133,6 @@ describe('workflow installation planning', () => {
       toolId: 'claude',
       projectPath: testDir,
       workflows: ['archive'],
-      delivery: 'skills',
       version: 'test',
     });
 
@@ -163,7 +159,6 @@ describe('workflow installation planning', () => {
       toolId: 'claude',
       projectPath: testDir,
       workflows: ['archive'],
-      delivery: 'skills',
       version: 'test',
     });
 
@@ -223,14 +218,12 @@ describe('workflow installation planning', () => {
         toolId: 'claude',
         projectPath: testDir,
         workflows: ['archive'],
-        delivery: 'skills',
         version: 'test',
       },
       {
         toolId: 'codex',
         projectPath: testDir,
         workflows: ['archive'],
-        delivery: 'skills',
         version: 'test',
       },
     ]);
@@ -268,19 +261,19 @@ describe('workflow installation planning', () => {
     ).toBe(false);
   });
 
-  it('resolves legacy codex command files via explicit paths', () => {
-    process.env.CODEX_HOME = path.join(testDir, 'custom-codex-home');
-
-    const commandFiles = getManagedCommandFiles(
-      testDir,
-      'codex',
-      ['explore', 'apply'],
-      { includeLegacyFiles: true }
-    );
-
-    expect(commandFiles).toEqual([
-      path.join(path.resolve(process.env.CODEX_HOME), 'prompts', 'opsx-explore.md'),
-      path.join(path.resolve(process.env.CODEX_HOME), 'prompts', 'opsx-apply.md'),
+  it('does not write any command files (skills-only surface)', async () => {
+    const summary = await ArtifactSyncEngine.syncAll([
+      {
+        toolId: 'claude',
+        projectPath: testDir,
+        workflows: ['archive', 'explore'],
+        version: 'test',
+      },
     ]);
+
+    expect(summary.totalCommandsWritten).toBe(0);
+    expect(summary.totalCommandsRemoved).toBe(0);
+    // Skills should be written
+    expect(summary.totalSkillsWritten).toBeGreaterThan(0);
   });
 });

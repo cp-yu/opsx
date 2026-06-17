@@ -252,7 +252,7 @@ git:
   });
 
   describe('bootstrap surface exposure', () => {
-    it('adds bootstrap command surface when bootstrap workspace exists and remains convergent across repeated updates', async () => {
+    it('adds bootstrap skill surface when bootstrap workspace exists and remains convergent across repeated updates', async () => {
       const skillsDir = path.join(testDir, '.claude', 'skills', 'openspec-explore');
       await fs.mkdir(skillsDir, { recursive: true });
       await fs.writeFile(path.join(skillsDir, 'SKILL.md'), 'existing explore skill');
@@ -260,18 +260,18 @@ git:
 
       setMockConfig({
         featureFlags: {},
-        delivery: 'commands',
       });
 
       await updateCommand.execute(testDir);
-      const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
-      const firstRunFiles = (await fs.readdir(commandsDir)).sort();
-      expect(firstRunFiles).toContain('bootstrap.md');
+      const bootstrapSkill = path.join(testDir, '.claude', 'skills', 'openspec-bootstrap-opsx', 'SKILL.md');
+      expect(await FileSystemUtils.fileExists(bootstrapSkill)).toBe(true);
 
       await updateCommand.execute(testDir);
-      const secondRunFiles = (await fs.readdir(commandsDir)).sort();
+      expect(await FileSystemUtils.fileExists(bootstrapSkill)).toBe(true);
 
-      expect(secondRunFiles).toEqual(firstRunFiles);
+      // Skills-only: no bootstrap command file is generated
+      const bootstrapCmd = path.join(testDir, '.claude', 'commands', 'opsx', 'bootstrap.md');
+      expect(await FileSystemUtils.fileExists(bootstrapCmd)).toBe(false);
     });
   });
 
@@ -375,8 +375,8 @@ Old instructions content
     });
   });
 
-  describe('command updates', () => {
-    it('should update opsx commands for configured Claude tool', async () => {
+  describe('command updates (skills-only surface)', () => {
+    it('should NOT generate opsx commands for configured Claude tool', async () => {
       // Set up a configured Claude tool
       const skillsDir = path.join(testDir, '.claude', 'skills');
       await fs.mkdir(path.join(skillsDir, 'openspec-explore'), {
@@ -389,22 +389,21 @@ Old instructions content
 
       await updateCommand.execute(testDir);
 
-      // Check opsx command files were created
+      // Skills-only: no command files are generated
       const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
       const exploreCmd = path.join(commandsDir, 'explore.md');
       const exists = await FileSystemUtils.fileExists(exploreCmd);
-      expect(exists).toBe(true);
+      expect(exists).toBe(false);
 
-      const content = await fs.readFile(exploreCmd, 'utf-8');
-      expect(content).toContain('---');
-      expect(content).toContain('name:');
-      expect(content).toContain('description:');
-      expect(content).toContain('category:');
-      expect(content).toContain('tags:');
+      // Skills should be refreshed
+      const skillContent = await fs.readFile(
+        path.join(skillsDir, 'openspec-explore', 'SKILL.md'),
+        'utf-8'
+      );
+      expect(skillContent).not.toBe('old content');
     });
 
-    it('should update core profile opsx commands when tool is configured', async () => {
-      // Set up a configured tool
+    it('should NOT generate any opsx commands even with all workflows installed', async () => {
       const skillsDir = path.join(testDir, '.claude', 'skills');
       await fs.mkdir(path.join(skillsDir, 'openspec-explore'), {
         recursive: true,
@@ -416,43 +415,35 @@ Old instructions content
 
       await updateCommand.execute(testDir);
 
-      // Verify core profile commands were created (propose, explore, apply, archive)
-      const coreCommandIds = ['explore', 'apply', 'archive', 'propose'];
+      const allCommandIds = ['explore', 'apply', 'archive', 'propose', 'bootstrap', 'new', 'continue', 'ff', 'sync', 'bulk-archive', 'verify'];
       const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
-      for (const cmdId of coreCommandIds) {
+      for (const cmdId of allCommandIds) {
         const cmdFile = path.join(commandsDir, `${cmdId}.md`);
-        const exists = await FileSystemUtils.fileExists(cmdFile);
-        expect(exists).toBe(true);
-      }
-
-      // Verify non-core commands are NOT created
-      const nonCoreCommandIds = ['new', 'continue', 'ff', 'sync', 'bulk-archive', 'verify'];
-      for (const cmdId of nonCoreCommandIds) {
-        const cmdFile = path.join(commandsDir, `${cmdId}.md`);
-        const exists = await FileSystemUtils.fileExists(cmdFile);
-        expect(exists).toBe(false);
+        expect(await FileSystemUtils.fileExists(cmdFile)).toBe(false);
       }
     });
 
-    it('should keep bootstrap command when bootstrap-opsx is in registry', async () => {
+    it('should NOT refresh existing bootstrap command files (skills-only)', async () => {
       const skillsDir = path.join(testDir, '.claude', 'skills');
       await fs.mkdir(path.join(skillsDir, 'openspec-explore'), { recursive: true });
       await fs.writeFile(path.join(skillsDir, 'openspec-explore', 'SKILL.md'), 'old content');
 
+      // Pre-existing command file remains untouched
       const bootstrapCmd = path.join(testDir, '.claude', 'commands', 'opsx', getCommandSlug('bootstrap-opsx') + '.md');
       await fs.mkdir(path.dirname(bootstrapCmd), { recursive: true });
-      await fs.writeFile(bootstrapCmd, 'legacy bootstrap command');
+      const legacyContent = 'legacy bootstrap command';
+      await fs.writeFile(bootstrapCmd, legacyContent);
 
       setMockConfig({
         featureFlags: {},
-        delivery: 'commands',
       });
 
       await updateCommand.execute(testDir);
 
-      // bootstrap-opsx is in the registry, so it should be kept
+      // Skills-only: command file is left as-is (not refreshed, not removed)
       expect(await FileSystemUtils.fileExists(bootstrapCmd)).toBe(true);
-      expect(await FileSystemUtils.fileExists(path.join(testDir, '.claude', 'commands', 'opsx', 'explore.md'))).toBe(true);
+      const content = await fs.readFile(bootstrapCmd, 'utf-8');
+      expect(content).toBe(legacyContent);
     });
 
   });
@@ -505,7 +496,7 @@ Old instructions content
       consoleSpy.mockRestore();
     });
 
-    it('should update Qwen tool with correct command format', async () => {
+    it('should update Qwen tool with skills-only format (no TOML commands)', async () => {
       // Set up Qwen
       const qwenSkillsDir = path.join(testDir, '.qwen', 'skills');
       await fs.mkdir(path.join(qwenSkillsDir, 'openspec-explore'), {
@@ -518,7 +509,7 @@ Old instructions content
 
       await updateCommand.execute(testDir);
 
-      // Check Qwen command format (TOML) - Qwen uses flat path structure: opsx-<id>.toml
+      // Skills-only: no TOML command files are generated
       const qwenCmd = path.join(
         testDir,
         '.qwen',
@@ -526,14 +517,17 @@ Old instructions content
         'opsx-explore.toml'
       );
       const exists = await FileSystemUtils.fileExists(qwenCmd);
-      expect(exists).toBe(true);
+      expect(exists).toBe(false);
 
-      const content = await fs.readFile(qwenCmd, 'utf-8');
-      expect(content).toContain('description =');
-      expect(content).toContain('prompt =');
+      // Skills should be refreshed
+      const skillContent = await fs.readFile(
+        path.join(qwenSkillsDir, 'openspec-explore', 'SKILL.md'),
+        'utf-8'
+      );
+      expect(readSkillFrontmatter(skillContent)).toMatchObject({ name: 'openspec-explore' });
     });
 
-    it('should update Windsurf tool with correct command format', async () => {
+    it('should update Windsurf tool with skills-only format (no workflow commands)', async () => {
       // Set up Windsurf
       const windsurfSkillsDir = path.join(testDir, '.windsurf', 'skills');
       await fs.mkdir(path.join(windsurfSkillsDir, 'openspec-explore'), {
@@ -546,7 +540,7 @@ Old instructions content
 
       await updateCommand.execute(testDir);
 
-      // Check Windsurf command format
+      // Skills-only: no workflow command files are generated
       const windsurfCmd = path.join(
         testDir,
         '.windsurf',
@@ -554,11 +548,14 @@ Old instructions content
         'opsx-explore.md'
       );
       const exists = await FileSystemUtils.fileExists(windsurfCmd);
-      expect(exists).toBe(true);
+      expect(exists).toBe(false);
 
-      const content = await fs.readFile(windsurfCmd, 'utf-8');
-      expect(content).toContain('---');
-      expect(content).toContain('name:');
+      // Skills should be refreshed
+      const skillContent = await fs.readFile(
+        path.join(windsurfSkillsDir, 'openspec-explore', 'SKILL.md'),
+        'utf-8'
+      );
+      expect(readSkillFrontmatter(skillContent)).toMatchObject({ name: 'openspec-explore' });
     });
   });
 
@@ -1566,7 +1563,7 @@ More user content after markers.
       expect(await FileSystemUtils.fileExists(nonCoreSkill)).toBe(false);
     });
 
-    it('should create commands when upgrading legacy tools', async () => {
+    it('should NOT create commands when upgrading legacy tools (skills-only)', async () => {
       // Create legacy command directory
       await fs.mkdir(path.join(testDir, '.claude', 'commands', 'openspec'), { recursive: true });
       await fs.writeFile(
@@ -1578,17 +1575,21 @@ More user content after markers.
       const forceUpdateCommand = new UpdateCommand({ force: true });
       await forceUpdateCommand.execute(testDir);
 
-      // New opsx commands should be created
+      // Skills-only: no new opsx commands are created
       const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
       const exploreCmd = path.join(commandsDir, 'explore.md');
-      const exists = await FileSystemUtils.fileExists(exploreCmd);
-      expect(exists).toBe(true);
+      expect(await FileSystemUtils.fileExists(exploreCmd)).toBe(false);
+
+      // Skills should be created
+      const skillsDir = path.join(testDir, '.claude', 'skills');
+      expect(await FileSystemUtils.fileExists(
+        path.join(skillsDir, 'openspec-explore', 'SKILL.md')
+      )).toBe(true);
     });
 
-    it('should install all 6 registry workflows when upgrading legacy tools', async () => {
+    it('should install all 6 registry workflows when upgrading legacy tools (skills-only)', async () => {
       setMockConfig({
         featureFlags: {},
-        delivery: 'both',
       });
 
       await fs.mkdir(path.join(testDir, '.claude', 'commands', 'openspec'), { recursive: true });
@@ -1600,7 +1601,7 @@ More user content after markers.
       const forceUpdateCommand = new UpdateCommand({ force: true });
       await forceUpdateCommand.execute(testDir);
 
-      // All 6 registry workflows should be installed (snack is skill-only)
+      // All 6 registry workflows should be installed as skills (snack is skill-only)
       const skillsDir = path.join(testDir, '.claude', 'skills');
       const expectedSkills = [
         'openspec-explore', 'openspec-propose', 'openspec-apply-change',
@@ -1612,18 +1613,19 @@ More user content after markers.
         )).toBe(true);
       }
 
+      // Skills-only: no command files are generated
       const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
       for (const cmd of ['explore.md', 'propose.md', 'apply.md', 'archive.md', 'bootstrap.md']) {
         expect(await FileSystemUtils.fileExists(
           path.join(commandsDir, cmd)
-        )).toBe(true);
+        )).toBe(false);
       }
     });
   });
 
-  describe('profile-aware updates', () => {
-    it('should install all 6 registry workflows regardless of config', async () => {
-      // Obsolete profile/workflows in config are now ignored
+  describe('profile-aware updates (skills-only)', () => {
+    it('should install all 6 registry workflows regardless of stale config', async () => {
+      // Obsolete profile/workflows/delivery in config are now ignored
       setMockConfig({
         featureFlags: {},
         delivery: 'both',
@@ -1653,7 +1655,7 @@ More user content after markers.
       )).toBe(false);
     });
 
-    it('should respect skills-only delivery setting', async () => {
+    it('should always generate skills only (no commands) with stale delivery=skills', async () => {
       setMockConfig({
         featureFlags: {},
         delivery: 'skills',
@@ -1677,7 +1679,7 @@ More user content after markers.
       )).toBe(false);
     });
 
-    it('should respect commands-only delivery setting', async () => {
+    it('should always generate skills only even with stale delivery=commands', async () => {
       setMockConfig({
         featureFlags: {},
         delivery: 'commands',
@@ -1689,49 +1691,46 @@ More user content after markers.
 
       await updateCommand.execute(testDir);
 
-      // Commands should be created
+      // Skills-only surface ignores stale delivery=commands
+      expect(await FileSystemUtils.fileExists(
+        path.join(skillsDir, 'openspec-explore', 'SKILL.md')
+      )).toBe(true);
+
+      // Commands should NOT be created
       const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
       expect(await FileSystemUtils.fileExists(
         path.join(commandsDir, 'explore.md')
-      )).toBe(true);
-
-      // Skills should be removed for commands-only delivery
-      expect(await FileSystemUtils.fileExists(
-        path.join(skillsDir, 'openspec-explore', 'SKILL.md')
       )).toBe(false);
     });
 
-    it('should remove skills for configured tools without command adapters in commands-only delivery', async () => {
+    it('should not actively remove skills even when stale delivery=commands is set', async () => {
       setMockConfig({
         featureFlags: {},
         delivery: 'commands',
       });
 
       const { AI_TOOLS } = await import('../../src/core/config.js');
-      const { CommandAdapterRegistry } = await import('../../src/core/command-generation/index.js');
-      const adapterlessTool = AI_TOOLS.find(
-        (tool) => tool.skillsDir && tool.value !== 'codex' && !CommandAdapterRegistry.get(tool.value)
-      );
-      expect(adapterlessTool).toBeDefined();
-      if (!adapterlessTool?.skillsDir) {
+      const someTool = AI_TOOLS.find((tool) => tool.skillsDir && tool.value !== 'codex');
+      expect(someTool).toBeDefined();
+      if (!someTool?.skillsDir) {
         return;
       }
 
-      const skillsDir = path.join(testDir, adapterlessTool.skillsDir, 'skills');
+      const skillsDir = path.join(testDir, someTool.skillsDir, 'skills');
       await fs.mkdir(path.join(skillsDir, 'openspec-explore'), { recursive: true });
       await fs.writeFile(path.join(skillsDir, 'openspec-explore', 'SKILL.md'), 'old');
 
       await expect(updateCommand.execute(testDir)).resolves.toBeUndefined();
 
+      // Skills remain — skills-only surface does not strip skills
       expect(await FileSystemUtils.fileExists(
         path.join(skillsDir, 'openspec-explore', 'SKILL.md')
-      )).toBe(false);
+      )).toBe(true);
     });
 
-    it('should apply config sync when templates are up to date', async () => {
+    it('should apply config sync when templates are up to date (skills-only)', async () => {
       setMockConfig({
         featureFlags: {},
-        delivery: 'skills',
       });
 
       const skillsDir = path.join(testDir, '.claude', 'skills');
@@ -1749,22 +1748,22 @@ content
 `
       );
 
+      // Pre-existing command file remains (skills-only does not actively clean command files)
       const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
       await fs.mkdir(commandsDir, { recursive: true });
       await fs.writeFile(path.join(commandsDir, 'explore.md'), 'old command');
 
       await updateCommand.execute(testDir);
 
-      // Command files should be removed due to delivery change, even though skill version is current
+      // Skills-only: command file is NOT removed
       expect(await FileSystemUtils.fileExists(
         path.join(commandsDir, 'explore.md')
-      )).toBe(false);
+      )).toBe(true);
     });
 
-    it('should detect commands-only tool configuration', async () => {
+    it('should NOT detect commands-only tool configuration (skills-only)', async () => {
       setMockConfig({
         featureFlags: {},
-        delivery: 'commands',
       });
 
       const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
@@ -1775,27 +1774,25 @@ content
 
       await updateCommand.execute(testDir);
 
-      // Should not short-circuit with "No configured tools found"
+      // Skills-only: command-only tools are NOT treated as configured
       const calls = consoleSpy.mock.calls.map(call =>
         call.map(arg => String(arg)).join(' ')
       );
       const hasNoConfiguredMessage = calls.some(call =>
         call.includes('No configured tools found')
       );
-      expect(hasNoConfiguredMessage).toBe(false);
+      expect(hasNoConfiguredMessage).toBe(true);
 
-      // Commands should be updated/generated for the core profile
-      expect(await FileSystemUtils.fileExists(
-        path.join(commandsDir, 'propose.md')
-      )).toBe(true);
+      // Existing command files are NOT refreshed
+      const existingContent = await fs.readFile(path.join(commandsDir, 'explore.md'), 'utf-8');
+      expect(existingContent).toBe('existing command');
 
       consoleSpy.mockRestore();
     });
 
-    it('should remove workflows not in registry during update sync', async () => {
+    it('should remove workflows not in registry during update sync (skills-only)', async () => {
       setMockConfig({
         featureFlags: {},
-        delivery: 'both',
       });
 
       // Set up tool with extra workflows not in registry
@@ -1803,9 +1800,12 @@ content
       await fs.mkdir(path.join(skillsDir, 'openspec-explore'), { recursive: true });
       await fs.writeFile(path.join(skillsDir, 'openspec-explore', 'SKILL.md'), 'old');
 
-      // Add a removed workflow
+      // Add a removed workflow skill
       await fs.mkdir(path.join(skillsDir, 'openspec-new-change'), { recursive: true });
       await fs.writeFile(path.join(skillsDir, 'openspec-new-change', 'SKILL.md'), 'old');
+      // Pre-existing command file for one of the 7 explicitly-removed workflows
+      // (new, continue, ff, sync, bulk-archive, verify, onboard) IS cleaned up
+      // by cleanupExpandedWorkflowRemnants.
       const extraCommandFile = path.join(testDir, '.claude', 'commands', 'opsx', 'new.md');
       await fs.mkdir(path.dirname(extraCommandFile), { recursive: true });
       await fs.writeFile(extraCommandFile, 'old');
@@ -1814,13 +1814,15 @@ content
 
       await updateCommand.execute(testDir);
 
-      // Removed workflow artifacts should be cleaned up
+      // Removed skill workflow is cleaned up
       expect(await FileSystemUtils.fileExists(
         path.join(skillsDir, 'openspec-new-change', 'SKILL.md')
       )).toBe(false);
+      // The 7 explicitly-removed workflow command files are still cleaned by
+      // cleanupExpandedWorkflowRemnants (historical cleanup, not delivery-based).
       expect(await FileSystemUtils.fileExists(extraCommandFile)).toBe(false);
 
-      // Should report cleaned up artifacts.
+      // Should report cleaned up skill artifacts.
       const calls = consoleSpy.mock.calls.map(call =>
         call.map(arg => String(arg)).join(' ')
       );
@@ -1832,10 +1834,9 @@ content
       consoleSpy.mockRestore();
     });
 
-    it('should keep codex skills-only in both delivery and delete legacy command files', async () => {
+    it('should keep codex skills-only and NOT delete legacy command files (skills-only surface)', async () => {
       setMockConfig({
         featureFlags: {},
-        delivery: 'both',
       });
 
       const skillsDir = path.join(testDir, '.codex', 'skills');
@@ -1849,14 +1850,15 @@ content
       expect(await FileSystemUtils.fileExists(
         path.join(skillsDir, 'openspec-propose', 'SKILL.md')
       )).toBe(true);
-      expect(await FileSystemUtils.fileExists(legacyCommand)).toBe(false);
+      // Skills-only: legacy command files are not actively removed
+      expect(await FileSystemUtils.fileExists(legacyCommand)).toBe(true);
 
       const calls = consoleSpy.mock.calls.map((call) => call.map((arg) => String(arg)).join(' '));
       expect(calls.some((call) => call.includes('no adapter'))).toBe(false);
       consoleSpy.mockRestore();
     });
 
-    it('should keep codex skills in commands delivery and remove legacy command files', async () => {
+    it('should keep codex skills even with stale delivery=commands (skills-only)', async () => {
       setMockConfig({
         featureFlags: {},
         delivery: 'commands',
@@ -1869,32 +1871,33 @@ content
 
       await updateCommand.execute(testDir);
 
+      // Skills-only ignores stale delivery=commands
       expect(await FileSystemUtils.fileExists(
         path.join(skillsDir, 'openspec-apply-change', 'SKILL.md')
       )).toBe(true);
-      expect(await FileSystemUtils.fileExists(legacyCommand)).toBe(false);
+      // Legacy command files are not actively removed
+      expect(await FileSystemUtils.fileExists(legacyCommand)).toBe(true);
     });
 
-    it('should recover codex from legacy command-only installs', async () => {
+    it('should NOT recover codex from legacy command-only installs (skills-only)', async () => {
       setMockConfig({
         featureFlags: {},
-        delivery: 'commands',
       });
 
       const legacyCommand = await writeLegacyCodexCommand('explore');
 
       await updateCommand.execute(testDir);
 
+      // Skills-only: command-only tools are NOT detected as configured
       expect(await FileSystemUtils.fileExists(
         path.join(testDir, '.codex', 'skills', 'openspec-explore', 'SKILL.md')
-      )).toBe(true);
-      expect(await FileSystemUtils.fileExists(legacyCommand)).toBe(false);
+      )).toBe(false);
+      expect(await FileSystemUtils.fileExists(legacyCommand)).toBe(true);
     });
 
     it('should show codex getting-started guidance with precise managed skill names', async () => {
       setMockConfig({
         featureFlags: {},
-        delivery: 'commands',
       });
 
       const consoleSpy = vi.spyOn(console, 'log');
@@ -2041,13 +2044,13 @@ content
       expect(workflows).toHaveLength(0);
     });
 
-    it('should detect installed workflows from managed command files', async () => {
+    it('should NOT detect installed workflows from managed command files (skills-only)', async () => {
       const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
       await fs.mkdir(commandsDir, { recursive: true });
       await fs.writeFile(path.join(commandsDir, 'explore.md'), 'content');
 
       const workflows = scanInstalledWorkflows(testDir, ['claude']);
-      expect(workflows).toContain('explore');
+      expect(workflows).not.toContain('explore');
     });
   });
 
