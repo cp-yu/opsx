@@ -49,7 +49,7 @@ The command SHALL verify task completion status before archiving to prevent prem
 
 ### Requirement: Archive Process
 
-The archive operation SHALL support complete archive-time sync in core mode before moving the change to the archive, and SHALL stop after the archive move plus handoff reminder without executing git write operations.
+The archive operation SHALL support complete archive-time sync in core mode before moving the change to the archive, and SHALL stop after the archive move plus handoff reminder without executing git write operations. Archive-time sync SHALL preserve removal-only delta idempotency: when all headers named by a removal-only delta are already absent from the corresponding main spec, archive SHALL treat that spec delta as already synced even if the main spec still contains unrelated requirements.
 
 #### Scenario: Core mode archives with embedded specs and OPSX sync
 - **WHEN** archiving a change in `core` mode
@@ -79,6 +79,15 @@ The archive operation SHALL support complete archive-time sync in core mode befo
 - **AND** the corresponding main spec file no longer exists because sync already deleted it
 - **THEN** the archive sync gate SHALL treat that spec delta as already synced
 - **AND** SHALL NOT block archive with a pending sync error
+
+#### Scenario: Removal-only delta target headers already absent
+- **WHEN** a change delta only removes requirements
+- **AND** the corresponding main spec file still exists
+- **AND** every requirement header named by the delta is already absent from that main spec
+- **AND** the main spec still contains unrelated requirements
+- **THEN** the archive sync gate SHALL treat that spec delta as already synced
+- **AND** SHALL NOT block archive with a pending sync error
+- **AND** archive-time sync SHALL NOT throw `REMOVED failed`
 
 ### Requirement: Spec Update Process
 

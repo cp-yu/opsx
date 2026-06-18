@@ -14,7 +14,7 @@ The system SHALL reconcile delta specs and OPSX delta during archive.
 - **AND** SHALL preserve idempotency
 
 ### Requirement: Delta Reconciliation Logic
-The agent SHALL reconcile main specs with delta specs using the delta operation headers.
+The agent SHALL reconcile main specs with delta specs using the delta operation headers. The reconciliation SHALL determine removal-only delta completion by explicit requirement header lookup: when every header listed under `## REMOVED Requirements` is absent from the current main spec, that removal-only delta is already applied even if unrelated requirements remain.
 
 #### Scenario: ADDED requirements
 - **WHEN** delta contains `## ADDED Requirements` with a requirement
@@ -35,6 +35,13 @@ The agent SHALL reconcile main specs with delta specs using the delta operation 
 - **WHEN** delta contains `## REMOVED Requirements` with a requirement name
 - **AND** the requirement exists in main spec
 - **THEN** remove the requirement from main spec
+
+#### Scenario: REMOVED requirements already absent
+- **WHEN** delta contains only `## REMOVED Requirements`
+- **AND** every listed requirement header is absent from main spec
+- **AND** main spec still contains unrelated requirements
+- **THEN** reconciliation SHALL treat the delta as already applied
+- **AND** SHALL NOT attempt to remove the missing headers again
 
 #### Scenario: RENAMED requirements
 - **WHEN** delta contains `## RENAMED Requirements` with FROM:/TO: format
@@ -99,3 +106,4 @@ Archive sync SHALL require a fresh verify result before writing.
 
 - **WHEN** archive sync runs without a fresh `.verify-result.json`
 - **THEN** system SHALL stop and require verify first
+
