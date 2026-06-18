@@ -47,7 +47,7 @@ These commands support `--json` output for programmatic use by AI agents and scr
 | `openspec templates` | Find template paths | `--json` for path resolution |
 | `openspec schemas` | List available schemas | `--json` for schema discovery |
 
-For AI workflow surfaces, `/opsx:verify` now runs a two-phase gate by default and accepts `--skip-optimization` when you want a Phase 1 conformance-only pass. When Phase 2 runs, it keeps a `git stash` checkpoint so failed optimization attempts can restore the exact Phase 1 baseline. `/opsx:archive` reuses a fresh verify result when possible, but if it must re-run full verify, that rerun is required to honor the same Phase 2 contract whenever optimization is still eligible.
+OpenSpec's verify gate now runs a two-phase contract by default and accepts `--skip-optimization` when you want a Phase 1 conformance-only pass. When Phase 2 runs, it keeps a `git stash` checkpoint so failed optimization attempts can restore the exact Phase 1 baseline. `/opsx:archive` reuses a fresh verify result when possible, but if it must re-run full verify, that rerun is required to honor the same Phase 2 contract whenever optimization is still eligible.
 
 ---
 
@@ -69,9 +69,7 @@ These options work with all commands:
 
 Initialize OpenSpec in your project. Creates the folder structure and configures AI tool integrations.
 
-Default behavior uses global config defaults: profile `core`, delivery `both`, workflows `propose, explore, apply, archive`.
-
-Codex is always treated as skills-only. `openspec init` and `openspec update` keep Codex workflows under `.codex/skills/` even when global delivery is `commands`.
+Default behavior installs the fixed managed workflow skills.
 
 ```
 openspec init [path] [options]
@@ -89,9 +87,6 @@ openspec init [path] [options]
 |--------|-------------|
 | `--tools <list>` | Configure AI tools non-interactively. Use `all`, `none`, or comma-separated list |
 | `--force` | Auto-cleanup legacy files without prompting |
-| `--profile <profile>` | Override global profile for this init run (`core` or `custom`) |
-
-`--profile custom` uses whatever workflows are currently selected in global config (`openspec config profile`).
 
 **Supported tool IDs (`--tools`):** `amazon-q`, `antigravity`, `auggie`, `claude`, `cline`, `codex`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `kilocode`, `kiro`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `windsurf`
 
@@ -110,9 +105,6 @@ openspec init --tools claude,cursor
 # Configure for all supported tools
 openspec init --tools all
 
-# Override profile for this run
-openspec init --profile core
-
 # Skip prompts and auto-cleanup legacy files
 openspec init --force
 ```
@@ -128,7 +120,6 @@ openspec/
 .claude/skills/         # Claude Code skills (if claude selected)
 .codex/skills/          # Codex skills (if codex selected; always skills-only)
 .cursor/skills/         # Cursor skills (if cursor selected)
-.cursor/commands/       # Cursor OPSX commands (if delivery includes commands)
 ... (other tool configs)
 ```
 
@@ -136,7 +127,7 @@ openspec/
 
 ### `openspec update`
 
-Update OpenSpec instruction files after upgrading the CLI. Re-generates AI tool configuration files using your current global profile, selected workflows, and delivery mode.
+Update OpenSpec instruction files after upgrading the CLI. Re-generates managed workflow skills for configured tools.
 
 ```
 openspec update [path] [options]
@@ -781,7 +772,6 @@ openspec config <subcommand> [options]
 | `unset <key>` | Remove a key |
 | `reset` | Reset to defaults |
 | `edit` | Open in `$EDITOR` |
-| `profile [preset]` | Configure workflow profile interactively or via preset |
 
 **Examples:**
 
@@ -810,36 +800,6 @@ openspec config reset --all --yes
 # Edit config in your editor
 openspec config edit
 
-# Configure profile with action-based wizard
-openspec config profile
-
-# Fast preset: switch workflows to core (keeps delivery mode)
-openspec config profile core
-```
-
-`openspec config profile` starts with a current-state summary, then lets you choose:
-- Change delivery + workflows
-- Change delivery only
-- Change workflows only
-- Keep current settings (exit)
-
-If you keep current settings, no changes are written and no update prompt is shown.
-If there are no config changes but the current project files are out of sync with your global profile/delivery, OpenSpec will show a warning and suggest running `openspec update`.
-Pressing `Ctrl+C` also cancels the flow cleanly (no stack trace) and exits with code `130`.
-In the workflow checklist, `[x]` means the workflow is selected in global config. To apply those selections to project files, run `openspec update` (or choose `Apply changes to this project now?` when prompted inside a project).
-
-**Interactive examples:**
-
-```bash
-# Delivery-only update
-openspec config profile
-# choose: Change delivery only
-# choose delivery: Skills only
-
-# Workflows-only update
-openspec config profile
-# choose: Change workflows only
-# toggle workflows in the checklist, then confirm
 ```
 
 ---

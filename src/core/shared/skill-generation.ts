@@ -98,8 +98,7 @@ export function getSkillTemplates(
     workflowId: entry.workflowId,
   }));
 
-  // Internal skill templates are always included — they are part of every
-  // installation (both core and expanded presets).
+  // Internal skill templates are always included — they are part of every installation.
   const internalEntries: SkillTemplateEntry[] = INTERNAL_SKILL_TEMPLATES.map((entry) => ({
     template: entry.getSkillTemplate(),
     dirName: entry.dirName,

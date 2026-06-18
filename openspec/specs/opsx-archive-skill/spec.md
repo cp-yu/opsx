@@ -62,25 +62,18 @@ The skill SHALL 在归档前检查 `tasks.md` 的任务完成状态，并执行�
 - **AND** SHALL NOT 仅因 archive-time 存在 speculative edit 风险而降级成 Phase-1-only verify
 - **AND** 只有在 config 禁用或用户显式请求 `--skip-optimization` 时，`.verify-result.json` 才可记录 `optimization.status = SKIPPED`
 
-#### Scenario: archive-time full verify 在不支持 subagent 的工具上复用 reread contract
-
-- **WHEN** archive 因缺失或 stale 的 `.verify-result.json` 而重新执行 full verify
-- **AND** 当前 AI 工具不支持 clean-context subagent verify
-- **THEN** the skill SHALL 复用与 `/opsx:verify` 相同的 current-agent-reread verify contract
-- **AND** SHALL 保持与 standalone verify 一致的 Phase 2 eligibility 语义
-
 ### Requirement: Spec Sync Prompt
 
-The skill SHALL handle sync inline during archive in core mode instead of requiring a separate `/opsx:sync` surface.
+The skill SHALL handle sync inline during archive instead of requiring a separate `/opsx:sync` surface.
 
-#### Scenario: Core mode archives a change with delta specs
-- **WHEN** agent executes `/opsx:archive` in `core` mode
+#### Scenario: Archive a change with delta specs
+- **WHEN** agent executes `/opsx:archive`
 - **AND** delta specs exist
 - **THEN** the skill SHALL reconcile delta specs to main specs as part of archive
 - **AND** SHALL NOT require an installed separate `/opsx:sync` skill
 
-#### Scenario: Core mode archives a change with opsx-delta
-- **WHEN** agent executes `/opsx:archive` in `core` mode
+#### Scenario: Archive a change with opsx-delta
+- **WHEN** agent executes `/opsx:archive`
 - **AND** `opsx-delta.yaml` exists
 - **THEN** the skill SHALL apply the OPSX delta during archive
 - **AND** SHALL validate referential integrity before writing
@@ -93,16 +86,15 @@ The skill SHALL handle sync inline during archive in core mode instead of requir
 - **AND** SHALL leave OPSX files unchanged
 - **AND** SHALL leave the change directory in place
 
-#### Scenario: Core mode archive summary reports embedded sync result
-- **WHEN** archive completes in `core` mode
+#### Scenario: Archive summary reports embedded sync result
+- **WHEN** archive completes
 - **THEN** the summary SHALL report whether archive-time sync updated main specs and OPSX files
 - **AND** SHALL distinguish successful sync from skipped sync
 
-#### Scenario: Expanded mode archive keeps the same sync-state contract
-- **WHEN** agent executes `/opsx:archive` in `expanded` mode
+#### Scenario: Archive keeps the same sync-state contract
+- **WHEN** agent executes `/opsx:archive`
 - **AND** delta specs or `opsx-delta.yaml` are present
-- **THEN** archive SHALL still assess and execute the same embedded sync contract before moving the change
-- **AND** expanded mode MAY separately expose `/opsx:sync` as an optional standalone surface
+- **THEN** archive SHALL assess and execute the embedded sync contract before moving the change
 
 ### Requirement: Archive Process
 
@@ -130,7 +122,7 @@ The skill SHALL provide clear feedback about the archive operation.
 
 - **WHEN** archive completes after syncing specs
 - **THEN** display summary:
-  - Specs synced (from `/opsx:sync` output)
+  - Specs synced
   - Change archived to location
   - Schema that was used
 
@@ -271,4 +263,3 @@ archive skill 在归档后的 git 流程中 SHALL 通过统一 prompt/runtime pr
 - **WHEN** 生成 `openspec-archive-change` skill
 - **THEN** 主 `SKILL.md` SHALL 保留 archive 流程、verify gate、sync、CLI archive、agent git 流程与 references 读取步骤
 - **AND** 主 `SKILL.md` SHALL NOT 内联 commit message 格式的完整说明
-

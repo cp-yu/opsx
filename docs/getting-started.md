@@ -6,20 +6,13 @@ This guide explains how OpenSpec works after you've installed and initialized it
 
 OpenSpec helps you and your AI coding assistant agree on what to build before any code is written.
 
-**Default quick path (core profile):**
+**Default quick path:**
 
 ```text
 /opsx:propose ──► /opsx:apply ──► /opsx:archive
 ```
 
-**Expanded path (`expanded` preset):**
-
-```text
-/opsx:new ──► /opsx:ff or /opsx:continue ──► /opsx:apply ──► /opsx:verify ──► /opsx:archive
-```
-
-The default global profile is `core`, which includes `propose`, `explore`, `apply`, and `archive`. In `core`, `/opsx:archive` syncs delta specs and `opsx-delta` inline before archiving. You can switch to the `expanded` preset with `openspec config profile` and then `openspec update`.
-The key difference is user-visible surface area, not verification standards: `core` still has four surfaces, but `/opsx:archive` now runs a full verify gate before archive. In `expanded`, you may run `/opsx:verify` explicitly and archive will reuse a fresh verify result when possible.
+OpenSpec installs a fixed managed workflow surface. `/opsx:archive` syncs delta specs and `opsx-delta` inline before archiving, and it runs a full verify gate before archive.
 
 ## What OpenSpec Creates
 
@@ -136,8 +129,6 @@ AI:  Created openspec/changes/add-dark-mode/
      - Skipped: OPSX merge validation (no openspec/project.opsx.yaml)
      Ready for implementation!
 ```
-
-If you've enabled the `expanded` preset, you can also do this as two steps: `/opsx:new` then `/opsx:ff` (or `/opsx:continue` incrementally).
 
 ### 2. What Gets Created
 

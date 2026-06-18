@@ -448,7 +448,7 @@ export const OPSX_ARCHIVE_CHECK = `
 **OPSX delta sync check**:
 - If \`openspec/changes/<name>/opsx-delta.yaml\` exists
 - Verify it has been synced to \`openspec/project.opsx.yaml\`
-- If not synced, prompt user: "OPSX delta not synced. Run /opsx:sync first?"
+- If not synced, prompt user: "OPSX delta not synced. sync it first?" 
 `.trim();
 
 /**

@@ -257,72 +257,6 @@ The init command SHALL detect installed AI tools by scanning for their configura
 - **WHEN** no tool configuration directories exist in project root
 - **THEN** the system SHALL return an empty list of detected tools
 
-### Requirement: Init performs migration on existing projects
-The init command SHALL perform one-time migration when re-initializing an existing project, using the same shared migration logic as the update command.
-
-#### Scenario: Re-init on existing project (no profile set)
-- **WHEN** user runs `openspec init` on a project with existing workflow files
-- **AND** global config does not contain a `profile` field
-- **THEN** the system SHALL perform one-time migration before proceeding (see `specs/cli-update/spec.md`)
-- **THEN** the system SHALL proceed with init using the migrated config
-
-#### Scenario: Init on new project (no existing workflows)
-- **WHEN** user runs `openspec init` on a project with no existing workflow files
-- **AND** global config does not contain a `profile` field
-- **THEN** the system SHALL NOT perform migration
-- **THEN** the system SHALL use `core` profile defaults
-
-### Requirement: Init respects global config
-
-The init command SHALL read global config values that still exist and SHALL ignore removed workflow selection fields.
-
-#### Scenario: User has profile preference
-
-- **WHEN** global config contains `profile: "custom"` with custom workflows
-- **THEN** init SHALL ignore the profile value
-- **AND** init SHALL continue fixed workflow installation
-
-#### Scenario: User has delivery preference
-
-- **WHEN** global config contains `delivery: "skills"`, `delivery: "commands"`, or `delivery: "both"`
-- **THEN** init SHALL ignore the delivery value
-- **AND** init SHALL install skills only
-- **AND** init SHALL NOT remove existing command files
-
-#### Scenario: Override via flags
-
-- **WHEN** user runs `openspec init --profile core`
-- **THEN** the system SHALL reject the flag according to fixed workflow installation behavior
-
-#### Scenario: Invalid profile override
-
-- **WHEN** user runs `openspec init --profile <invalid>`
-- **THEN** the system SHALL reject the flag according to fixed workflow installation behavior
-
-### Requirement: Init preserves existing workflows
-
-The init command SHALL NOT remove workflows that are already installed, and SHALL refresh the fixed skill workflow set.
-
-#### Scenario: Existing custom installation
-
-- **WHEN** user has extra workflow skills and runs `openspec init`
-- **THEN** the system SHALL NOT remove extra workflow skills
-- **AND** the system SHALL regenerate fixed workflow skill files, overwriting existing managed skill content with latest templates
-
-#### Scenario: Init with different delivery setting
-
-- **WHEN** user runs `openspec init` on existing project
-- **AND** global config contains any `delivery` value
-- **THEN** the system SHALL generate skills only
-- **AND** the system SHALL NOT delete command files because delivery cleanup is not supported
-
-#### Scenario: Re-init with current templates
-
-- **WHEN** user runs `openspec init` on an existing project
-- **AND** existing skill files are already on current template versions
-- **THEN** the system SHALL keep the project skills-only managed surface current
-- **AND** the system SHALL NOT perform command file cleanup
-
 ### Requirement: Init tool confirmation UX
 The init command SHALL show detected tools and ask for confirmation.
 
@@ -334,29 +268,24 @@ The init command SHALL show detected tools and ask for confirmation.
 
 ### Requirement: 固定工作流安装
 
-该命令 SHALL 固定安装 5 个核心工作流，无需用户配置或选择。
+该命令 SHALL 固定安装工作流 skills，无需用户配置或选择。
 
-#### Scenario: 固定安装 5 个工作流
+#### Scenario: 固定安装工作流
 
 - **WHEN** 用户运行 `openspec init`
-- **THEN** 系统 SHALL 为所选工具生成以下 5 个工作流的 skills：
-  - `propose`
-  - `explore`
-  - `apply`
-  - `archive`
-  - `bootstrap-opsx`
+- **THEN** 系统 SHALL 为所选工具生成固定 workflow manifest 中声明的 skills
 - **AND** 系统 SHALL NOT 接受 `--profile` 参数
 - **AND** 系统 SHALL NOT 根据全局配置选择工作流
 
 #### Scenario: 拒绝 profile 参数
 
 - **WHEN** 用户运行 `openspec init --profile <any-value>`
-- **THEN** 系统 SHALL 输出错误消息："--profile 参数已删除。现在固定安装 5 个核心工作流。"
+- **THEN** 系统 SHALL 输出错误消息，说明 `--profile` 参数已删除且 OpenSpec 现在固定安装工作流 skills
 - **AND** 退出码 SHALL 为 1
 
 #### Scenario: 忽略全局配置中的 profile 字段
 
-- **WHEN** 全局配置文件包含 `profile` 或 `workflows` 字段
+- **WHEN** 全局配置文件包含过时的 `profile` 或 `workflows` 字段
 - **THEN** 系统 SHALL 忽略这些字段
 - **AND** 系统 SHALL 输出警告："检测到过时配置字段：profile/workflows。运行 'openspec update' 清理。"
 - **AND** 继续固定安装 5 个工作流

@@ -1,38 +1,7 @@
 ## Purpose
 
-Profiles SHALL define which workflows to install, enabling a streamlined core experience for new users while allowing power users to customize their workflow selection.
+Profile selection is removed. The active contract only preserves the absence of the old profile surface.
 ## Requirements
-### Requirement: Profile definitions
-The system SHALL support two workflow profiles: `core` and `custom`.
-
-#### Scenario: Core profile contents
-- **WHEN** profile is set to `core`
-- **THEN** the profile SHALL include workflows: `propose`, `explore`, `apply`, `archive`
-
-#### Scenario: Custom profile contents
-- **WHEN** profile is set to `custom`
-- **THEN** the profile SHALL include only the workflows specified in global config `workflows` array
-
-### Requirement: Profile defaults
-The system SHALL use `core` as the default profile for new users, while preserving existing users' workflows via migration.
-
-#### Scenario: No global config exists (new user)
-- **WHEN** global config file does not exist
-- **AND** no existing workflows are installed in the project
-- **THEN** the system SHALL behave as if profile is `core`
-
-#### Scenario: Global config exists but profile field absent (new user)
-- **WHEN** global config file exists but does not contain a `profile` field
-- **AND** no existing workflows are installed in the project
-- **THEN** the system SHALL behave as if profile is `core`
-
-#### Scenario: Profile field absent with existing workflows (existing user migration)
-- **WHEN** global config does not contain a `profile` field
-- **AND** the `update` command detects existing workflow files in the project
-- **THEN** the system SHALL perform one-time migration (see `specs/cli-update/spec.md` for details)
-- **THEN** the system SHALL set profile to `custom` with the detected workflows
-- **THEN** the system SHALL NOT add or remove any workflow files during migration
-
 ### Requirement: Profile 系统已删除
 
 系统 SHALL NOT 支持 profile 配置，profile 系统已完全删除。
@@ -50,4 +19,3 @@ The system SHALL use `core` as the default profile for new users, while preservi
 - **THEN** getProfileWorkflows 函数 SHALL NOT 存在
 - **AND** CORE_WORKFLOWS 常量 SHALL NOT 存在
 - **AND** EXPANDED_WORKFLOWS 常量 SHALL NOT 存在
-

@@ -84,8 +84,8 @@ Don't worry about getting it perfect. We're still learning what works best here,
 
 Both `openspec init` and `openspec update` detect legacy files and guide you through the same cleanup process. Use whichever fits your situation:
 
-- New installs default to profile `core` (`propose`, `explore`, `apply`, `archive`).
-- Migrated installs preserve your previously installed workflows by writing a `custom` profile when needed.
+- New installs use the fixed managed workflow surface.
+- Migrated installs are moved onto the same fixed skills-only surface.
 
 ### Using `openspec init`
 
@@ -144,7 +144,7 @@ Run this if you just want to migrate and refresh your existing tools to the late
 openspec update
 ```
 
-The update command also detects and cleans up legacy artifacts, then refreshes generated skills/commands to match your current profile and delivery settings.
+The update command also detects and cleans up legacy artifacts, then refreshes managed workflow skills on the fixed surface.
 
 ### Non-Interactive / CI Environments
 
@@ -323,9 +323,7 @@ The AI will help you identify what's essential vs. what can be trimmed.
 
 ## The New Commands
 
-Command availability is profile-dependent:
-
-**Default (`core` profile):**
+OpenSpec now installs one fixed managed workflow surface:
 
 | Command | Purpose |
 |---------|---------|
@@ -375,10 +373,10 @@ OPSX uses actions, not phases:
          ┌───────────────────────────────────────────────┐
          │           ACTIONS (not phases)                │
          │                                               │
-         │     new ◄──► continue ◄──► apply ◄──► archive │
-         │      │          │           │             │   │
-         │      └──────────┴───────────┴─────────────┘   │
-         │                    any order                  │
+         │   propose ◄──► explore ◄──► apply ◄──► archive│
+         │         │                          │           │
+         │         └──────────────┬───────────┘           │
+         │              bootstrap-opsx / snack            │
          └───────────────────────────────────────────────┘
 ```
 
@@ -405,7 +403,7 @@ Artifacts form a directed graph. Dependencies are enablers, not gates:
                      specs, design)
 ```
 
-When you run `/opsx:continue`, it checks what's ready and offers the next artifact. You can also create multiple ready artifacts in any order.
+`/opsx:propose` creates the planning artifacts directly on the managed surface. You can still refine those artifacts during implementation.
 
 ### Skills vs Commands
 
@@ -423,10 +421,11 @@ OPSX uses the emerging **skills** standard:
 ```
 .claude/skills/
 ├── openspec-explore/SKILL.md
-├── openspec-new-change/SKILL.md
-├── openspec-continue-change/SKILL.md
+├── openspec-propose/SKILL.md
 ├── openspec-apply-change/SKILL.md
-└── ...
+├── openspec-archive-change/SKILL.md
+├── openspec-bootstrap-opsx/SKILL.md
+└── openspec-snack/SKILL.md
 ```
 
 Skills are recognized across multiple AI coding tools and provide richer metadata.
@@ -445,13 +444,7 @@ Your in-progress changes work seamlessly with OPSX commands.
 
 OPSX reads the existing artifacts and continues from where you left off.
 
-**Want to add more artifacts to an existing change?**
-
-```
-/opsx:continue add-my-feature
-```
-
-Shows what's ready to create based on what already exists.
+If an existing change needs artifact fixes, edit the artifacts directly and continue with `/opsx:apply`.
 
 **Need to see status?**
 
@@ -597,7 +590,7 @@ project/
 - `openspec/AGENTS.md` — obsolete
 - `openspec/project.md` — migrate to `config.yaml`, then delete
 - OpenSpec marker blocks in `CLAUDE.md`, `AGENTS.md`, etc.
-- **Profile system removed** — `openspec config profile`, `--profile` flag, and `profile`/`workflows` config fields are gone. OpenSpec now installs all 5 workflows by default. Run `openspec update` to auto-clean obsolete config fields and expanded workflow remnants.
+- **Profile system removed** — `openspec config profile`, `--profile` flag, and `profile`/`workflows` config fields are gone. OpenSpec now installs the fixed workflow surface by default. Run `openspec update` to auto-clean obsolete config fields and expanded workflow remnants.
 
 ### Command Cheatsheet
 

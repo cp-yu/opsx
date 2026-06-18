@@ -101,9 +101,9 @@ The update command SHALL always update the core OpenSpec files and display an AS
 - **AND** SHALL reference the explicit `skillDirName`
 - **AND** SHALL NOT fall back to command syntax
 
-### Requirement: Update respects global profile config
+### Requirement: Update respects removed workflow-selection config
 
-The update command SHALL refresh the fixed workflow skill set and SHALL ignore removed global profile, workflow, and delivery settings.
+The update command SHALL refresh the fixed workflow skill set and SHALL ignore removed workflow-selection settings.
 
 #### Scenario: Update adds missing workflows from config
 
@@ -127,7 +127,7 @@ The update command SHALL refresh the fixed workflow skill set and SHALL ignore r
 - **AND** all templates are current
 - **THEN** the system SHALL display: "Already up to date."
 
-#### Scenario: Profile or delivery drift with current templates
+#### Scenario: Workflow drift with current templates
 
 - **WHEN** user runs `openspec update`
 - **AND** workflow templates are current for the installed skills
@@ -142,7 +142,7 @@ The update command SHALL refresh the fixed workflow skill set and SHALL ignore r
 - **AND** the system SHALL list affected tools
 - **AND** the summary SHALL NOT report command files as generated, refreshed, or removed
 
-### Requirement: Update detects configured tools from skills or commands
+### Requirement: Update detects configured tools from skills only
 
 The update command SHALL treat a tool as configured only when it has generated OpenSpec skill files.
 
@@ -185,11 +185,11 @@ The update command SHALL only run inside an initialized OpenSpec project.
 - **THEN** the system SHALL display: "No OpenSpec project found. Run 'openspec init' to set up."
 - **THEN** the system SHALL exit with code 1
 
-### Requirement: Extra workflows synchronized to active profile
+### Requirement: Extra workflows synchronized to the fixed workflow set
 
 The update command SHALL remove managed skill workflow files that are no longer part of the fixed workflow set.
 
-#### Scenario: Deselected workflows from previous profile
+#### Scenario: Extra workflows outside the fixed set
 
 - **WHEN** user runs `openspec update`
 - **AND** project has managed skill workflows not in the fixed workflow set
@@ -282,17 +282,12 @@ The update command SHALL remove managed skill workflow files that are no longer 
 
 ### Requirement: 固定工作流更新
 
-该命令 SHALL 固定更新 5 个核心工作流，无需读取 profile 配置。
+该命令 SHALL 固定更新 workflow manifest 中声明的工作流，无需读取 profile 配置。
 
-#### Scenario: 固定更新 5 个工作流
+#### Scenario: 固定更新工作流
 
 - **WHEN** 用户运行 `openspec update`
-- **THEN** 系统 SHALL 为所有检测到的工具固定更新以下 5 个工作流：
-  - `propose`
-  - `explore`
-  - `apply`
-  - `archive`
-  - `bootstrap-opsx`
+- **THEN** 系统 SHALL 为所有检测到的工具固定更新 workflow manifest 中声明的工作流 skills
 - **AND** 系统 SHALL NOT 读取全局配置中的 `profile` 或 `workflows` 字段
 - **AND** 系统 SHALL 删除不在固定 5 个工作流列表中的 skill 文件
 

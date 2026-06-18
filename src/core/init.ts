@@ -1,7 +1,7 @@
 /**
  * Init Command
  *
- * Sets up OpenSpec with Agent Skills and /opsx:* slash commands.
+ * Sets up OpenSpec with managed workflow skills.
  * This is the unified setup command that replaces both the old init and experimental commands.
  */
 

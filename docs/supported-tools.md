@@ -1,23 +1,10 @@
 # Supported Tools
 
-OpenSpec works with many AI coding assistants. When you run `openspec init`, OpenSpec configures selected tools using your active profile/workflow selection and delivery mode.
+OpenSpec works with many AI coding assistants. When you run `openspec init`, OpenSpec configures selected tools with the fixed managed workflow surface.
 
 ## How It Works
 
-For each selected tool, OpenSpec can install:
-
-1. **Skills**: `.../skills/openspec-*/SKILL.md`
-2. **Commands** (for command-backed tools when delivery includes commands): tool-specific `opsx-*` command files
-
-Codex is always managed as skills-only. Even when global delivery is `both` or `commands`, OpenSpec only maintains `.codex/skills/`.
-
-By default, OpenSpec uses the `core` profile, which includes:
-- `propose`
-- `explore`
-- `apply`
-- `archive`
-
-You can enable expanded workflows (`new`, `continue`, `ff`, `verify`, `sync`, `bulk-archive`, `onboard`) via `openspec config profile`, then run `openspec update`.
+For each selected tool, OpenSpec installs managed skills under the tool's `skills/` directory. Legacy command files may still exist from older installations, but OpenSpec no longer generates, refreshes, or removes workflow command artifacts.
 
 ## Tool Directory Reference
 
@@ -52,7 +39,7 @@ You can enable expanded workflows (`new`, `continue`, `ff`, `verify`, `sync`, `b
 
 ## Non-Interactive Setup
 
-For CI/CD or scripted setup, use `--tools` (and optionally `--profile`):
+For CI/CD or scripted setup, use `--tools`:
 
 ```bash
 # Configure specific tools
@@ -64,37 +51,23 @@ openspec init --tools all
 # Skip tool configuration
 openspec init --tools none
 
-# Override profile for this init run
-openspec init --profile core
 ```
 
 **Available tool IDs (`--tools`):** `amazon-q`, `antigravity`, `auggie`, `claude`, `cline`, `codex`, `codebuddy`, `continue`, `costrict`, `crush`, `cursor`, `factory`, `gemini`, `github-copilot`, `iflow`, `kilocode`, `kiro`, `opencode`, `pi`, `qoder`, `qwen`, `roocode`, `trae`, `windsurf`
 
-## Workflow-Dependent Installation
+## Managed Workflow Skills
 
-OpenSpec installs workflow artifacts based on selected workflows:
-
-- **Core profile (default):** `propose`, `explore`, `apply`, `archive`
-- **Custom selection:** any subset of all workflow IDs:
-  `propose`, `explore`, `new`, `continue`, `apply`, `ff`, `sync`, `archive`, `bulk-archive`, `verify`, `onboard`
-
-In other words, skill/command counts are profile-dependent and delivery-dependent, not fixed.
+OpenSpec installs the fixed managed workflow skills:
+- `openspec-propose`
+- `openspec-explore`
+- `openspec-apply-change`
+- `openspec-archive-change`
+- `openspec-bootstrap-opsx`
+- `openspec-snack`
 
 ## Generated Skill Names
 
-When selected by profile/workflow config, OpenSpec generates these skills:
-
-- `openspec-propose`
-- `openspec-explore`
-- `openspec-new-change`
-- `openspec-continue-change`
-- `openspec-apply-change`
-- `openspec-ff-change`
-- `openspec-sync-specs`
-- `openspec-archive-change`
-- `openspec-bulk-archive-change`
-- `openspec-verify-change`
-- `openspec-onboard`
+OpenSpec also installs internal supporting skills when required by a workflow template, but those are not user-facing workflow entry points.
 
 See [Commands](commands.md) for command behavior and [CLI](cli.md) for `init`/`update` options.
 

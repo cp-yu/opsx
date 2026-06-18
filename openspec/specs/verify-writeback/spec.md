@@ -69,7 +69,7 @@
 - **WHEN** verify 写入 `.verify-result.json`
 - **THEN** 系统 SHALL 在 `verificationContext` 对象中记录：
   - `contractVersion`: "1.0" (当前验证合同版本)
-  - `executionMode`: 'clean-context-reviewer' 或 'current-agent-reread'
+  - `executionMode`: 'clean-context-reviewer'
   - `evidenceFiles`: 本次验证实际审阅的文件列表（相对 POSIX 路径，已排序）
   - `evidenceFingerprint`: 基于 evidenceFiles 的相对 POSIX 路径和文件内容哈希计算的 SHA-256 hash
   - `gitHeadCommit`: 当前 HEAD commit SHA（可选，如果在 git repo 中）

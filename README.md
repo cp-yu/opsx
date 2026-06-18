@@ -102,7 +102,7 @@ For vague or multi-subsystem ideas, start with `/opsx:explore`. Explore now runs
 
 `/opsx:apply` now reads coarse `tasks.md` entries and has the current agent execute pending behavior checks through strict red/green TDD before marking evidence-backed progress. When run on `main` or `master`, it asks whether to create a feature branch, create a worktree, or continue on the current branch.
 
-OpenSpec installs 5 workflows by default: `/opsx:propose`, `/opsx:explore`, `/opsx:apply`, `/opsx:archive`, and `/opsx:bootstrap-opsx`. `/opsx:archive` exposes only one user-facing command, but it runs the same full verify gate before archive and then performs spec + OPSX sync inline.
+OpenSpec installs managed workflow skills by default, including `/opsx:propose`, `/opsx:explore`, `/opsx:apply`, `/opsx:archive`, `/opsx:bootstrap-opsx`, and `/opsx:snack`. `/opsx:archive` runs the full verify gate before archive and then performs spec + OPSX sync inline.
 
 > [!NOTE]
 > OpenSpec's managed workflow surface is **skills-only**. `openspec init` and `openspec update` install and refresh skill files under `.<tool>/skills/`. Slash command files may still exist from older installations; they remain on disk as legacy artifacts and OpenSpec no longer generates, refreshes, or removes them.
@@ -116,7 +116,7 @@ OpenSpec installs 5 workflows by default: `/opsx:propose`, `/opsx:explore`, `/op
 
 → **[Getting Started](docs/getting-started.md)**: first steps<br>
 → **[Workflows](docs/workflows.md)**: combos and patterns<br>
-→ **[Commands](docs/commands.md)**: slash commands & skills<br>
+→ **[Commands](docs/commands.md)**: workflow entry points & skills<br>
 → **[CLI](docs/cli.md)**: terminal reference<br>
 → **[OPSX Integration](docs/opsx-integration.md)**: programmatic architecture tracking<br>
 → **[Supported Tools](docs/supported-tools.md)**: tool integrations & install paths<br>
@@ -132,7 +132,7 @@ AI coding assistants are powerful but unpredictable when requirements live only 
 - **Agree before you build** — human and AI align on specs before code gets written
 - **Stay organized** — each change gets its own folder with proposal, specs, design, and tasks
 - **Work fluidly** — update any artifact anytime, no rigid phase gates
-- **Use your tools** — works with 20+ AI assistants via slash commands
+- **Use your tools** — works with 20+ AI assistants via managed skills
 
 ### How we compare
 
@@ -152,7 +152,7 @@ npm install -g https://github.com/cp-yu/opsx/releases/download/v1.4.1-cpyu.1/fis
 
 **Refresh agent instructions**
 
-Run this inside each project to regenerate AI guidance and ensure the latest slash commands are active:
+Run this inside each project to regenerate AI guidance and refresh the managed workflow skills:
 
 ```bash
 openspec update

@@ -1,8 +1,8 @@
 /**
  * Update Command
  *
- * Refreshes OpenSpec skills and commands for configured tools.
- * Supports profile-aware updates, delivery changes, migration, and smart update detection.
+ * Refreshes OpenSpec skills for configured tools.
+ * Supports stale-config cleanup, migration, and smart update detection.
  */
 
 import path from 'path';
@@ -295,7 +295,7 @@ export class UpdateCommand {
   }
 
   /**
-   * Displays a note about extra workflows installed that aren't in the current profile.
+   * Displays a note about extra workflows installed outside the fixed workflow set.
    */
   private displayExtraWorkflowsNote(
     projectPath: string,

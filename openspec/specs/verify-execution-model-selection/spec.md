@@ -1,20 +1,20 @@
 # verify-execution-model-selection Specification
 
 ## Purpose
-此规约记录变更 split-verify-execution-models 引入的行为，请在后续同步或归档前补全正式 Purpose。
+定义 verify 和 archive 复用的固定 subagent-orchestrated execution model。
 ## Requirements
 ### Requirement: Verify template selection follows execution model
 
 系统 SHALL 使用 subagent-orchestrated verify 模板骨架，而不是按工具选择 execution model。
 
-#### Scenario: 支持 clean-context subagent 的工具选择 subagent verify skeleton
+#### Scenario: 所有工具使用 subagent verify skeleton
 
 - **WHEN** 系统生成 verify workflow skill
 - **THEN** 系统 SHALL 选择专用的 subagent-orchestrated verify 模板骨架
 - **AND** 该骨架中的顶层 agent SHALL 只负责输入收集、subagent orchestration、write-back 应用、checkpoint 管理与结果持久化
 - **AND** 顶层模板 SHALL NOT 内嵌 completeness、correctness 或 coherence 的直接 judgment 步骤
 
-#### Scenario: 不支持 clean-context subagent 的工具选择 reread skeleton
+#### Scenario: 不存在 reread fallback
 
 - **WHEN** 系统生成 verify workflow skill for any supported tool
 - **THEN** 系统 SHALL NOT 选择 current-agent-reread verify 模板骨架
@@ -30,15 +30,14 @@
 
 系统 SHALL 在 archive 需要重跑 full verify 时，复用与 standalone verify 相同的 subagent-orchestrated orchestration 合同。
 
-#### Scenario: archive 对支持 clean-context subagent 的工具复用 subagent skeleton
+#### Scenario: archive 复用 subagent skeleton
 
 - **WHEN** archive 因 verify result missing 或 stale 而需要执行 full verify
 - **THEN** 系统 SHALL 复用与 standalone verify 相同的 subagent-orchestrated verify 模板骨架
 - **AND** SHALL NOT 维护另一套 archive-only Phase 1 review skeleton
 
-#### Scenario: archive 对不支持 clean-context subagent 的工具复用 reread skeleton
+#### Scenario: archive 不存在 reread fallback
 
 - **WHEN** archive 因 verify result missing 或 stale 而需要执行 full verify
 - **THEN** 系统 SHALL NOT 使用 current-agent-reread skeleton
 - **AND** SHALL 保持与 standalone subagent-orchestrated verify 一致的 Phase 2 eligibility 语义
-

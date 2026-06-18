@@ -19,7 +19,7 @@ The system SHALL provide an `/opsx:onboard` skill that guides users through thei
 - **WHEN** onboarding begins
 - **THEN** agent displays welcome message explaining what will happen
 - **AND** sets expectation of ~15 minute duration
-- **AND** explains the workflow phases: explore → new → artifacts → apply → archive
+- **AND** explains the workflow phases: explore → propose → apply → archive
 
 ### Requirement: Codebase Analysis for Task Suggestions
 
@@ -65,7 +65,7 @@ The skill SHALL guide users through each artifact with narration explaining the 
 #### Scenario: Change creation with narration
 
 - **WHEN** creating the change directory
-- **THEN** agent runs `openspec new change "<name>"` with derived kebab-case name
+- **THEN** agent starts from `/opsx:propose` semantics with a derived kebab-case name
 - **AND** explains what a "change" is (container for thinking and planning)
 - **AND** shows the folder structure that was created
 - **AND** pauses for user acknowledgment before proceeding
@@ -143,8 +143,8 @@ The skill SHALL conclude with a recap and command reference.
 - **WHEN** onboarding is complete
 - **THEN** agent summarizes the workflow phases completed
 - **AND** emphasizes this rhythm works for any size change
-- **AND** provides command reference table (/opsx:explore, /opsx:new, /opsx:ff, /opsx:continue, /opsx:apply, /opsx:verify, /opsx:archive)
-- **AND** suggests next actions (try /opsx:new or /opsx:ff on something)
+- **AND** provides command reference table (/opsx:explore, /opsx:propose, /opsx:apply, /opsx:archive, /opsx:bootstrap-opsx, /opsx:snack)
+- **AND** suggests next actions (try /opsx:propose on something small)
 
 ### Requirement: Graceful Exit Handling
 
@@ -155,14 +155,14 @@ The skill SHALL handle users who want to stop mid-way.
 - **WHEN** user indicates they want to stop during onboarding
 - **THEN** agent acknowledges gracefully
 - **AND** notes that the in-progress change is saved
-- **AND** explains how to continue later with `/opsx:continue <name>`
+- **AND** explains how to continue later with `/opsx:apply <name>`
 - **AND** exits without pressure
 
 #### Scenario: User wants quick reference only
 
 - **WHEN** user says they just want to see the commands
 - **THEN** agent provides command cheat sheet
-- **AND** exits gracefully with encouragement to try `/opsx:new`
+- **AND** exits gracefully with encouragement to try `/opsx:propose`
 
 ### Requirement: Onboard-guided artifact drafting SHALL consume prompt projection
 When `/opsx:onboard` guides users through drafting proposal, specs, design, or tasks artifacts, the skill SHALL consume the same prompt projection contract used by standard artifact workflows.
@@ -171,4 +171,3 @@ When `/opsx:onboard` guides users through drafting proposal, specs, design, or t
 - **WHEN** onboarding drafts an OpenSpec artifact under project config that defines authoring constraints
 - **THEN** the skill SHALL apply the projected prose policy to newly authored natural-language text
 - **AND** SHALL preserve canonical artifact structure tokens and normative keywords
-

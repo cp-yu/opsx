@@ -285,7 +285,7 @@ The system now uses `openspec/project.opsx.yaml` as the canonical location.
 If you've been manually editing OPSX files:
 
 1. **Let the workflow manage it** — use `/opsx:propose` and `/opsx:archive`
-2. **Validate your structure** — run `/opsx:verify` to check integrity
+2. **Validate your structure** — run `openspec validate --all` and rely on `/opsx:archive` for the full verify gate
 3. **Fix any issues** — the validator will report problems
 
 ## Best Practices
@@ -348,8 +348,7 @@ If you've been manually editing OPSX files:
 ### 5. Validate Before Archiving
 
 ```bash
-# Always verify before archiving
-/opsx:verify
+# Archive runs the verify gate before archiving
 /opsx:archive
 ```
 

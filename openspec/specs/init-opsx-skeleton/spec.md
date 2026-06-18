@@ -45,17 +45,17 @@
 
 `openspec init` 成功提示 SHALL 在 getting started 区块之后、链接之前，显式引导用户运行 `/opsx:bootstrap` 完成架构映射。
 
-#### Scenario: Bootstrap guidance shown when bootstrap is in profile
+#### Scenario: Bootstrap guidance shown when bootstrap is in the fixed set
 
-- **GIVEN** `bootstrap-opsx` workflow 在 active profile 中
+- **GIVEN** `bootstrap-opsx` workflow 在固定工作流集合中
 - **AND** 非 extend 模式（首次 init）
 - **AND** getting started 区块已显示
 - **WHEN** 输出成功提示
 - **THEN** 显示引导行："Next: run /opsx:bootstrap to map your architecture"
 
-#### Scenario: Bootstrap guidance NOT shown when bootstrap is not in profile
+#### Scenario: Bootstrap guidance NOT shown when bootstrap is not selected
 
-- **GIVEN** `bootstrap-opsx` workflow 不在 active profile 中
+- **GIVEN** `bootstrap-opsx` workflow 不在固定工作流集合中
 - **WHEN** 输出成功提示
 - **THEN** SHALL NOT 显示 `/opsx:bootstrap` 引导行
 
@@ -64,4 +64,3 @@
 - **GIVEN** 当前为 extend 模式（`openspec/` 已存在）
 - **WHEN** 输出成功提示
 - **THEN** SHALL NOT 显示 `/opsx:bootstrap` 引导行
-

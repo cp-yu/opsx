@@ -35,12 +35,12 @@ The `propose` workflow SHALL include explanatory output to help new users unders
 - **WHEN** the system creates each artifact
 - **THEN** the system SHALL show progress (e.g., "✓ Created proposal.md")
 
-### Requirement: Propose workflow combines new and ff
-The `propose` workflow SHALL perform the same operations as running `new` followed by `ff`.
+### Requirement: Propose workflow creates the full planning set
+The `propose` workflow SHALL create the same planning artifacts that were previously produced by scaffold-plus-generation flows.
 
-#### Scenario: Equivalent to new + ff
+#### Scenario: Equivalent artifact result
 - **WHEN** user invokes `/opsx:propose "feature name"`
-- **THEN** the result SHALL be functionally equivalent to invoking `/opsx:new "feature-name"` followed by `/opsx:ff feature-name`
+- **THEN** the result SHALL create the change directory and the planning artifacts in one step
 - **THEN** the same directory structure and artifacts SHALL be created
 - **THEN** console output MAY differ (propose includes onboarding explanations)
 
@@ -69,4 +69,3 @@ The `propose` workflow SHALL apply the schema-provided `Spec content boundary` w
 - **WHEN** propose workflow 创建 artifact
 - **THEN** workflow SHALL 根据 artifact instructions 和共享 language contract 撰写 artifact
 - **AND** workflow SHALL NOT 要求每个 artifact 完成前执行额外 non-canonical English prose scan
-
