@@ -142,6 +142,9 @@ export async function prepareChangeSync(
     ) {
       continue;
     }
+    if (originalContent === null && isRemovalOnlyDelta(changeContent)) {
+      continue;
+    }
 
     const built = await buildUpdatedSpec(update, state.changeName, projectRoot);
     const action = shouldDeleteRebuiltSpec(built.rebuilt) ? 'delete' : 'write';
