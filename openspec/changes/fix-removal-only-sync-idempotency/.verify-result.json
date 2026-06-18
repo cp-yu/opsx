@@ -1,0 +1,148 @@
+{
+  "timestamp": "2026-06-18T04:21:42.601Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "dd33668885299543bbfd7dc93c110e1ed5e982fef629da73de8ca3be48b7b202",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "clean-context-subagent",
+    "evidenceFiles": [
+      "openspec/changes/fix-removal-only-sync-idempotency/design.md",
+      "openspec/changes/fix-removal-only-sync-idempotency/opsx-delta.yaml",
+      "openspec/changes/fix-removal-only-sync-idempotency/proposal.md",
+      "openspec/changes/fix-removal-only-sync-idempotency/specs/cli-archive/spec.md",
+      "openspec/changes/fix-removal-only-sync-idempotency/specs/cli-sync/spec.md",
+      "openspec/changes/fix-removal-only-sync-idempotency/specs/specs-sync-skill/spec.md",
+      "openspec/changes/fix-removal-only-sync-idempotency/tasks.md",
+      "src/core/change-sync.ts",
+      "src/core/specs-apply.ts",
+      "test/commands/sync.test.ts",
+      "test/core/archive.test.ts"
+    ],
+    "evidenceFingerprint": "980ddf76f727abdc3341f00d18851311ca99f28d0d959fe84609bc53defb0fb5",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/fix-removal-only-sync-idempotency/design.md",
+        "hash": "1fdbb5941e7458844e246d9107960efb9d6c79db45e127fa626d549e7e01b2c0"
+      },
+      {
+        "path": "openspec/changes/fix-removal-only-sync-idempotency/opsx-delta.yaml",
+        "hash": "1c4f83dfc69e2a47cd4e5d795e2755305ebb1a2a85c188ff6b4848c4a1c7754f"
+      },
+      {
+        "path": "openspec/changes/fix-removal-only-sync-idempotency/proposal.md",
+        "hash": "5148a2f83e7da2949144c615135412da3931748f6a0ec8ccb7f386e7e4dbed18"
+      },
+      {
+        "path": "openspec/changes/fix-removal-only-sync-idempotency/specs/cli-archive/spec.md",
+        "hash": "60480007ce9e4a38b3eec13f0edb94a0f04c28f17f82973aa0ada10a615b015a"
+      },
+      {
+        "path": "openspec/changes/fix-removal-only-sync-idempotency/specs/cli-sync/spec.md",
+        "hash": "151280b7d5a110653a4a4eb978f68dbf28762ee9555dce428391c2f773dde188"
+      },
+      {
+        "path": "openspec/changes/fix-removal-only-sync-idempotency/specs/specs-sync-skill/spec.md",
+        "hash": "d4ce15a5be1680c78f4c137edec2997af5c5343ad27bfe1dd4fa332001b416ac"
+      },
+      {
+        "path": "openspec/changes/fix-removal-only-sync-idempotency/tasks.md",
+        "hash": "dd33668885299543bbfd7dc93c110e1ed5e982fef629da73de8ca3be48b7b202"
+      },
+      {
+        "path": "src/core/change-sync.ts",
+        "hash": "82f7eb8233fdd36198d83f158716bf089fcd7a7efc55799d03a8d0aaa08ed342"
+      },
+      {
+        "path": "src/core/specs-apply.ts",
+        "hash": "2bb435b698cc994d5c91f506acbb320365b2505268c5f2fbd55fe25a8116e6ac"
+      },
+      {
+        "path": "test/commands/sync.test.ts",
+        "hash": "bb816d21378e243b29a39867cf2df5bfb80a2fb2bcdf4b4c8d957c3948af7f41"
+      },
+      {
+        "path": "test/core/archive.test.ts",
+        "hash": "1973f155e909f1ccddab56f9d46464b5196f96788016ac82396b7b3f8026dfa8"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "f48e758544ffd349c392a93e09390d1d246064a5"
+  },
+  "optimization": {
+    "status": "PENDING_VERIFICATION",
+    "attempts": [],
+    "baseline": {
+      "timestamp": "2026-06-18T04:21:42.601Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "dd33668885299543bbfd7dc93c110e1ed5e982fef629da73de8ca3be48b7b202",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "clean-context-subagent",
+        "evidenceFiles": [
+          "openspec/changes/fix-removal-only-sync-idempotency/design.md",
+          "openspec/changes/fix-removal-only-sync-idempotency/opsx-delta.yaml",
+          "openspec/changes/fix-removal-only-sync-idempotency/proposal.md",
+          "openspec/changes/fix-removal-only-sync-idempotency/specs/cli-archive/spec.md",
+          "openspec/changes/fix-removal-only-sync-idempotency/specs/cli-sync/spec.md",
+          "openspec/changes/fix-removal-only-sync-idempotency/specs/specs-sync-skill/spec.md",
+          "openspec/changes/fix-removal-only-sync-idempotency/tasks.md",
+          "src/core/change-sync.ts",
+          "src/core/specs-apply.ts",
+          "test/commands/sync.test.ts",
+          "test/core/archive.test.ts"
+        ],
+        "evidenceFingerprint": "980ddf76f727abdc3341f00d18851311ca99f28d0d959fe84609bc53defb0fb5",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/fix-removal-only-sync-idempotency/design.md",
+            "hash": "1fdbb5941e7458844e246d9107960efb9d6c79db45e127fa626d549e7e01b2c0"
+          },
+          {
+            "path": "openspec/changes/fix-removal-only-sync-idempotency/opsx-delta.yaml",
+            "hash": "1c4f83dfc69e2a47cd4e5d795e2755305ebb1a2a85c188ff6b4848c4a1c7754f"
+          },
+          {
+            "path": "openspec/changes/fix-removal-only-sync-idempotency/proposal.md",
+            "hash": "5148a2f83e7da2949144c615135412da3931748f6a0ec8ccb7f386e7e4dbed18"
+          },
+          {
+            "path": "openspec/changes/fix-removal-only-sync-idempotency/specs/cli-archive/spec.md",
+            "hash": "60480007ce9e4a38b3eec13f0edb94a0f04c28f17f82973aa0ada10a615b015a"
+          },
+          {
+            "path": "openspec/changes/fix-removal-only-sync-idempotency/specs/cli-sync/spec.md",
+            "hash": "151280b7d5a110653a4a4eb978f68dbf28762ee9555dce428391c2f773dde188"
+          },
+          {
+            "path": "openspec/changes/fix-removal-only-sync-idempotency/specs/specs-sync-skill/spec.md",
+            "hash": "d4ce15a5be1680c78f4c137edec2997af5c5343ad27bfe1dd4fa332001b416ac"
+          },
+          {
+            "path": "openspec/changes/fix-removal-only-sync-idempotency/tasks.md",
+            "hash": "dd33668885299543bbfd7dc93c110e1ed5e982fef629da73de8ca3be48b7b202"
+          },
+          {
+            "path": "src/core/change-sync.ts",
+            "hash": "82f7eb8233fdd36198d83f158716bf089fcd7a7efc55799d03a8d0aaa08ed342"
+          },
+          {
+            "path": "src/core/specs-apply.ts",
+            "hash": "2bb435b698cc994d5c91f506acbb320365b2505268c5f2fbd55fe25a8116e6ac"
+          },
+          {
+            "path": "test/commands/sync.test.ts",
+            "hash": "bb816d21378e243b29a39867cf2df5bfb80a2fb2bcdf4b4c8d957c3948af7f41"
+          },
+          {
+            "path": "test/core/archive.test.ts",
+            "hash": "1973f155e909f1ccddab56f9d46464b5196f96788016ac82396b7b3f8026dfa8"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "f48e758544ffd349c392a93e09390d1d246064a5"
+      }
+    }
+  }
+}
