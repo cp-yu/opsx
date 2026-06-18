@@ -1,0 +1,128 @@
+{
+  "timestamp": "2026-06-18T06:42:04.389Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "45afe7013d44ceeabf4cbb1858d2198be78d1846ef9af038985d14819972d028",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      ".codex/skills/openspec-explore/SKILL.md",
+      "openspec/changes/restore-explore-superpowers-brainstorming-reference/design.md",
+      "openspec/changes/restore-explore-superpowers-brainstorming-reference/opsx-delta.yaml",
+      "openspec/changes/restore-explore-superpowers-brainstorming-reference/specs/explore-brainstorming/spec.md",
+      "openspec/changes/restore-explore-superpowers-brainstorming-reference/tasks.md",
+      "openspec/references/openspec-explore-supperpowers-style.md",
+      "src/core/templates/workflows/explore.ts",
+      "test/core/templates/explore-template.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts"
+    ],
+    "evidenceFingerprint": "0b9e660096a82089e041833d0a9b8d4de19c3bab59cdbc5979c04626104a1515",
+    "evidenceFingerprintEntries": [
+      {
+        "path": ".codex/skills/openspec-explore/SKILL.md",
+        "hash": "3f493b502dde2e4475d09df4459568ce485b9cd37170215db97be0aaeb42fafb"
+      },
+      {
+        "path": "openspec/changes/restore-explore-superpowers-brainstorming-reference/design.md",
+        "hash": "665aae0feaece4548cd11eca09bb4ccb2b823308b43f49ba320e58cd11389118"
+      },
+      {
+        "path": "openspec/changes/restore-explore-superpowers-brainstorming-reference/opsx-delta.yaml",
+        "hash": "95e7f3b1cda5f0af80242aa019a01b5029792f26f313f7e26118ed6ade18158c"
+      },
+      {
+        "path": "openspec/changes/restore-explore-superpowers-brainstorming-reference/specs/explore-brainstorming/spec.md",
+        "hash": "0d037b7c7197b624c1a08a8a33dcfdf058d4937fe9f7fe573d8a90df0d944903"
+      },
+      {
+        "path": "openspec/changes/restore-explore-superpowers-brainstorming-reference/tasks.md",
+        "hash": "45afe7013d44ceeabf4cbb1858d2198be78d1846ef9af038985d14819972d028"
+      },
+      {
+        "path": "openspec/references/openspec-explore-supperpowers-style.md",
+        "hash": "a5095da8245979b2ca0377098d41201d843ccae18d4c1d842a1120b48140124d"
+      },
+      {
+        "path": "src/core/templates/workflows/explore.ts",
+        "hash": "1664ab578ce252ea86574d0977a5a3e18b74d2d322a6fcd88bf2b812f092fbad"
+      },
+      {
+        "path": "test/core/templates/explore-template.test.ts",
+        "hash": "a13bbb55fe0d22562844e0ca5433762d341961e50e30314fde25fae0b60bc019"
+      },
+      {
+        "path": "test/core/templates/skill-templates-parity.test.ts",
+        "hash": "1547672cb1876f50e844f1f135b8b23b280d52ad382830fb4beb6ff161806e98"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "dd4e76388e6e7d92e4430e0fd49c162ddac27dae"
+  },
+  "optimization": {
+    "status": "PENDING_VERIFICATION",
+    "attempts": [],
+    "baseline": {
+      "timestamp": "2026-06-18T06:42:04.389Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "45afe7013d44ceeabf4cbb1858d2198be78d1846ef9af038985d14819972d028",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          ".codex/skills/openspec-explore/SKILL.md",
+          "openspec/changes/restore-explore-superpowers-brainstorming-reference/design.md",
+          "openspec/changes/restore-explore-superpowers-brainstorming-reference/opsx-delta.yaml",
+          "openspec/changes/restore-explore-superpowers-brainstorming-reference/specs/explore-brainstorming/spec.md",
+          "openspec/changes/restore-explore-superpowers-brainstorming-reference/tasks.md",
+          "openspec/references/openspec-explore-supperpowers-style.md",
+          "src/core/templates/workflows/explore.ts",
+          "test/core/templates/explore-template.test.ts",
+          "test/core/templates/skill-templates-parity.test.ts"
+        ],
+        "evidenceFingerprint": "0b9e660096a82089e041833d0a9b8d4de19c3bab59cdbc5979c04626104a1515",
+        "evidenceFingerprintEntries": [
+          {
+            "path": ".codex/skills/openspec-explore/SKILL.md",
+            "hash": "3f493b502dde2e4475d09df4459568ce485b9cd37170215db97be0aaeb42fafb"
+          },
+          {
+            "path": "openspec/changes/restore-explore-superpowers-brainstorming-reference/design.md",
+            "hash": "665aae0feaece4548cd11eca09bb4ccb2b823308b43f49ba320e58cd11389118"
+          },
+          {
+            "path": "openspec/changes/restore-explore-superpowers-brainstorming-reference/opsx-delta.yaml",
+            "hash": "95e7f3b1cda5f0af80242aa019a01b5029792f26f313f7e26118ed6ade18158c"
+          },
+          {
+            "path": "openspec/changes/restore-explore-superpowers-brainstorming-reference/specs/explore-brainstorming/spec.md",
+            "hash": "0d037b7c7197b624c1a08a8a33dcfdf058d4937fe9f7fe573d8a90df0d944903"
+          },
+          {
+            "path": "openspec/changes/restore-explore-superpowers-brainstorming-reference/tasks.md",
+            "hash": "45afe7013d44ceeabf4cbb1858d2198be78d1846ef9af038985d14819972d028"
+          },
+          {
+            "path": "openspec/references/openspec-explore-supperpowers-style.md",
+            "hash": "a5095da8245979b2ca0377098d41201d843ccae18d4c1d842a1120b48140124d"
+          },
+          {
+            "path": "src/core/templates/workflows/explore.ts",
+            "hash": "1664ab578ce252ea86574d0977a5a3e18b74d2d322a6fcd88bf2b812f092fbad"
+          },
+          {
+            "path": "test/core/templates/explore-template.test.ts",
+            "hash": "a13bbb55fe0d22562844e0ca5433762d341961e50e30314fde25fae0b60bc019"
+          },
+          {
+            "path": "test/core/templates/skill-templates-parity.test.ts",
+            "hash": "1547672cb1876f50e844f1f135b8b23b280d52ad382830fb4beb6ff161806e98"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "dd4e76388e6e7d92e4430e0fd49c162ddac27dae"
+      }
+    }
+  }
+}
