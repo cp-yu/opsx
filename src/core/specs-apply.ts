@@ -102,10 +102,6 @@ export function isDeltaSpecAlreadyApplied(
     confirmedAppliedState = true;
   }
 
-  if (plan.removed.length > 0 && !confirmedAppliedState) {
-    return false;
-  }
-
   return true;
 }
 

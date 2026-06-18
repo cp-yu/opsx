@@ -19,7 +19,7 @@
       "test/commands/sync.test.ts",
       "test/core/archive.test.ts"
     ],
-    "evidenceFingerprint": "980ddf76f727abdc3341f00d18851311ca99f28d0d959fe84609bc53defb0fb5",
+    "evidenceFingerprint": "db4f954a74bdacb1fb20f2e48ad7103d9bac2be4ab390ec5edc7bab757bc69ea",
     "evidenceFingerprintEntries": [
       {
         "path": "openspec/changes/fix-removal-only-sync-idempotency/design.md",
@@ -55,7 +55,7 @@
       },
       {
         "path": "src/core/specs-apply.ts",
-        "hash": "2bb435b698cc994d5c91f506acbb320365b2505268c5f2fbd55fe25a8116e6ac"
+        "hash": "0f9f19d98362736246daed6ee692326843a3dab492b9dbefa8d5ff4685cb45f6"
       },
       {
         "path": "test/commands/sync.test.ts",
@@ -67,11 +67,31 @@
       }
     ],
     "skippedEvidenceFiles": [],
-    "gitHeadCommit": "f48e758544ffd349c392a93e09390d1d246064a5"
+    "gitHeadCommit": "6f93f08e9186dd047b2093cb8093f991089c5dd6",
+    "timestamp": "2026-06-18T04:44:26.191Z"
   },
   "optimization": {
-    "status": "PENDING_VERIFICATION",
-    "attempts": [],
+    "status": "IMPROVED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-18T04:41:55.989Z",
+        "type": "optimization",
+        "status": "OPTIMIZATION_PROPOSED",
+        "summary": "Remove unreachable fallback guard in isDeltaSpecAlreadyApplied() at src/core/specs-apply.ts:105-107. After setting confirmedAppliedState=true inside the REMOVED loop, the trailing if (plan.removed.length > 0 && !confirmedAppliedState) is dead code: REMOVED loop unconditionally sets the flag for any plan.removed.length>0, so !confirmedAppliedState is always false.",
+        "files": [
+          "src/core/specs-apply.ts"
+        ]
+      },
+      {
+        "timestamp": "2026-06-18T04:44:26.184Z",
+        "type": "verification",
+        "result": "PASS",
+        "behaviorRetryCounter": 1
+      }
+    ],
+    "affectedFileHashes": {
+      "src/core/specs-apply.ts": "2bb435b698cc994d5c91f506acbb320365b2505268c5f2fbd55fe25a8116e6ac"
+    },
     "baseline": {
       "timestamp": "2026-06-18T04:21:42.601Z",
       "result": "PASS",
@@ -143,6 +163,10 @@
         "skippedEvidenceFiles": [],
         "gitHeadCommit": "f48e758544ffd349c392a93e09390d1d246064a5"
       }
+    },
+    "final": {
+      "result": "PASS",
+      "issues": []
     }
   }
 }
