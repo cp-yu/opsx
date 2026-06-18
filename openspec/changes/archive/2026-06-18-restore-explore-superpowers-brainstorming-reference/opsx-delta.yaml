@@ -1,0 +1,6 @@
+schema_version: 1
+MODIFIED:
+  capabilities:
+    - id: cap.ai.explore-brainstorming
+      type: capability
+      intent: Explore 阶段的 brainstorming 流程，包含 6 步 checklist、一次一问纪律、2-3 方案对比、Design Summary 生成；main explore agent 严格 read-only，用户设计确认不构成文件写入授权；已有 change 的 insight 仅分类为 future capture target，不在 explore 中更新 artifacts；Superpowers 行为引导通过 referenceFiles 暴露为 OpenSpec-adapted brainstorming protocol，以原始 Superpowers brainstorming 的 hard gate、上下文探索、just-in-time visual 判断、分段设计确认、自检和用户审查 gate 为行为来源，并映射到 conversation-only Design Summary 与 openspec-propose 路由

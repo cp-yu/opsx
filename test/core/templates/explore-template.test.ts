@@ -88,21 +88,38 @@ describe('explore template impact sweeps', () => {
   it('uses the generated superpowers reference as the authoritative behavior guide', () => {
     expect(template).toContain('## Required References');
     expect(template).toContain('openspec/references/openspec-explore-supperpowers-style.md');
-    expect(template).toContain('authoritative Superpowers-style behavior guide');
+    expect(template).toContain('authoritative Superpowers brainstorming behavior guide');
+    expect(template).toContain('hard gate, context exploration, visual companion judgment, one-question discipline');
     expect(template).toContain('Do not reconstruct or duplicate Superpowers behavior from this prompt');
   });
 });
 
 describe('explore supperpowers-style reference', () => {
-  it('declares supperpowers-style reference with four topics', () => {
+  it('declares supperpowers-style reference with Superpowers brainstorming discipline', () => {
     const template = getExploreSkillTemplate();
     const ref = (template.referenceFiles || []).find(f => f.path === 'references/explore-supperpowers-style.md');
 
     expect(ref).toBeDefined();
-    expect(ref?.content).toContain('## The Stance');
-    expect(ref?.content).toContain('## What You Might Do');
-    expect(ref?.content).toContain('## Handling Different Entry Points');
-    expect(ref?.content).toContain('## What We Figured Out');
+    expect(ref?.content).toContain('Superpowers brainstorming');
+    expect(ref?.content).toContain('Hard gate before implementation');
+    expect(ref?.content).toContain('Project context exploration');
+    expect(ref?.content).toContain('Just-in-time visual companion');
+    expect(ref?.content).toContain('One-question discipline');
+    expect(ref?.content).toContain('2-3 approaches');
+    expect(ref?.content).toContain('Section-by-section design approval');
+    expect(ref?.content).toContain('Design Summary self-review');
+    expect(ref?.content).toContain('User review gate');
+    expect(ref?.content).toContain('openspec-propose handoff');
+  });
+
+  it('preserves the Superpowers design-before-implementation gate', () => {
+    const template = getExploreSkillTemplate();
+    const ref = (template.referenceFiles || []).find(f => f.path === 'references/explore-supperpowers-style.md');
+
+    expect(ref).toBeDefined();
+    expect(ref?.content).toContain('Do not implement before design confirmation is complete');
+    expect(ref?.content).toContain('Simple changes still require design confirmation');
+    expect(ref?.content).toContain('Only route to openspec-propose after the user reviews and accepts the Design Summary');
   });
 
   it('reference content routes to propose instead of direct writes', () => {
@@ -114,6 +131,9 @@ describe('explore supperpowers-style reference', () => {
     expect(ref?.content).not.toContain('Want me to create a proposal');
     expect(ref?.content).not.toContain('I can create a change proposal');
     expect(ref?.content).not.toContain('Updated design.md');
+    expect(ref?.content).not.toContain('write design doc');
+    expect(ref?.content).not.toContain('commit the design document');
+    expect(ref?.content).not.toContain('invoke writing-plans');
 
     // Should route to propose by logical workflow name, not tool-specific syntax.
     expect(ref?.content).toContain('openspec-propose');
