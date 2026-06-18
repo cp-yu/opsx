@@ -83,6 +83,7 @@ export function isDeltaSpecAlreadyApplied(
     if (currentBlocks.has(normalizeRequirementName(name))) {
       return false;
     }
+    confirmedAppliedState = true;
   }
 
   for (const modified of plan.modified) {

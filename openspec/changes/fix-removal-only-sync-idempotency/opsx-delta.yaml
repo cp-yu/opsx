@@ -1,0 +1,5 @@
+schema_version: 1
+MODIFIED:
+  capabilities:
+    - id: cap.change.specs-sync
+      intent: 将变更中的 delta specs 和 OPSX delta 同步到主规约与主 OPSX；removal-only delta 在所有目标 requirement headers 已缺失时视为已同步，重复 sync/archive-time sync 保持幂等。core 模式下改为调用 openspec sync CLI 工具（而非手动内联 sync）。sync 执行前增加 verify gate 入口校验

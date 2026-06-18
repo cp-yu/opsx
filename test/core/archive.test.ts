@@ -280,6 +280,49 @@ System SHALL keep synced gates stable.
       expect(archives.some((entry) => entry.includes(changeName))).toBe(true);
     });
 
+    it('should allow archive when removal-only delta targets headers already absent from a still-existing main spec', async () => {
+      const changeName = 'removal-headers-already-absent';
+      const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
+      const changeSpecDir = path.join(changeDir, 'specs', 'partial-merge');
+      const mainSpecDir = path.join(tempDir, 'openspec', 'specs', 'partial-merge');
+      await fs.mkdir(changeSpecDir, { recursive: true });
+      await fs.mkdir(mainSpecDir, { recursive: true });
+      await writeFreshVerifyResult(changeDir);
+
+      const mainSpecPath = path.join(mainSpecDir, 'spec.md');
+      await fs.writeFile(
+        mainSpecPath,
+        `# partial-merge Specification
+
+## Purpose
+Partial merge behavior.
+
+## Requirements
+
+### Requirement: Unrelated Keeper
+The system SHALL keep this requirement.`,
+        'utf-8'
+      );
+
+      await fs.writeFile(
+        path.join(changeSpecDir, 'spec.md'),
+        `## REMOVED Requirements
+
+### Requirement: Old A
+### Requirement: Old B`,
+        'utf-8'
+      );
+
+      await archiveCommand.execute(changeName, { yes: true });
+
+      const archiveDir = path.join(tempDir, 'openspec', 'changes', 'archive');
+      const archives = await fs.readdir(archiveDir);
+      expect(archives.some((entry) => entry.includes(changeName))).toBe(true);
+
+      const preserved = await fs.readFile(mainSpecPath, 'utf-8');
+      expect(preserved).toContain('### Requirement: Unrelated Keeper');
+    });
+
     it('should warn about incomplete tasks', async () => {
       const changeName = 'incomplete-feature';
       const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
@@ -1179,7 +1222,7 @@ Zeta purpose.
 ### Requirement: Z1
 z1`);
 
-      // Delta: epsilon is valid modification; zeta tries to remove non-existent -> should abort both
+      // Delta: epsilon is valid modification; zeta tries to modify non-existent -> should abort both
       await fs.writeFile(path.join(spec1Dir, 'spec.md'), `# Epsilon - Changes
 
 ## MODIFIED Requirements
@@ -1188,8 +1231,9 @@ E1 updated`);
 
       await fs.writeFile(path.join(spec2Dir, 'spec.md'), `# Zeta - Changes
 
-## REMOVED Requirements
-### Requirement: Missing`);
+## MODIFIED Requirements
+### Requirement: Missing
+Zeta missing update.`);
 
       await archiveCommand.execute(changeName, { yes: true, noVerify: true, noValidate: true });
 

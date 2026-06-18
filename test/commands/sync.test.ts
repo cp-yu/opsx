@@ -220,6 +220,84 @@ Old B.`
     expect(console.log).toHaveBeenCalledWith('specs: synced');
   });
 
+  it('treats removal-only delta as synced when target headers are already absent but unrelated requirements remain', async () => {
+    const syncCommand = await loadSyncCommand();
+    const changeName = 'removal-already-applied';
+    const changeDir = await createChange(changeName);
+    const changeSpecDir = path.join(changeDir, 'specs', 'partial-merge');
+    const mainSpecDir = path.join(tempDir, 'openspec', 'specs', 'partial-merge');
+    await fs.mkdir(changeSpecDir, { recursive: true });
+    await fs.mkdir(mainSpecDir, { recursive: true });
+    await writeFreshVerifyResult(changeDir);
+
+    const mainSpecPath = path.join(mainSpecDir, 'spec.md');
+    await fs.writeFile(
+      mainSpecPath,
+      `# partial-merge Specification
+
+## Purpose
+Partial merge behavior.
+
+## Requirements
+
+### Requirement: Unrelated Keeper
+The system SHALL keep this requirement.`
+    );
+
+    await fs.writeFile(
+      path.join(changeSpecDir, 'spec.md'),
+      `## REMOVED Requirements
+
+### Requirement: Old A
+### Requirement: Old B`
+    );
+
+    await syncCommand(changeName, { noValidate: true });
+
+    const after = await fs.readFile(mainSpecPath, 'utf-8');
+    expect(after).toContain('### Requirement: Unrelated Keeper');
+    expect(console.log).toHaveBeenCalledWith('No sync required.');
+  });
+
+  it('stays idempotent when a removal-only delta emptied the main spec on the first run', async () => {
+    const syncCommand = await loadSyncCommand();
+    const changeName = 'removal-empty-then-rerun';
+    const changeDir = await createChange(changeName);
+    const changeSpecDir = path.join(changeDir, 'specs', 'solo-merge');
+    const mainSpecDir = path.join(tempDir, 'openspec', 'specs', 'solo-merge');
+    await fs.mkdir(changeSpecDir, { recursive: true });
+    await fs.mkdir(mainSpecDir, { recursive: true });
+    await writeFreshVerifyResult(changeDir);
+
+    const mainSpecPath = path.join(mainSpecDir, 'spec.md');
+    await fs.writeFile(
+      mainSpecPath,
+      `# solo-merge Specification
+
+## Purpose
+Solo merge behavior.
+
+## Requirements
+
+### Requirement: Old A
+Old A.`
+    );
+
+    await fs.writeFile(
+      path.join(changeSpecDir, 'spec.md'),
+      `## REMOVED Requirements
+
+### Requirement: Old A`
+    );
+
+    await syncCommand(changeName, { noValidate: true });
+    await expect(fs.access(mainSpecPath)).rejects.toThrow();
+
+    await syncCommand(changeName, { noValidate: true });
+    await expect(fs.access(mainSpecPath)).rejects.toThrow();
+    expect(console.log).toHaveBeenCalledWith('No sync required.');
+  });
+
   it('supports interactive change selection when no name is provided', async () => {
     const syncCommand = await loadSyncCommand();
     const { select } = await import('@inquirer/prompts');
