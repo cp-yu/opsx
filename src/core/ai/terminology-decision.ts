@@ -33,18 +33,18 @@ export function createTerminologyQuestion(
 
   if (!userMatchesSpecTerm) {
     const lines = visibleTerms(found).map(
-      (item) => `  - '${item.term}'（${item.count} 处，见 ${formatSpecs(item.specs)}）`
+      (item) => `  - '${item.term}' (${item.count} occurrences, see ${formatSpecs(item.specs)})`
     );
 
-    return [`你使用了'${userInput}'，相关 specs 中发现：`, ...lines, formatHiddenTermCount(found), '是否指同一概念？']
+    return [`You used '${userInput}'. Found in related specs:`, ...lines, formatHiddenTermCount(found), 'Do they refer to the same concept?']
       .filter(Boolean)
       .join('\n');
   }
 
   if (found.length > 1) {
-    const lines = visibleTerms(found).map((item) => `  - '${item.term}'（${item.count} 处）`);
+    const lines = visibleTerms(found).map((item) => `  - '${item.term}' (${item.count} occurrences)`);
 
-    return ['检测到术语不一致：', ...lines, formatHiddenTermCount(found), '建议选择统一术语'].filter(Boolean).join('\n');
+    return ['Terminology inconsistency detected:', ...lines, formatHiddenTermCount(found), 'Suggest choosing a unified term'].filter(Boolean).join('\n');
   }
 
   return undefined;
@@ -83,13 +83,13 @@ function visibleTerms(found: TerminologyOccurrence[]): TerminologyOccurrence[] {
 }
 
 function formatHiddenTermCount(found: TerminologyOccurrence[]): string | undefined {
-  return found.length > MAX_TERMS ? `等 ${found.length} 种表达` : undefined;
+  return found.length > MAX_TERMS ? `and ${found.length} other expression(s)` : undefined;
 }
 
 function formatSpecs(specs: string[]): string {
-  const visible = specs.slice(0, MAX_SPECS).join('、');
+  const visible = specs.slice(0, MAX_SPECS).join(', ');
 
-  return specs.length > MAX_SPECS ? `${visible} 等` : visible;
+  return specs.length > MAX_SPECS ? `${visible} etc.` : visible;
 }
 
 function addGroup(groups: string[][], group: string[]): void {

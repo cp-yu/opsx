@@ -391,7 +391,7 @@ export const VERIFY_ERROR_RECOVERY_GUIDE = `
 - If the CLI says \`Invalid JSON input\`: re-check that \`--input\` is a JSON string, not a file path; \`issues\` must be an array and \`evidenceFiles\` must be an array of strings
 - If the CLI says \`status must be NO_OPTIMIZATION_NEEDED, OPTIMIZATION_PROPOSED, ABORTED_UNSAFE, or SKIPPED\`: fix the \`--input.status\` value and confirm whether \`optimization.status\` already has \`affectedFileHashes\`
 - If the CLI says \`result must be PASS, PASS_WITH_WARNINGS, or FAIL_NEEDS_REMEDIATION\`: fix the \`--input.result\` value and keep \`issues\` as an array when provided
-- If the CLI says \`尚未提交优化结果，请先调用 phase2 --type=optimization\`: call \`phase2 --type=optimization\` before retrying verification
+- If the CLI says \`Optimization not yet submitted, call phase2 --type=optimization first\`: call \`phase2 --type=optimization\` before retrying verification
 - If the CLI says \`FILES_REQUIRED\`: add \`--files "<affected-files>"\` with the space-separated list of files the optimizer subagent declared as affected, then retry the same command
 `.trim();
 

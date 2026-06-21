@@ -1828,7 +1828,7 @@ content
         call.map(arg => String(arg)).join(' ')
       );
       const hasCleanupNote = calls.some(call =>
-        call.includes('废弃工作流残留文件') || (call.includes('Removed:') && call.includes('skill director'))
+        call.includes('deprecated workflow remnant files') || (call.includes('Removed:') && call.includes('skill director'))
       );
       expect(hasCleanupNote).toBe(true);
 

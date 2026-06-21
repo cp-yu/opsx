@@ -138,8 +138,8 @@ async function verifyPhase1(changeName: string, options: VerifyCommandOptions): 
 
   await writeVerifyResult(changeDir, result);
   const nextStep = result.result === 'FAIL_NEEDS_REMEDIATION'
-    ? '修复 CRITICAL issues'
-    : '进入 Phase 2';
+    ? 'Fix CRITICAL issues'
+    : 'Enter Phase 2';
   writeOutput(options, { ok: true, nextStep, result }, nextStep);
   return 0;
 }
@@ -237,11 +237,11 @@ async function handleOptimization(
     return 1;
   }
   if (existingStatus === 'PENDING_VERIFICATION' && current.optimization?.affectedFileHashes) {
-    writeOutput(options, { ok: false, reason: 'PENDING_VERIFICATION' }, '检测到未完成的 Phase 2 验证。请先完成验证或重置');
+    writeOutput(options, { ok: false, reason: 'PENDING_VERIFICATION' }, 'Unfinished Phase 2 verification detected. Complete verification or reset first');
     return 1;
   }
   if (existingStatus && existingStatus !== 'PENDING_VERIFICATION') {
-    writeOutput(options, { ok: false, reason: 'PHASE2_DONE' }, 'Phase 2 已完成');
+    writeOutput(options, { ok: false, reason: 'PHASE2_DONE' }, 'Phase 2 already completed');
     return 1;
   }
 
@@ -259,19 +259,19 @@ async function handleOptimization(
     }
     current.optimization = { status: 'NOT_NEEDED', attempts, baseline: phase1Baseline(current) };
     await writeVerifyResult(changeDir, current);
-    writeOutput(options, { ok: true, result: current }, 'Phase 2 完成 (无需优化)。可进入 sync/archive');
+    writeOutput(options, { ok: true, result: current }, 'Phase 2 complete (no optimization needed). Ready for sync/archive');
     return 0;
   }
   if (input.status === 'SKIPPED') {
     current.optimization = { status: 'SKIPPED', attempts, baseline: phase1Baseline(current) };
     await writeVerifyResult(changeDir, current);
-    writeOutput(options, { ok: true, result: current }, 'Phase 2 skipped. 可进入 sync/archive');
+    writeOutput(options, { ok: true, result: current }, 'Phase 2 skipped. Ready for sync/archive');
     return 0;
   }
   if (input.status === 'ABORTED_UNSAFE') {
     current.optimization = { status: 'ABORTED_UNSAFE', attempts, baseline: phase1Baseline(current), final: input };
     await writeVerifyResult(changeDir, current);
-    writeOutput(options, { ok: true, result: current }, 'Phase 2 aborted unsafe. 请恢复工作区后重试');
+    writeOutput(options, { ok: true, result: current }, 'Phase 2 aborted unsafe. Restore workspace before retrying');
     return 0;
   }
 
@@ -292,7 +292,7 @@ async function handleOptimization(
     baseline: phase1Baseline(current),
   };
   await writeVerifyResult(changeDir, current);
-  writeOutput(options, { ok: true, result: current }, '优化建议已记录。下一步: 应用 Search/Replace 块 + P1_SPECULATIVE_FENCE subagent 验证，然后调用 phase2 --type=verification');
+  writeOutput(options, { ok: true, result: current }, 'Optimization suggestions recorded. Next: apply Search/Replace blocks + P1_SPECULATIVE_FENCE subagent verification, then call phase2 --type=verification');
   return 0;
 }
 
@@ -304,7 +304,7 @@ async function handleVerification(
   options: VerifyCommandOptions
 ): Promise<number> {
   if (current.optimization?.status !== 'PENDING_VERIFICATION') {
-    writeOutput(options, { ok: false, reason: 'OPTIMIZATION_REQUIRED' }, '尚未提交优化结果，请先调用 phase2 --type=optimization');
+    writeOutput(options, { ok: false, reason: 'OPTIMIZATION_REQUIRED' }, 'Optimization not yet submitted. Call phase2 --type=optimization first');
     return 1;
   }
 
@@ -313,7 +313,7 @@ async function handleVerification(
     writeOutput(
       options,
       { ok: false, reason: 'PATCH_NOT_APPLIED', unchanged },
-      '检测到优化 patch 未应用，请先应用 Search/Replace 块再重试'
+      'Optimization patch not applied. Apply Search/Replace blocks before retrying'
     );
     return 1;
   }
@@ -340,17 +340,17 @@ async function handleVerification(
     current.verificationContext.gitHeadCommit = await getGitHead(projectRoot);
     current.verificationContext.timestamp = new Date().toISOString();
     await writeVerifyResult(changeDir, current);
-    writeOutput(options, { ok: true, result: current }, 'Phase 2 完成 (优化+验证通过)。可进入 sync/archive');
+    writeOutput(options, { ok: true, result: current }, 'Phase 2 complete (optimization + verification passed). Ready for sync/archive');
     return 0;
   }
 
   const optRetries = readProjectConfig(projectRoot)?.optimization?.optRetries ?? 2;
 
-  // 记录失败方向，避免跨会话重复尝试
+  // Record failed directions to avoid cross-session retry duplication
   const lastOptAttempt = current.optimization.attempts
     .filter((a) => a.type === 'optimization')
     .at(-1);
-  const failedDirection = input.summary ?? lastOptAttempt?.summary ?? '未记录优化方向';
+  const failedDirection = input.summary ?? lastOptAttempt?.summary ?? 'Optimization direction not recorded';
   current.optimization.failedDirections = [
     ...(current.optimization.failedDirections ?? []),
     failedDirection,
@@ -361,13 +361,13 @@ async function handleVerification(
     current.optimization.final = input;
     current.result = 'PASS_WITH_WARNINGS';
     await writeVerifyResult(changeDir, current);
-    writeOutput(options, { ok: true, result: current }, `Phase 2: ${optRetries}次优化尝试已安全回滚。可进入 sync/archive`);
+    writeOutput(options, { ok: true, result: current }, `Phase 2: ${optRetries} optimization attempt(s) safely rolled back. Ready for sync/archive`);
     return 0;
   }
 
   delete current.optimization.affectedFileHashes;
   await writeVerifyResult(changeDir, current);
-  writeOutput(options, { ok: true, result: current }, `推测性验证失败 (尝试 ${behaviorRetryCounter}/${optRetries})。请用不同策略重试优化`);
+  writeOutput(options, { ok: true, result: current }, `Speculative verification failed (attempt ${behaviorRetryCounter}/${optRetries}). Retry with a different strategy`);
   return 0;
 }
 

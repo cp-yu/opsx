@@ -260,11 +260,11 @@ nodes:
 
     expect(overLimit.exitCode).toBe(1);
     expect(overLimit.stderr).toContain('--depth');
-    expect(overLimit.stderr).toContain('1 到 5');
+    expect(overLimit.stderr).toContain('1 to 5');
     expect(zero.exitCode).toBe(1);
-    expect(zero.stderr).toContain('正整数');
+    expect(zero.stderr).toContain('positive integer');
     expect(text.exitCode).toBe(1);
-    expect(text.stderr).toContain('正整数');
+    expect(text.stderr).toContain('positive integer');
   });
 
   it('子图过滤参数作用于整个输出', async () => {

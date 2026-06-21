@@ -63,7 +63,7 @@ describe('explore template impact sweeps', () => {
   });
 
   it('treats design confirmation as direction only', () => {
-    expect(template).toContain('User selection of an option, confirmation of a design section, or statements such as "可以", "就这样", "选 2", or "拆成多个文件" confirm design direction only');
+    expect(template).toContain('User selection of an option, confirmation of a design section, or statements such as "ok", "that works", "option 2", or "split into multiple files" confirm design direction only');
     expect(template).toContain('They are not authorization to modify files');
   });
 

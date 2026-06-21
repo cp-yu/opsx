@@ -29,15 +29,15 @@ export interface ImpactSweepReport {
   coverageGaps: string[];
   questions: string[];
   /**
-   * 术语观察结果，用于检测用户输入与 specs 中术语的一致性。
+   * Terminology observation results, used to detect consistency between user input and spec terminology.
    *
    * Example:
    * {
    *   "terminologyObservations": {
-   *     "userInput": "流程",
+   *     "userInput": "workflow",
    *     "foundInSpecs": [
    *       {
-   *         "term": "工作流",
+   *         "term": "process",
    *         "specs": ["apply-change-workflow"],
    *         "count": 3
    *       }

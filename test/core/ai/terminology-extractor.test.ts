@@ -4,30 +4,30 @@ import { extractTerminologyObservations } from '../../../src/core/ai/terminology
 
 describe('extractTerminologyObservations', () => {
   it('extracts terms related to a flow concept', () => {
-    const observations = extractTerminologyObservations('流程管理', [
+    const observations = extractTerminologyObservations('workflow management', [
       {
         name: 'apply-change-workflow',
-        content: '工作流负责调度。workflow template 保留。工作流程需要验证。拓扑排序和制品无关。',
+        content: 'process handles scheduling. workflow template is kept. pipeline needs validation. topological sort and artifacts are unrelated.',
       },
     ]);
 
-    expect(observations?.foundInSpecs.map((item) => item.term)).toEqual(['workflow', '工作流', '工作流程']);
+    expect(observations?.foundInSpecs.map((item) => item.term)).toEqual(['pipeline', 'process', 'workflow']);
   });
 
   it('counts term occurrences and spec distribution', () => {
-    const observations = extractTerminologyObservations('流程', [
+    const observations = extractTerminologyObservations('workflow', [
       {
         name: 'spec-b',
-        content: '工作流和工作流',
+        content: 'process and process',
       },
       {
         name: 'spec-a',
-        content: '工作流 workflow',
+        content: 'process workflow',
       },
     ]);
 
     expect(observations?.foundInSpecs).toContainEqual({
-      term: '工作流',
+      term: 'process',
       count: 3,
       specs: ['spec-a', 'spec-b'],
     });
@@ -39,20 +39,20 @@ describe('extractTerminologyObservations', () => {
   });
 
   it('sorts found terms by count then term', () => {
-    const observations = extractTerminologyObservations('流程', [
+    const observations = extractTerminologyObservations('workflow', [
       {
         name: 'spec-a',
-        content: 'workflow 工作流 工作流程',
+        content: 'pipeline process flow',
       },
     ]);
 
-    expect(observations?.foundInSpecs.map((item) => item.term)).toEqual(['workflow', '工作流', '工作流程']);
+    expect(observations?.foundInSpecs.map((item) => item.term)).toEqual(['flow', 'pipeline', 'process']);
   });
 
   it('omits observations when extraction fails', () => {
     const observations = extractTerminologyObservations(
-      '流程',
-      [{ name: 'spec-a', content: '工作流' }],
+      'workflow',
+      [{ name: 'spec-a', content: 'process' }],
       {
         getCandidateTerms: () => {
           throw new Error('LLM timeout');

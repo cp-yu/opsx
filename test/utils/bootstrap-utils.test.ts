@@ -461,10 +461,10 @@ code_refs:
     const starter = await fs.readFile(path.join(testDir, 'openspec', 'specs', 'README.md'), 'utf-8');
 
     expect(review).toContain('# Bootstrap Review');
-    expect(review).toContain('在提升为正式 OPSX 文件之前');
+    expect(review).toContain('Review the mapped architecture before promoting');
     expect(review).toContain('## Validation');
     expect(starter).toContain('# Specs Starter');
-    expect(starter).toContain('该仓库通过 `opsx-first` 模式完成了 bootstrap。');
+    expect(starter).toContain('This repository was bootstrapped in `opsx-first` mode');
   });
 
   it('rejects spec folders that embed path separators (Windows/posix)', async () => {

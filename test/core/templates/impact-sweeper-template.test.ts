@@ -57,7 +57,7 @@ describe('impact sweeper template', () => {
 
     expect(terminology).toContain('# Impact Sweeper Terminology Awareness');
     expect(terminology).toContain("Identify terms semantically related to user's `concept` input");
-    expect(terminology).toContain("if concept is '流程', extract '工作流', 'workflow', '工作流程' etc.");
+    expect(terminology).toContain("if concept is 'workflow', extract 'process', 'pipeline', 'flow' etc.");
     expect(terminology).toContain('Record in `terminologyObservations` field');
     expect(terminology).toContain('Report facts only, no judgment or recommendations');
     expect(terminology).toContain('If terminology extraction fails, omit `terminologyObservations` and keep the report usable');

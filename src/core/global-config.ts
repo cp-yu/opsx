@@ -123,7 +123,7 @@ export function getGlobalConfig(): GlobalConfig {
 
     // Warn about deprecated fields
     if ('profile' in parsed || 'workflows' in parsed || 'delivery' in parsed) {
-      console.warn('警告：检测到过时的配置字段 (profile/workflows/delivery)。运行 "openspec update" 清理这些字段。');
+      console.warn('Warning: obsolete config fields detected (profile/workflows/delivery). Run "openspec update" to clean up these fields.');
     }
 
     // Merge with defaults (loaded values take precedence)

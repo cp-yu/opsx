@@ -137,7 +137,7 @@ git:
         expect.stringContaining('agent')
       );
       expect(console.log).not.toHaveBeenCalledWith(
-        expect.stringContaining(`docs(${changeName}): 归档变更制品`)
+        expect.stringContaining(`docs(${changeName}): Archive change artifacts`)
       );
     });
 
@@ -157,7 +157,7 @@ git:
         expect.stringContaining('Git handoff: agent handles git commits, merge, and cleanup after archive.')
       );
       expect(console.log).not.toHaveBeenCalledWith(
-        expect.stringContaining(`docs(${changeName}): 归档变更制品`)
+        expect.stringContaining(`docs(${changeName}): Archive change artifacts`)
       );
     });
 

@@ -14,7 +14,7 @@ import {
   normalizeRequirementName,
   type RequirementBlock,
 } from './parsers/requirement-blocks.js';
-import { projectConfigForRuntime, isChineseProseLanguage, type RuntimeProjection } from './config-projection.js';
+import { projectConfigForRuntime, type RuntimeProjection } from './config-projection.js';
 import { readProjectConfig } from './project-config.js';
 import { findMainSpecStructureIssues } from './parsers/spec-structure.js';
 import { Validator } from './validation/validator.js';
@@ -435,10 +435,6 @@ export async function writeUpdatedSpec(
  * Build a skeleton spec for new capabilities.
  */
 function buildSpecSkeletonPurpose(changeName: string, projection: RuntimeProjection): string {
-  if (isChineseProseLanguage(projection.proseLanguage)) {
-    return `此规约记录变更 ${changeName} 引入的行为，请在后续同步或归档前补全正式 Purpose。`;
-  }
-
   return `This specification records behavior introduced by change ${changeName}. Replace this Purpose with the formal capability intent before archive.`;
 }
 

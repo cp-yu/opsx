@@ -140,7 +140,7 @@ nodes:
 
     const review = await fs.readFile(path.join(testDir, 'openspec', 'bootstrap', 'review.md'), 'utf-8');
     expect(review).toContain('full-scan-fallback');
-    expect(review).toContain('Git 不可用');
+    expect(review).toContain('Git unavailable');
   });
 
   it('fails refresh promote on spec conflicts before mutating formal outputs', async () => {

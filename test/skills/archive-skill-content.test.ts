@@ -107,21 +107,21 @@ describe('openspec archive skill content', () => {
     expect(instructions).not.toContain('read `references/archive-commit-message.md` before creating the OpenSpec/docs archive commit');
     expect(instructions).not.toContain('read `references/boundary-commit-message.md`');
     expect(instructions).not.toContain('read `references/merge-summary-message.md` before creating a merge or squash commit message');
-    expect(instructions).not.toContain('docs(<change-name>): 归档变更制品');
-    expect(instructions).not.toContain('<type>(<scope>): <中文标题>');
+    expect(instructions).not.toContain('docs(<change-name>): Archive change artifacts');
+    expect(instructions).not.toContain('<type>(<scope>): <English subject>');
     expect(instructions).not.toContain('## Why');
     expect(instructions).not.toContain('## Changes');
     expect(instructions).not.toContain('Implementation:');
     expect(archiveReference).toContain('git.commitMessage.archive');
-    expect(archiveReference).toContain('docs(<change-name>): 归档变更制品');
+    expect(archiveReference).toContain('docs(<change-name>): Archive change artifacts');
     expect(boundaryReference).toContain('git.commitMessage.boundary');
-    expect(boundaryReference).toContain('<type>(<scope>): <中文标题>');
+    expect(boundaryReference).toContain('<type>(<scope>): <English subject>');
     expect(boundaryReference).toContain('## Why');
     expect(boundaryReference).toContain('## Changes');
     expect(boundaryReference).toContain('Implementation:');
     expect(boundaryReference).toContain('git diff --name-only');
     expect(mergeReference).toContain('git.commitMessage.merge');
-    expect(mergeReference).toContain('<type>(<scope>): <中文标题>');
+    expect(mergeReference).toContain('<type>(<scope>): <English subject>');
   });
 
   it('generates codex and claude archive skill step sections from the template source', async () => {

@@ -25,15 +25,15 @@ Use this built-in format when \`git.commitMessage.boundary\` is not configured.
 Subject:
 
 \`\`\`text
-<type>(<scope>): <中文标题>
+<type>(<scope>): <English subject>
 \`\`\`
 
 Body:
 
 \`\`\`text
 ## Why
-[业务背景] <why from proposal.md>
-[技术决策] <decision from design.md when present>
+[Business context] <why from proposal.md>
+[Technical decision] <decision from design.md when present>
 
 ## Changes
 - \`<file-path>\`: <why this file changed>
@@ -63,14 +63,14 @@ Use this built-in format when \`git.commitMessage.archive\` is not configured.
 Subject:
 
 \`\`\`text
-docs(<change-name>): 归档变更制品
+docs(<change-name>): Archive change artifacts
 \`\`\`
 
 Body:
 
 \`\`\`text
 ## Why
-[业务背景] <why this archive commit is needed>
+[Business context] <why this archive commit is needed>
 
 ## Changes
 - \`<file-path>\`: <why this archived/synced path must be committed>
@@ -90,15 +90,15 @@ Use this built-in format when \`git.commitMessage.merge\` is not configured.
 Subject:
 
 \`\`\`text
-<type>(<scope>): <中文标题>
+<type>(<scope>): <English subject>
 \`\`\`
 
 Body:
 
 \`\`\`text
 ## Why
-[业务背景] <why from proposal.md>
-[技术决策] <decision from design.md when present>
+[Business context] <why from proposal.md>
+[Technical decision] <decision from design.md when present>
 
 ## Changes
 - \`<file-path>\`: <why this file changed>

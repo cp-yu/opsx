@@ -82,5 +82,5 @@ export function migrateIfNeeded(projectPath: string, tools: AIToolOption[]): voi
   const config = getGlobalConfig();
   saveGlobalConfig(config);
 
-  console.log('已自动清理过时的 profile/workflows/delivery 配置字段。');
+  console.log('Automatically cleaned up obsolete profile/workflows/delivery config fields.');
 }

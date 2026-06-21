@@ -177,7 +177,7 @@ Then the system signs the user in`
       'utf-8'
     );
     expect(mainSpec).toContain('## Purpose');
-    expect(mainSpec).toContain('此规约记录变更 localized-sync 引入的行为');
+    expect(mainSpec).toContain('This specification records behavior introduced by change localized-sync. Replace this Purpose with the formal capability intent before archive.');
     expect(mainSpec).toContain('### Requirement: The system SHALL support login');
     expect(mainSpec).not.toContain('TBD - created by archiving change');
   });

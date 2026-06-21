@@ -37,7 +37,7 @@ describe('ImpactSweepReport', () => {
   it('documents terminology observations with JSDoc', () => {
     const source = readFileSync(join(process.cwd(), 'src', 'types', 'sweeper.ts'), 'utf8');
 
-    expect(source).toContain('术语观察结果，用于检测用户输入与 specs 中术语的一致性');
+    expect(source).toContain('Terminology observation results, used to detect consistency between user input and spec terminology.');
     expect(source).toContain('"terminologyObservations"');
     expect(source).toContain('"foundInSpecs"');
   });

@@ -268,7 +268,7 @@ describe('global-config', () => {
         getGlobalConfig();
 
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('过时的配置字段')
+          expect.stringContaining('obsolete config fields')
         );
       });
 
@@ -286,7 +286,7 @@ describe('global-config', () => {
         getGlobalConfig();
 
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('过时的配置字段')
+          expect.stringContaining('obsolete config fields')
         );
       });
 

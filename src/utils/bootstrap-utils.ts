@@ -8,7 +8,6 @@ import { z } from 'zod';
 import { FileSystemUtils } from './file-system.js';
 import {
   getRuntimeFingerprintInput,
-  isChineseProseLanguage,
   projectConfigForRuntime,
   type RuntimeProjection,
 } from '../core/config-projection.js';
@@ -725,7 +724,7 @@ async function collectGitChangedPaths(projectRoot: string, anchorCommit: string 
   if (!workTree.ok || workTree.stdout !== 'true') {
     return {
       strategy: 'full-scan-fallback',
-      reason: 'Git 不可用，或当前目录不在 git work tree 中。',
+      reason: 'Git unavailable, or current directory is not in a git work tree.',
       anchorCommit: null,
       changedPaths: [],
       mappedNodeIds: [],
@@ -738,7 +737,7 @@ async function collectGitChangedPaths(projectRoot: string, anchorCommit: string 
   if (!anchorCommit) {
     return {
       strategy: 'full-scan-fallback',
-      reason: 'Refresh 锚点缺失，无法可靠缩小扫描范围。',
+      reason: 'Refresh anchor missing; cannot reliably narrow scan scope.',
       anchorCommit: null,
       changedPaths: [],
       mappedNodeIds: [],
@@ -752,7 +751,7 @@ async function collectGitChangedPaths(projectRoot: string, anchorCommit: string 
   if (!anchorReachable.ok) {
     return {
       strategy: 'full-scan-fallback',
-      reason: `Refresh 锚点提交 '${anchorCommit}' 不可达，回退到全量扫描。`,
+      reason: `Refresh anchor commit '${anchorCommit}' is unreachable. Falling back to full scan.`,
       anchorCommit,
       changedPaths: [],
       mappedNodeIds: [],
@@ -772,7 +771,7 @@ async function collectGitChangedPaths(projectRoot: string, anchorCommit: string 
   if ([committed, staged, unstaged, untracked].some((result) => !result.ok)) {
     return {
       strategy: 'full-scan-fallback',
-      reason: '无法稳定收集 git diff 结果，回退到全量扫描。',
+      reason: 'Unable to reliably collect git diff results. Falling back to full scan.',
       anchorCommit,
       changedPaths: [],
       mappedNodeIds: [],
@@ -804,8 +803,8 @@ async function collectGitChangedPaths(projectRoot: string, anchorCommit: string 
   return {
     strategy: 'git-diff',
     reason: changedPaths.length > 0
-      ? '使用 git 锚点与工作树 diff 缩小 refresh 扫描范围。'
-      : 'git 锚点可用，但未发现需要映射到 code-map 的源码路径变化。',
+      ? 'Using git anchor plus worktree diff to narrow refresh scan scope.'
+      : 'Git anchor available, but no source path changes requiring code-map mapping were found.',
     anchorCommit,
     changedPaths,
     mappedNodeIds: [],
@@ -1344,14 +1343,14 @@ async function deriveRefreshPlan(projectRoot: string, state: BootstrapState, for
   const mapping = mapChangedPathsToNodeIds(projectRoot, formalBundle, rawPlan.changedPaths);
   if (mapping.unmappedPaths.length > 0) {
     return buildRefreshFallbackPlan(
-      `变更路径无法可信映射到现有 code-map：${mapping.unmappedPaths.join(', ')}`,
+      `Changed paths cannot be reliably mapped to existing code-map: ${mapping.unmappedPaths.join(', ')}`,
       rawPlan.anchorCommit
     );
   }
 
   if (mapping.mappedNodeIds.length === 0) {
     return buildRefreshFallbackPlan(
-      'git diff 命中了源码路径，但没有映射到任何 formal OPSX 节点，回退到全量扫描。',
+      'git diff matched source paths, but none mapped to any formal OPSX node. Falling back to full scan.',
       rawPlan.anchorCommit
     );
   }
@@ -1987,10 +1986,10 @@ function computeCandidateFingerprint(
 }
 
 function localizeBootstrapText(
-  projection: RuntimeProjection,
+  _projection: RuntimeProjection,
   text: { en: string; zh: string }
 ): string {
-  return isChineseProseLanguage(projection.proseLanguage) ? text.zh : text.en;
+  return text.en;
 }
 
 async function writeBootstrapMetadata(projectRoot: string, metadata: BootstrapMetadata): Promise<void> {
@@ -2058,14 +2057,14 @@ function buildReviewContent(
   lines.push(
     localizeBootstrapText(projection, {
       en: 'Review the mapped architecture before promoting to formal OPSX files.',
-      zh: '在提升为正式 OPSX 文件之前，先审阅当前映射出的架构。',
+      zh: 'Review the mapped architecture before promoting to formal OPSX files.',
     }),
     ''
   );
   lines.push(
     localizeBootstrapText(projection, {
       en: 'This file is derived from evidence.yaml and domain-map/*.yaml. If either changes, regenerate review via `openspec bootstrap validate`.',
-      zh: '该文件由 evidence.yaml 和 domain-map/*.yaml 派生；任一内容变化后，都需要重新运行 `openspec bootstrap validate` 生成新的 review。',
+      zh: 'This file is derived from evidence.yaml and domain-map/*.yaml. If either changes, regenerate review via `openspec bootstrap validate`.',
     }),
     ''
   );
@@ -2074,29 +2073,29 @@ function buildReviewContent(
     lines.push('## Refresh Scope', '');
     lines.push(`- ${localizeBootstrapText(projection, {
       en: `Strategy: ${derived.refreshPlan.strategy}`,
-      zh: `策略：${derived.refreshPlan.strategy}`,
+      zh: `Strategy: ${derived.refreshPlan.strategy}`,
     })}`);
     lines.push(`- ${localizeBootstrapText(projection, {
       en: `Anchor commit: ${derived.refreshPlan.anchorCommit ?? '(none)'}`,
-      zh: `锚点提交：${derived.refreshPlan.anchorCommit ?? '（空）'}`,
+      zh: `Anchor commit: ${derived.refreshPlan.anchorCommit ?? '(none)'}`,
     })}`);
     lines.push(`- ${localizeBootstrapText(projection, {
       en: `Reason: ${derived.refreshPlan.reason}`,
-      zh: `原因：${derived.refreshPlan.reason}`,
+      zh: `Reason: ${derived.refreshPlan.reason}`,
     })}`);
     if (derived.refreshPlan.changedPaths.length > 0) {
       lines.push(`- ${localizeBootstrapText(projection, {
         en: `Changed paths: ${derived.refreshPlan.changedPaths.join(', ')}`,
-        zh: `变更路径：${derived.refreshPlan.changedPaths.join(', ')}`,
+        zh: `Changed paths: ${derived.refreshPlan.changedPaths.join(', ')}`,
       })}`);
     }
     lines.push(`- ${localizeBootstrapText(projection, {
       en: `Impacted domains: ${derived.refreshDelta.affectedDomainIds.join(', ') || '(none)'}`,
-      zh: `受影响 domains：${derived.refreshDelta.affectedDomainIds.join(', ') || '（空）'}`,
+      zh: `Impacted domains: ${derived.refreshDelta.affectedDomainIds.join(', ') || '(none)'}`,
     })}`);
     lines.push(`- ${localizeBootstrapText(projection, {
       en: `Preserved baseline nodes: ${derived.refreshDelta.preservedNodeIds.length}`,
-      zh: `保留的基线节点数：${derived.refreshDelta.preservedNodeIds.length}`,
+      zh: `Preserved baseline nodes: ${derived.refreshDelta.preservedNodeIds.length}`,
     })}`);
     lines.push('', '## Delta Summary', '');
 
@@ -2105,20 +2104,20 @@ function buildReviewContent(
     const removedNodeCount = derived.refreshDelta.result.counts.removed.domains + derived.refreshDelta.result.counts.removed.capabilities;
     lines.push(`- ${localizeBootstrapText(projection, {
       en: `ADDED: ${addedNodeCount} nodes, ${derived.refreshDelta.result.counts.added.relations} relations`,
-      zh: `ADDED：${addedNodeCount} 个节点，${derived.refreshDelta.result.counts.added.relations} 条关系`,
+      zh: `ADDED: ${addedNodeCount} nodes, ${derived.refreshDelta.result.counts.added.relations} relations`,
     })}`);
     lines.push(`- ${localizeBootstrapText(projection, {
       en: `MODIFIED: ${modifiedNodeCount} nodes, ${derived.refreshDelta.result.counts.modified.relations} relations`,
-      zh: `MODIFIED：${modifiedNodeCount} 个节点，${derived.refreshDelta.result.counts.modified.relations} 条关系`,
+      zh: `MODIFIED: ${modifiedNodeCount} nodes, ${derived.refreshDelta.result.counts.modified.relations} relations`,
     })}`);
     lines.push(`- ${localizeBootstrapText(projection, {
       en: `REMOVED: ${removedNodeCount} nodes, ${derived.refreshDelta.result.counts.removed.relations} relations`,
-      zh: `REMOVED：${removedNodeCount} 个节点，${derived.refreshDelta.result.counts.removed.relations} 条关系`,
+      zh: `REMOVED: ${removedNodeCount} nodes, ${derived.refreshDelta.result.counts.removed.relations} relations`,
     })}`);
     if (derived.refreshDelta.preservedNodeIds.length > 0) {
       lines.push(`- ${localizeBootstrapText(projection, {
         en: `Preserved baseline nodes: ${derived.refreshDelta.preservedNodeIds.join(', ')}`,
-        zh: `保留的基线节点：${derived.refreshDelta.preservedNodeIds.join(', ')}`,
+        zh: `Preserved baseline nodes: ${derived.refreshDelta.preservedNodeIds.join(', ')}`,
       })}`);
     }
     lines.push('');
@@ -2135,9 +2134,9 @@ function buildReviewContent(
     const status = mapFile
       ? localizeBootstrapText(projection, {
         en: `${capCount} capabilities`,
-        zh: `${capCount} 个 capability`,
+        zh: `${capCount} capabilities`,
       })
-      : localizeBootstrapText(projection, { en: 'unmapped', zh: '未映射' });
+      : localizeBootstrapText(projection, { en: 'unmapped', zh: 'unmapped' });
     lines.push(`- [ ] ${dom.id} — ${status}, confidence: ${dom.confidence}`);
   }
 
@@ -2145,21 +2144,21 @@ function buildReviewContent(
   if (state.metadata.mode === 'opsx-first') {
     lines.push(`- ${localizeBootstrapText(projection, {
       en: 'Mode contract: README-only starter at openspec/specs/README.md',
-      zh: '模式约束：只在 openspec/specs/README.md 生成 README 型 starter',
+      zh: 'Mode contract: README-only starter at openspec/specs/README.md',
     })}`);
     lines.push(`- ${localizeBootstrapText(projection, {
       en: 'No capability-level candidate specs should be generated',
-      zh: '此模式下不应生成 capability 级别的 candidate spec',
+      zh: 'No capability-level candidate specs should be generated',
     })}`);
   } else if (derived.candidateSpecs.length === 0) {
     lines.push(`- ${localizeBootstrapText(projection, {
       en: 'No candidate specs will be written',
-      zh: '当前不会写入 candidate spec',
+      zh: 'No candidate specs will be written',
     })}`);
     if (state.metadata.mode === 'refresh') {
       lines.push(`- ${localizeBootstrapText(projection, {
         en: 'Existing formal specs remain the source of truth unless a new capability requires a missing spec file.',
-        zh: '除非新增 capability 缺少 formal spec，否则现有 formal specs 继续作为唯一真相来源。',
+        zh: 'Existing formal specs remain the source of truth unless a new capability requires a missing spec file.',
       })}`);
     }
   } else {
@@ -2171,40 +2170,40 @@ function buildReviewContent(
   for (const preservedPath of derived.preservedFormalPaths) {
     lines.push(`- ${localizeBootstrapText(projection, {
       en: `preserved existing spec: ${preservedPath}`,
-      zh: `保留已有 spec：${preservedPath}`,
+      zh: `preserved existing spec: ${preservedPath}`,
     })}`);
   }
 
   lines.push('', '## Validation', '');
   lines.push(`- [ ] ${localizeBootstrapText(projection, {
     en: 'Review matches current candidate output',
-    zh: 'Review 内容与当前 candidate 输出一致',
+    zh: 'Review matches current candidate output',
   })}`);
   lines.push(`- [ ] ${localizeBootstrapText(projection, {
     en: 'Referential integrity passes',
-    zh: '引用完整性校验通过',
+    zh: 'Referential integrity passes',
   })}`);
   lines.push(`- [ ] ${localizeBootstrapText(projection, {
     en: 'Code-map paths exist on disk',
-    zh: 'Code-map 中的路径都存在于磁盘上',
+    zh: 'Code-map paths exist on disk',
   })}`);
   lines.push(`- [ ] ${localizeBootstrapText(projection, {
     en: 'Candidate spec set matches the bootstrap mode contract',
-    zh: 'Candidate spec 集合符合当前 bootstrap 模式约束',
+    zh: 'Candidate spec set matches the bootstrap mode contract',
   })}`);
   if (state.metadata.mode === 'refresh') {
     lines.push(`- [ ] ${localizeBootstrapText(projection, {
       en: 'Refresh delta matches the current formal OPSX baseline',
-      zh: 'Refresh delta 与当前 formal OPSX 基线一致',
+      zh: 'Refresh delta matches the current formal OPSX baseline',
     })}`);
   }
   lines.push(`- [ ] ${localizeBootstrapText(projection, {
     en: 'Candidate specs pass OpenSpec validation',
-    zh: 'Candidate spec 通过 OpenSpec 校验',
+    zh: 'Candidate specs pass OpenSpec validation',
   })}`);
   lines.push(`- [ ] ${localizeBootstrapText(projection, {
     en: 'Domain boundaries match mental model',
-    zh: 'Domain 边界与预期心智模型一致',
+    zh: 'Domain boundaries match mental model',
   })}`);
   lines.push('');
 
@@ -2416,20 +2415,20 @@ async function writeBootstrapSpecStarter(projectRoot: string, state: BootstrapSt
 
 ${localizeBootstrapText(projection, {
   en: 'This repository was bootstrapped in `opsx-first` mode.',
-  zh: '该仓库通过 `opsx-first` 模式完成了 bootstrap。',
+  zh: 'This repository was bootstrapped in `opsx-first` mode.',
 })}
 
 - ${localizeBootstrapText(projection, {
   en: 'Formal OPSX files were generated from the bootstrap workflow.',
-  zh: '正式 OPSX 文件已经由 bootstrap 工作流生成。',
+  zh: 'Formal OPSX files were generated from the bootstrap workflow.',
 })}
 - ${localizeBootstrapText(projection, {
   en: 'Add behavior specs incrementally with normal OpenSpec changes.',
-  zh: '后续请通过常规 OpenSpec change 渐进补充行为规约。',
+  zh: 'Add behavior specs incrementally with normal OpenSpec changes.',
 })}
 - ${localizeBootstrapText(projection, {
   en: 'Create focused specs under `openspec/specs/<capability>/spec.md` as features evolve.',
-  zh: '随着功能演进，在 `openspec/specs/<capability>/spec.md` 下补充聚焦的 spec。',
+  zh: 'Create focused specs under `openspec/specs/<capability>/spec.md` as features evolve.',
 })}
 `;
 

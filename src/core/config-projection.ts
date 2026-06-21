@@ -385,7 +385,7 @@ export function isChineseProseLanguage(proseLanguage: string | undefined): boole
   return normalized === 'zh'
     || normalized === 'zh-cn'
     || normalized === 'zh-hans'
-    || normalized === '中文';
+    ;
 }
 
 export function getRuntimeFingerprintInput(projection: RuntimeProjection): Record<string, unknown> {

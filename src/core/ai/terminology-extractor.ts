@@ -11,12 +11,12 @@ export interface TerminologyExtractorOptions {
 
 const DEFAULT_TERM_GROUPS = [
   {
-    signals: ['流程', '工作流', 'workflow', 'process', 'flow'],
-    terms: ['流程', '工作流', 'workflow', '工作流程', 'process', 'flow'],
+    signals: ['workflow', 'process', 'flow', 'pipeline'],
+    terms: ['workflow', 'process', 'flow', 'pipeline'],
   },
   {
-    signals: ['变更', 'change'],
-    terms: ['变更', 'change'],
+    signals: ['change'],
+    terms: ['change'],
   },
 ];
 

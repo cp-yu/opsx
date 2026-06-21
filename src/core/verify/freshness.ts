@@ -255,7 +255,7 @@ export function formatVerifyGateFailure(
   const lines = [`✗ Verify gate failed — ${summarizeFailure(freshness, archiveCompatibility)}`];
 
   if (fingerprintFiles.length > 0) {
-    lines.push('', '  证据文件指纹不匹配:');
+    lines.push('', '  Evidence file fingerprint mismatch:');
     for (const file of fingerprintFiles) {
       lines.push(`    - ${file}`);
     }
@@ -270,7 +270,7 @@ export function formatVerifyGateFailure(
   }
 
   if (otherDetails.length > 0) {
-    lines.push('', '  其他诊断:');
+    lines.push('', '  Other diagnostics:');
     for (const detail of otherDetails) {
       lines.push(`    - ${detail}`);
     }
@@ -278,7 +278,7 @@ export function formatVerifyGateFailure(
 
   lines.push(
     '',
-    '  建议操作:',
+    '  Suggested actions:',
     `    openspec verify phase1 ${changeName}`,
     `    openspec ${command} ${changeName} --no-verify`
   );

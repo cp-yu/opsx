@@ -21,13 +21,13 @@ Before creating artifacts, inspect the current conversation for an explore-gener
 - If no Design Summary exists, read \`openspec/config.yaml\` through the compiled config projection. When \`propose.smartRouting: false\` or \`propose.requireExplore: false\` is configured, keep legacy behavior and proceed directly.
 - Otherwise, score the user's input across 5 dimensions: technology stack/library, data model/interface, API endpoint/function signature, test strategy, boundary conditions/error handling.
 - Treat input as detailed only when length is greater than 100 characters and score is at least 3/5.
-- Detect multi-subsystem scope when the input uses broad platform/system wording or lists more than 3 parallel modules joined by terms like "包含", "以及", "和", commas, or enumeration.
+- Detect multi-subsystem scope when the input uses broad platform/system wording or lists more than 3 parallel modules joined by terms like "includes", "plus", "and", commas, or enumeration.
 
 Routing outcomes:
 - Design Summary found: proceed and show that Design Summary is being used.
-- Detailed input: proceed and show "输入足够详细，跳过 explore，直接生成制品。"
-- Multi-subsystem input: stop and show "这个需求涉及多个独立子系统，建议先运行 \`/opsx:explore\` 进行拆解。"
-- Simple input: stop and show "输入过于简单，建议先运行 \`/opsx:explore\` 澄清需求和设计方案。"
+- Detailed input: proceed and show "Input is sufficiently detailed. Skipping explore; generating artifacts directly."
+- Multi-subsystem input: stop and show "This request spans multiple independent subsystems. Consider running \`/opsx:explore\` to decompose it first."
+- Simple input: stop and show "Input is too brief. Consider running \`/opsx:explore\` to clarify requirements and design approach."
 
 Decision transparency:
 - Show input length, detail score, multi-subsystem result, and final decision.
@@ -48,7 +48,7 @@ export function getOpsxProposeSkillTemplate(): SkillTemplate {
 ## Flow
 
 1. Input must identify a kebab-case change name or enough description to derive one. If unclear, ask what to build or fix.
-2. Apply smart routing before creating files: inspect the current conversation for an explore-generated \`Design Summary\`; if no summary exists, respect \`propose.smartRouting: false\` and \`propose.requireExplore: false\`, otherwise score the user's input across 5 dimensions. Detect multi-subsystem scope. Outcomes include: "Design Summary found: proceed and show that Design Summary is being used", "输入足够详细，跳过 explore，直接生成制品。", and "这个需求涉及多个独立子系统，建议先运行 \`/opsx:explore\` 进行拆解。". Show input length, detail score, multi-subsystem result, and final decision.
+2. Apply smart routing before creating files: inspect the current conversation for an explore-generated \`Design Summary\`; if no summary exists, respect \`propose.smartRouting: false\` and \`propose.requireExplore: false\`, otherwise score the user's input across 5 dimensions. Detect multi-subsystem scope. Outcomes include: "Design Summary found: proceed and show that Design Summary is being used", "Input is sufficiently detailed. Skipping explore; generating artifacts directly.", and "This request spans multiple independent subsystems. Consider running \`/opsx:explore\` to decompose it first.". Show input length, detail score, multi-subsystem result, and final decision.
 3. Run \`openspec new change "<name>"\`, then \`openspec status --change "<name>" --json\` to read \`applyRequires\`, artifact order, dependencies, and schema.
 4. Load shared OPSX context before artifact generation.
 ${OPSX_SHARED_CONTEXT}

@@ -39,7 +39,7 @@ describe('openspec verify command', () => {
     ], { cwd: tempDir });
 
     expect(phase1.exitCode).toBe(0);
-    expect(JSON.parse(phase1.stdout).nextStep).toBe('进入 Phase 2');
+    expect(JSON.parse(phase1.stdout).nextStep).toBe('Enter Phase 2');
 
     const pendingStatus = await runCLI(['verify', 'status', 'c1', '--json'], { cwd: tempDir });
     expect(pendingStatus.exitCode).toBe(1);
@@ -95,7 +95,7 @@ describe('openspec verify command', () => {
     const status = await runCLI(['verify', 'status', 'c1'], { cwd: tempDir });
 
     expect(status.exitCode).toBe(1);
-    expect(status.stdout).toContain('证据文件指纹不匹配:');
+    expect(status.stdout).toContain('Evidence file fingerprint mismatch:');
     expect(status.stdout).toContain('- src/a.ts');
   });
 
@@ -155,7 +155,7 @@ describe('openspec verify command', () => {
     expect(status.exitCode).toBe(1);
     expect(status.stdout).toContain('Archive compatibility:');
     expect(status.stdout).toContain('PENDING_VERIFICATION');
-    expect(status.stdout).toContain('建议操作:');
+    expect(status.stdout).toContain('Suggested actions:');
     expect(status.stdout).toContain('openspec verify phase1 c1');
     expect(status.stdout).toContain('openspec sync c1 --no-verify');
   });

@@ -46,7 +46,7 @@ describe('reviewer cleanliness dimension contract', () => {
   it('escalates behavior code to CRITICAL and downgrades mechanical changes', () => {
     const instructions = getReviewerSkillTemplate().instructions;
 
-    expect(instructions).toContain('behavior code');
+    expect(instructions).toContain('Behavior code');
     expect(instructions).toContain('lockfile');
     expect(instructions).toContain('WARNING');
   });

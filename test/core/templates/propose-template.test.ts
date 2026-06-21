@@ -80,8 +80,8 @@ describe('propose template post-validation flow', () => {
       expect(body).toContain("score the user's input across 5 dimensions");
       expect(body).toContain('Detect multi-subsystem scope');
       expect(body).toContain('Design Summary found: proceed and show that Design Summary is being used');
-      expect(body).toContain('输入足够详细，跳过 explore，直接生成制品。');
-      expect(body).toContain('这个需求涉及多个独立子系统，建议先运行 `/opsx:explore` 进行拆解。');
+      expect(body).toContain('Input is sufficiently detailed. Skipping explore; generating artifacts directly.');
+      expect(body).toContain('This request spans multiple independent subsystems. Consider running `/opsx:explore` to decompose it first.');
       expect(body).toContain('Show input length, detail score, multi-subsystem result, and final decision');
     }
   });

@@ -59,7 +59,7 @@ async function writeChange(projectRoot: string, changeName = 'feature-archive'):
 `);
   await writeFile(projectRoot, path.join('openspec', 'changes', changeName, 'proposal.md'), `## Why
 
-归档流程需要合并回主线。
+归档workflow需要合并回主线。
 
 ## What Changes
 
@@ -151,7 +151,7 @@ ADDED:
       expect.stringContaining('agent')
     );
     expect(console.log).not.toHaveBeenCalledWith(
-      expect.stringContaining('docs(feature-archive): 归档变更制品')
+      expect.stringContaining('docs(feature-archive): Archive change artifacts')
     );
 
     expect(await fs.readFile(path.join(projectRoot, 'openspec', 'specs', 'synced', 'spec.md'), 'utf-8')).toContain('Synced behavior');

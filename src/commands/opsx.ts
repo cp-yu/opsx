@@ -26,15 +26,15 @@ function parseDepth(value: string | undefined): { depth: number; explicit: boole
   }
 
   if (!/^\d+$/.test(value)) {
-    throw new Error('--depth 必须为正整数');
+    throw new Error('--depth must be a positive integer');
   }
 
   const depth = Number(value);
   if (depth < 1) {
-    throw new Error('--depth 必须为正整数');
+    throw new Error('--depth must be a positive integer');
   }
   if (depth > 5) {
-    throw new Error('--depth 的有效范围为 1 到 5');
+    throw new Error('--depth valid range is 1 to 5');
   }
   return { depth, explicit: true };
 }

@@ -5,17 +5,17 @@ import { extractTerminologyObservations } from '../../src/core/ai/terminology-ex
 
 describe('explore terminology integration', () => {
   it('turns sweeper terminology observations into an explore question', () => {
-    const observations = extractTerminologyObservations('流程', [
+    const observations = extractTerminologyObservations('workflow', [
       {
         name: 'apply-change-workflow',
-        content: '工作流使用 workflow 模板。',
+        content: 'process uses pipeline templates.',
       },
     ]);
 
     const question = createTerminologyQuestion(observations);
 
     expect(observations?.foundInSpecs.length).toBeGreaterThan(0);
-    expect(question).toContain("你使用了'流程'");
+    expect(question).toContain("You used 'workflow'");
   });
 
   it('keeps old sweeper reports compatible', () => {

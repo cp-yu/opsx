@@ -504,10 +504,10 @@ export class UpdateCommand {
       if (!fs.existsSync(configPath)) return;
       const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
       if (raw.profile === undefined && raw.workflows === undefined && raw.delivery === undefined) return;
-      console.warn(chalk.yellow('检测到过时的配置字段 (profile/workflows/delivery)，正在自动清理...'));
+      console.warn(chalk.yellow('Obsolete config fields detected (profile/workflows/delivery), auto-cleaning...'));
       const config = getGlobalConfig();
       saveGlobalConfig(config);
-      console.log(chalk.dim('已自动清理过时字段。'));
+      console.log(chalk.dim('Obsolete fields auto-cleaned.'));
     } catch {
       // Silently ignore config cleanup failures
     }
@@ -586,7 +586,7 @@ export class UpdateCommand {
     }
 
     if (cleaned > 0) {
-      console.log(chalk.dim(`已清理 ${cleaned} 个废弃工作流残留文件。`));
+      console.log(chalk.dim(`Cleaned ${cleaned} deprecated workflow remnant files.`));
     }
   }
 }
