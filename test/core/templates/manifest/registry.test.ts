@@ -30,11 +30,16 @@ describe('WorkflowManifestRegistry', () => {
 
   describe('modeMembership 作为标签系统', () => {
     it('core workflows should have ["core"] tag', () => {
-      const coreWorkflows = ['propose', 'explore', 'apply', 'archive', 'snack'];
+      const coreWorkflows = ['propose', 'explore', 'apply', 'archive'];
       for (const workflowId of coreWorkflows) {
         const entry = WorkflowManifestRegistry.get(workflowId);
         expect(entry?.modeMembership).toEqual(['core']);
       }
+    });
+
+    it('snack should have ["flexible"] tag (transitional capability)', () => {
+      const entry = WorkflowManifestRegistry.get('snack');
+      expect(entry?.modeMembership).toEqual(['flexible']);
     });
 
     it('bootstrap-opsx should have empty modeMembership', () => {

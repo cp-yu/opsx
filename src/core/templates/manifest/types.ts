@@ -5,7 +5,7 @@
 
 import type { SkillTemplate, CommandTemplate } from '../types.js';
 
-export type WorkflowPreset = 'core' | 'expanded';
+export type WorkflowPreset = 'core' | 'flexible';
 
 export interface WorkflowPromptMeta {
   name: string;

@@ -18,7 +18,7 @@ import {
   getSnackSkillTemplate,
 } from '../skill-templates.js';
 
-import type { WorkflowManifestEntry, WorkflowPreset } from './types.js';
+import type { WorkflowManifestEntry } from './types.js';
 
 // ---------------------------------------------------------------------------
 // Manifest entries
@@ -91,7 +91,7 @@ const MANIFEST_ENTRIES: readonly WorkflowManifestEntry[] = [
   },
   {
     workflowId: 'snack',
-    modeMembership: ['core'],
+    modeMembership: ['flexible'],
     skillDirName: 'openspec-snack',
     skillName: 'openspec-snack',
     commandSlug: 'snack',
@@ -128,12 +128,6 @@ export const WorkflowManifestRegistry = {
 
   getSkillNames(): readonly string[] {
     return MANIFEST_ENTRIES.map((e) => e.skillDirName);
-  },
-
-  getWorkflowsForPreset(preset: WorkflowPreset): readonly string[] {
-    return MANIFEST_ENTRIES
-      .filter((e) => (e.modeMembership as readonly WorkflowPreset[]).includes(preset))
-      .map((e) => e.workflowId);
   },
 
   getCommandSlugMap(): Record<string, string> {

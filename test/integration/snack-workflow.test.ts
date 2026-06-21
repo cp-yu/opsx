@@ -63,7 +63,7 @@ describe('snack workflow integration', () => {
     expect(workflowIds).toContain('snack');
 
     const snack = WorkflowManifestRegistry.get('snack');
-    expect(snack?.modeMembership).toEqual(['core']);
+    expect(snack?.modeMembership).toEqual(['flexible']);
     expect(snack?.getSkillTemplate).toBeDefined();
     // snack is skill-only: no command template
     expect(snack?.getCommandTemplate).toBeUndefined();
