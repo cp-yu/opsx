@@ -1,216 +1,170 @@
-# opsx-verify-skill Specification
+# verify-prompt-orchestration Specification
 
 ## Purpose
-Define `/opsx:verify` behavior for assessing implementation completeness, correctness, and coherence against change artifacts.
+此规约记录变更 optimize-verify-prompts 引入的行为，请在后续同步或归档前补全正式 Purpose。
 ## Requirements
-### Requirement: Verify Skill Invocation
-The system SHALL 提供 `/opsx:verify` skill，并使用能够最小化实现上下文偏见的执行方式来校验实现与 change artifacts 的一致性。
+### Requirement: Coordinator 角色声明
 
-#### Scenario: 提供 change name 执行 verify
-- **WHEN** agent 执行 `/opsx:verify <change-name>`
-- **THEN** the agent 针对该特定 change 校验实现
-- **AND** 产出 verification report
+verify 工作流提示词 SHALL 以显式 coordinator 角色声明开头，将 top-level agent 定义为 verification coordinator，而不是 verification judge。
 
-#### Scenario: 未提供 change name 执行 verify
-- **WHEN** agent 在未提供 change name 的情况下执行 `/opsx:verify`
-- **THEN** the agent 提示用户从可用 changes 中选择
-- **AND** 仅展示那些已经拥有实现任务的 changes
+角色声明 SHALL 定义四个互相独立的角色及其边界：
 
-#### Scenario: Change 不包含 tasks
-- **WHEN** 选中的 change 没有 `tasks.md` 或 tasks 为空
-- **THEN** the agent 报告“没有可供 verify 的任务”
-- **AND** 建议先补全 `tasks.md` 或重新运行 `/opsx:propose`
+| 角色 | 职责 |
+|------|----------------|
+| Coordinator (top-level agent) | 确定 change 目录、传递定位信息给 subagent、验证 payload 结构、执行确定性写回、管理 git checkpoint、通过 CLI 持久化结果 |
+| Reviewer Subagent | 自主读取文件和执行测试，负责全部 completeness、correctness、coherence 裁决 |
+| Optimizer Subagent | 自主读取文件，提出保持行为不变的 Search/Replace 块；绝不直接修改文件 |
+| CLI | 确定性持久化、hash 计算、seal 验证 |
 
-#### Scenario: 固定使用 clean-context subagent 验证
-- **WHEN** 当前系统生成 verify workflow
-- **THEN** `/opsx:verify` SHALL 使用专用的 subagent-orchestrated verify 模板骨架
-- **AND** 顶层 agent SHALL 先收集显式输入：change artifacts、git evidence output、final file contents
-- **AND** 顶层 agent SHALL spawn a clean-context reviewer subagent to execute Phase 1 verification
-- **AND** 顶层 agent SHALL NOT 直接执行 completeness、correctness 或 coherence judgment
-- **AND** reviewer subagent SHALL NOT have access to implementation conversation history
-- **AND** write-back 与 verify result persistence MAY 由顶层 agent 在接收结构化 reviewer output 后执行
-- **AND** 若 reviewer subagent 无法启动、超时或返回不可消费的 payload，`/opsx:verify` SHALL fail closed，而不是静默降级到当前 agent 的内联判断
-- **AND** SHALL record `executionMode: 'subagent-orchestrated'` in verify result
+角色声明 SHALL 显式包含约束：`You MUST NOT substitute your own completeness/correctness/coherence judgments for the reviewer's.`
 
-### Requirement: Completeness Verification
-The agent SHALL verify that all required work has been completed, including work whose deliverable is the absence of code.
+Coordinator 的 `[Mode: Evidence]` 步骤 SHALL 简化为：确定 changeDir 和 projectRoot 路径，不再读取候选文件内容。
 
-#### Scenario: Task completion check
-- **WHEN** verifying completeness
-- **THEN** the agent reads tasks.md
-- **AND** counts tasks marked `- [x]` (complete) vs `- [ ]` (incomplete)
-- **AND** reports completion status with specific incomplete tasks listed
+#### Scenario: Agent 理解自身是 coordinator 而不是 judge
+- **WHEN** top-level agent 加载 verify prompt
+- **THEN** 第一个内容块 SHALL 声明 coordinator 角色
+- **AND** SHALL 列出四个角色及其更新后的职责（coordinator 不再收集 evidence）
+- **AND** SHALL 显式禁止 coordinator 自行作出裁决
 
-#### Scenario: Spec coverage check
-- **WHEN** verifying completeness
-- **AND** delta specs exist in `openspec/changes/<name>/specs/`
-- **THEN** the agent extracts all requirements from delta specs
-- **AND** 按锚定类型核查：ADDED/MODIFIED requirement 在 codebase 中搜索实现证据；REMOVED requirement 搜索残留引用并确认缺失
-- **AND** reports which requirements appear to have implementation vs which are missing
-- **AND** 对 REMOVED requirement 报告缺失确认结果，发现残留 = 未完成
+#### Scenario: Evidence 步骤不再读取文件内容
+- **WHEN** coordinator 进入 `[Mode: Evidence]`
+- **THEN** coordinator SHALL 仅确定 changeDir 和 projectRoot 路径
+- **AND** SHALL NOT 读取候选实现文件的内容
+- **AND** SHALL NOT 执行 git diff 或 git status（由 subagent 自行执行）
 
-#### Scenario: All tasks complete
-- **WHEN** all tasks are marked complete
-- **THEN** report "Tasks: N/N complete"
-- **AND** mark completeness dimension as passed
+### Requirement: 阶段模式标签
 
-#### Scenario: Incomplete tasks found
-- **WHEN** some tasks are incomplete
-- **THEN** report "Tasks: X/N complete"
-- **AND** list each incomplete task
-- **AND** mark as CRITICAL issue
-- **AND** suggest: "Complete remaining tasks or mark as done if already implemented"
+verify 工作流提示词 SHALL 使用 mode label 标记主要阶段切换，以提示认知上下文切换。
 
-#### Scenario: Delete 声明核对
+以下 mode label SHALL 放置在对应步骤：
 
-- **WHEN** verifying completeness
-- **AND** 某 task 的 `Files` 包含 `Delete:` 条目
-- **THEN** the agent SHALL 在 `git diff <originalBranch>...HEAD` 中逐项确认声明的文件已删除
-- **AND** 声明已删除但文件仍存在时 SHALL mark as CRITICAL issue
+| Mode Label | 阶段 | 触发点 |
+|------------|-------|---------|
+| `[Mode: Setup]` | 选择 change、加载 artifact、early-stop 检查 | Steps 1-3.5 |
+| `[Mode: Evidence]` | 收集 git evidence 和 final file contents | Step 4 |
+| `[Mode: Delegate Review]` | 启动 reviewer subagent 并等待结构化 payload | Step 5 |
+| `[Mode: Validate Payload]` | 验证 reviewer payload 结构和证据引用 | Step 6 |
+| `[Mode: Writeback]` | 将 writeBackPlan 应用到 tasks.md | Step 7 |
+| `[Mode: Record]` | 通过 CLI 持久化 canonical Phase 1 result | Step 8/10 |
+| `[Mode: Checkpoint]` | Phase 2 安全保护的 git stash 生命周期 | Phase 2 entry |
+| `[Mode: Optimize]` | 启动 optimizer subagent 并应用 Search/Replace 块 | Phase 2 optimization |
+| `[Mode: Speculative Verify]` | 不触碰 canonical result 的 P1_SPECULATIVE_FENCE re-verify | Step 10/12 |
+| `[Mode: Seal]` | 最终验证和 seal hash | Step 11/13 |
 
-### Requirement: Correctness Verification
+Mode label SHALL NOT 应用于 checkpoint 子状态（CREATED、BASELINE_RESTORED_FOR_RETRY、TERMINAL_ACCEPTED、TERMINAL_RESTORED）；这些只是单一 `[Mode: Checkpoint]` 认知模式内的实现分支。
 
-The agent SHALL 通过将 change 意图与仓库最终状态做对照来验证实现是否符合规格，并将 git 证据仅用作发现线索而非事实来源。判定模式按 Check 锚点类型分派：`Verifies`（普通 requirement）执行存在性判定，`Verifies ... REMOVED Requirement` 执行缺失性判定，`Preserves` 执行等价性判定。
+#### Scenario: 主要阶段切换带有 mode label
 
-#### Scenario: Git evidence 作为调查线索
+- **WHEN** verify 工作流从 evidence collection 切换到 reviewer delegation
+- **THEN** step header SHALL 包含 `[Mode: Delegate Review]`
+- **AND** mode label SHALL 作为 step number 的前缀
 
-- **WHEN** 验证一个带有本地修改或最近提交的 change
-- **THEN** the agent SHALL 使用 git status / diff / log 定位候选文件、声称实现的区域与可疑遗漏
-- **AND** SHALL 将 git evidence 视为调查线索，NOT sufficient proof of requirement satisfaction
-- **AND** SHALL 遵循证据优先级顺序：change artifacts → git evidence (guide) → final file contents (judge) → tests
-- **AND** 具体协议见 reviewer.ts Self-Read Protocol 步骤 3-5（git status/diff 仅作为导航线索，最终文件内容为权威证据）
+#### Scenario: Checkpoint 子状态不单独使用 mode label
 
-#### Scenario: Step-by-step objective verification
+- **WHEN** verify 工作流处于 Phase 2 checkpoint management
+- **THEN** 单个 stash 状态（CREATED、BASELINE_RESTORED_FOR_RETRY 等）SHALL NOT 获得独立 mode label
+- **AND** SHALL 在 `[Mode: Checkpoint]` section 内描述
 
-- **WHEN** 验证任何 requirement
-- **THEN** the agent SHALL 遵循以下步骤：
-  1. **Locate**: 搜索代码库中与 requirement 相关的关键词，识别候选文件
-  2. **Read**: 读取实际文件内容（不仅是搜索结果或 git diffs）
-  3. **Analyze**: 将文件内容与 requirement intent 和 scenario conditions 对比
-  4. **Cite**: 记录具体文件路径和行号作为证据
-  5. **Judge**: 基于证据做出 PASS/WARNING/CRITICAL 判断
-  6. **Explain**: 对于非 PASS 判断，解释缺失或偏离之处
-- **AND** 具体判定标准见 reviewer.ts Correctness 节（Presence/Absence/Equivalence 三段分派，Locate→Read→Analyze→Cite→Judge→Explain 六步验证循环）
+### Requirement: Explicit subagent delegation instructions
 
-### Requirement: Coherence Verification
-The agent SHALL verify that implementation is sensible and follows design decisions.
+verify 工作流提示词 SHALL 提供明确的 subagent delegation 指令，用于启动 reviewer 和 optimizer subagent。
 
-#### Scenario: Design.md adherence check
-- **WHEN** verifying coherence
-- **AND** design.md exists for the change
-- **THEN** extract key decisions from design.md
-- **AND** verify implementation follows those decisions
-- **AND** report any deviations
+提示词 SHALL NOT 写入任何工具专属 API 调用语法。提示词 SHALL 只描述工作流意图、subagent 角色、skill invoke、输入信息和等待规则。
 
-#### Scenario: No design.md
-- **WHEN** verifying coherence
-- **AND** no design.md exists
-- **THEN** skip design adherence check
-- **AND** note "No design.md to verify against"
+reviewer subagent delegation 指令 SHALL 包含：
 
-#### Scenario: Design decision followed
-- **WHEN** implementation follows a design decision
-- **THEN** report as confirmed
-- **AND** cite evidence from code
+- 调用 clean-context reviewer subagent，赋予 Read 和 Bash 工具能力
+- instruct subagent to invoke `openspec-reviewer`
+- 传入轻量定位信息：`changeName`、`changeDir`、`projectRoot`
+- 声明 subagent 将自主读取文件、执行 git 命令和按需跑测试
+- 要求 top-level agent 等待完整 reviewer payload 后再进入 payload validation
+- 要求 top-level agent MUST NOT substitute its own completeness/correctness/coherence verdict
 
-#### Scenario: Design decision violated
-- **WHEN** implementation contradicts a design decision
-- **THEN** report as WARNING
-- **AND** explain the contradiction
-- **AND** suggest: either update implementation or update design.md
+optimizer subagent delegation 指令 SHALL 包含：
 
-#### Scenario: Code pattern consistency
-- **WHEN** verifying coherence
-- **THEN** check if new code follows existing project patterns
-- **AND** flag any significant deviations as suggestions
+- 调用 clean-context optimizer subagent，赋予 Read 和 Bash 工具能力
+- instruct subagent to invoke `openspec-optimizer`
+- 传入轻量定位信息：`changeName`、`changeDir`、`projectRoot`
+- 声明 subagent 将自主从 `.verify-result.json` 读取 Phase 1 结果和 evidence 列表
+- 要求 optimizer 只返回 Search/Replace blocks 或 `No optimization opportunities found`
+- 要求 top-level agent 等待完整 optimizer payload 后再应用块或记录 NO_OPTIMIZATION_NEEDED
 
-### Requirement: Verification Report Format
+#### Scenario: Master 委派 reviewer 时只传定位信息
+- **WHEN** verify coordinator 进入 `[Mode: Delegate Review]`
+- **THEN** coordinator SHALL 传入 changeName、changeDir、projectRoot 三个字符串
+- **AND** SHALL NOT 传入 finalFileContents、changeArtifacts 或 gitEvidence 的完整文本
+- **AND** SHALL 声明 reviewer 拥有 Read + Bash 工具能力
 
-The agent SHALL produce a structured, prioritized report with exit code semantics, now including optimization phase results.
+#### Scenario: Master 委派 optimizer 时只传定位信息
+- **WHEN** verify coordinator 进入 `[Mode: Optimize]`
+- **THEN** coordinator SHALL 传入 changeName、changeDir、projectRoot 三个字符串
+- **AND** SHALL NOT 传入 phase1Summary、finalFileContents 或 config 的完整内容
+- **AND** SHALL 声明 optimizer 拥有 Read + Bash 工具能力
 
-#### Scenario: Report summary with optimization
+### Requirement: Subagent 超时和等待规则
 
-- **WHEN** verification completes
-- **THEN** display summary scorecard:
-  ```text
-  ## Verification Report: <change-name>
+verify 工作流提示词 SHALL 为所有 subagent delegation 包含显式 timeout 和 waiting rules。
 
-  ### Summary
-  | Dimension    | Status   |
-  |--------------|----------|
-  | Completeness | X/Y      |
-  | Correctness  | X/Y      |
-  | Coherence    | Followed |
-  | Optimization | <status> |
-  ```
-- **AND** the optimization row shows the Phase 2 outcome（`SKIPPED`、`NOT_NEEDED`、`IMPROVED`、`DEGRADED`、`ABORTED_UNSAFE`）
+timeout rules SHALL 指定工具无关约束：
 
-#### Scenario: All checks pass with optimization
+- 表达 10 分钟等待预算
+- 等待完整 subagent 结果
+- 如果 10 分钟内未完成，继续 polling 或继续等待；SHALL NOT kill subagent
+- 如果等待时间过长，询问用户继续等待还是终止
+- 未经用户确认，绝不终止 subagent
+- top-level agent MUST 在进入下一步前接收完整 subagent payload
 
-- **WHEN** no issues found across all dimensions
-- **AND** Phase 2 completed with `IMPROVED`
-- **THEN** display: `All checks passed. Code optimized. Ready for archive.`
-- **AND** persist result as `PASS`
+#### Scenario: Reviewer subagent 超过默认 timeout
 
-#### Scenario: Degraded Pass with warnings
+- **WHEN** reviewer subagent 在 30 秒内没有返回
+- **THEN** coordinator SHALL NOT 将其视为失败
+- **AND** SHALL 继续等待或 polling
+- **AND** SHALL NOT 在收到结果前进入 payload validation
 
-- **WHEN** Phase 2 reached `DEGRADED` after 3 failed behavior attempts
-- **THEN** display: `Phase 1 PASS. 3 optimization attempts safely reverted.`
-- **AND** persist result as `PASS_WITH_WARNINGS`
+#### Scenario: Subagent 等待时间过长
 
-### Requirement: Verify Write-back
-The agent SHALL write back high-confidence CRITICAL verification failures into `tasks.md`.
+- **WHEN** coordinator 等待某个 subagent 超过 10 分钟
+- **THEN** coordinator SHALL 询问用户是否继续等待或终止
+- **AND** SHALL NOT 在未经用户确认时 kill subagent
 
-#### Scenario: CRITICAL issue unmarks completed task
-- **WHEN** verify finds a CRITICAL issue that maps to a task currently marked `- [x]`
-- **THEN** the agent SHALL change that task entry to `- [ ]`
-- **AND** SHALL explain the requirement and reason in the remediation output
+### Requirement: Checkpoint 状态机块格式
 
-#### Scenario: WARNING issue does not unmark task
-- **WHEN** verify finds only WARNING or SUGGESTION issues for a completed task
-- **THEN** the agent SHALL keep the task marked complete
-- **AND** SHALL report the issue without mutating `tasks.md`
+Phase 2 prompt SHALL 将 checkpoint state machine description 从连续段落重构为表格格式，并追加 hard rules 列表。
 
-#### Scenario: Remediation section appended
-- **WHEN** verify finds one or more fixable issues
-- **THEN** the agent SHALL append or refresh a `## Remediation` section in `tasks.md`
-- **AND** SHALL write each remediation item as a checkbox tagged `[code_fix]` or `[artifact_fix]`
-- **AND** SHALL avoid duplicating the same remediation item across repeated runs
+表格 SHALL 将每个 checkpoint state 映射到 trigger condition 和对应 git operation：
 
-### Requirement: Verify Result Persistence
+| 状态 | 触发条件 | Git 操作 |
+|-------|---------|---------------|
+| CREATED | 执行任何 optimization edits 之前 | `git stash push -u -m "verify-phase2-checkpoint"` |
+| BASELINE_RESTORED_FOR_RETRY | reverify 失败后的 retry | `git stash apply <ref>`（保留 checkpoint） |
+| TERMINAL_ACCEPTED | optimization 被接受 | `git stash drop <ref>`（消耗 checkpoint） |
+| TERMINAL_RESTORED | rollback | `git stash pop <ref>`（恢复并消耗 checkpoint） |
 
-The agent SHALL persist verification results including optimization data for downstream apply/archive flows.
+Hard rules SHALL 以 bullet list 形式跟在表格之后。
 
-#### Scenario: Verify result file written with optimization
+#### Scenario: Agent 查找 checkpoint state trigger
 
-- **WHEN** verify completes
-- **THEN** the agent SHALL write `openspec/changes/<name>/.verify-result.json`
-- **AND** the file SHALL include `timestamp`、`result`、`issues`、`tasksFileHash`、`verificationContext`、**`optimization`**
-- **AND** `optimization` SHALL contain `status`、`score`、`attempts`、`baseline`、`final`
+- **WHEN** coordinator 需要确定 BASELINE_RESTORED_FOR_RETRY 状态对应的 git operation
+- **THEN** 表格 SHALL 直接显示：触发条件 = `reverify 失败后的 retry`，Git 操作 = `git stash apply <ref>`
+- **AND** SHALL 注明该操作保留而不是消耗 checkpoint
 
-#### Scenario: optimization 对象不改变顶层 result 语义
+### Requirement: 语言一致性
 
-- **WHEN** Phase 1 result is `PASS` and optimization.status is `DEGRADED`
-- **THEN** `.verify-result.json` 顶层 `result` SHALL be `PASS_WITH_WARNINGS`
-- **AND** 详细优化状态仅在 `optimization.status` 中记录
+verify 工作流中新增或修改的 prompt text SHALL 全部使用英文，与现有 template language 保持一致。
 
-### Requirement: Flexible Artifact Handling
-The agent SHALL gracefully handle changes with varying artifact completeness.
+Mode label SHALL 使用英文格式 `[Mode: ...]`，例如 `[Mode: Evidence]`、`[Mode: Delegate Review]`。
 
-#### Scenario: Minimal change (tasks only)
-- **WHEN** change has only tasks.md
-- **THEN** verify task completion only
-- **AND** skip spec and design checks
-- **AND** note which checks were skipped
+Severity philosophy 表述 SHALL 从"prefer lower tier"改为"escalate when uncertain"，删除降级偏见的措辞。
 
-#### Scenario: Change with specs but no design
-- **WHEN** change has tasks.md and delta specs but no design.md
-- **THEN** verify completeness and correctness
-- **AND** skip design adherence
-- **AND** still check code coherence against project patterns
+#### Scenario: Mode label 使用英文
 
-#### Scenario: Full change (all artifacts)
-- **WHEN** change has proposal, design, specs, and tasks
-- **THEN** perform all verification checks
-- **AND** cross-reference artifacts for consistency
+- **WHEN** verify prompt 被组装
+- **THEN** 所有 mode label SHALL 以 `[Mode: <EnglishLabel>]` 形式出现
+- **AND** SHALL NOT 使用 `[模式：证据]` 这类中文 mode label
+
+#### Scenario: 删除"prefer lower tier"表述
+
+- **WHEN** reviewer.ts 子代理 contract 定义 severity 判定标准时
+- **THEN** SHALL NOT 包含 "when uncertain, prefer SUGGESTION over WARNING and WARNING over CRITICAL" 表述
+- **AND** SHALL 替换为 "when uncertain, escalate to CRITICAL to enforce the 'clean slate' principle"
 
