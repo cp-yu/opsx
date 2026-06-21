@@ -1,0 +1,155 @@
+{
+  "timestamp": "2026-06-21T17:38:03.409Z",
+  "result": "PASS_WITH_WARNINGS",
+  "issues": [],
+  "tasksFileHash": "e2d87952533535d29ec3fbebb2b94eabdf1c93e18020c58bddc75e6bd7b28c69",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "evidenceFiles": [
+      "openspec/changes/cleanup-dead-fragment-exports/design.md",
+      "openspec/changes/cleanup-dead-fragment-exports/proposal.md",
+      "openspec/specs/ai-workflow-templates/spec.md",
+      "openspec/specs/apply-change-workflow/spec.md",
+      "openspec/specs/enforce-optimizer-invocation/spec.md",
+      "openspec/specs/opsx-verify-skill/spec.md",
+      "openspec/specs/verify-prompt-orchestration/spec.md",
+      "openspec/specs/verify-skill-reference-files/spec.md",
+      "openspec/specs/verify-writeback/spec.md",
+      "src/core/templates/fragments/opsx-fragments.ts",
+      "test/core/templates/fragments/opsx-fragments.test.ts"
+    ],
+    "evidenceFingerprint": "9fbd88d60b71311914162141e5e74ffbac41f75ce40dc181d138e4cb75aa6ebf",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/cleanup-dead-fragment-exports/design.md",
+        "hash": "928f42bdced64ecf5806fe0a16454c93e5e2328940dc30fc43ea1c42bab1f899"
+      },
+      {
+        "path": "openspec/changes/cleanup-dead-fragment-exports/proposal.md",
+        "hash": "4048717b6d34db50d51a04ef26bb536c8cb9e49a84aa905eb96e526cfe40ff28"
+      },
+      {
+        "path": "openspec/specs/ai-workflow-templates/spec.md",
+        "hash": "3f4431a6cddd1de7a15fd42ee3670afa968f0b500052c28b60cf76be66053922"
+      },
+      {
+        "path": "openspec/specs/apply-change-workflow/spec.md",
+        "hash": "43a49e2b7d80a7a16bb57ab261864e19a209f74801346def9aedb934a5d3cc74"
+      },
+      {
+        "path": "openspec/specs/enforce-optimizer-invocation/spec.md",
+        "hash": "e41bc5bce3bbfc20b8190ff0c9a6ade0f127e355565468b85fdfee965172774f"
+      },
+      {
+        "path": "openspec/specs/opsx-verify-skill/spec.md",
+        "hash": "ddd84bfe5a55d2a428e6a905b27a13ee85fe96f3818e1482beb98aa75f6b6674"
+      },
+      {
+        "path": "openspec/specs/verify-prompt-orchestration/spec.md",
+        "hash": "64f6549c04015ed679441ab6e27dca6f26b4c80fe96b7d54e7f65e8e731e0f87"
+      },
+      {
+        "path": "openspec/specs/verify-skill-reference-files/spec.md",
+        "hash": "37b4f7675b56cc4cd26cadfddf3dd043e31990dccff2ec6106d7e069002e8ac4"
+      },
+      {
+        "path": "openspec/specs/verify-writeback/spec.md",
+        "hash": "88f5988bcebbba38366f689d82712b8d58298ae456779b9adf984473890cb2c2"
+      },
+      {
+        "path": "src/core/templates/fragments/opsx-fragments.ts",
+        "hash": "65cff53167c92f5a9b8bc770466440cee0d068dd836fd882d6c72fdd85ea4aad"
+      },
+      {
+        "path": "test/core/templates/fragments/opsx-fragments.test.ts",
+        "hash": "496422dfd1a9c5004783743c3136ca5867a9b309c967d1fa93a7a3ca7bdb911d"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "8145e5aee14b079bf44dc4ec9698164bec64c560",
+    "gitDiffSummary": "20 files changed: 15 dead exports deleted from opsx-fragments.ts, 7 Used-in comments fixed, 7 spec files stale references converged, test file cleaned. 1 file (progress.md) is benign documentation outside change scope."
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-21T17:39:04.230Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "Pure deletion and annotation fix. 15 dead exports removed, 7 Used-in comments corrected, 7 spec files stale references updated. Remaining 9 fragments are single-responsibility export const declarations with no duplication, nesting, or logic. No optimization opportunities exist."
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-06-21T17:38:03.409Z",
+      "result": "PASS_WITH_WARNINGS",
+      "issues": [],
+      "tasksFileHash": "e2d87952533535d29ec3fbebb2b94eabdf1c93e18020c58bddc75e6bd7b28c69",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "evidenceFiles": [
+          "openspec/changes/cleanup-dead-fragment-exports/design.md",
+          "openspec/changes/cleanup-dead-fragment-exports/proposal.md",
+          "openspec/specs/ai-workflow-templates/spec.md",
+          "openspec/specs/apply-change-workflow/spec.md",
+          "openspec/specs/enforce-optimizer-invocation/spec.md",
+          "openspec/specs/opsx-verify-skill/spec.md",
+          "openspec/specs/verify-prompt-orchestration/spec.md",
+          "openspec/specs/verify-skill-reference-files/spec.md",
+          "openspec/specs/verify-writeback/spec.md",
+          "src/core/templates/fragments/opsx-fragments.ts",
+          "test/core/templates/fragments/opsx-fragments.test.ts"
+        ],
+        "evidenceFingerprint": "9fbd88d60b71311914162141e5e74ffbac41f75ce40dc181d138e4cb75aa6ebf",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/cleanup-dead-fragment-exports/design.md",
+            "hash": "928f42bdced64ecf5806fe0a16454c93e5e2328940dc30fc43ea1c42bab1f899"
+          },
+          {
+            "path": "openspec/changes/cleanup-dead-fragment-exports/proposal.md",
+            "hash": "4048717b6d34db50d51a04ef26bb536c8cb9e49a84aa905eb96e526cfe40ff28"
+          },
+          {
+            "path": "openspec/specs/ai-workflow-templates/spec.md",
+            "hash": "3f4431a6cddd1de7a15fd42ee3670afa968f0b500052c28b60cf76be66053922"
+          },
+          {
+            "path": "openspec/specs/apply-change-workflow/spec.md",
+            "hash": "43a49e2b7d80a7a16bb57ab261864e19a209f74801346def9aedb934a5d3cc74"
+          },
+          {
+            "path": "openspec/specs/enforce-optimizer-invocation/spec.md",
+            "hash": "e41bc5bce3bbfc20b8190ff0c9a6ade0f127e355565468b85fdfee965172774f"
+          },
+          {
+            "path": "openspec/specs/opsx-verify-skill/spec.md",
+            "hash": "ddd84bfe5a55d2a428e6a905b27a13ee85fe96f3818e1482beb98aa75f6b6674"
+          },
+          {
+            "path": "openspec/specs/verify-prompt-orchestration/spec.md",
+            "hash": "64f6549c04015ed679441ab6e27dca6f26b4c80fe96b7d54e7f65e8e731e0f87"
+          },
+          {
+            "path": "openspec/specs/verify-skill-reference-files/spec.md",
+            "hash": "37b4f7675b56cc4cd26cadfddf3dd043e31990dccff2ec6106d7e069002e8ac4"
+          },
+          {
+            "path": "openspec/specs/verify-writeback/spec.md",
+            "hash": "88f5988bcebbba38366f689d82712b8d58298ae456779b9adf984473890cb2c2"
+          },
+          {
+            "path": "src/core/templates/fragments/opsx-fragments.ts",
+            "hash": "65cff53167c92f5a9b8bc770466440cee0d068dd836fd882d6c72fdd85ea4aad"
+          },
+          {
+            "path": "test/core/templates/fragments/opsx-fragments.test.ts",
+            "hash": "496422dfd1a9c5004783743c3136ca5867a9b309c967d1fa93a7a3ca7bdb911d"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "8145e5aee14b079bf44dc4ec9698164bec64c560",
+        "gitDiffSummary": "20 files changed: 15 dead exports deleted from opsx-fragments.ts, 7 Used-in comments fixed, 7 spec files stale references converged, test file cleaned. 1 file (progress.md) is benign documentation outside change scope."
+      }
+    }
+  }
+}

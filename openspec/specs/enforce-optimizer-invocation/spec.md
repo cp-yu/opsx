@@ -39,17 +39,7 @@
 
 - **WHEN** 开发者修改 `src/core/templates/fragments/opsx-fragments.ts`
 - **THEN** SHALL 保持常量名 `VERIFY_SIMPLE_CHANGE_FAST_PATH` 不变
-- **AND** 所有现有引用点（`apply-change.ts`、`verify-change.ts`、`archive-change.ts`）无需修改 import
-
-#### Scenario: 新文本禁止 master agent 自主判断
-
-- **WHEN** `VERIFY_SIMPLE_CHANGE_FAST_PATH` 被渲染到 agent prompt 中
-- **THEN** 文本 SHALL 包含以下语义约束：
-  - MUST spawn optimizer subagent 至少一次
-  - optimizer subagent（而非 master agent）决定是否需要优化
-  - 若 optimizer 返回 "No optimization opportunities found"，记录 `NO_OPTIMIZATION_NEEDED` 并将 optimizer 结论作为 summary
-  - master agent MUST NOT 自行做出 "not needed" 判断
-  - 唯一例外为 `--skip-optimization` flag 或 `optimization.enabled: false`
+- **AND** 现有引用点（`apply-change.ts` [REMOVED: `verify-change.ts`、`archive-change.ts` 不 import 此 fragment]）无需修改 import
 
 ### Requirement: Apply 编排文本明确角色分离
 

@@ -62,19 +62,7 @@
   - `issues` 数组
   - `tasksFileHash`
   - `verificationContext` 对象（见下方 scenario）
-- **AND** 具体持久化逻辑见 `prompts.md` 中 verify-change.ts Step 10
-
-#### Scenario: 记录 verification context
-
-- **WHEN** verify 写入 `.verify-result.json`
-- **THEN** 系统 SHALL 在 `verificationContext` 对象中记录：
-  - `contractVersion`: "1.0" (当前验证合同版本)
-  - `executionMode`: 'clean-context-reviewer'
-  - `evidenceFiles`: 本次验证实际审阅的文件列表（相对 POSIX 路径，已排序）
-  - `evidenceFingerprint`: 基于 evidenceFiles 的相对 POSIX 路径和文件内容哈希计算的 SHA-256 hash
-  - `gitHeadCommit`: 当前 HEAD commit SHA（可选，如果在 git repo 中）
-  - `gitDiffSummary`: `git diff --stat` 输出摘要（可选，如果有改动）
-- **AND** SHALL 使用跨平台路径处理（`path.join`, `path.resolve`）
+- **AND** 持久化逻辑由 verify CLI 工具（`openspec verify phase1 --input --json`）处理，reviewer subagent 的 writeBackPlan 通过 `reviewer.ts` Output Contract 定义
 
 #### Scenario: 验证结果 freshness 判定
 
@@ -89,19 +77,7 @@
     - `evidenceFingerprint` 不匹配
     - `contractVersion` 缺失或不是 "1.0"
 - **AND** `gitHeadCommit` 不匹配时 SHALL 作为 warning 报告，不单独导致 STALE
-- **AND** 具体规则见 `prompts.md` 中的 `VERIFY_FRESHNESS_RULES`
-
-#### Scenario: 跨平台路径处理
-
-- **WHEN** 写入或读取 `.verify-result.json`
-- **THEN** 系统 SHALL 使用 `path.join()` 构建文件路径
-- **AND** SHALL NOT 硬编码路径分隔符
-
-#### Scenario: Windows 下的 evidence file 路径处理
-
-- **WHEN** verification context 持久化 evidence file 路径
-- **THEN** 系统 SHALL 使用跨平台可比较的路径表示
-- **AND** archive 在比较 freshness 时 SHALL NOT 因 `\\` 与 `/` 的差异误判结果过期或新鲜
+- **AND** freshness 判定规则由 verify CLI freshness-engine（`src/core/verify/freshness.ts`）统一管理，Archive gate 通过 `openspec verify status --json` 判定 FRESH/STALE/MISSING
 
 ### Requirement: Verify write-back SHALL consume runtime projection
 When verify writes remediation content back to `tasks.md`, the system SHALL use runtime projection compiled from project config for natural-language prose decisions.
@@ -111,3 +87,4 @@ When verify writes remediation content back to `tasks.md`, the system SHALL use 
 - **AND** runtime projection defines a prose-language policy
 - **THEN** remediation descriptions SHALL follow that policy
 - **AND** task checkboxes, section headers, requirement references, and other canonical tokens SHALL remain unchanged
+
