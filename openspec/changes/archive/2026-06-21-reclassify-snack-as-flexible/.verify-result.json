@@ -1,0 +1,171 @@
+{
+  "timestamp": "2026-06-21T11:54:48.354Z",
+  "result": "PASS_WITH_WARNINGS",
+  "issues": [
+    {
+      "severity": "WARNING",
+      "requirement": "unaccounted-change:.pi/settings.json",
+      "task": null,
+      "message": ".pi/settings.json 为工具配置新文件，曾 staged 在本 change diff 中但未列入任何 Task Files 声明；已从 staged 区移除（code_fix），该文件内容仅为 {\"skills\": [\".codex/skills\"]}，属工具/编辑器机械配置，非本 change 行为代码",
+      "evidenceCitations": [
+        ".pi/settings.json:1-3",
+        "openspec/changes/reclassify-snack-as-flexible/tasks.md:5-8",
+        "openspec/changes/reclassify-snack-as-flexible/tasks.md:36-39",
+        "openspec/changes/reclassify-snack-as-flexible/tasks.md:62-66"
+      ]
+    }
+  ],
+  "tasksFileHash": "7061e9b9e8df6c18871585433ab5a7fe9fa7c7de555ec22d083b4c3e89f0c474",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "evidenceFiles": [
+      "openspec/changes/reclassify-snack-as-flexible/design.md",
+      "openspec/changes/reclassify-snack-as-flexible/opsx-delta.yaml",
+      "openspec/changes/reclassify-snack-as-flexible/proposal.md",
+      "openspec/changes/reclassify-snack-as-flexible/specs/snack-workflow-manifest/spec.md",
+      "openspec/changes/reclassify-snack-as-flexible/tasks.md",
+      "src/core/templates/manifest/registry.ts",
+      "src/core/templates/manifest/types.ts",
+      "test/core/global-config.test.ts",
+      "test/core/templates/manifest/registry.test.ts",
+      "test/integration/snack-workflow.test.ts"
+    ],
+    "evidenceFingerprint": "3cf02976121538a77ecff221bbc7bd08329e81ed633e9923e2fac18606e064df",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "openspec/changes/reclassify-snack-as-flexible/design.md",
+        "hash": "063ddf9314e368149542f510604584f417e008fa606014bb3211c8a81d5e4127"
+      },
+      {
+        "path": "openspec/changes/reclassify-snack-as-flexible/opsx-delta.yaml",
+        "hash": "b827151dfc81491be952763bcca6ee18875da3d7ac5acbebe678fc3613e99836"
+      },
+      {
+        "path": "openspec/changes/reclassify-snack-as-flexible/proposal.md",
+        "hash": "f02ec859b0b4be2f4ce904c140a7e4d74bd234c7b316a32fb78d356171cec840"
+      },
+      {
+        "path": "openspec/changes/reclassify-snack-as-flexible/specs/snack-workflow-manifest/spec.md",
+        "hash": "22d830fe9c020a11780dda9a2d6cec1534f6e7b67f2be4cade6387fd94ec1ea6"
+      },
+      {
+        "path": "openspec/changes/reclassify-snack-as-flexible/tasks.md",
+        "hash": "7061e9b9e8df6c18871585433ab5a7fe9fa7c7de555ec22d083b4c3e89f0c474"
+      },
+      {
+        "path": "src/core/templates/manifest/registry.ts",
+        "hash": "b0f99012ee2cd3009baebb7378719bb32f0205663a6b1b86dcfa24efded408ec"
+      },
+      {
+        "path": "src/core/templates/manifest/types.ts",
+        "hash": "c1ce11386cfbb0b0cef89fe5c6243ac247490e85ecbd46b17326a1ef9581fd28"
+      },
+      {
+        "path": "test/core/global-config.test.ts",
+        "hash": "edeb8e3822b8ae1b1c5a39aeb27520229e726dd8be04029075e7b660c352021e"
+      },
+      {
+        "path": "test/core/templates/manifest/registry.test.ts",
+        "hash": "fafcdbc301f4543b7ba879b19286fd830a9ebd2946f659482269942437a32858"
+      },
+      {
+        "path": "test/integration/snack-workflow.test.ts",
+        "hash": "452a44692d071dbb87928b162312f45a2ea97f4b33aff5fa4d8a2e74571466ef"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "5ddfd0b59069fd8b79877d56edbfbab6fdfee879",
+    "gitDiffSummary": "Phase 1 review against staged diff on branch main. Commands run: git status; git diff --cached --name-only; grep residue sweeps for 'getWorkflowsForPreset', 'expanded', 'WorkflowPreset'; openspec validate; pnpm tsc --noEmit; pnpm test (1927/1927 passing). .pi/settings.json (tool config) unstaged before final writeback; cleanliness.unaccountedChangesFound=0 in final staged scope."
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-21T11:58:37.973Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "Pure semantic/label change + dead-code cleanup. Source diff = 1 union literal rename (types.ts: 'expanded' -> 'flexible'), 1 label literal reclassification (registry.ts snack: ['core'] -> ['flexible']), 1 import simplification, and deletion of 5-line getWorkflowsForPreset() dead method. Matches 'Pure Deletions or Renames' edge case: no meaningful optimization surface. 'Remove dead weight' rule already satisfied by the change itself (grep zero hits). Data-literal repetition of ['core'] across 4 manifest entries is declarative data, not logic duplication — extracting would add indirection and violate KISS. Registry post-change has 7 independent projection methods, none shallow/wrapper-only. Test changes are assertion-value syncs with no extractable production logic. failedDirections is empty (first optimization cycle)."
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-06-21T11:54:48.354Z",
+      "result": "PASS_WITH_WARNINGS",
+      "issues": [
+        {
+          "severity": "WARNING",
+          "requirement": "unaccounted-change:.pi/settings.json",
+          "task": null,
+          "message": ".pi/settings.json 为工具配置新文件，曾 staged 在本 change diff 中但未列入任何 Task Files 声明；已从 staged 区移除（code_fix），该文件内容仅为 {\"skills\": [\".codex/skills\"]}，属工具/编辑器机械配置，非本 change 行为代码",
+          "evidenceCitations": [
+            ".pi/settings.json:1-3",
+            "openspec/changes/reclassify-snack-as-flexible/tasks.md:5-8",
+            "openspec/changes/reclassify-snack-as-flexible/tasks.md:36-39",
+            "openspec/changes/reclassify-snack-as-flexible/tasks.md:62-66"
+          ]
+        }
+      ],
+      "tasksFileHash": "7061e9b9e8df6c18871585433ab5a7fe9fa7c7de555ec22d083b4c3e89f0c474",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "evidenceFiles": [
+          "openspec/changes/reclassify-snack-as-flexible/design.md",
+          "openspec/changes/reclassify-snack-as-flexible/opsx-delta.yaml",
+          "openspec/changes/reclassify-snack-as-flexible/proposal.md",
+          "openspec/changes/reclassify-snack-as-flexible/specs/snack-workflow-manifest/spec.md",
+          "openspec/changes/reclassify-snack-as-flexible/tasks.md",
+          "src/core/templates/manifest/registry.ts",
+          "src/core/templates/manifest/types.ts",
+          "test/core/global-config.test.ts",
+          "test/core/templates/manifest/registry.test.ts",
+          "test/integration/snack-workflow.test.ts"
+        ],
+        "evidenceFingerprint": "3cf02976121538a77ecff221bbc7bd08329e81ed633e9923e2fac18606e064df",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "openspec/changes/reclassify-snack-as-flexible/design.md",
+            "hash": "063ddf9314e368149542f510604584f417e008fa606014bb3211c8a81d5e4127"
+          },
+          {
+            "path": "openspec/changes/reclassify-snack-as-flexible/opsx-delta.yaml",
+            "hash": "b827151dfc81491be952763bcca6ee18875da3d7ac5acbebe678fc3613e99836"
+          },
+          {
+            "path": "openspec/changes/reclassify-snack-as-flexible/proposal.md",
+            "hash": "f02ec859b0b4be2f4ce904c140a7e4d74bd234c7b316a32fb78d356171cec840"
+          },
+          {
+            "path": "openspec/changes/reclassify-snack-as-flexible/specs/snack-workflow-manifest/spec.md",
+            "hash": "22d830fe9c020a11780dda9a2d6cec1534f6e7b67f2be4cade6387fd94ec1ea6"
+          },
+          {
+            "path": "openspec/changes/reclassify-snack-as-flexible/tasks.md",
+            "hash": "7061e9b9e8df6c18871585433ab5a7fe9fa7c7de555ec22d083b4c3e89f0c474"
+          },
+          {
+            "path": "src/core/templates/manifest/registry.ts",
+            "hash": "b0f99012ee2cd3009baebb7378719bb32f0205663a6b1b86dcfa24efded408ec"
+          },
+          {
+            "path": "src/core/templates/manifest/types.ts",
+            "hash": "c1ce11386cfbb0b0cef89fe5c6243ac247490e85ecbd46b17326a1ef9581fd28"
+          },
+          {
+            "path": "test/core/global-config.test.ts",
+            "hash": "edeb8e3822b8ae1b1c5a39aeb27520229e726dd8be04029075e7b660c352021e"
+          },
+          {
+            "path": "test/core/templates/manifest/registry.test.ts",
+            "hash": "fafcdbc301f4543b7ba879b19286fd830a9ebd2946f659482269942437a32858"
+          },
+          {
+            "path": "test/integration/snack-workflow.test.ts",
+            "hash": "452a44692d071dbb87928b162312f45a2ea97f4b33aff5fa4d8a2e74571466ef"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "5ddfd0b59069fd8b79877d56edbfbab6fdfee879",
+        "gitDiffSummary": "Phase 1 review against staged diff on branch main. Commands run: git status; git diff --cached --name-only; grep residue sweeps for 'getWorkflowsForPreset', 'expanded', 'WorkflowPreset'; openspec validate; pnpm tsc --noEmit; pnpm test (1927/1927 passing). .pi/settings.json (tool config) unstaged before final writeback; cleanliness.unaccountedChangesFound=0 in final staged scope."
+      }
+    }
+  }
+}

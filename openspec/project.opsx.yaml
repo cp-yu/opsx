@@ -410,6 +410,6 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.snack-workflow-manifest
-    intent: 在 WorkflowManifestRegistry 中注册 snack 工作流，使其成为第 6 个核心工作流
+    intent: 在 WorkflowManifestRegistry 中注册 snack 工作流，modeMembership 标记为 flexible（过渡能力标签），运行时安装行为不受标签影响（所有 6 个工作流仍被全量安装）
     status: active
     type: capability

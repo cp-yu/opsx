@@ -1,5 +1,5 @@
 schema_version: 1
-generated_at: 2026-06-18T06:50:27.586Z
+generated_at: 2026-06-21T12:02:26.799Z
 nodes:
   - id: cap.config.projection
     refs:
