@@ -154,11 +154,11 @@ describe('apply change workflow template', () => {
       getApplyChangeSkillTemplate().instructions,
       getOpsxApplyCommandTemplate().content,
     ]) {
-      expect(template).toContain('诊断优先');
-      expect(template).toContain('读完整错误输出');
-      expect(template).toContain('确认失败层面');
+      expect(template).toContain('Diagnosis Before Repair');
+      expect(template).toContain('Read the full error output');
+      expect(template).toContain('Identify the failure layer');
       expect(template).toContain('working example');
-      expect(template).toContain('形成并陈述单一假设');
+      expect(template).toContain('Root cause hypothesis');
     }
   });
 
@@ -167,9 +167,9 @@ describe('apply change workflow template', () => {
       getApplyChangeSkillTemplate().instructions,
       getOpsxApplyCommandTemplate().content,
     ]) {
-      expect(template).toContain('单变量修复');
-      expect(template).toContain('只改变一个变量');
-      expect(template).toContain('不得叠加多个独立修改');
+      expect(template).toContain('Single-Variable Fix Constraint');
+      expect(template).toContain('change only one variable');
+      expect(template).toContain('do not stack multiple independent changes');
     }
   });
 
@@ -178,9 +178,9 @@ describe('apply change workflow template', () => {
       getApplyChangeSkillTemplate().instructions,
       getOpsxApplyCommandTemplate().content,
     ]) {
-      expect(template).toContain('累计 3 次修复');
-      expect(template).toContain('停止修复并向用户呈现证据');
-      expect(template).toContain('已尝试的 3 条路径');
+      expect(template).toContain('Cumulative 3-Strike Escalation');
+      expect(template).toContain('stop and present evidence');
+      expect(template).toContain('attempted paths');
     }
   });
 
@@ -201,8 +201,8 @@ describe('apply change workflow template', () => {
       getOpsxApplyCommandTemplate().content,
     ]) {
       expect(template).toContain('Pre-flight Scan');
-      expect(template).toContain('扫描 tasks.md 全部 task 的 Goal、Files、Requirements 和 Checks');
-      expect(template).toContain('检测 task 间矛盾和依赖顺序问题');
+      expect(template).toContain('scan all tasks in tasks.md for contradictions');
+      expect(template).toContain('dependency-ordering issues');
     }
   });
 
@@ -227,8 +227,8 @@ describe('apply change workflow template', () => {
       getApplyChangeSkillTemplate().instructions,
       getOpsxApplyCommandTemplate().content,
     ]) {
-      expect(template).toContain('依赖顺序');
-      expect(template).toContain('前序 task 依赖后序 task');
+      expect(template).toContain('dependency-ordering');
+      expect(template).toContain('Earlier task depending on output of a later task');
     }
   });
 
