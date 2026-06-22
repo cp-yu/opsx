@@ -15,6 +15,14 @@
 - **AND** `skillDirName` SHALL 来自共享 workflow surface manifest 的显式值
 - **AND** 系统 SHALL NOT 通过 `commandSlug`、字符串拼接或后缀猜测来生成 Codex skill 名称
 
+#### Scenario: Claude Code 引用使用 slash-command 格式
+
+- **WHEN** 系统为 `claude` 生成 workflow skill 或基于 skill 的 getting-started guidance
+- **AND** guidance 需要引用另一个已注册 workflow surface
+- **THEN** 渲染结果 SHALL 使用 `/<skillDirName>` 形式（如 `/openspec-propose`）
+- **AND** `skillDirName` SHALL 来自共享 workflow surface manifest 的显式值
+- **AND** 系统 SHALL NOT 通过 `commandSlug`、字符串拼接或后缀猜测来生成 Claude skill 名称
+
 #### Scenario: Command-backed 工具保持各自的 command 语法
 
 - **WHEN** 系统为没有精确 skill invocation metadata 的工具渲染 workflow 引用
