@@ -145,7 +145,7 @@ Before archiving, run \`openspec config project --json\` and consume git policy 
 2.5. **Execute Full Verify**
 
 ${buildArchiveFullVerifyContract(executionModel)}
-   Continue through Phase 2 when eligible; \`SKIPPED\` is valid only for config/user skip. Persist fresh verify before archiving. This is the only archive gate; no mini-check or bypass exists.
+   Continue through Phase 2 when eligible; \`SKIPPED\` is valid only for config/user skip. Persist fresh verify before archiving.
 
 3. **Check artifact completion status**
    Run \`openspec status --change "<name>" --json\`. Warn and confirm before proceeding if any artifact is not \`done\`.
@@ -187,7 +187,7 @@ Archive completed after satisfying the unified full verify gate.
 
 **Guardrails**
 - Always prompt for change selection if not provided
-- Do not downgrade the verify gate into a lightweight archive-only check
+- Prioritize the standard verify gate; only pass \`--no-verify\` to the archive CLI when the user explicitly requests it (the CLI provides its own confirmation prompt)
 - Show clearly whether verify was reused or re-executed
 - In \`core\`, use \`openspec sync "<change-name>"\` rather than manual inline sync
 - If delta specs or \`opsx-delta.yaml\` exist, always run the shared sync assessment before moving the change directory`;

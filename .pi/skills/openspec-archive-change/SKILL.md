@@ -32,7 +32,7 @@ Before archiving, run `openspec config project --json` and consume git policy fr
    - Execute the verify workflow end-to-end, including Phase 2 (spawn optimizer subagent with Read and Bash tool capability, invoke `openspec-optimizer`, and pass only `changeName`, `changeDir`, and `projectRoot`) whenever the `/opsx:verify` contract would make it eligible
    - In `P1_SPECULATIVE_FENCE`, invoke the reviewer subagent again with `changeName`, `changeDir`, and `projectRoot` for the speculative verdict
    - The top-level archive flow MUST NOT inline a current-agent review skeleton or silently downgrade to reread mode
-   Continue through Phase 2 when eligible; `SKIPPED` is valid only for config/user skip. Persist fresh verify before archiving. This is the only archive gate; no mini-check or bypass exists.
+   Continue through Phase 2 when eligible; `SKIPPED` is valid only for config/user skip. Persist fresh verify before archiving.
 
 3. **Check artifact completion status**
    Run `openspec status --change "<name>" --json`. Warn and confirm before proceeding if any artifact is not `done`.
@@ -74,7 +74,7 @@ Archive completed after satisfying the unified full verify gate.
 
 **Guardrails**
 - Always prompt for change selection if not provided
-- Do not downgrade the verify gate into a lightweight archive-only check
+- Prioritize the standard verify gate; only pass `--no-verify` to the archive CLI when the user explicitly requests it (the CLI provides its own confirmation prompt)
 - Show clearly whether verify was reused or re-executed
 - In `core`, use `openspec sync "<change-name>"` rather than manual inline sync
 - If delta specs or `opsx-delta.yaml` exist, always run the shared sync assessment before moving the change directory
