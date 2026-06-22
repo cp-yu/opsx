@@ -167,7 +167,7 @@ Explore 在已有 change 上发现 insight 时 SHALL 先判断 insight 类型，
 - **AND** new work 或 verification work SHALL 分类到 `tasks.md`
 - **AND** OPSX graph intent change SHALL 分类到 `opsx-delta.yaml`
 - **AND** invalidated assumption SHALL 分类到相关制品
-- **AND** 制品写入 SHALL 由 `$openspec-propose <change-name>` 或合适的非-explore workflow 执行
+- **AND** 制品写入 SHALL 由 `/opsx:propose <change-name>` 或合适的非-explore workflow 执行
 
 ### Requirement: Explore 主代理保持只读
 
@@ -179,7 +179,7 @@ Explore main agent SHALL 保持只读。它 SHALL 检查文件、搜索代码、
 - **AND** 对话已形成确定的设计方向
 - **THEN** main explore agent SHALL 将结果保留在对话状态中
 - **AND** SHALL 生成只存在于对话中的 `Design Summary`
-- **AND** SHALL 在需要生成制品时指示用户调用 `$openspec-propose <change-name>`
+- **AND** SHALL 在需要生成制品时指示用户调用 `/opsx:propose <change-name>`
 
 #### Scenario: Impact sweeper 是 explore 唯一写例外
 

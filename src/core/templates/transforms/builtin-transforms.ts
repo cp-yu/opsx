@@ -91,9 +91,31 @@ const piCommandRefsTransform: ArtifactTransform = {
 };
 
 // ---------------------------------------------------------------------------
+// Claude Code command reference transform
+// ---------------------------------------------------------------------------
+
+const claudeCommandRefsTransform: ArtifactTransform = {
+  id: 'claude-command-refs',
+  scope: 'both',
+  phase: 'preAdapter',
+  priority: 10,
+  applies(ctx: GenerationContext): boolean {
+    return ctx.toolId === 'claude';
+  },
+  transform(content: string, _ctx: GenerationContext): string {
+    let result = content;
+    for (const pair of PAIRS) {
+      result = result.split(pair.source).join('/' + pair.codexTarget.slice(1));
+    }
+    return result;
+  },
+};
+
+// ---------------------------------------------------------------------------
 // Registration
 // ---------------------------------------------------------------------------
 
 TransformRegistry.register(codexCommandRefsTransform);
 TransformRegistry.register(opencodeCommandRefsTransform);
 TransformRegistry.register(piCommandRefsTransform);
+TransformRegistry.register(claudeCommandRefsTransform);
