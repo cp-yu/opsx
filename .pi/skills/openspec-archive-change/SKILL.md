@@ -64,7 +64,7 @@ Before archiving, run `openspec config project --json` and consume git policy fr
 **Schema:** <schema-name>
 **Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
 **Verify Gate:** Fresh PASS or PASS_WITH_WARNINGS result confirmed
-**Specs / OPSX:** ✓ Synced to main specs and project OPSX (or "No deltas" or "Skipped all archive-time sync writes")
+**Specs / OPSX:** ✓ Synced to main specs and project OPSX (or "No deltas" or "Sync gate bypassed with --no-sync")
 **Agent Git Follow-up:** <completed / pending with reason>
 **Merge Strategy:** <git.merge.strategy>
 **Cleanup Responsibility:** <agent>

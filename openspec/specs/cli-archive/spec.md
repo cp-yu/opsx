@@ -49,103 +49,31 @@ The command SHALL verify task completion status before archiving to prevent prem
 
 ### Requirement: Archive Process
 
-The archive operation SHALL support complete archive-time sync in core mode before moving the change to the archive, and SHALL stop after the archive move plus handoff reminder without executing git write operations. Archive-time sync SHALL preserve removal-only delta idempotency: when all headers named by a removal-only delta are already absent from the corresponding main spec, archive SHALL treat that spec delta as already synced even if the main spec still contains unrelated requirements.
+archive 操作 SHALL 在校验通过后将 change 目录移动到 archive 目录，并输出 git handoff 提醒。archive 不执行任何 spec 或 OPSX 写入操作。同步合并由 `openspec sync` 独立完成。
 
-#### Scenario: Core mode archives with embedded specs and OPSX sync
-- **WHEN** archiving a change in `core` mode
-- **AND** delta specs or `opsx-delta.yaml` are present
-- **THEN** the command SHALL assess sync state before moving the change directory
-- **AND** SHALL apply delta spec changes to main specs
-- **AND** SHALL apply `opsx-delta` changes to project OPSX files
-- **AND** SHALL only move the change directory after sync completes successfully
-- **AND** SHALL NOT execute `git add`, `git commit`, `git checkout`, `git merge`, or `git branch`
+#### Scenario: 直接归档
 
-#### Scenario: Embedded sync failure aborts archive
-- **WHEN** archive-time sync fails validation or referential integrity checks
-- **THEN** the command SHALL abort archive
-- **AND** main specs SHALL remain unchanged
-- **AND** project OPSX files SHALL remain unchanged
-- **AND** the change directory SHALL remain in the active changes directory
-- **AND** SHALL NOT execute any git write operation
+- **WHEN** 所有 gate 通过（verify、sync、validation、task）
+- **AND** change 目录存在
+- **THEN** 命令 SHALL 将 change 目录移动到 archive 目录
+- **AND** 目录名 SHALL 使用 `YYYY-MM-DD-<change-name>` 格式
+- **AND** SHALL 输出 git handoff 提醒
+- **AND** SHALL NOT 修改 main spec 文件
+- **AND** SHALL NOT 修改 OPSX 主文件
+- **AND** SHALL NOT 执行 `git add`、`git commit`、`git checkout`、`git merge` 或 `git branch`
 
-#### Scenario: Embedded sync deletes a main spec emptied by removals
-- **WHEN** archive-time sync applies delta removals that leave a main spec with zero requirements
-- **THEN** the command SHALL delete that main spec file
-- **AND** SHALL treat the deletion as a completed spec sync
-- **AND** SHALL NOT fail rebuilt spec validation only because no requirements remain
+#### Scenario: 已归档 change 检测
 
-#### Scenario: Removal-only delta already deleted the main spec
-- **WHEN** a change delta only removes requirements
-- **AND** the corresponding main spec file no longer exists because sync already deleted it
-- **THEN** the archive sync gate SHALL treat that spec delta as already synced
-- **AND** SHALL NOT block archive with a pending sync error
+- **WHEN** 目标 archive 路径已存在
+- **AND** change 目录已不在活动目录
+- **THEN** 命令 SHALL 输出 git handoff 提醒后退出
 
-#### Scenario: Removal-only delta target headers already absent
-- **WHEN** a change delta only removes requirements
-- **AND** the corresponding main spec file still exists
-- **AND** every requirement header named by the delta is already absent from that main spec
-- **AND** the main spec still contains unrelated requirements
-- **THEN** the archive sync gate SHALL treat that spec delta as already synced
-- **AND** SHALL NOT block archive with a pending sync error
-- **AND** archive-time sync SHALL NOT throw `REMOVED failed`
+#### Scenario: 归档失败不回写
 
-### Requirement: Spec Update Process
-
-Before moving the change to archive, the command SHALL apply delta changes to main specs to reflect the deployed reality.
-
-#### Scenario: Applying delta changes
-
-- **WHEN** archiving a change with delta-based specs
-- **THEN** parse and apply delta changes as defined in openspec-conventions
-- **AND** validate all operations before applying
-
-#### Scenario: Validating delta changes
-
-- **WHEN** processing delta changes
-- **THEN** perform validations as specified in openspec-conventions
-- **AND** if validation fails, show specific errors and abort
-
-#### Scenario: Conflict detection
-
-- **WHEN** applying deltas would create duplicate requirement headers
-- **THEN** abort with error message showing the conflict
-- **AND** suggest manual resolution
-
-### Requirement: Confirmation Behavior
-
-The spec update confirmation SHALL provide clear visibility into changes before they are applied.
-
-#### Scenario: Displaying confirmation
-
-- **WHEN** prompting for confirmation
-- **THEN** display a clear summary showing:
-  - Which specs will be created (new capabilities)
-  - Which specs will be updated (existing capabilities)
-  - The source path for each spec
-- **AND** format the confirmation prompt as:
-  ```
-  The following specs will be updated:
-  
-  NEW specs to be created:
-    - cli-archive (from changes/add-archive-command/specs/cli-archive/spec.md)
-  
-  EXISTING specs to be updated:
-    - cli-init (from changes/update-init-command/specs/cli-init/spec.md)
-  
-  Update 2 specs and archive 'add-archive-command'? [y/N]:
-  ```
-#### Scenario: Handling confirmation response
-
-- **WHEN** waiting for user confirmation
-- **THEN** default to "No" for safety (require explicit "y" or "yes")
-- **AND** skip confirmation when `--yes` or `-y` flag is provided
-
-#### Scenario: User declines confirmation
-
-- **WHEN** user declines the confirmation
-- **THEN** abort the entire archive operation
-- **AND** display message: "Archive cancelled. No changes were made."
-- **AND** exit with non-zero status code
+- **WHEN** archive gate 校验失败
+- **THEN** 命令 SHALL 终止归档
+- **AND** 不执行任何文件修改
+- **AND** change 目录保持原样
 
 ### Requirement: Error Conditions
 
@@ -160,53 +88,16 @@ The command SHALL handle various error conditions gracefully.
   - Archive target already exists
   - File system permissions issues
 
-### Requirement: Skip Specs Option
-
-The archive command SHALL support a `--skip-specs` flag that skips all archive-time sync writes and proceeds directly to archiving.
-
-#### Scenario: Skipping all archive-time sync writes with flag
-- **WHEN** executing `openspec archive <change> --skip-specs`
-- **THEN** skip main spec update operations
-- **AND** skip OPSX sync operations
-- **AND** proceed directly to moving the change to archive
-- **AND** display a message indicating archive-time sync was skipped
-
-#### Scenario: Archive does not depend on standalone sync surface
-- **WHEN** archiving a change with delta specs and `opsx-delta.yaml`
-- **AND** no standalone `/opsx:sync` surface is installed
-- **THEN** the command SHALL still complete archive-time sync safely before moving the change
-
-### Requirement: Non-blocking confirmation
-
-The archive operation SHALL proceed when the user declines spec updates instead of cancelling the entire operation.
-
-#### Scenario: User declines spec update confirmation
-
-- **WHEN** the user declines spec update confirmation
-- **THEN** skip spec updates
-- **AND** continue with the archive operation
-- **AND** display a success message indicating specs were not updated
-
 ### Requirement: Display Output
 
-The command SHALL provide clear feedback about delta operations.
+archive 命令 SHALL 提供清晰的 gate 状态反馈。
 
-#### Scenario: Showing delta application
+#### Scenario: 显示 gate 状态
 
-- **WHEN** applying delta changes
-- **THEN** display for each spec:
-  - Number of requirements added
-  - Number of requirements modified
-  - Number of requirements removed
-  - Number of requirements renamed
-- **AND** use standard output symbols (+ ~ - →) as defined in openspec-conventions:
-  ```
-  Applying changes to specs/user-auth/spec.md:
-    + 2 added
-    ~ 3 modified
-    - 1 removed
-    → 1 renamed
-  ```
+- **WHEN** 执行 archive
+- **THEN** 依次显示每个 gate 的通过/跳过/失败状态
+- **AND** 显示 task 完成状态
+- **AND** 归档完成后显示最终确认消息和 git handoff 提醒
 
 ### Requirement: Archive Validation
 
@@ -225,21 +116,6 @@ The archive command SHALL validate changes before applying them to ensure data i
 - **THEN** skip validation (unsafe mode)
 - **AND** show warning about skipping validation
 
-### Requirement: Archive-time sync SHALL use runtime projection
-When `openspec archive` performs embedded spec sync, any generated or rebuilt artifact prose SHALL be driven by runtime projection compiled from project config, and git policy fields in that projection SHALL be used only for handoff reminders.
-
-#### Scenario: Embedded sync creating a new main spec
-- **WHEN** archive-time sync creates a main spec that does not yet exist
-- **THEN** the archive command SHALL use runtime projection for generated prose
-- **AND** SHALL NOT inject hardcoded English placeholder text that bypasses config policy
-- **AND** SHALL NOT use `git.autoCommit` to execute git commit or merge
-
-#### Scenario: Embedded sync updates remain projection-consistent
-- **WHEN** archive-time sync updates existing main specs
-- **THEN** the command SHALL preserve the same prose policy used by standalone sync
-- **AND** both paths SHALL remain semantically aligned for the same input config and delta set
-- **AND** SHALL NOT generate archive or merge commit messages
-
 ### Requirement: Archive CLI 输出 git handoff 提醒
 
 `openspec archive` 在完成 verify、sync 与 move-to-archive 后 SHALL 输出后续 git 工作由 agent 自动继续的责任归属提醒，不再读取或区分任何 handoff 模式配置。
@@ -251,6 +127,46 @@ When `openspec archive` performs embedded spec sync, any generated or rebuilt ar
 - **AND** SHALL 提醒后续 git 提交流程由 agent 自动继续处理
 - **AND** SHALL NOT 输出任何推荐 commit message
 - **AND** SHALL NOT 读取 `git.autoCommit` 配置
+
+### Requirement: Sync Gate
+
+archive 命令 SHALL 在归档前检查 change 是否存在未合并的 delta（spec + OPSX），并在存在时阻止归档。sync 检查与 verify gate 正交，`--no-sync` flag 可跳过。
+
+#### Scenario: 存在未合并 delta 时阻止归档
+
+- **WHEN** change 包含尚未通过 `openspec sync` 合并到 main spec 的 delta
+- **AND** 未使用 `--no-sync`
+- **THEN** archive 命令 SHALL 输出错误消息指明 pending delta
+- **AND** SHALL 提示用户执行 `openspec sync <change-name>` 后重试
+- **AND** SHALL 终止归档操作
+
+#### Scenario: delta 已全部合并时通过检查
+
+- **WHEN** change 的所有 delta（spec + OPSX）已通过 `openspec sync` 合并到 main spec
+- **AND** 未使用 `--no-sync`
+- **THEN** sync gate SHALL 通过
+- **AND** archive 命令 SHALL 继续后续步骤
+
+#### Scenario: --no-sync 跳过 sync gate
+
+- **WHEN** 执行 `openspec archive <change> --no-sync`
+- **AND** 非 `--yes` 模式
+- **THEN** CLI SHALL 显示警告确认提示，说明跳过 sync 检查的风险
+- **AND** 用户确认后 SHALL 跳过 sync 检查
+- **AND** 继续归档
+
+#### Scenario: --yes --no-sync 静默跳过
+
+- **WHEN** 执行 `openspec archive <change> --no-sync --yes`
+- **THEN** CLI SHALL 静默跳过 sync 检查
+- **AND** 直接继续归档
+
+#### Scenario: 仅含 removal delta 且目标 header 已不存在
+
+- **WHEN** change delta 仅包含 REMOVED 操作
+- **AND** 对应 main spec 中所有被移除的 header 已不存在
+- **THEN** sync gate SHALL 将该项 delta 视为已同步
+- **AND** SHALL NOT 阻止归档
 
 ## Why These Decisions
 

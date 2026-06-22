@@ -156,6 +156,7 @@ opencode.json
 
 # Codex
 .codex/
+.pi/
 .ace-tool/
 .npm-cache
 .github
