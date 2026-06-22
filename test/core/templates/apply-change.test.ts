@@ -140,13 +140,47 @@ describe('apply change workflow template', () => {
       expect(template).toContain('task + check + command + failure kind');
       expect(template).toContain('two consecutive failures');
       expect(template).toContain('same task and same normalized error signature');
-      expect(template).toContain('changed normalized error signature is progress');
       expect(template).toContain('User interrupt remains an immediate stop condition');
       expect(template).toContain('Failures are recovery feedback');
       expect(template).toContain('Phase 1 failures enter the same recovery loop');
       expect(template).toContain('If a task Goal or Requirements is ambiguous, enrich context from proposal, design, change-local specs, tasks.md, OPSX code-map, related specs, and project search');
       expect(template).not.toContain('update the .apply-steps file and continue dispatch before asking the user');
       expect(template).toContain('If project context is missing, convert the gap into verifiable exploration or check steps in the current task and continue execution');
+    }
+  });
+
+  it('documents diagnosis-first discipline in enhanced recovery protocol', () => {
+    for (const template of [
+      getApplyChangeSkillTemplate().instructions,
+      getOpsxApplyCommandTemplate().content,
+    ]) {
+      expect(template).toContain('诊断优先');
+      expect(template).toContain('读完整错误输出');
+      expect(template).toContain('确认失败层面');
+      expect(template).toContain('working example');
+      expect(template).toContain('形成并陈述单一假设');
+    }
+  });
+
+  it('documents single-variable fix constraint in enhanced recovery protocol', () => {
+    for (const template of [
+      getApplyChangeSkillTemplate().instructions,
+      getOpsxApplyCommandTemplate().content,
+    ]) {
+      expect(template).toContain('单变量修复');
+      expect(template).toContain('只改变一个变量');
+      expect(template).toContain('不得叠加多个独立修改');
+    }
+  });
+
+  it('documents cumulative 3-strike mechanism in enhanced recovery protocol', () => {
+    for (const template of [
+      getApplyChangeSkillTemplate().instructions,
+      getOpsxApplyCommandTemplate().content,
+    ]) {
+      expect(template).toContain('累计 3 次修复');
+      expect(template).toContain('停止修复并向用户呈现证据');
+      expect(template).toContain('已尝试的 3 条路径');
     }
   });
 
@@ -158,6 +192,43 @@ describe('apply change workflow template', () => {
       expect(template).not.toContain('If more than 5 cycles are needed, split the task automatically');
       expect(template).not.toContain('Each step file or batch MUST contain 1-5 TDD Cycles');
       expect(template).not.toContain('Do not pause solely because a task needs more than 5 TDD Cycles');
+    }
+  });
+
+  it('contains pre-flight scan paragraph in the skill template', () => {
+    for (const template of [
+      getApplyChangeSkillTemplate().instructions,
+      getOpsxApplyCommandTemplate().content,
+    ]) {
+      expect(template).toContain('Pre-flight Scan');
+      expect(template).toContain('扫描 tasks.md 全部 task 的 Goal、Files、Requirements 和 Checks');
+      expect(template).toContain('检测 task 间矛盾和依赖顺序问题');
+    }
+  });
+
+  it('positions pre-flight scan after OPSX navigation before Branch Isolation', () => {
+    for (const template of [
+      getApplyChangeSkillTemplate().instructions,
+      getOpsxApplyCommandTemplate().content,
+    ]) {
+      const opsxEnd = template.indexOf('Treat CLI output as navigation context');
+      const preflightIndex = template.indexOf('Pre-flight Scan');
+      const branchIndex = template.indexOf('Branch Isolation Preflight');
+      expect(opsxEnd).toBeGreaterThan(-1);
+      expect(preflightIndex).toBeGreaterThan(-1);
+      expect(branchIndex).toBeGreaterThan(-1);
+      expect(preflightIndex).toBeGreaterThan(opsxEnd);
+      expect(branchIndex).toBeGreaterThan(preflightIndex);
+    }
+  });
+
+  it('contains dependency order detection in pre-flight scan', () => {
+    for (const template of [
+      getApplyChangeSkillTemplate().instructions,
+      getOpsxApplyCommandTemplate().content,
+    ]) {
+      expect(template).toContain('依赖顺序');
+      expect(template).toContain('前序 task 依赖后序 task');
     }
   });
 

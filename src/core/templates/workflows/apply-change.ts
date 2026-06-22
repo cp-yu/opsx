@@ -141,9 +141,22 @@ For each pending coarse task:
 
 - Failures are recovery feedback, not immediate user-visible pause conditions.
 - Normalize each failure as \`task + check + command + failure kind\`; do not compare full natural-language output.
-- Track retries per same task and same normalized error signature after master remediation.
 - Pause only when the same task and same normalized error signature produces two consecutive failures after master remediation.
-- A changed normalized error signature is progress: reset the previous signature's consecutive failure count and continue the recovery loop.
+
+**诊断优先于修复**: 当 Check command 返回非预期失败时，agent SHALL 先完成诊断步骤再尝试代码修复：
+  1. 读完整错误输出（含 stack trace）
+  2. 确认失败层面（编译/类型/运行时/断言）
+  3. 在 codebase 中搜索同类 working example 对比差异
+  4. 形成并陈述单一假设（"根因假设：X，因为 Y"）
+
+**单变量修复约束**: 每次修复尝试 SHALL 只改变一个变量，不得叠加多个独立修改。修复后 SHALL 重跑相同 Check command 确认结果。
+
+**累计 3-strike 升级机制**:
+- 同一 task 累计 3 次修复尝试仍未解决问题时（无论 error signature 是否变化），agent SHALL 停止修复并向用户呈现证据：已尝试的 3 条路径及各自结果、当前最佳根因判断、怀疑方向（spec 矛盾/design 遗漏/环境问题）
+- 连续 2 次相同 normalized error signature 仍作为快速 pause 路径保留（不等累计计数器达到 3）
+- 用户指示后计数器重置，按用户指示继续
+
+- Track retries per same task.
 - If a task Goal or Requirements is ambiguous, enrich context from proposal, design, change-local specs, tasks.md, OPSX code-map, related specs, and project search before asking the user.
 - If project context is missing, convert the gap into verifiable exploration or check steps in the current task and continue execution.
 - Phase 1 failures enter the same recovery loop: write CRITICAL issues to \`tasks.md\`, add typed remediation, map the remediation to affected tasks, and continue Phase 0.
@@ -176,6 +189,14 @@ ${OPSX_SHARED_CONTEXT}
 5. Use CLI-backed OPSX navigation after shared context.
 ${OPSX_CLI_QUERY_CONTEXT}
 
+### Pre-flight Scan
+
+在进入 Branch Isolation 之前，扫描 tasks.md 全部 task 的 Goal、Files、Requirements 和 Checks，检测 task 间矛盾和依赖顺序问题：
+- 检测不同 task 对同一文件或接口的互斥声明
+- 检测 task 声明与 change-local spec 或 design.md 的冲突
+- 检测前序 task 依赖后序 task 的产出（如 Task N 的 Files 声明 Modify 某路径，但该路径由 Task M (M > N) 的 Files Create 产生）
+- 发现问题时一次性呈现所有 findings，扫描干净时无声继续
+
 ### Branch Isolation Preflight
 
 Run \`git branch --show-current\`. On main/master ask whether to Create branch \`<change-name>\`, Create worktree at \`.worktrees/<change-name>\`, or continue; config branch/worktree/none use that as the default choice without prompting; only \`ask\` is interactive and means prompt. Persist \`path.join(changeDir, '.apply-isolation.json')\` with \`method\`, \`branchName\`, optional \`worktreePath\`, and \`originalBranch\`. Use using-git-worktrees when present.
@@ -188,7 +209,19 @@ TDD Checkpoint 1: Interface Design for Testability — dependencies are injected
 
 ### Continuous Recovery Protocol
 
-Failures are recovery feedback. Normalize as \`task + check + command + failure kind\`; pause only after two consecutive failures for the same task and same normalized error signature. A changed normalized error signature is progress. If a task Goal or Requirements is ambiguous, enrich context from proposal, design, change-local specs, tasks.md, OPSX code-map, related specs, and project search. If project context is missing, convert the gap into verifiable exploration or check steps in the current task and continue execution. Phase 1 failures enter the same recovery loop. User interrupt remains an immediate stop condition.
+Failures are recovery feedback. Normalize as \`task + check + command + failure kind\`; pause only after two consecutive failures for the same task and same normalized error signature.
+
+**诊断优先于修复**: 当 Check command 返回非预期失败时，agent SHALL 先完成诊断步骤再尝试代码修复：
+1. 读完整错误输出（含 stack trace）
+2. 确认失败层面（编译/类型/运行时/断言）
+3. 在 codebase 中搜索同类 working example 对比差异
+4. 形成并陈述单一假设（"根因假设：X，因为 Y"）
+
+**单变量修复约束**: 每次修复尝试 SHALL 只改变一个变量，不得叠加多个独立修改。修复后 SHALL 重跑相同 Check command 确认结果。
+
+**累计 3-strike 升级机制**: 同一 task 累计 3 次修复尝试仍未解决问题时，agent SHALL 停止修复并向用户呈现证据：已尝试的 3 条路径及各自结果、当前最佳根因判断、怀疑方向。连续 2 次相同 normalized error signature 仍作为快速 pause 路径保留。用户指示后计数器重置。
+
+If a task Goal or Requirements is ambiguous, enrich context from proposal, design, change-local specs, tasks.md, OPSX code-map, related specs, and project search. If project context is missing, convert the gap into verifiable exploration or check steps in the current task and continue execution. Phase 1 failures enter the same recovery loop. User interrupt remains an immediate stop condition.
 
 ### Phase 1: Run canonical verification
 
@@ -274,6 +307,14 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
    ${OPSX_SHARED_CONTEXT}
 
    ${OPSX_CLI_QUERY_CONTEXT}
+
+   ### Pre-flight Scan
+
+   在进入 Branch Isolation 之前，扫描 tasks.md 全部 task 的 Goal、Files、Requirements 和 Checks，检测 task 间矛盾和依赖顺序问题：
+   - 检测不同 task 对同一文件或接口的互斥声明
+   - 检测 task 声明与 change-local spec 或 design.md 的冲突
+   - 检测前序 task 依赖后序 task 的产出（如 Task N 的 Files 声明 Modify 某路径，但该路径由 Task M (M > N) 的 Files Create 产生）
+   - 发现问题时一次性呈现所有 findings，扫描干净时无声继续
 
    Read the files listed in \`contextFiles\` from the apply instructions output.
    The files depend on the schema being used:
