@@ -1,0 +1,21 @@
+schema_version: 1
+ADDED:
+  capabilities:
+    - id: cap.apply.preflight-scan
+      type: capability
+      intent: apply 执行前的 tasks.md 一致性预检，扫描 task 间矛盾（同一文件互斥声明、与 spec/design 冲突）和依赖顺序问题（前序 task 引用后序 task 的产出）
+    - id: cap.apply.recovery-protocol-enhanced
+      type: capability
+      intent: 增强版 Recovery Protocol，引入诊断优先（读错误→定位层面→找 working example→形成假设）、单变量修复约束和累计 3-strike 升级机制；替代原有"error signature 变化即进步"的假设
+  relations:
+    - from: cap.apply.preflight-scan
+      type: contains
+      to: dom.apply
+    - from: cap.apply.recovery-protocol-enhanced
+      type: contains
+      to: dom.apply
+
+MODIFIED:
+  capabilities:
+    - id: cap.apply.task-decomposition
+      intent: Apply Phase 0 中 Master agent 直接读取 tasks.md、change-local specs、design 与项目代码上下文，但必须按 pending Check 执行严格 TDD。行为/代码 Check 需要 test first、预期失败、最小实现、通过确认后才勾选；非运行时文本制品只需最终证据；缺失断言按非运行时快速路径以 Command 输出为最终证据。失败处理遵循诊断优先、单变量修复、累计 3-strike 升级机制，不再将 error signature 变化视为进步。
