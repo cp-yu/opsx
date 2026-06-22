@@ -38,3 +38,13 @@
 - **WHEN** apply 遇到 `[artifact_fix]` 类型的 remediation 条目
 - **THEN** apply SHALL 修改对应的 artifact（spec 或 design）而非代码
 - **AND** 标记该 remediation 为完成
+
+### Requirement: Apply 完成时输出 archive 指引
+
+Apply 阶段在所有 task 完成且 seal 通过后，SHALL 显式输出下一步操作指引，引导用户进入归档。
+
+#### Scenario: seal 通过后输出 call-to-action
+
+- **WHEN** Phase 3 seal 返回 valid
+- **THEN** apply SHALL 在汇总输出末尾显式给出：`Archive ready. Run /opsx-archive <change-name> to complete the workflow.`
+- **AND** SHALL NOT 仅报告 sealed 状态而省略操作指引

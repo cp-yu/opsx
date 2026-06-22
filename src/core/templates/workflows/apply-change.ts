@@ -241,7 +241,9 @@ ${VERIFY_STATE_MACHINE_DIAGRAM}
 
 ## Output
 
-Report schema, progress, current task, completed tasks this session, and final sealed/archive-ready status. Keep edits minimal, use Node path handling for generated paths, update task checkboxes only after evidence passes, and preserve canonical artifact headings/tokens and configured document language projection.`,
+Report schema, progress, current task, completed tasks this session, and final sealed/archive-ready status. Keep edits minimal, use Node path handling for generated paths, update task checkboxes only after evidence passes, and preserve canonical artifact headings/tokens and configured document language projection.
+
+When Phase 3 seal passes, end with an explicit call-to-action: \`Archive ready. Run /opsx-archive <change-name> to complete the workflow.\``,
     license: 'MIT',
     compatibility: 'Requires openspec CLI.',
     metadata: { author: 'openspec', version: '1.0' },
