@@ -293,12 +293,12 @@ changeCmd
 
 program
   .command('archive [change-name]')
-  .description('Archive a completed change and reconcile main specs plus OPSX state')
+  .description('Archive a completed change')
   .option('-y, --yes', 'Skip confirmation prompts')
-  .option('--skip-specs', 'Skip all archive-time sync writes, including main specs and OPSX updates')
+  .option('--no-sync', 'Skip sync gate（pending delta 检查，需要显式授权）')
   .option('--no-validate', 'Skip validation (not recommended, requires confirmation)')
   .option('--no-verify', 'Skip unified full verify gate (requires explicit user authorization, not recommended)')
-  .action(async (changeName?: string, options?: { yes?: boolean; skipSpecs?: boolean; noValidate?: boolean; validate?: boolean; noVerify?: boolean; verify?: boolean }) => {
+  .action(async (changeName?: string, options?: { yes?: boolean; noSync?: boolean; sync?: boolean; noValidate?: boolean; validate?: boolean; noVerify?: boolean; verify?: boolean }) => {
     try {
       const archiveCommand = new ArchiveCommand();
       await archiveCommand.execute(changeName, options);

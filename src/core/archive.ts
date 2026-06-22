@@ -5,9 +5,7 @@ import { Validator } from './validation/validator.js';
 import chalk from 'chalk';
 import {
   assessChangeSyncState,
-  applyPreparedChangeSync,
   getPendingChangeSync,
-  prepareChangeSync,
 } from './change-sync.js';
 import {
   checkArchiveCompatibility,
@@ -67,26 +65,33 @@ async function findArchivedChangePathAsync(archiveDir: string, changeName: strin
   }
 }
 
+interface ArchiveOptions {
+  yes?: boolean;
+  noValidate?: boolean;
+  validate?: boolean;
+  noVerify?: boolean;
+  verify?: boolean;
+  noSync?: boolean;
+  sync?: boolean;
+}
+
 export class ArchiveCommand {
   /**
-   * Archive a completed change. Enforces unified full verify gate by default.
-   * Use --no-verify to bypass (requires explicit user authorization).
+   * Archive a completed change. Enforces verify gate, sync gate, validation gate,
+   * and task gate before moving the change to archive. Does NOT write main specs
+   * or OPSX files — sync is handled by `openspec sync`.
    */
-  async execute(
-    changeName?: string,
-    options: { yes?: boolean; skipSpecs?: boolean; noValidate?: boolean; validate?: boolean; noVerify?: boolean; verify?: boolean } = {}
-  ): Promise<void> {
+  async execute(changeName?: string, options: ArchiveOptions = {}): Promise<void> {
     const targetPath = '.';
     const changesDir = path.join(targetPath, 'openspec', 'changes');
     const archiveDir = path.join(changesDir, 'archive');
-    // Check if changes directory exists
+
     try {
       await fs.access(changesDir);
     } catch {
       throw new Error("No OpenSpec changes directory found. Run 'openspec init' first.");
     }
 
-    // Get change name interactively if not provided
     if (!changeName) {
       const selectedChange = await selectActiveChange(changesDir, {
         message: 'Select a change to archive',
@@ -100,10 +105,8 @@ export class ArchiveCommand {
 
     const changeDir = path.join(changesDir, changeName);
     const archivedChangePath = await findArchivedChangePathAsync(archiveDir, changeName);
-    let archivePath = archivedChangePath;
     let activeChangeExists = false;
 
-    // Verify change exists
     try {
       const stat = await fs.stat(changeDir);
       if (!stat.isDirectory()) {
@@ -111,112 +114,202 @@ export class ArchiveCommand {
       }
       activeChangeExists = true;
     } catch {
-      if (!archivePath) {
+      if (!archivedChangePath) {
         throw new Error(`Change '${changeName}' not found.`);
       }
     }
 
-    if (!activeChangeExists && archivePath) {
+    if (!activeChangeExists && archivedChangePath) {
       this.printGitHandoff();
       return;
     }
 
-    const syncState = await assessChangeSyncState(targetPath, changeName);
-    const pendingSync = syncState.requiresSync
-      ? await getPendingChangeSync(targetPath, syncState)
-      : null;
+    // Pipeline: verify → sync → validation → task → move
+    // Each gate returns false when user cancels (not an error)
+    if (!(await this.runVerifyGate(changeDir, targetPath, changeName, options))) return;
+    if (!(await this.runSyncGate(targetPath, changeName, options))) return;
+    if (!(await this.runValidationGate(changeDir, options))) return;
+    if (!(await this.runTaskGate(changesDir, changeName, options))) return;
 
-    const skipValidation = options.validate === false || options.noValidate === true;
+    // Move change to archive
+    const archiveName = `${this.getArchiveDate()}-${changeName}`;
+    const archivePath = path.join(archiveDir, archiveName);
+
+    try {
+      await fs.access(archivePath);
+      throw new Error(`Archive '${archiveName}' already exists.`);
+    } catch (error: any) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+
+    await fs.mkdir(archiveDir, { recursive: true });
+    await moveDirectory(changeDir, archivePath);
+
+    console.log(`Change '${changeName}' archived as '${archiveName}'.`);
+    this.printGitHandoff();
+  }
+
+  private async runVerifyGate(
+    changeDir: string,
+    targetPath: string,
+    changeName: string,
+    options: ArchiveOptions,
+  ): Promise<boolean> {
     const skipVerify = options.verify === false || options.noVerify === true;
 
-    // --no-verify bypass requires explicit user authorization
-    if (skipVerify && !options.yes) {
-      const { confirm } = await import('@inquirer/prompts');
-      const proceed = await confirm({
-        message: chalk.yellow(
-          '⚠️  WARNING: Skipping unified full verify gate bypasses critical quality checks.\n' +
-          '   This may archive unverified implementations with correctness, completeness, or coherence issues.\n' +
-          '   Continue with --no-verify? (y/N)'
-        ),
-        default: false
-      });
-      if (!proceed) {
-        console.log('Archive cancelled. Run without --no-verify to use the standard verify gate.');
-        return;
+    if (skipVerify) {
+      if (!options.yes) {
+        const { confirm } = await import('@inquirer/prompts');
+        const proceed = await confirm({
+          message: chalk.yellow(
+            '⚠️  WARNING: Skipping the full verify gate bypasses critical quality checks.\n' +
+            '   This may archive unverified implementations with correctness, completeness, or coherence issues.\n' +
+            '   Continue with --no-verify? (y/N)'
+          ),
+          default: false,
+        });
+        if (!proceed) {
+          console.log('Archive cancelled. Run without --no-verify to use the standard verify gate.');
+          return false;
+        }
       }
       console.log(chalk.yellow('[AUTHORIZED] User explicitly authorized --no-verify bypass.'));
+      return true;
     }
 
-    // Execute unified full verify gate
-    if (!skipVerify) {
-      const freshness = await checkFreshness(changeDir, targetPath);
-      const compatibility = freshness.verifyResult
-        ? checkArchiveCompatibility(freshness.verifyResult)
-        : undefined;
-      const failures: string[] = [];
+    const freshness = await checkFreshness(changeDir, targetPath);
+    const compatibility = freshness.verifyResult
+      ? checkArchiveCompatibility(freshness.verifyResult)
+      : undefined;
+    const failures: string[] = [];
 
-      if (freshness.status !== 'FRESH' || !compatibility?.compatible) {
-        failures.push(
-          formatVerifyGateFailure(freshness, compatibility, {
-            changeName,
-            command: 'archive',
-          })
-        );
-      }
-      if (pendingSync && (pendingSync.specs > 0 || pendingSync.opsx)) {
-        failures.push('Sync gate failed: pending delta specs or OPSX delta. Run openspec sync <change-name> first, or pass --no-verify to bypass.');
-      }
-      if (failures.length > 0) {
-        throw new Error(failures.join('\n\n'));
-      }
+    if (freshness.status !== 'FRESH' || !compatibility?.compatible) {
+      failures.push(
+        formatVerifyGateFailure(freshness, compatibility, {
+          changeName,
+          command: 'archive',
+        }),
+      );
     }
 
-    // Validate specs and change before archiving
-    if (!skipValidation) {
-      const validator = new Validator();
-      let hasValidationErrors = false;
+    if (failures.length > 0) {
+      throw new Error(failures.join('\n\n'));
+    }
+    return true;
+  }
 
-      // Validate proposal.md (non-blocking unless strict mode desired in future)
-      const changeFile = path.join(changeDir, 'proposal.md');
-      try {
-        await fs.access(changeFile);
-        const changeReport = await validator.validateChange(changeFile);
-        // Proposal validation is informative only (do not block archive)
-        if (!changeReport.valid) {
-          console.log(chalk.yellow(`\nProposal warnings in proposal.md (non-blocking):`));
-          for (const issue of changeReport.issues) {
-            const symbol = issue.level === 'ERROR' ? '⚠' : (issue.level === 'WARNING' ? '⚠' : 'ℹ');
-            console.log(chalk.yellow(`  ${symbol} ${issue.message}`));
-          }
+  private async runSyncGate(
+    targetPath: string,
+    changeName: string,
+    options: ArchiveOptions,
+  ): Promise<boolean> {
+    const skipSync = options.sync === false || options.noSync === true;
+
+    if (skipSync) {
+      if (!options.yes) {
+        const { confirm } = await import('@inquirer/prompts');
+        const proceed = await confirm({
+          message: chalk.yellow(
+            '⚠️  WARNING: Skipping the sync gate may leave main specs out of sync with the change deltas.\n' +
+            '   Continue with --no-sync? (y/N)'
+          ),
+          default: false,
+        });
+        if (!proceed) {
+          console.log('Archive cancelled.');
+          return false;
         }
-      } catch {
-        // Change file doesn't exist, skip validation
       }
+      console.log(chalk.yellow('[AUTHORIZED] User explicitly authorized --no-sync bypass.'));
+      return true;
+    }
 
-      // Validate delta-formatted spec files under the change directory if present
-      const changeSpecsDir = path.join(changeDir, 'specs');
-      let hasDeltaSpecs = false;
-      try {
-        const candidates = await fs.readdir(changeSpecsDir, { withFileTypes: true });
-        for (const c of candidates) {
-          if (c.isDirectory()) {
-            try {
-              const candidatePath = path.join(changeSpecsDir, c.name, 'spec.md');
-              await fs.access(candidatePath);
-              const content = await fs.readFile(candidatePath, 'utf-8');
-              if (/^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements/m.test(content)) {
-                hasDeltaSpecs = true;
-                break;
-              }
-            } catch {}
-          }
+    const syncState = await assessChangeSyncState(targetPath, changeName);
+    if (!syncState.requiresSync) return true;
+
+    const pendingSync = await getPendingChangeSync(targetPath, syncState);
+    if (pendingSync.specs > 0) {
+      throw new Error(
+        `Sync gate failed: ${pendingSync.specs} pending delta spec(s).\n` +
+        `Run openspec sync ${changeName} first, or pass --no-sync to bypass.`,
+      );
+    }
+    if (pendingSync.opsx) {
+      throw new Error(
+        `Sync gate failed: pending OPSX delta.\n` +
+        `Run openspec sync ${changeName} first, or pass --no-sync to bypass.`,
+      );
+    }
+    return true;
+  }
+
+  private async runValidationGate(
+    changeDir: string,
+    options: ArchiveOptions,
+  ): Promise<boolean> {
+    const skipValidation = options.validate === false || options.noValidate === true;
+
+    if (skipValidation) {
+      if (!options.yes) {
+        const { confirm } = await import('@inquirer/prompts');
+        const proceed = await confirm({
+          message: chalk.yellow('⚠️  WARNING: Skipping validation may archive invalid specs. Continue? (y/N)'),
+          default: false,
+        });
+        if (!proceed) {
+          console.log('Archive cancelled.');
+          return false;
         }
-      } catch {}
-      if (hasDeltaSpecs && (!pendingSync || pendingSync.specs > 0)) {
+      }
+      const timestamp = new Date().toISOString();
+      console.log(chalk.yellow(`[${timestamp}] Validation skipped: ${path.basename(changeDir)}`));
+      return true;
+    }
+
+    const validator = new Validator();
+    let hasValidationErrors = false;
+
+    const changeFile = path.join(changeDir, 'proposal.md');
+    try {
+      await fs.access(changeFile);
+      const changeReport = await validator.validateChange(changeFile);
+      if (!changeReport.valid) {
+        console.log(chalk.yellow('\nProposal warnings in proposal.md (non-blocking):'));
+        for (const issue of changeReport.issues) {
+          console.log(chalk.yellow(`  ⚠ ${issue.message}`));
+        }
+      }
+    } catch {
+      // proposal.md may not exist
+    }
+
+    const changeSpecsDir = path.join(changeDir, 'specs');
+    let hasDeltaSpecs = false;
+    try {
+      const candidates = await fs.readdir(changeSpecsDir, { withFileTypes: true });
+      for (const c of candidates) {
+        if (c.isDirectory()) {
+          try {
+            const candidatePath = path.join(changeSpecsDir, c.name, 'spec.md');
+            await fs.access(candidatePath);
+            const content = await fs.readFile(candidatePath, 'utf-8');
+            if (/^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements/m.test(content)) {
+              hasDeltaSpecs = true;
+              break;
+            }
+          } catch {}
+        }
+      }
+    } catch {}
+
+    if (hasDeltaSpecs) {
+      const syncState = await assessChangeSyncState('.', path.basename(changeDir));
+      const pendingSync = syncState.requiresSync ? await getPendingChangeSync('.', syncState) : null;
+      if (!pendingSync || pendingSync.specs > 0) {
         const deltaReport = await validator.validateChangeDeltaSpecs(changeDir);
         if (!deltaReport.valid) {
           hasValidationErrors = true;
-          console.log(chalk.red(`\nValidation errors in change delta specs:`));
+          console.log(chalk.red('\nValidation errors in change delta specs:'));
           for (const issue of deltaReport.issues) {
             if (issue.level === 'ERROR') {
               console.log(chalk.red(`  ✗ ${issue.message}`));
@@ -226,38 +319,23 @@ export class ArchiveCommand {
           }
         }
       }
-
-      if (hasValidationErrors) {
-        console.log(chalk.red('\nValidation failed. Please fix the errors before archiving.'));
-        console.log(chalk.yellow('To skip validation (not recommended), use --no-validate flag.'));
-        return;
-      }
-    } else {
-      // Log warning when validation is skipped
-      const timestamp = new Date().toISOString();
-      
-      if (!options.yes) {
-        const { confirm } = await import('@inquirer/prompts');
-        const proceed = await confirm({
-          message: chalk.yellow('⚠️  WARNING: Skipping validation may archive invalid specs. Continue? (y/N)'),
-          default: false
-        });
-        if (!proceed) {
-          console.log('Archive cancelled.');
-          return;
-        }
-      } else {
-        console.log(chalk.yellow(`\n⚠️  WARNING: Skipping validation may archive invalid specs.`));
-      }
-      
-      console.log(chalk.yellow(`[${timestamp}] Validation skipped for change: ${changeName}`));
-      console.log(chalk.yellow(`Affected files: ${changeDir}`));
     }
 
-    // Show progress and check for incomplete tasks
+    if (hasValidationErrors) {
+      console.log(chalk.red('\nValidation failed. Please fix the errors before archiving.'));
+      console.log(chalk.yellow('To skip validation (not recommended), use --no-validate flag.'));
+      return false;
+    }
+    return true;
+  }
+
+  private async runTaskGate(
+    changesDir: string,
+    changeName: string,
+    options: ArchiveOptions,
+  ): Promise<boolean> {
     const progress = await getTaskProgressForChange(changesDir, changeName);
-    const status = formatTaskStatus(progress);
-    console.log(`Task status: ${status}`);
+    console.log(`Task status: ${formatTaskStatus(progress)}`);
 
     const incompleteTasks = Math.max(progress.total - progress.completed, 0);
     if (incompleteTasks > 0) {
@@ -265,69 +343,17 @@ export class ArchiveCommand {
         const { confirm } = await import('@inquirer/prompts');
         const proceed = await confirm({
           message: `Warning: ${incompleteTasks} incomplete task(s) found. Continue?`,
-          default: false
+          default: false,
         });
         if (!proceed) {
           console.log('Archive cancelled.');
-          return;
+          return false;
         }
       } else {
         console.log(`Warning: ${incompleteTasks} incomplete task(s) found. Continuing due to --yes flag.`);
       }
     }
-
-    // Handle archive-time sync unless skipSpecs flag is set
-    if (options.skipSpecs) {
-      console.log('Skipping archive-time sync writes (--skip-specs flag provided).');
-    } else {
-      if (syncState.requiresSync) {
-        try {
-          const preparedSync = await prepareChangeSync(targetPath, syncState, { skipValidation });
-          if (preparedSync.specs.writes.length === 0 && !preparedSync.opsx) {
-            console.log('No archive-time sync required.');
-          } else {
-            const syncTargets: string[] = [];
-            if (preparedSync.specs.writes.length > 0) {
-              syncTargets.push(`${preparedSync.specs.writes.length} spec update(s)`);
-            }
-            if (preparedSync.opsx) {
-              syncTargets.push('OPSX delta');
-            }
-            console.log(`Archive sync state: ${syncTargets.join(' + ')} pending.`);
-            await applyPreparedChangeSync(targetPath, preparedSync);
-          }
-        } catch (err: any) {
-          console.log(String(err.message || err));
-          console.log('Aborted. No files were changed.');
-          return;
-        }
-      } else {
-        console.log('No archive-time sync required.');
-      }
-    }
-
-    // Create archive directory with date prefix
-    const archiveName = `${this.getArchiveDate()}-${changeName}`;
-    archivePath = path.join(archiveDir, archiveName);
-
-    // Check if archive already exists
-    try {
-      await fs.access(archivePath);
-      throw new Error(`Archive '${archiveName}' already exists.`);
-    } catch (error: any) {
-      if (error.code !== 'ENOENT') {
-        throw error;
-      }
-    }
-
-    // Create archive directory if needed
-    await fs.mkdir(archiveDir, { recursive: true });
-
-    // Move change to archive (uses copy+remove on EPERM/EXDEV, e.g. Windows)
-    await moveDirectory(changeDir, archivePath);
-
-    console.log(`Change '${changeName}' archived as '${archiveName}'.`);
-    this.printGitHandoff();
+    return true;
   }
 
   private printGitHandoff(): void {

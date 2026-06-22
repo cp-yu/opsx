@@ -138,7 +138,7 @@ ADDED:
     const beforeHead = await git(projectRoot, ['rev-parse', 'HEAD']);
     process.chdir(projectRoot);
 
-    await new ArchiveCommand().execute('feature-archive', { yes: true, noVerify: true, noValidate: true });
+    await new ArchiveCommand().execute('feature-archive', { yes: true, noVerify: true, noValidate: true, noSync: true });
 
     const currentBranch = await git(projectRoot, ['branch', '--show-current']);
     expect(currentBranch).toBe('feature-archive');
@@ -154,7 +154,8 @@ ADDED:
       expect.stringContaining('docs(feature-archive): Archive change artifacts')
     );
 
-    expect(await fs.readFile(path.join(projectRoot, 'openspec', 'specs', 'synced', 'spec.md'), 'utf-8')).toContain('Synced behavior');
+    // Sync is no longer embedded in archive — verify spec was NOT auto-synced
+    await expect(fs.access(path.join(projectRoot, 'openspec', 'specs', 'synced', 'spec.md'))).rejects.toThrow();
     const status = await git(projectRoot, ['status', '--short']);
     expect(status).toContain('?? openspec/changes/');
     expect(status).toContain('?? openspec/specs/');

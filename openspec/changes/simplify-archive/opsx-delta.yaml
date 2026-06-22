@@ -1,0 +1,14 @@
+schema_version: 1
+MODIFIED:
+  capabilities:
+    - id: cap.change.archive
+      intent: 归档已完成的变更，移动变更到 archive；archive 在校验通过后将 change 目录移入 archive，不执行 spec 或 OPSX 写入操作；同步合并由 openspec sync 独立完成
+    - id: cap.cli.archive
+      intent: 归档已完成的变更并将规约合并到主规约目录；输出 agent 接管后续 git 工作的 handoff 提醒，不读取 handoff 模式配置，不执行 git 写操作或生成推荐 commit message；sync gate 检查未合并 delta，--no-sync flag 可跳过
+  relations:
+    - from: cap.change.archive
+      type: depends_on
+      to: cap.change.specs-sync
+    - from: cap.change.archive
+      type: depends_on
+      to: cap.opsx.delta-merge
