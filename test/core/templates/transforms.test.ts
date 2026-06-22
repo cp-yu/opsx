@@ -73,15 +73,10 @@ describe('Transform Pipeline', () => {
       expect(result).toBe('Run /opsx-apply');
     });
 
-    it('should NOT transform tool-inapplicable command body', () => {
-      const input = 'Run /opsx:apply';
-      // claude has no builtin transform registered
-      const result = runTransforms(
-        input,
-        { toolId: 'claude', workflowId: 'apply', artifactType: 'command' },
-        'preAdapter'
-      );
-      expect(result).toBe(input);
+    it('should transform colon-based references for claude', () => {
+      const result = runTransforms('Run /opsx:apply to implement',
+        { toolId: 'claude', workflowId: 'apply', artifactType: 'skill' });
+      expect(result).toBe('Run /openspec-apply-change to implement');
     });
   });
 

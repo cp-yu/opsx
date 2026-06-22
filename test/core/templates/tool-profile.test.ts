@@ -61,20 +61,21 @@ describe('Tool Profile Registry', () => {
     it('should match transforms to declared transform IDs in tool profiles', () => {
       for (const profile of ToolProfileRegistry.profiles) {
         for (const transformId of profile.transforms) {
-          expect(['codex-command-refs', 'opencode-command-refs', 'pi-command-refs']).toContain(transformId);
+          expect(['codex-command-refs', 'opencode-command-refs', 'pi-command-refs', 'claude-command-refs']).toContain(transformId);
         }
       }
     });
 
-    it('should associate codex, opencode, pi with their respective transforms', () => {
+    it('should associate codex, opencode, pi, claude with their respective transforms', () => {
       expect(ToolProfileRegistry.get('codex')!.transforms).toContain('codex-command-refs');
       expect(ToolProfileRegistry.get('opencode')!.transforms).toContain('opencode-command-refs');
       expect(ToolProfileRegistry.get('pi')!.transforms).toContain('pi-command-refs');
+      expect(ToolProfileRegistry.get('claude')!.transforms).toContain('claude-command-refs');
     });
 
     it('should not have transforms for majority of tools', () => {
       const nonTransformTools = ToolProfileRegistry.profiles.filter((p) => p.transforms.length === 0);
-      expect(nonTransformTools.length).toBeGreaterThanOrEqual(21);
+      expect(nonTransformTools.length).toBeGreaterThanOrEqual(20);
     });
   });
 });

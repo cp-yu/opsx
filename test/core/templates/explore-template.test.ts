@@ -59,7 +59,7 @@ describe('explore template impact sweeps', () => {
     expect(template).toContain('Explore is read-only for the main agent');
     expect(template).toContain('Do not create, edit, delete, format, regenerate, or patch any project file or OpenSpec artifact');
     expect(template).toContain('produce a conversation-only `Design Summary`');
-    expect(template).toContain('instruct the user to call `$openspec-propose <change-name>`');
+    expect(template).toContain('instruct the user to call `/opsx:propose <change-name>`');
   });
 
   it('treats design confirmation as direction only', () => {

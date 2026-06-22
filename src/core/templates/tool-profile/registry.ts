@@ -16,6 +16,7 @@ export const TRANSFORM_IDS = {
   CODEX_COMMAND_REFS: 'codex-command-refs',
   OPENCODE_COMMAND_REFS: 'opencode-command-refs',
   PI_COMMAND_REFS: 'pi-command-refs',
+  CLAUDE_COMMAND_REFS: 'claude-command-refs',
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -27,6 +28,7 @@ function resolveTransforms(toolId: string): string[] {
   if (toolId === 'codex') transforms.push(TRANSFORM_IDS.CODEX_COMMAND_REFS);
   if (toolId === 'opencode') transforms.push(TRANSFORM_IDS.OPENCODE_COMMAND_REFS);
   if (toolId === 'pi') transforms.push(TRANSFORM_IDS.PI_COMMAND_REFS);
+  if (toolId === 'claude') transforms.push(TRANSFORM_IDS.CLAUDE_COMMAND_REFS);
   return transforms;
 }
 

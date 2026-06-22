@@ -1,0 +1,130 @@
+{
+  "timestamp": "2026-06-22T08:33:11.587Z",
+  "result": "PASS_WITH_WARNINGS",
+  "issues": [
+    {
+      "severity": "WARNING",
+      "dimension": "correctness",
+      "message": "C2 Verifies Requirement name references non-existent requirement name. Fixed to Explore 捕获边界保持 specs 为可观察行为."
+    },
+    {
+      "severity": "WARNING",
+      "dimension": "correctness",
+      "message": "C2 Expect count was 5 but actual grep output is 6. Fixed to 6."
+    }
+  ],
+  "tasksFileHash": "42fbee4a26c38d0c91db3f317806dfd31ccf769bf1f0286d71bbd922c3bd194a",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent-orchestrated",
+    "evidenceFiles": [
+      "src/core/templates/tool-profile/registry.ts",
+      "src/core/templates/transforms/builtin-transforms.ts",
+      "src/core/templates/workflows/explore.ts",
+      "test/core/templates/explore-template.test.ts",
+      "test/core/templates/skill-templates-parity.test.ts",
+      "test/core/templates/tool-profile.test.ts",
+      "test/core/templates/transforms.test.ts"
+    ],
+    "evidenceFingerprint": "c6d020d4c3d02ab44aa51cd9068a481e562ed83fea8b1ece046d02fb92b0cda8",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "src/core/templates/tool-profile/registry.ts",
+        "hash": "23c0c3a2cb83be13bb4405e7a8e1a671f43550925285f162bc383835b04b32ae"
+      },
+      {
+        "path": "src/core/templates/transforms/builtin-transforms.ts",
+        "hash": "829f55029a540a72be69a4e64c2f13a780ddbdd01957dd63fe23fec4bb3e35aa"
+      },
+      {
+        "path": "src/core/templates/workflows/explore.ts",
+        "hash": "96979bea25ee26a6bc39ca06d73313fa73ac8cd89bcdafe606f8166f23b208f5"
+      },
+      {
+        "path": "test/core/templates/explore-template.test.ts",
+        "hash": "01dc6bd30db433f63f4d580c2340dba87a4a0b9e6caf40aa8bea3a53598a33d0"
+      },
+      {
+        "path": "test/core/templates/skill-templates-parity.test.ts",
+        "hash": "9e0712d71532aeff9f601c890359a28d6412fe33344c2c492b5a11fae1fd5ca0"
+      },
+      {
+        "path": "test/core/templates/tool-profile.test.ts",
+        "hash": "fdcabfa0ec90e9abf0824b081245faf24d47980cece44b2fc9f61a7f3cbb97f6"
+      },
+      {
+        "path": "test/core/templates/transforms.test.ts",
+        "hash": "40ec0a487572028c2d73564d95b24fb43488eee63c262476ff3a81ff9d3ee53d"
+      }
+    ],
+    "skippedEvidenceFiles": [],
+    "gitHeadCommit": "a15db060b6d50e5083524b4f33569563acfc2fda"
+  },
+  "optimization": {
+    "status": "PENDING_VERIFICATION",
+    "attempts": [],
+    "baseline": {
+      "timestamp": "2026-06-22T08:33:11.587Z",
+      "result": "PASS_WITH_WARNINGS",
+      "issues": [
+        {
+          "severity": "WARNING",
+          "dimension": "correctness",
+          "message": "C2 Verifies Requirement name references non-existent requirement name. Fixed to Explore 捕获边界保持 specs 为可观察行为."
+        },
+        {
+          "severity": "WARNING",
+          "dimension": "correctness",
+          "message": "C2 Expect count was 5 but actual grep output is 6. Fixed to 6."
+        }
+      ],
+      "tasksFileHash": "42fbee4a26c38d0c91db3f317806dfd31ccf769bf1f0286d71bbd922c3bd194a",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent-orchestrated",
+        "evidenceFiles": [
+          "src/core/templates/tool-profile/registry.ts",
+          "src/core/templates/transforms/builtin-transforms.ts",
+          "src/core/templates/workflows/explore.ts",
+          "test/core/templates/explore-template.test.ts",
+          "test/core/templates/skill-templates-parity.test.ts",
+          "test/core/templates/tool-profile.test.ts",
+          "test/core/templates/transforms.test.ts"
+        ],
+        "evidenceFingerprint": "c6d020d4c3d02ab44aa51cd9068a481e562ed83fea8b1ece046d02fb92b0cda8",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "src/core/templates/tool-profile/registry.ts",
+            "hash": "23c0c3a2cb83be13bb4405e7a8e1a671f43550925285f162bc383835b04b32ae"
+          },
+          {
+            "path": "src/core/templates/transforms/builtin-transforms.ts",
+            "hash": "829f55029a540a72be69a4e64c2f13a780ddbdd01957dd63fe23fec4bb3e35aa"
+          },
+          {
+            "path": "src/core/templates/workflows/explore.ts",
+            "hash": "96979bea25ee26a6bc39ca06d73313fa73ac8cd89bcdafe606f8166f23b208f5"
+          },
+          {
+            "path": "test/core/templates/explore-template.test.ts",
+            "hash": "01dc6bd30db433f63f4d580c2340dba87a4a0b9e6caf40aa8bea3a53598a33d0"
+          },
+          {
+            "path": "test/core/templates/skill-templates-parity.test.ts",
+            "hash": "9e0712d71532aeff9f601c890359a28d6412fe33344c2c492b5a11fae1fd5ca0"
+          },
+          {
+            "path": "test/core/templates/tool-profile.test.ts",
+            "hash": "fdcabfa0ec90e9abf0824b081245faf24d47980cece44b2fc9f61a7f3cbb97f6"
+          },
+          {
+            "path": "test/core/templates/transforms.test.ts",
+            "hash": "40ec0a487572028c2d73564d95b24fb43488eee63c262476ff3a81ff9d3ee53d"
+          }
+        ],
+        "skippedEvidenceFiles": [],
+        "gitHeadCommit": "a15db060b6d50e5083524b4f33569563acfc2fda"
+      }
+    }
+  }
+}
