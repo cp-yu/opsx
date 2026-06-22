@@ -141,9 +141,22 @@ For each pending coarse task:
 
 - Failures are recovery feedback, not immediate user-visible pause conditions.
 - Normalize each failure as \`task + check + command + failure kind\`; do not compare full natural-language output.
-- Track retries per same task and same normalized error signature after master remediation.
 - Pause only when the same task and same normalized error signature produces two consecutive failures after master remediation.
-- A changed normalized error signature is progress: reset the previous signature's consecutive failure count and continue the recovery loop.
+
+**Diagnosis Before Repair**: When a Check command returns an unexpected failure, the agent SHALL complete diagnosis steps before attempting code fixes:
+  1. Read the full error output (including stack trace)
+  2. Identify the failure layer (compile / type / runtime / assertion)
+  3. Search the codebase for a working example of the same pattern and compare
+  4. Form and state a single hypothesis ("Root cause hypothesis: X, because Y")
+
+**Single-Variable Fix Constraint**: Each fix attempt SHALL change only one variable — do not stack multiple independent changes in a single fix. After the fix, SHALL re-run the same Check command to confirm the result.
+
+**Cumulative 3-Strike Escalation**:
+- When the same task accumulates 3 failed fix attempts without resolution (regardless of error signature changes), the agent SHALL stop and present evidence: the 3 attempted paths with their results, the current best root-cause judgment, and suspected directions (spec conflict / design gap / environment issue)
+- Two consecutive identical normalized error signatures still trigger a fast pause (don't wait for the counter to reach 3)
+- Counter resets on user instruction; continue per user direction
+
+- Track retries per same task.
 - If a task Goal or Requirements is ambiguous, enrich context from proposal, design, change-local specs, tasks.md, OPSX code-map, related specs, and project search before asking the user.
 - If project context is missing, convert the gap into verifiable exploration or check steps in the current task and continue execution.
 - Phase 1 failures enter the same recovery loop: write CRITICAL issues to \`tasks.md\`, add typed remediation, map the remediation to affected tasks, and continue Phase 0.
@@ -176,6 +189,14 @@ ${OPSX_SHARED_CONTEXT}
 5. Use CLI-backed OPSX navigation after shared context.
 ${OPSX_CLI_QUERY_CONTEXT}
 
+### Pre-flight Scan
+
+Before entering Branch Isolation, scan all tasks in tasks.md for contradictions and dependency-ordering issues across Goals, Files, Requirements, and Checks:
+- Conflicting declarations on the same file or interface across different tasks
+- Task declarations that conflict with change-local specs or design.md
+- Earlier task depending on output of a later task (e.g., Task N's Files declares Modify on a path created by Task M's Files, where M > N)
+- Present all findings at once; proceed silently when scan is clean
+
 ### Branch Isolation Preflight
 
 Run \`git branch --show-current\`. On main/master ask whether to Create branch \`<change-name>\`, Create worktree at \`.worktrees/<change-name>\`, or continue; config branch/worktree/none use that as the default choice without prompting; only \`ask\` is interactive and means prompt. Persist \`path.join(changeDir, '.apply-isolation.json')\` with \`method\`, \`branchName\`, optional \`worktreePath\`, and \`originalBranch\`. Use using-git-worktrees when present.
@@ -188,7 +209,19 @@ TDD Checkpoint 1: Interface Design for Testability — dependencies are injected
 
 ### Continuous Recovery Protocol
 
-Failures are recovery feedback. Normalize as \`task + check + command + failure kind\`; pause only after two consecutive failures for the same task and same normalized error signature. A changed normalized error signature is progress. If a task Goal or Requirements is ambiguous, enrich context from proposal, design, change-local specs, tasks.md, OPSX code-map, related specs, and project search. If project context is missing, convert the gap into verifiable exploration or check steps in the current task and continue execution. Phase 1 failures enter the same recovery loop. User interrupt remains an immediate stop condition.
+Failures are recovery feedback. Normalize as \`task + check + command + failure kind\`; pause only after two consecutive failures for the same task and same normalized error signature.
+
+**Diagnosis Before Repair**: When a Check command returns an unexpected failure, the agent SHALL complete diagnosis steps before attempting code fixes:
+1. Read the full error output (including stack trace)
+2. Identify the failure layer (compile / type / runtime / assertion)
+3. Search the codebase for a working example of the same pattern and compare
+4. Form and state a single hypothesis ("Root cause hypothesis: X, because Y")
+
+**Single-Variable Fix Constraint**: Each fix attempt SHALL change only one variable — do not stack multiple independent changes in a single fix. After the fix, SHALL re-run the same Check command to confirm the result.
+
+**Cumulative 3-Strike Escalation**: When the same task accumulates 3 failed fix attempts without resolution, the agent SHALL stop and present evidence: the 3 attempted paths with their results, the current best root-cause judgment, and suspected directions. Two consecutive identical normalized error signatures still trigger a fast pause. Counter resets on user instruction.
+
+If a task Goal or Requirements is ambiguous, enrich context from proposal, design, change-local specs, tasks.md, OPSX code-map, related specs, and project search. If project context is missing, convert the gap into verifiable exploration or check steps in the current task and continue execution. Phase 1 failures enter the same recovery loop. User interrupt remains an immediate stop condition.
 
 ### Phase 1: Run canonical verification
 
@@ -274,6 +307,14 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
    ${OPSX_SHARED_CONTEXT}
 
    ${OPSX_CLI_QUERY_CONTEXT}
+
+   ### Pre-flight Scan
+
+   Before entering Branch Isolation, scan all tasks in tasks.md for contradictions and dependency-ordering issues across Goals, Files, Requirements, and Checks:
+   - Conflicting declarations on the same file or interface across different tasks
+   - Task declarations that conflict with change-local specs or design.md
+   - Earlier task depending on output of a later task (e.g., Task N's Files declares Modify on a path created by Task M's Files, where M > N)
+   - Present all findings at once; proceed silently when scan is clean
 
    Read the files listed in \`contextFiles\` from the apply instructions output.
    The files depend on the schema being used:

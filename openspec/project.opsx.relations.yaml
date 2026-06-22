@@ -543,3 +543,9 @@ relations:
   - from: cap.ai.snack-workflow-manifest
     type: depends_on
     to: cap.ai.template-artifact-pipeline
+  - from: cap.apply.preflight-scan
+    type: contains
+    to: dom.apply
+  - from: cap.apply.recovery-protocol-enhanced
+    type: contains
+    to: dom.apply
