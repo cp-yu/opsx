@@ -54,6 +54,27 @@ Execute tasks sequentially. For each pending task, read Goal, Files, Requirement
 
 TDD Checkpoint 1: Interface Design for Testability — dependencies are injected through parameters, behavior returns values or observable results, and public interface area is minimal. TDD Checkpoint 2: Test Quality Standards — verifies behavior through public interfaces, avoids mocking internal project collaborators, keeps one logical assertion per test, and survives internal refactoring. TDD Checkpoint 3: Mock Boundary Enforcement — mocks are allowed only at system boundaries; internal classes, modules, and project-owned collaborators MUST NOT be mocked; mockable boundaries must be passed through dependency injection.
 
+### Ponytail-full Coding Discipline
+
+While implementing, apply the ponytail 6-rung ladder for implementation details NOT specified by any spec requirement. This is a coding behavior, not a standalone review step.
+
+**The ladder** — stop at the first rung that holds:
+1. Does this need to exist at all? (YAGNI)
+2. Does the standard library already do it? Use it.
+3. Does a native platform feature cover it? Use it.
+4. Does an already-installed dependency solve it? Use it.
+5. Can it be one line? Make it one line.
+6. Only then: the minimum code that works.
+
+**Specs-first hard constraint**: Spec requirements always take priority. When a spec explicitly requires an interface, abstraction, or component, implement it fully — do not simplify, skip, or argue. The ladder ONLY applies to implementation details the specs leave open (internal helpers, file organization, utility functions, implementation approach).
+
+**Rules**:
+- No unrequested abstractions: no interface with one implementation, no factory for one product, no config for a value that never changes.
+- No new dependency if it can be avoided. Prefer stdlib, native platform, or installed deps.
+- Deletion over addition. Boring over clever. Fewest files possible.
+- Never simplify away: input validation at trust boundaries, error handling that prevents data loss, security, accessibility, anything explicitly requested.
+- Mark deliberate simplifications with a `ponytail:` comment. If a shortcut has a known ceiling, the comment names the ceiling and the upgrade path.
+
 ### Continuous Recovery Protocol
 
 Failures are recovery feedback. Normalize as `task + check + command + failure kind`; pause only after two consecutive failures for the same task and same normalized error signature.

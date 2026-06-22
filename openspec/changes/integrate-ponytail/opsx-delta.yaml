@@ -1,0 +1,3 @@
+schema_version: 1
+# 本变更修改已有 capability 的 spec 级行为要求，不改变 OPSX 架构图中的 capability intent。
+# 无需 ADDED / MODIFIED / REMOVED OPSX 节点。
