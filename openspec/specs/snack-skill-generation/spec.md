@@ -16,11 +16,12 @@ skill 生成管线 SHALL 包含 snack skill，与现有 5 个核心工作流（p
   3. 共享 OPSX 上下文加载指令（复用 explore/propose/apply 片段）
   4. Git diff 分析步骤
   5. Code-map 反查步骤
-  6. Specs 生成策略（中层推断）
-  7. Design 简化生成策略
-  8. OPSX delta 启发式规则
-  9. 输出提示（完成路径 vs 修正路径）
-  10. 明确不生成 tasks.md 的说明
+  6. Spec 覆盖扫描步骤（`openspec list --specs --json`）
+  7. Specs 生成策略（中层推断）
+  8. Design 简化生成策略
+  9. OPSX delta 启发式规则
+  10. 输出提示（完成路径 vs 修正路径）
+  11. 明确不生成 tasks.md 的说明
 
 #### Scenario: skill 文件长度验证
 

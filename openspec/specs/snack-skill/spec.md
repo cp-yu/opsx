@@ -57,6 +57,26 @@ snack skill SHALL 通过读取 `openspec/project.opsx.code-map.yaml`，将修改
 - **WHEN** skill 获得修改文件列表后
 - **THEN** 读取 `openspec/project.opsx.code-map.yaml`，查找每个文件路径对应的 capability ID，构建受影响 capabilities 列表
 
+### Requirement: Spec 覆盖扫描
+
+snack skill SHALL 在 code-map 反查完成后、proposal 生成前，通过 `openspec list --specs --json` 扫描已有 specs 覆盖情况，将受影响 capability 分类为 **Modified Capability**（已有 spec 覆盖）或 **New Capability**（无 spec 覆盖）。
+
+#### Scenario: 已有 spec 覆盖的能力标记为 Modified
+
+- **WHEN** step 4 code-map 反查出的 capability ID 出现在某个 spec 的 `capabilities` 数组中
+- **THEN** 将该 capability 标记为 **Modified Capability**
+- **AND** 记录该 spec 的目录名，供 step 8 specs 生成时复用已有目录
+
+#### Scenario: 无 spec 覆盖的能力标记为 New
+
+- **WHEN** step 4 code-map 反查出的 capability ID 未出现在任何 spec 的 `capabilities` 数组中
+- **THEN** 将该 capability 标记为 **New Capability**
+
+#### Scenario: 映射结果注入 proposal
+
+- **WHEN** step 7 生成 proposal 的 `## Capabilities` section
+- **THEN** SHALL 使用 step 5 的 Modified/New 分类填充 New Capabilities 和 Modified Capabilities 列表
+
 ### Requirement: Specs 中层推断生成
 
 snack skill SHALL 在生成 specs 前运行 `openspec instructions specs --change "<name>" --json`，严格使用返回的 `template` 和 `instruction` 填充 delta spec。ADDED 与 MODIFIED 的判定、spec 目录名、MODIFIED requirement 标题逐字匹配，均 SHALL 遵循 `instruction` 投影中的规则（复用 `openspec/specs/<capability>/` 已有目录名或 proposal capability 名；新增关注点用 ADDED，改已有 requirement 行为用 MODIFIED 并保留原标题）。snack SHALL NOT 在 skill 正文中自建独立的判定流程，也 SHALL NOT 自造非模板章节。不确定的推断 SHALL 标记 `[REVIEW NEEDED]`。

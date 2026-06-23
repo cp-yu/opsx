@@ -37,15 +37,21 @@ ${OPSX_SHARED_CONTEXT}
 4. Reverse-map files to capabilities via code-map.
    - Read \`openspec/project.opsx.code-map.yaml\` and map each modified path to its capability/domain node IDs.
    - Files without a code-map entry are [REVIEW NEEDED] candidates for new capabilities.
-5. Use CLI-backed OPSX navigation after code-map reverse lookup.
+5. Map capabilities to existing specs via spec registry.
+   - Run \`openspec list --specs --json\` to get all specs with their \`capabilities\` field.
+   - For each capability ID from step 4 code-map reverse lookup:
+     - If the capability ID appears in any spec's \`capabilities\` array → mark as **Modified Capability** and record the spec directory name.
+     - If no existing spec covers it → mark as **New Capability**.
+   - Use this mapping in step 7 when writing the proposal's \`## Capabilities\` section.
+6. Use CLI-backed OPSX navigation after code-map reverse lookup.
 ${OPSX_CLI_QUERY_CONTEXT}
-6. Determine the capability list first, then generate \`proposal.md\`.
+7. Determine the capability list first, then generate \`proposal.md\`.
    - Run \`openspec instructions proposal --change "<name>" --json\`.
    - Use the returned \`template\`, \`instruction\`, \`outputPath\`, and \`configProjection\`; do not invent non-template sections.
    - Determine the \`## Capabilities\` list before specs generation and reuse the same list as specs input.
    - Prefer code-map reverse lookup; files without code-map coverage may use git diff inference but MUST be marked \`[REVIEW NEEDED]\`.
    - Preserve the template headings including \`## Why\`, \`## What Changes\`, \`## Capabilities\`, and \`## Impact\`.
-7. Generate delta specs in \`specs/<capability>/spec.md\` from the artifact instruction.
+8. Generate delta specs in \`specs/<capability>/spec.md\` from the artifact instruction.
    - Run \`openspec instructions specs --change "<name>" --json\`.
    - Use the returned \`template\`, \`instruction\`, \`outputPath\`, and \`configProjection\`; do not invent non-template sections.
    - Follow the returned \`instruction\` for ADDED/MODIFIED selection, spec directory naming, and MODIFIED requirement title matching.
@@ -53,19 +59,19 @@ ${OPSX_CLI_QUERY_CONTEXT}
    - New concerns use \`## ADDED Requirements\`; changed existing behavior uses \`## MODIFIED Requirements\` with the exact existing Requirement title.
    - Requirement text MUST contain SHALL/MUST language and at least one \`#### Scenario:\` block with WHEN/THEN style.
    - Mark uncertain inferences with \`[REVIEW NEEDED]\`.
-8. Generate simplified \`design.md\` from the artifact instruction.
+9. Generate simplified \`design.md\` from the artifact instruction.
    - Run \`openspec instructions design --change "<name>" --json\`.
    - Use the returned \`template\`, \`instruction\`, \`outputPath\`, and \`configProjection\`; do not invent non-template sections.
    - Preserve the full template skeleton: Context, Goals / Non-Goals, Decisions, and Risks / Trade-offs.
    - Mark inferred content with \`[INFERRED FROM CODE]\`; mark unresolved risks or trade-offs with \`[REVIEW NEEDED]\`.
-9. OPSX delta heuristic — generate \`opsx-delta.yaml\` ONLY when git diff shows new/deleted exports or new files; otherwise skip and log "No architecture-level changes detected. Skipping OPSX delta generation".
+10. OPSX delta heuristic — generate \`opsx-delta.yaml\` ONLY when git diff shows new/deleted exports or new files; otherwise skip and log "No architecture-level changes detected. Skipping OPSX delta generation".
    ${OPSX_GENERATE_DELTA}
-10. Do NOT generate \`tasks.md\` (code is already implemented).
-11. Run \`openspec validate "<name>" --type change --json\` after all generated artifacts are written.
+11. Do NOT generate \`tasks.md\` (code is already implemented).
+12. Run \`openspec validate "<name>" --type change --json\` after all generated artifacts are written.
    - If validation returns ERROR or WARNING, run one repair pass using the relevant artifact \`instruction\` rules, then run \`openspec validate "<name>" --type change --json\` once more.
    - Treat the second validation result as final evidence.
    - Output validate result: if passed, indicate self-check passed; if ERROR/WARNING remain, list each and advise user review.
-12. Finish with the output hints below, including the validate result.
+13. Finish with the output hints below, including the validate result.
 
 ## Output Hints
 
