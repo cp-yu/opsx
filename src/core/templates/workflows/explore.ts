@@ -190,7 +190,7 @@ export function getExploreSkillTemplate(): SkillTemplate {
 
 ## Required References
 
-- Read the project-root file \`openspec/references/openspec-explore-supperpowers-style.md\` before exploring. It is the authoritative Superpowers brainstorming behavior guide for hard gate, context exploration, visual companion judgment, one-question discipline, options comparison, section approval, Design Summary review, and propose handoff.
+- MUST read the project-root file \`openspec/references/openspec-explore-supperpowers-style.md\` before exploring. DO NOT proceed without reading it first. It is the authoritative Superpowers brainstorming behavior guide for hard gate, context exploration, visual companion judgment, one-question discipline, options comparison, section approval, Design Summary review, and propose handoff.
 - Do not reconstruct or duplicate Superpowers behavior from this prompt. This prompt defines boundaries, context loading, sweeper delegation, and proposal routing only.
 
 ## Skill Delegation Protocol
