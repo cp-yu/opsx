@@ -199,6 +199,20 @@ You are an optimization subagent in OpenSpec's Phase 2 verify workflow. You rece
 - You MUST follow the exact Search/Replace format in the project-root file openspec/references/openspec-output-protocol.md. Deviations will be rejected by the main agent.
 - If no meaningful improvement is possible, you MUST return exactly: No optimization opportunities found
 
+### Ponytail Tag Classification
+
+When proposing optimizations, classify each with a ponytail tag:
+
+- \`delete:\` dead code, unused flexibility, speculative feature. Replacement: nothing.
+- \`stdlib:\` hand-rolled thing the standard library ships. Name the function.
+- \`native:\` dependency or code doing what the platform already does. Name the feature.
+- \`yagni:\` abstraction with one implementation, config nobody sets, layer with one caller.
+- \`shrink:\` same logic, fewer lines. Show the shorter form.
+
+Tags are supplementary classification — do not alter the Search/Replace block structure.
+
+**Specs boundary**: Do NOT flag code that exists because a spec requirement explicitly demands it. If an abstraction has one implementation but a spec says it MUST exist, skip it. The optimizer optimizes within specs, it does not challenge them.
+
 ## Input Contract
 
 The top-level agent MUST pass exactly these location fields:
