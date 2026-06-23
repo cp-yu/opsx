@@ -19,7 +19,7 @@ const APPLY_VERIFY_PHASES = `
 7. **Phase 1: Run canonical verification**
 
    After all implementation tasks and remediation items are complete:
-   - Spawn a clean-context reviewer subagent with change artifacts, git evidence, final file contents, and prior \`.verify-result.json\` when present
+   - Spawn a clean-context reviewer subagent with \`context: "fresh"\` with change artifacts, git evidence, final file contents, and prior \`.verify-result.json\` when present
    - Instruct the subagent to invoke the \`openspec-reviewer\` skill, which loads the full reviewer contract (role, constraints, 6-step verification protocol, severity thresholds, three-dimension coverage, structured output schema)
    - Keep completeness, correctness, and coherence judgment inside the reviewer subagent
    - If the reviewer returns \`FAIL_NEEDS_REMEDIATION\`, write back only CRITICAL issues to \`tasks.md\`, add typed \`## Remediation\` entries, and return to Phase 0
@@ -39,7 +39,7 @@ ${VERIFY_CLI_JSON_SCHEMA_REFERENCE}
    - Before the first optimization attempt, create a checkpoint commit: \`git add -A && git commit -m "wip: opt-checkpoint-r0 (baseline)"\`
    - Each complete proposal + patch + reviewer re-verify loop consumes one \`optRetries\` budget, whether it passes or fails
    - Format or Search/Replace matching problems are handled by the main agent and do not consume retry budget
-   - Optimizer subagent: spawn and instruct to invoke the \`openspec-optimizer\` skill (loads full optimizer contract: role, constraints, optimization principles, Search/Replace format, failed directions protocol). Proposes Search/Replace blocks only; it MUST NOT edit files
+   - Optimizer subagent: spawn with \`context: "fresh"\` and instruct to invoke the \`openspec-optimizer\` skill (loads full optimizer contract: role, constraints, optimization principles, Search/Replace format, failed directions protocol). Proposes Search/Replace blocks only; it MUST NOT edit files
    - **TIMING CONSTRAINT — hashFiles() samples disk state; the following order is mandatory:**
      1. Main agent calls \`openspec verify phase2 "<change-name>" --type=optimization --files "<affected-files>" --input '<json>'\` to record \`OPTIMIZATION_PROPOSED\` with pre-patch file hashes (disk MUST still be in pre-patch state at this point)
      2. Main agent applies Search/Replace blocks atomically (disk transitions to post-patch state)
@@ -225,11 +225,11 @@ If a task Goal or Requirements is ambiguous, enrich context from proposal, desig
 
 ### Phase 1: Run canonical verification
 
-Invoke reviewer subagent, persist \`openspec verify phase1 "<change-name>" --input '<json>' --json\`, and write back only CRITICAL remediation.
+Invoke reviewer subagent with \`context: "fresh"\`, persist \`openspec verify phase1 "<change-name>" --input '<json>' --json\`, and write back only CRITICAL remediation.
 
 ### Phase 2: Optimize under checkpoint protection
 
-You MUST read the project-root file \`openspec/references/openspec-apply-phase2-optimization.md\` before Phase 2. Checkpoints are git commits, not git stash entries or git tags. Respect \`--skip-optimization\`; read \`optimization.optRetries\`; create the initial checkpoint commit with \`git add -A && git commit -m "wip: opt-checkpoint-r0 (baseline)"\`; invoke Optimizer subagent; use \`openspec verify phase2\`; create an incremental checkpoint commit for each successful optimization round; record each failed direction.
+You MUST read the project-root file \`openspec/references/openspec-apply-phase2-optimization.md\` before Phase 2. Checkpoints are git commits, not git stash entries or git tags. Respect \`--skip-optimization\`; read \`optimization.optRetries\`; create the initial checkpoint commit with \`git add -A && git commit -m "wip: opt-checkpoint-r0 (baseline)"\`; invoke Optimizer subagent with \`context: "fresh"\`; use \`openspec verify phase2\`; create an incremental checkpoint commit for each successful optimization round; record each failed direction.
 
 ### Phase 3: Seal final result
 

@@ -19,10 +19,10 @@ import { generateSkillContent } from '../../../src/core/shared/skill-generation.
 
 const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getExploreSkillTemplate: '91cc28049156724a067a5605b9fbf6f82e9723b86021381bc788ad343294fba3',
-  getApplyChangeSkillTemplate: '3abb6fcdd3f89eece35183ba21dcb4e0a5c89733d9f25d73f31b359c031173da',
-  getOpsxApplyCommandTemplate: '4db67e54888accd2ee09555daa8a4274bb4924eaa189cf8a10fff3dbef4fc90c',
-  getArchiveChangeSkillTemplate: 'cee00d2e7712233a9a7ccdc6dc8863f297b88c47021efa7318f300cda5bfc4be',
-  getOpsxArchiveCommandTemplate: 'a4318eca0c9bf7404ed2675c2ff238a4dcfb956eee1e65a0c5e962294556f2ea',
+  getApplyChangeSkillTemplate: '73c329ac4af4ebdc6825c4a4b8e8c82d368e1abd24596017d22e23017511cfb2',
+  getOpsxApplyCommandTemplate: 'ff26cf57a2d291cf7b19e711b567ce755c9cc51327731501e74eea94c73ec1fd',
+  getArchiveChangeSkillTemplate: 'aa1d1386857766bec331976b3439bbba6c358344ba47f89a6f2fcea9d71862ea',
+  getOpsxArchiveCommandTemplate: '837246afecdf10ebdc52f11f325f5eb598905e17e90e91883819c943c3a3cc53',
   getOpsxProposeSkillTemplate: 'e4895a01729832a4564daab9d4428677fe969943e8d9a30d5d9a055a468816da',
   getOpsxProposeCommandTemplate: '2743bb593c363678dcb320ea44d470270e2054930242d1525e23a5810ec282af',
   getFeedbackSkillTemplate: 'd7d83c5f7fc2b92fe8f4588a5bf2d9cb315e4c73ec19bcd5ef28270906319a0d',
@@ -33,8 +33,8 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
 
 const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-explore': '1b89674fc0e1a1800a78a16020f19a20dfd75c69f25dfd2aff42e161151d54eb',
-  'openspec-apply-change': '07ae4dd0db0af6f221d669ab303a49492253898ea8c11ff115cda825137e3742',
-  'openspec-archive-change': 'afffb7a64b6c8fd2bf9986e286621c357b013006398c4ab61450b898fb54cc44',
+  'openspec-apply-change': 'a051bd54c3b27418e3a9a8d294ccddd13e6d303d80e1a8d4a25f4c0b40a8f2b4',
+  'openspec-archive-change': '12f4f0b6d606d7ac009d297ad52cdf4cb2d3995c36b0d726997629c2fbccf1b4',
   'openspec-propose': '718ed9cb0f0dacc39c67f7e08a0f9f944af8a117f690b22a492985788cb6bf47',
   'openspec-impact-sweeper': '67bf2a12f45ce7421a262e814487cdc38a01945a1c65f94ddd707d3eb2397253',
 };

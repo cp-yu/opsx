@@ -77,7 +77,7 @@
 #### Scenario: subagent reviewer 仅负责判断
 
 - **WHEN** Phase 1 验证或优化后再验证执行中
-- **THEN** 系统 SHALL spawn clean-context reviewer subagent
+- **THEN** 系统 SHALL spawn clean-context reviewer subagent，指定 `context: "fresh"`
 - **AND** subagent SHALL 基于 artifacts + git evidence + 代码文件给出 verdict
 - **AND** subagent SHALL NOT 修改代码或 tasks.md
 - **AND** 主 agent SHALL NOT 替代 subagent 的判断
@@ -85,7 +85,7 @@
 #### Scenario: subagent optimizer 仅负责提案
 
 - **WHEN** Phase 2 优化提案执行中
-- **THEN** 系统 SHALL spawn clean-context optimizer subagent
+- **THEN** 系统 SHALL spawn clean-context optimizer subagent，指定 `context: "fresh"`
 - **AND** subagent SHALL 输出 Search/Replace 块建议
 - **AND** subagent SHALL NOT 直接修改代码
 - **AND** 主 agent SHALL 应用补丁而非 subagent

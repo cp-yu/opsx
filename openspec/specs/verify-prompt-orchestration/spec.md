@@ -92,12 +92,14 @@ optimizer subagent delegation 指令 SHALL 包含：
 #### Scenario: Master 委派 reviewer 时只传定位信息
 - **WHEN** verify coordinator 进入 `[Mode: Delegate Review]`
 - **THEN** coordinator SHALL 传入 changeName、changeDir、projectRoot 三个字符串
+- **AND** SHALL 指定 `context: "fresh"` 确保 subagent 不继承对话历史
 - **AND** SHALL NOT 传入 finalFileContents、changeArtifacts 或 gitEvidence 的完整文本
 - **AND** SHALL 声明 reviewer 拥有 Read + Bash 工具能力
 
 #### Scenario: Master 委派 optimizer 时只传定位信息
 - **WHEN** verify coordinator 进入 `[Mode: Optimize]`
 - **THEN** coordinator SHALL 传入 changeName、changeDir、projectRoot 三个字符串
+- **AND** SHALL 指定 `context: "fresh"` 确保 subagent 不继承对话历史
 - **AND** SHALL NOT 传入 phase1Summary、finalFileContents 或 config 的完整内容
 - **AND** SHALL 声明 optimizer 拥有 Read + Bash 工具能力
 

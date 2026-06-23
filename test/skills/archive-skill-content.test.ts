@@ -101,9 +101,9 @@ describe('openspec archive skill content', () => {
     expect(template.referenceFiles?.map((file) => file.path)).toContain('references/archive-commit-message.md');
     expect(template.referenceFiles?.map((file) => file.path)).toContain('references/boundary-commit-message.md');
     expect(template.referenceFiles?.map((file) => file.path)).toContain('references/merge-summary-message.md');
-    expect(instructions).toContain(`If \`git.commitMessage.archive\` is set, read that project-relative path; otherwise read \`${archivePath}\``);
-    expect(instructions).toContain(`If \`git.commitMessage.boundary\` is set, read that project-relative path; otherwise read \`${boundaryPath}\``);
-    expect(instructions).toContain(`If \`git.commitMessage.merge\` is set, read that project-relative path; otherwise read \`${mergePath}\``);
+    expect(instructions).toContain(`If \`git.commitMessage.archive\` is set, read that project-relative path; otherwise read the project-root file \`${archivePath}\``);
+    expect(instructions).toContain(`If \`git.commitMessage.boundary\` is set, read that project-relative path; otherwise read the project-root file \`${boundaryPath}\``);
+    expect(instructions).toContain(`If \`git.commitMessage.merge\` is set, read that project-relative path; otherwise read the project-root file \`${mergePath}\``);
     expect(instructions).not.toContain('read `references/archive-commit-message.md` before creating the OpenSpec/docs archive commit');
     expect(instructions).not.toContain('read `references/boundary-commit-message.md`');
     expect(instructions).not.toContain('read `references/merge-summary-message.md` before creating a merge or squash commit message');
