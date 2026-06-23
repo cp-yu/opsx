@@ -18,25 +18,25 @@ import {
 import { generateSkillContent } from '../../../src/core/shared/skill-generation.js';
 
 const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
-  getExploreSkillTemplate: '12f2946e32b5edeecc728f9981cdb3289546cf74c6462621c428cff6a89ef81b',
-  getApplyChangeSkillTemplate: '12d4bfa1e8257671bd3d2fe1318f215b3b1d968b304df7cdfbcd8fd3403fb3c8',
+  getExploreSkillTemplate: '91cc28049156724a067a5605b9fbf6f82e9723b86021381bc788ad343294fba3',
+  getApplyChangeSkillTemplate: '3abb6fcdd3f89eece35183ba21dcb4e0a5c89733d9f25d73f31b359c031173da',
   getOpsxApplyCommandTemplate: '4db67e54888accd2ee09555daa8a4274bb4924eaa189cf8a10fff3dbef4fc90c',
-  getArchiveChangeSkillTemplate: '2d12addb4277f8c6921d6f01202c11e819f77489d193a7f0bd1fbed6e9a16d07',
-  getOpsxArchiveCommandTemplate: '08404e5a87a3589d5fb147f3050782bf09297e1fd53db3f11d024f1261d13512',
+  getArchiveChangeSkillTemplate: 'cee00d2e7712233a9a7ccdc6dc8863f297b88c47021efa7318f300cda5bfc4be',
+  getOpsxArchiveCommandTemplate: 'a4318eca0c9bf7404ed2675c2ff238a4dcfb956eee1e65a0c5e962294556f2ea',
   getOpsxProposeSkillTemplate: 'e4895a01729832a4564daab9d4428677fe969943e8d9a30d5d9a055a468816da',
   getOpsxProposeCommandTemplate: '2743bb593c363678dcb320ea44d470270e2054930242d1525e23a5810ec282af',
   getFeedbackSkillTemplate: 'd7d83c5f7fc2b92fe8f4588a5bf2d9cb315e4c73ec19bcd5ef28270906319a0d',
   getBootstrapOpsxSkillTemplate: 'e716b90f35332851874f4426319aacb9fdef04a7221bf68669a73bde2232f203',
   getOpsxBootstrapCommandTemplate: 'a249d04dd1706472b46b344b0fe3568c218e369eff33ed781007a473421206a1',
-  getImpactSweeperSkillTemplate: '3ff9aeb8be2c572791f0f54e0d7fa193604f0b8579423d775191cb33393dbffb',
+  getImpactSweeperSkillTemplate: '2806c1ff6aae0fe5563d90b35c3cbeb69b4aa8963a1ba2670513e9c5b31062e2',
 };
 
 const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
-  'openspec-explore': '8ca8198818a41d060926b16823a71ac890eedb790efc1842de032dd50d1beb81',
-  'openspec-apply-change': 'c84090e13bf4fe381697d11e586c395e4ef0c69fad986f353ae4fd1ac6250cef',
-  'openspec-archive-change': 'a0a758d9adc1977d83c81eb0ea71be493254dde6542b05224e037eef15a0204e',
+  'openspec-explore': '1b89674fc0e1a1800a78a16020f19a20dfd75c69f25dfd2aff42e161151d54eb',
+  'openspec-apply-change': '07ae4dd0db0af6f221d669ab303a49492253898ea8c11ff115cda825137e3742',
+  'openspec-archive-change': 'afffb7a64b6c8fd2bf9986e286621c357b013006398c4ab61450b898fb54cc44',
   'openspec-propose': '718ed9cb0f0dacc39c67f7e08a0f9f944af8a117f690b22a492985788cb6bf47',
-  'openspec-impact-sweeper': '4a82789ac5265770bb0fabb93b5c677cb5f2654c6499b0922ffd05c63a5d5283',
+  'openspec-impact-sweeper': '67bf2a12f45ce7421a262e814487cdc38a01945a1c65f94ddd707d3eb2397253',
 };
 
 function stableStringify(value: unknown): string {

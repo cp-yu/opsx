@@ -56,7 +56,9 @@ Explore MUST run this sequence before saying a proposal is ready:
 6. **Generate Design Summary**
    - Produce a \`Design Summary\` in the conversation, not in a file.
    - Include: architecture, core components, data flow, technology stack, testing strategy, risks and trade-offs.
-   - End with: "Design Summary complete. Review the above design. If confirmed, call \`/opsx:propose <change-name>\` generate artifacts."`;
+   - Present the Design Summary as a visible content block.
+   - End with: "Design Summary complete. Review the above design. If confirmed, call \`/opsx:propose <change-name>\` generate artifacts."
+   - After presenting the Design Summary, STOP — do not offer to run any workflow or ask follow-up questions. Only the user triggers the next workflow.`;
 
 const ACTIVE_CHANGE_CAPTURE_GUIDANCE = `### Capture Boundary for Existing Changes
 
@@ -227,7 +229,7 @@ ${OPSX_NAVIGATION_GUIDANCE}
 3. Ask exactly one scope/design question at a time.
 4. Compare 2-3 viable options with strengths, weaknesses, best fit, and a recommendation when appropriate.
 5. Confirm design sections one by one: architecture, components, data flow, tech stack, test strategy, risks/trade-offs.
-6. Produce a conversation-only \`Design Summary\` and end with: "Design Summary complete. Review the above design. If confirmed, call \`/opsx:propose <change-name>\` generate artifacts."
+6. Generate a conversation-only \`Design Summary\` that recaps architecture, core components, data flow, technology stack, testing strategy, and risks/trade-offs. Present it as a visible content block, then end with: "Design Summary complete. Review the above design. If confirmed, call \`/opsx:propose <change-name>\` generate artifacts." After this message, STOP — do not offer to run any workflow, do not ask follow-up questions. Only the user can trigger the next workflow.
 
 ## Impact Sweeps
 
@@ -243,7 +245,7 @@ Explore MUST run this sequence before saying a proposal is ready:
 3. **Clarify one question at a time**. Ask exactly one question, then wait for the answer.
 4. **Compare 2-3 options**. Present 2-3 viable approaches.
 5. **Confirm design in sections**: architecture, core components, data flow, technology stack, testing strategy, risks and trade-offs.
-6. **Generate Design Summary**. Produce a \`Design Summary\` in the conversation, not in a file.
+6. **Generate Design Summary**. Produce a \`Design Summary\` in the conversation, not in a file. Present it as a visible content block, then end with: "Design Summary complete. Review the above design. If confirmed, call \`/opsx:propose <change-name>\` generate artifacts." After presenting the Design Summary, STOP — do not offer to run any workflow or ask follow-up questions. Only the user triggers the next workflow.
 
 ## Existing Changes
 
