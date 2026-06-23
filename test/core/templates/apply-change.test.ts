@@ -22,7 +22,7 @@ describe('apply change workflow template', () => {
       ])
     );
     expect(template.instructions).toContain(
-      'read `openspec/references/openspec-apply-phase2-optimization.md` before Phase 2'
+      'read the project-root file `openspec/references/openspec-apply-phase2-optimization.md` before Phase 2'
     );
   });
 
