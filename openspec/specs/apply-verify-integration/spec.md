@@ -12,10 +12,11 @@
 - **WHEN** Phase 2 启动
 - **THEN** 系统 SHALL 创建初始 git commit checkpoint（`git add -A && git commit -m "wip: opt-checkpoint-r0 (baseline)"`），保存 Phase 1 baseline
 - **AND** SHALL 按以下循环执行：
-  1. **优化提案（subagent optimizer）**: 读取代码 + specs + design + `failedDirections`，输出 Search/Replace 块。若无优化机会，返回 NO_OPTIMIZATION_NEEDED
-  2. **记录 optimization（主 agent）**: 调用 `phase2 --type=optimization --files "..."` 记录 pre-patch hash（此时磁盘 MUST 处于 pre-patch 状态）
-  3. **应用补丁（主 agent）**: 解析并原子应用 Search/Replace 块到工作区
-  4. **再验证 Phase 1（subagent reviewer）**: 在补丁后的代码上重新执行 Phase 1 一致性验证
+  1. **优化提案（subagent optimizer）**: 读取代码 + specs + design + `failedDirections`，按 ponytail ladder 前置分析 + 结构优化原则输出 Search/Replace 块。若无优化机会，返回 NO_OPTIMIZATION_NEEDED
+  2. **理解优化意图（主 agent）**: 读取 optimizer 返回的 ponytail 标签（delete/stdlib/native/yagni/shrink）和 Code Smell 注释，理解每个提案的优化理由——是删除、stdlib 替代、简化还是结构改进——在应用补丁前确认每个提案适合 change 上下文
+  3. **记录 optimization（主 agent）**: 调用 `phase2 --type=optimization --files "..."` 记录 pre-patch hash（此时磁盘 MUST 处于 pre-patch 状态）
+  4. **应用补丁（主 agent）**: 解析并原子应用 Search/Replace 块到工作区
+  5. **再验证 Phase 1（subagent reviewer）**: 在补丁后的代码上重新执行 Phase 1 一致性验证
 - **AND** 若再验证 PASS — 接受补丁，递增 cycleCounter，执行 `git add -A && git commit -m "wip: opt-r${N} (${description})"` 将当前优化后状态保存为新 checkpoint。若 cycleCounter < `config.optimization.optRetries`：继续循环（可能发现新的优化机会）。若 cycleCounter >= `config.optimization.optRetries`：强制终止并以 `optimization.status = IMPROVED` 进入 Phase 3
 - **AND** 若再验证 FAIL — 执行 `git reset --hard HEAD` + `git clean -fd` 回滚到最近一次 commit（最近成功状态），递增 cycleCounter，记录 `failedDirections`
 - **AND** 若 cycleCounter >= `config.optimization.optRetries` → `optimization.status = DEGRADED`，进入 Phase 3

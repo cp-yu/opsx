@@ -40,6 +40,7 @@ ${VERIFY_CLI_JSON_SCHEMA_REFERENCE}
    - Each complete proposal + patch + reviewer re-verify loop consumes one \`optRetries\` budget, whether it passes or fails
    - Format or Search/Replace matching problems are handled by the main agent and do not consume retry budget
    - Optimizer subagent: spawn with \`context: "fresh"\` and instruct to invoke the \`openspec-optimizer\` skill (loads full optimizer contract: role, constraints, optimization principles, Search/Replace format, failed directions protocol). Proposes Search/Replace blocks only; it MUST NOT edit files
+   - **Think before patching**: When the optimizer returns blocks, read each ponytail tag (delete/stdlib/native/yagni/shrink) and Code Smell annotation. Understand the optimization rationale — is this a deletion, a stdlib replacement, a simplification, or a structural improvement? Confirm each proposal fits the change context before mechanically applying Search/Replace.
    - **TIMING CONSTRAINT — hashFiles() samples disk state; the following order is mandatory:**
      1. Main agent calls \`openspec verify phase2 "<change-name>" --type=optimization --files "<affected-files>" --input '<json>'\` to record \`OPTIMIZATION_PROPOSED\` with pre-patch file hashes (disk MUST still be in pre-patch state at this point)
      2. Main agent applies Search/Replace blocks atomically (disk transitions to post-patch state)
@@ -77,24 +78,25 @@ The checkpoint is a git commit, not a git stash entry or git tag. Do not create 
    git commit -m "wip: opt-checkpoint-r0 (baseline)"
    \`\`\`
 4. Spawn the optimizer subagent and instruct it to invoke the \`openspec-optimizer\` skill. The optimizer proposes Search/Replace blocks only; it MUST NOT edit files.
-5. For each proposed optimization, record pre-patch hashes before editing:
+5. **Think before patching**: Read the ponytail tags (delete/stdlib/native/yagni/shrink) and Code Smell annotations on each proposed block. Understand the optimization rationale before proceeding.
+6. For each proposed optimization, record pre-patch hashes before editing:
    \`\`\`bash
    openspec verify phase2 "<change-name>" --type=optimization --files "<affected-files>" --input '<json>' --json
    \`\`\`
-6. Apply Search/Replace blocks atomically, then spawn the reviewer subagent for speculative Phase 1 re-verification.
-7. On speculative PASS, record verification PASS and save the new successful state before deciding whether to continue:
+7. Apply Search/Replace blocks atomically, then spawn the reviewer subagent for speculative Phase 1 re-verification.
+8. On speculative PASS, record verification PASS and save the new successful state before deciding whether to continue:
    \`\`\`bash
    git add -A
    git commit -m "wip: opt-r\${N} (\${description})"
    \`\`\`
-8. On speculative FAIL, restore the latest commit:
+9. On speculative FAIL, restore the latest commit:
    \`\`\`bash
    git reset --hard HEAD
    git clean -fd
    \`\`\`
    Record the failed direction in \`.verify-result.json\`.
-9. Each complete proposal + patch + reviewer re-verify loop consumes one \`optRetries\` budget, whether it passes or fails. Format or Search/Replace matching problems are handled by the main agent and do not consume retry budget.
-10. When all attempts finish, keep all \`wip: opt-*\` commits as audit history.
+10. Each complete proposal + patch + reviewer re-verify loop consumes one \`optRetries\` budget, whether it passes or fails. Format or Search/Replace matching problems are handled by the main agent and do not consume retry budget.
+11. When all attempts finish, keep all \`wip: opt-*\` commits as audit history.
 `.trim();
 
 const APPLY_STRICT_TDD_IMPLEMENTATION = `
@@ -250,7 +252,7 @@ Invoke reviewer subagent with \`context: "fresh"\`, persist \`openspec verify ph
 
 ### Phase 2: Optimize under checkpoint protection
 
-You MUST read the project-root file \`openspec/references/openspec-apply-phase2-optimization.md\` before Phase 2. Checkpoints are git commits, not git stash entries or git tags. Respect \`--skip-optimization\`; read \`optimization.optRetries\`; create the initial checkpoint commit with \`git add -A && git commit -m "wip: opt-checkpoint-r0 (baseline)"\`; invoke Optimizer subagent with \`context: "fresh"\`; use \`openspec verify phase2\`; create an incremental checkpoint commit for each successful optimization round; record each failed direction.
+You MUST read the project-root file \`openspec/references/openspec-apply-phase2-optimization.md\` before Phase 2. Checkpoints are git commits, not git stash entries or git tags. Respect \`--skip-optimization\`; read \`optimization.optRetries\`; create the initial checkpoint commit with \`git add -A && git commit -m "wip: opt-checkpoint-r0 (baseline)"\`; invoke Optimizer subagent with \`context: "fresh"\`; when the optimizer returns blocks, read the ponytail tags and Code Smell annotations to understand the optimization rationale before applying Search/Replace; use \`openspec verify phase2\`; create an incremental checkpoint commit for each successful optimization round; record each failed direction.
 
 ### Phase 3: Seal final result
 

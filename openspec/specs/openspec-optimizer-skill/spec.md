@@ -85,7 +85,16 @@ Optimizer MUST NOT 把 `git diff` 的内容级输出作为优化判断依据；d
 
 ### Requirement: 优化原则与禁止项
 
-`openspec-optimizer` skill SHALL 定义优先级排序的优化类别：
+`openspec-optimizer` skill SHALL 定义优先级排序的优化类别，在结构优化前 SHALL 先执行 ponytail 6-rung ladder 前置分析：
+
+**Ponytail ladder（前置，按阶梯顺序判断，命中即停）**：
+1. **是否存在已安装的方案（YAGNI）** — 死代码、无用灵活性、推测性功能 → 记录为 `delete:`，不再评估结构改进
+2. **标准库是否已有** — 手写字符串处理、日期运算、集合操作 → 记录为 `stdlib:`
+3. **原生平台功能是否覆盖** — 框架内建功能、语言特性、操作系统能力 → 记录为 `native:`
+4. **已安装依赖能否解决** — 检查已安装依赖后再评估是否需要新依赖 → 若已安装依赖已覆盖，记录为 `yagni:`
+5. **能否单行实现** — 优先用直接表达式替代辅助函数 → 记录为 `shrink:`
+
+**仅在 ladder 未命中后**，进入以下结构优化类别：
 
 1. **降低重复** — 提取重复逻辑为共享函数、去重验证、合并错误处理模式
 2. **简化结构** — 展平不必要的嵌套、减少间接层、以直接代码替代过度工程化的抽象
@@ -112,6 +121,14 @@ Optimizer MUST NOT 把 `git diff` 的内容级输出作为优化判断依据；d
 - **WHEN** 变更代码已经是扁平结构、无重复、命名清晰
 - **THEN** optimizer SHALL 返回 No optimization opportunities found
 - **AND** SHALL NOT 制造不存在的改进
+
+#### Scenario: Ponytail ladder 前置分析
+
+- **WHEN** optimizer 分析某个优化候选区域
+- **THEN** optimizer SHALL 先通过 ponytail 6-rung ladder 判断是否存在更懒的方案
+- **AND** SHALL 在第一阶命中时停止，跳过后续 ladder 阶梯和结构优化分析
+- **AND** 命中方案 SHALL 标注对应的 ponytail 标签（delete/stdlib/native/yagni/shrink）
+- **AND** 仅在 ladder 六阶均未命中后 MAY 进入结构优化分析（降低重复、简化结构等）
 
 ### Requirement: Search/Replace 块输出格式
 `openspec-optimizer` skill SHALL 精确指定 Search/Replace 块格式：

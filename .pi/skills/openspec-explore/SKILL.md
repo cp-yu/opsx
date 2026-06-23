@@ -6,7 +6,7 @@ compatibility: "Requires openspec CLI."
 metadata:
   author: "openspec"
   version: "1.0"
-  generatedBy: "PI"
+  generatedBy: "1.4.1-cpyu.1"
 ---
 
 Enter explore mode: investigate, clarify, compare, and help the user think before implementation.
@@ -30,7 +30,7 @@ Do not read `openspec-impact-sweeper/SKILL.md` directly in the main agent.
 - The sweeper report write is an internal subagent exception and does not grant the main explore agent permission to create or modify project files or OpenSpec artifacts.
 - User selection of an option, confirmation of a design section, or statements such as "ok", "that works", "option 2", or "split into multiple files" confirm design direction only. They are not authorization to modify files.
 - Ask one clarification question at a time; do not auto-capture decisions into artifacts.
-- When artifact generation is appropriate, produce a conversation-only `Design Summary` and instruct the user to call `/opsx:propose <change-name>`.
+- When artifact generation is appropriate, produce a conversation-only `Design Summary` and instruct the user to call `/opsx-propose <change-name>`.
 
 ## Required Context
 
@@ -58,7 +58,7 @@ If `openspec/project.opsx.yaml` exists:
 3. Ask exactly one scope/design question at a time.
 4. Compare 2-3 viable options with strengths, weaknesses, best fit, and a recommendation when appropriate.
 5. Confirm design sections one by one: architecture, components, data flow, tech stack, test strategy, risks/trade-offs.
-6. Generate a conversation-only `Design Summary` that recaps architecture, core components, data flow, technology stack, testing strategy, and risks/trade-offs. Present it as a visible content block, then end with: "Design Summary complete. Review the above design. If confirmed, call `/opsx:propose <change-name>` generate artifacts." After this message, STOP — do not offer to run any workflow, do not ask follow-up questions. Only the user can trigger the next workflow.
+6. Generate a conversation-only `Design Summary` that recaps architecture, core components, data flow, technology stack, testing strategy, and risks/trade-offs. Present it as a visible content block, then end with: "Design Summary complete. Review the above design. If confirmed, call `/opsx-propose <change-name>` generate artifacts." After this message, STOP — do not offer to run any workflow, do not ask follow-up questions. Only the user can trigger the next workflow.
 
 ## Impact Sweeps
 
@@ -86,7 +86,7 @@ Explore MUST run this sequence before saying a proposal is ready:
 3. **Clarify one question at a time**. Ask exactly one question, then wait for the answer.
 4. **Compare 2-3 options**. Present 2-3 viable approaches. If the ponytail ladder suggests a simpler alternative (unnecessary abstraction, new dependency, platform-native replacement), name it in one line and let the user choose. Skip when nothing triggers.
 5. **Confirm design in sections**: architecture, core components, data flow, technology stack, testing strategy, risks and trade-offs. When discussing a single section, if you spot over-engineering that the ponytail ladder would simplify, name the lazier path in one line. Do not force ponytail output when nothing triggers.
-6. **Generate Design Summary**. Produce a `Design Summary` in the conversation, not in a file. Present it as a visible content block, then end with: "Design Summary complete. Review the above design. If confirmed, call `/opsx:propose <change-name>` generate artifacts." After presenting the Design Summary, STOP — do not offer to run any workflow or ask follow-up questions. Only the user triggers the next workflow.
+6. **Generate Design Summary**. Produce a `Design Summary` in the conversation, not in a file. Present it as a visible content block, then end with: "Design Summary complete. Review the above design. If confirmed, call `/opsx-propose <change-name>` generate artifacts." After presenting the Design Summary, STOP — do not offer to run any workflow or ask follow-up questions. Only the user triggers the next workflow.
 
 ## Existing Changes
 
@@ -106,6 +106,6 @@ When exploring an active change, read proposal/design/specs/tasks, reference the
 | Assumption invalidated               | Relevant artifact              |
 
 Example offers:
-- "That is a design decision for `design.md`; include it in the Design Summary, then call `/opsx:propose <change-name>` or the appropriate non-explore workflow."
-- "This is observable behavior for `specs/<capability>/spec.md`; include it in the Design Summary, then call `/opsx:propose <change-name>` or the appropriate non-explore workflow."
-- "This changes scope for `proposal.md`; include it in the Design Summary, then call `/opsx:propose <change-name>` or the appropriate non-explore workflow."
+- "That is a design decision for `design.md`; include it in the Design Summary, then call `/opsx-propose <change-name>` or the appropriate non-explore workflow."
+- "This is observable behavior for `specs/<capability>/spec.md`; include it in the Design Summary, then call `/opsx-propose <change-name>` or the appropriate non-explore workflow."
+- "This changes scope for `proposal.md`; include it in the Design Summary, then call `/opsx-propose <change-name>` or the appropriate non-explore workflow."
