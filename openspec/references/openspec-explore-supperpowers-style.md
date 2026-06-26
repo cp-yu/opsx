@@ -27,6 +27,8 @@ Simple changes still require design confirmation. Simple changes can shorten the
 
 ## Project context exploration
 
+**Evidence-first discipline**: All claims about existing code, architecture, or technical decisions must be grounded in project evidence. Do not substitute general knowledge for project facts.
+
 Constrain the discussion with project facts first:
 - Read relevant OpenSpec change, spec, design, and tasks.
 - Inspect relevant implementation files, tests, and git evidence.
