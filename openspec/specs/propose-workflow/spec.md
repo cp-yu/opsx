@@ -8,7 +8,8 @@ capabilities:
 The propose workflow SHALL combine change creation and artifact generation into a single command, reducing friction for new users while teaching them the OpenSpec workflow through embedded guidance.
 ## Requirements
 ### Requirement: Propose workflow creation
-The system SHALL provide a `propose` workflow that creates a change and generates all artifacts in one step.
+
+The system SHALL provide a `propose` workflow that creates a change and generates all artifacts in one step. 生成的 propose skill 内容 SHALL 在正文开头通过 `## Workflow Stage` 表格声明制品生成边界，包含 Stage、Allowed、Forbidden 三行。
 
 #### Scenario: Basic propose invocation
 - **WHEN** user invokes `/opsx:propose "add user authentication"`
@@ -22,6 +23,14 @@ The system SHALL provide a `propose` workflow that creates a change and generate
 - **THEN** if "continue": the system SHALL resume artifact generation from last completed state
 - **THEN** if "create new": the system SHALL prompt for a new name
 - **THEN** in non-interactive mode: the system SHALL fail with error suggesting to use a different name
+
+#### Scenario: Propose skill 声明制品生成阶段边界表格
+
+- **WHEN** 生成 `openspec-propose` skill 内容
+- **THEN** 输出 SHALL 在正文首个章节包含 `## Workflow Stage` 表格
+- **AND** 表格 SHALL 包含 Stage 行标记为 `PROPOSE` 并说明为制品生成阶段（不实施代码）
+- **AND** 表格 SHALL 包含 Forbidden 行声明禁止实施代码、修改现有项目文件
+- **AND** 表格 SHALL 位于 `## Flow` 等其他章节之前
 
 ### Requirement: Propose workflow onboarding UX
 The `propose` workflow SHALL include explanatory output to help new users understand the process.
@@ -69,3 +78,4 @@ The `propose` workflow SHALL apply the schema-provided `Spec content boundary` w
 - **WHEN** propose workflow 创建 artifact
 - **THEN** workflow SHALL 根据 artifact instructions 和共享 language contract 撰写 artifact
 - **AND** workflow SHALL NOT 要求每个 artifact 完成前执行额外 non-canonical English prose scan
+

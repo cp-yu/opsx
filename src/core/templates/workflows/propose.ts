@@ -45,6 +45,14 @@ export function getOpsxProposeSkillTemplate(): SkillTemplate {
     description: 'Propose a new change with all artifacts generated in one step. Use when the user wants to quickly describe what they want to build and get a complete proposal with design, specs, and tasks ready for implementation.',
     instructions: `Propose a new change and generate all artifacts needed for implementation.
 
+## Workflow Stage
+
+| Aspect | Value |
+|--------|-------|
+| **Stage** | \`PROPOSE\` - Artifact generation (no implementation) |
+| **Allowed** | Generate proposal, design, specs, tasks, opsx-delta in openspec/changes/<name>/ |
+| **Forbidden** | Implement code, modify existing project files |
+
 ## Flow
 
 1. Input must identify a kebab-case change name or enough description to derive one. If unclear, ask what to build or fix.

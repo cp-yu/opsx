@@ -11,6 +11,14 @@ metadata:
 
 Propose a new change and generate all artifacts needed for implementation.
 
+## Workflow Stage
+
+| Aspect | Value |
+|--------|-------|
+| **Stage** | `PROPOSE` - Artifact generation (no implementation) |
+| **Allowed** | Generate proposal, design, specs, tasks, opsx-delta in openspec/changes/<name>/ |
+| **Forbidden** | Implement code, modify existing project files |
+
 ## Flow
 
 1. Input must identify a kebab-case change name or enough description to derive one. If unclear, ask what to build or fix.

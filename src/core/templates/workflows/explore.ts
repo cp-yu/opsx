@@ -192,6 +192,14 @@ export function getExploreSkillTemplate(): SkillTemplate {
     ],
     instructions: `Enter explore mode: investigate, clarify, compare, and help the user think before implementation.
 
+## Workflow Stage
+
+| Aspect | Value |
+|--------|-------|
+| **Stage** | \`EXPLORE\` - Read-only brainstorming |
+| **Allowed** | Read files, query CLI, ask questions, present options, Design Summary (conversation only) |
+| **Forbidden** | Create, edit, delete any file or artifact |
+
 ## Required References
 
 - MUST read the project-root file \`openspec/references/openspec-explore-supperpowers-style.md\` before exploring. DO NOT proceed without reading it first. It is the authoritative Superpowers brainstorming behavior guide for hard gate, context exploration, visual companion judgment, one-question discipline, options comparison, section approval, Design Summary review, and propose handoff.
@@ -206,12 +214,11 @@ Do not read \`openspec-impact-sweeper/SKILL.md\` directly in the main agent.
 
 ## Hard Rules
 
-- Explore is read-only for the main agent. Do not create, edit, delete, format, regenerate, or patch any project file or OpenSpec artifact.
-- Only the subagent running the \`openspec-impact-sweeper\` skill may write its JSON report under \`openspec/sweeper/\`; the main explore agent may only read and interpret that report.
-- The sweeper report write is an internal subagent exception and does not grant the main explore agent permission to create or modify project files or OpenSpec artifacts.
-- User selection of an option, confirmation of a design section, or statements such as "ok", "that works", "option 2", or "split into multiple files" confirm design direction only. They are not authorization to modify files.
+- User confirmations ("ok", "option 2") approve design direction only, not file modification.
 - Ask one clarification question at a time; do not auto-capture decisions into artifacts.
-- When artifact generation is appropriate, produce a conversation-only \`Design Summary\` and instruct the user to call \`/opsx:propose <change-name>\`.
+- When ready, produce conversation-only Design Summary and instruct user to call \`/opsx:propose <name>\`.
+
+**Subagent Exception**: The \`openspec-impact-sweeper\` subagent may write JSON reports to \`openspec/sweeper/\`. The main explore agent remains read-only.
 
 ## Required Context
 
