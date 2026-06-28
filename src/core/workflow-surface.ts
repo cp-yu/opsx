@@ -7,7 +7,7 @@ import {
 
 export type { WorkflowPreset, WorkflowPromptMeta };
 
-interface WorkflowSurfaceDefinition extends WorkflowManifestEntry {}
+type WorkflowSurfaceDefinition = WorkflowManifestEntry;
 
 export const WORKFLOW_SURFACE_MANIFEST: readonly WorkflowSurfaceDefinition[] =
   WorkflowManifestRegistry.entries as unknown as readonly WorkflowSurfaceDefinition[];

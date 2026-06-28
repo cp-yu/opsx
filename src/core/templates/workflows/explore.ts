@@ -218,7 +218,7 @@ Do not read \`openspec-impact-sweeper/SKILL.md\` directly in the main agent.
 
 - User confirmations ("ok", "option 2") approve design direction only, not file modification.
 - Ask one clarification question at a time; do not auto-capture decisions into artifacts.
-- When ready, produce conversation-only Design Summary and instruct user to call \`/opsx:propose <name>\`.
+- When ready, produce a conversation-only \`Design Summary\` and instruct the user to call \`/opsx:propose <change-name>\`.
 
 **Subagent Exception**: The \`openspec-impact-sweeper\` subagent may write JSON reports to \`openspec/sweeper/\`. The main explore agent remains read-only.
 

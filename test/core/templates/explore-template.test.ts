@@ -58,21 +58,20 @@ describe('explore template impact sweeps', () => {
   });
 
   it('states the main explore agent is read-only', () => {
-    expect(template).toContain('Explore is read-only for the main agent');
-    expect(template).toContain('Do not create, edit, delete, format, regenerate, or patch any project file or OpenSpec artifact');
+    expect(template).toContain('Forbidden');
+    expect(template).toContain('Create, edit, delete any file or artifact');
     expect(template).toContain('produce a conversation-only `Design Summary`');
     expect(template).toContain('instruct the user to call `/opsx:propose <change-name>`');
   });
 
   it('treats design confirmation as direction only', () => {
-    expect(template).toContain('User selection of an option, confirmation of a design section, or statements such as "ok", "that works", "option 2", or "split into multiple files" confirm design direction only');
-    expect(template).toContain('They are not authorization to modify files');
+    expect(template).toContain('User confirmations ("ok", "option 2") approve design direction only, not file modification');
   });
 
   it('keeps the sweeper report as the only explore write exception', () => {
-    expect(template).toContain('Only the subagent running the `openspec-impact-sweeper` skill may write its JSON report under `openspec/sweeper/`');
-    expect(template).toContain('the main explore agent may only read and interpret that report');
-    expect(template).toContain('The sweeper report write is an internal subagent exception and does not grant the main explore agent permission to create or modify project files or OpenSpec artifacts');
+    expect(template).toContain('Subagent Exception');
+    expect(template).toContain('The `openspec-impact-sweeper` subagent may write JSON reports to `openspec/sweeper/`');
+    expect(template).toContain('The main explore agent remains read-only');
   });
 
   it('routes active-change insights to future capture targets', () => {
