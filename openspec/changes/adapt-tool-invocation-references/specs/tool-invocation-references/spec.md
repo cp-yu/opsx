@@ -1,0 +1,51 @@
+## MODIFIED Requirements
+
+### Requirement: Workflow 引用 SHALL 通过显式工具表面元数据渲染
+
+系统 SHALL 通过共享 workflow surface 元数据渲染生成 guidance 中的用户可调用 workflow 引用。缺少精确工具调用语法时，系统 SHALL 使用中性 skill invocation 文案，而不是回退到 command syntax。
+
+#### Scenario: Codex 引用使用精确的受管 skill 名称
+
+- **WHEN** 系统为 `codex` 生成 workflow skill 或基于 skill 的 getting-started guidance
+- **AND** guidance 需要引用另一个已注册 workflow surface
+- **THEN** 渲染结果 SHALL 使用 `$<skillDirName>` 形式
+- **AND** `skillDirName` SHALL 来自共享 workflow surface manifest 的显式值
+- **AND** 系统 SHALL NOT 通过 `commandSlug`、字符串拼接或后缀猜测来生成 Codex skill 名称
+
+#### Scenario: Claude Code 引用使用 slash-command 格式
+
+- **WHEN** 系统为 `claude` 生成 workflow skill 或基于 skill 的 getting-started guidance
+- **AND** guidance 需要引用另一个已注册 workflow surface
+- **THEN** 渲染结果 SHALL 使用 `/<skillDirName>` 形式（如 `/openspec-propose`）
+- **AND** `skillDirName` SHALL 来自共享 workflow surface manifest 的显式值
+- **AND** 系统 SHALL NOT 通过 `commandSlug`、字符串拼接或后缀猜测来生成 Claude skill 名称
+
+#### Scenario: Pi 引用使用 skill 前缀格式
+
+- **WHEN** 系统为 `pi` 生成 workflow skill 或基于 skill 的 getting-started guidance
+- **AND** guidance 需要引用另一个已注册 workflow surface
+- **THEN** 渲染结果 SHALL 使用 `/skill:<skillDirName>` 形式（如 `/skill:openspec-archive-change`）
+- **AND** `skillDirName` SHALL 来自共享 workflow surface manifest 的显式值
+- **AND** 系统 SHALL NOT 通过 `commandSlug`、字符串拼接或后缀猜测来生成 Pi skill 名称
+
+#### Scenario: OpenCode 引用保持 command-backed 格式
+
+- **WHEN** 系统为 `opencode` 生成 workflow skill 或基于 skill 的 getting-started guidance
+- **AND** guidance 需要引用另一个已注册 workflow surface
+- **THEN** 渲染结果 SHALL 使用 `/opsx-<commandSlug>` 形式（如 `/opsx-archive`）
+- **AND** `commandSlug` SHALL 来自共享 workflow surface manifest 的显式值
+- **AND** 系统 SHALL NOT 通过 `skillDirName` 反推 OpenCode command 名称
+
+#### Scenario: 无精确语法的工具使用中性文案
+
+- **WHEN** 系统为没有精确 skill invocation metadata 的工具渲染 workflow 引用
+- **THEN** 渲染结果 SHALL 使用中性 skill invocation 文案
+- **AND** SHALL include the explicit `skillDirName`
+- **AND** SHALL NOT 使用 command-surface 语法
+
+#### Scenario: 替换范围仅限已注册 workflow surface
+
+- **WHEN** guidance 文本中同时包含 workflow 引用与普通文本
+- **THEN** 系统 SHALL 仅替换能够通过共享 workflow surface manifest 显式解析的引用
+- **AND** SHALL 使用显式 lookup 而不是通配符或猜测式正则来生成 skill 名称
+- **AND** 无法解析为已注册 workflow surface 的普通文本 SHALL 保持原样

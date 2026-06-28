@@ -1,0 +1,9 @@
+schema_version: 1
+ADDED: {}
+
+MODIFIED:
+  capabilities:
+    - id: cap.ai.tool-invocation-references
+      intent: 基于共享 workflow surface 元数据渲染不同 AI 工具的用户可调用 skill 引用；Codex 使用 $<skillDirName>，Claude Code 使用 /<skillDirName>，Pi 使用 /skill:<skillDirName>，OpenCode 使用 /opsx-<commandSlug>；没有精确工具语法时使用中性 skill invocation 文案。
+
+REMOVED: {}

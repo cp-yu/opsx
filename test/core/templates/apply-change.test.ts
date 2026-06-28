@@ -9,6 +9,7 @@ import {
   getApplyChangeSkillTemplate,
   getOpsxApplyCommandTemplate,
 } from '../../../src/core/templates/workflows/apply-change.js';
+import { runTransforms } from '../../../src/core/templates/transforms/index.js';
 
 describe('apply change workflow template', () => {
   it('references the apply Phase 2 optimization protocol from the skill surface', () => {
@@ -242,5 +243,29 @@ describe('apply change workflow template', () => {
       expect(template).toContain('return to Phase 0 recovery');
       expect(template).toContain('Do not pause on the first seal failure');
     }
+  });
+
+  it('uses canonical archive source reference for archive-ready handoff', () => {
+    const instructions = getApplyChangeSkillTemplate().instructions;
+
+    expect(instructions).toContain('Archive ready. Run /opsx:archive <change-name> to complete the workflow.');
+    expect(instructions).not.toContain('Archive ready. Run /opsx-archive');
+  });
+
+  it('allows archive-ready handoff to be adapted per tool', () => {
+    const source = 'Archive ready. Run /opsx:archive <change-name> to complete the workflow.';
+
+    expect(runTransforms(source, { toolId: 'codex', workflowId: 'apply', artifactType: 'skill' })).toBe(
+      'Archive ready. Run $openspec-archive-change <change-name> to complete the workflow.'
+    );
+    expect(runTransforms(source, { toolId: 'claude', workflowId: 'apply', artifactType: 'skill' })).toBe(
+      'Archive ready. Run /openspec-archive-change <change-name> to complete the workflow.'
+    );
+    expect(runTransforms(source, { toolId: 'pi', workflowId: 'apply', artifactType: 'skill' })).toBe(
+      'Archive ready. Run /skill:openspec-archive-change <change-name> to complete the workflow.'
+    );
+    expect(runTransforms(source, { toolId: 'opencode', workflowId: 'apply', artifactType: 'skill' })).toBe(
+      'Archive ready. Run /opsx-archive <change-name> to complete the workflow.'
+    );
   });
 });
