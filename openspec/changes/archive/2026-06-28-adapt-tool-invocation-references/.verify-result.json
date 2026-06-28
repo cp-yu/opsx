@@ -1,0 +1,221 @@
+{
+  "timestamp": "2026-06-28T06:46:35.031Z",
+  "result": "PASS",
+  "issues": [],
+  "tasksFileHash": "d6a91689c70cad0a13277f70e37a9cdb96d69c2cb1ad387f8ad43ef6b4dc58c5",
+  "verificationContext": {
+    "contractVersion": "1.0",
+    "executionMode": "subagent",
+    "evidenceFiles": [
+      "CLAUDE.md",
+      "openspec/changes/adapt-tool-invocation-references/.apply-isolation.json",
+      "openspec/changes/adapt-tool-invocation-references/.verify-result.json",
+      "openspec/changes/adapt-tool-invocation-references/design.md",
+      "openspec/changes/adapt-tool-invocation-references/opsx-delta.yaml",
+      "openspec/changes/adapt-tool-invocation-references/proposal.md",
+      "openspec/changes/adapt-tool-invocation-references/specs/opsx-apply-skill/spec.md",
+      "openspec/changes/adapt-tool-invocation-references/specs/tool-invocation-references/spec.md",
+      "openspec/changes/adapt-tool-invocation-references/tasks.md",
+      "src/core/config.ts",
+      "src/core/templates/sync-engine.ts",
+      "src/core/templates/tool-profile/registry.ts",
+      "src/core/templates/transforms/builtin-transforms.ts",
+      "src/core/templates/workflows/apply-change.ts",
+      "src/utils/command-references.ts",
+      "test/core/templates/apply-change.test.ts",
+      "test/core/templates/transforms.test.ts",
+      "test/utils/command-references.test.ts"
+    ],
+    "evidenceFingerprint": "b4b26f1d5184b1a68a53ec7d8bb93e1ac045a42f8753402774a683454e28c560",
+    "evidenceFingerprintEntries": [
+      {
+        "path": "CLAUDE.md",
+        "hash": "eca0b21d7e488e05f7ead1c3eb45278d908218cbe586baa266760caea2f24f05"
+      },
+      {
+        "path": "openspec/changes/adapt-tool-invocation-references/.apply-isolation.json",
+        "hash": "a0acb75a0875bc7d2d1713d0f999eda6083f1ce25b527e05e7a7a2ed14be217e"
+      },
+      {
+        "path": "openspec/changes/adapt-tool-invocation-references/design.md",
+        "hash": "1d2c328d75a678caad34661cddc6294bfa8a2724541b1cdb2de73767701b4593"
+      },
+      {
+        "path": "openspec/changes/adapt-tool-invocation-references/opsx-delta.yaml",
+        "hash": "421a86eed17162d2dad048262f28e24b55477bb307c05b8589b92c33c50f7613"
+      },
+      {
+        "path": "openspec/changes/adapt-tool-invocation-references/proposal.md",
+        "hash": "a83e934644e7d46dc1488a29938807f36d8f1ee70f1eb9aa3bd5e609e0e08ddd"
+      },
+      {
+        "path": "openspec/changes/adapt-tool-invocation-references/specs/opsx-apply-skill/spec.md",
+        "hash": "7259d6f86a34f5265c12642adb97a16e7396a25420de69b2e60cd412218e47ab"
+      },
+      {
+        "path": "openspec/changes/adapt-tool-invocation-references/specs/tool-invocation-references/spec.md",
+        "hash": "8372771c8b438368edb168bc2e4e163f6b379b09129b6a259cbf9bc735d67e7c"
+      },
+      {
+        "path": "openspec/changes/adapt-tool-invocation-references/tasks.md",
+        "hash": "d6a91689c70cad0a13277f70e37a9cdb96d69c2cb1ad387f8ad43ef6b4dc58c5"
+      },
+      {
+        "path": "src/core/config.ts",
+        "hash": "78599a7883ab922f3529cb16bc3e6ca7bd48e422aeef71c4308c8000b99d5e24"
+      },
+      {
+        "path": "src/core/templates/sync-engine.ts",
+        "hash": "ff595ad401e07f36df76913c7fa21adbfbcf21b767eb62345a06ada79dec84d7"
+      },
+      {
+        "path": "src/core/templates/tool-profile/registry.ts",
+        "hash": "23c0c3a2cb83be13bb4405e7a8e1a671f43550925285f162bc383835b04b32ae"
+      },
+      {
+        "path": "src/core/templates/transforms/builtin-transforms.ts",
+        "hash": "52ff11991808829872e220f59a4ceab3a82babc848ce7b78b8cc951aab4ade61"
+      },
+      {
+        "path": "src/core/templates/workflows/apply-change.ts",
+        "hash": "c333907e78175d348fca02b63a914fbe7eb66ce2b6c9ceda9fd5dfd4fe34878c"
+      },
+      {
+        "path": "src/utils/command-references.ts",
+        "hash": "c6d78cefbdb1b0407e05f838109f0e08ff9056069dd2121843f6127b46e780e7"
+      },
+      {
+        "path": "test/core/templates/apply-change.test.ts",
+        "hash": "15fa45c5dd359b474f8025c77e1246f9c4e3c370290b7672c6e88ccfa4c37dde"
+      },
+      {
+        "path": "test/core/templates/transforms.test.ts",
+        "hash": "e1e2eea8d571c70f4a8f57cea351611a82de6717f178546e35f3d61461fe198f"
+      },
+      {
+        "path": "test/utils/command-references.test.ts",
+        "hash": "8b35d06d4c3a82a3a1bbe52bd5c4080131bf52ff390902cad3747d5b9fb542f6"
+      }
+    ],
+    "skippedEvidenceFiles": [
+      "openspec/changes/adapt-tool-invocation-references/.verify-result.json"
+    ],
+    "gitHeadCommit": "db73c86367fd6efab87838bf08c9bf8b4a8fab69"
+  },
+  "optimization": {
+    "status": "NOT_NEEDED",
+    "attempts": [
+      {
+        "timestamp": "2026-06-28T06:49:05.012Z",
+        "type": "optimization",
+        "status": "NO_OPTIMIZATION_NEEDED",
+        "summary": "Optimizer subagent reported no behavior-preserving optimization opportunities."
+      }
+    ],
+    "baseline": {
+      "timestamp": "2026-06-28T06:46:35.031Z",
+      "result": "PASS",
+      "issues": [],
+      "tasksFileHash": "d6a91689c70cad0a13277f70e37a9cdb96d69c2cb1ad387f8ad43ef6b4dc58c5",
+      "verificationContext": {
+        "contractVersion": "1.0",
+        "executionMode": "subagent",
+        "evidenceFiles": [
+          "CLAUDE.md",
+          "openspec/changes/adapt-tool-invocation-references/.apply-isolation.json",
+          "openspec/changes/adapt-tool-invocation-references/.verify-result.json",
+          "openspec/changes/adapt-tool-invocation-references/design.md",
+          "openspec/changes/adapt-tool-invocation-references/opsx-delta.yaml",
+          "openspec/changes/adapt-tool-invocation-references/proposal.md",
+          "openspec/changes/adapt-tool-invocation-references/specs/opsx-apply-skill/spec.md",
+          "openspec/changes/adapt-tool-invocation-references/specs/tool-invocation-references/spec.md",
+          "openspec/changes/adapt-tool-invocation-references/tasks.md",
+          "src/core/config.ts",
+          "src/core/templates/sync-engine.ts",
+          "src/core/templates/tool-profile/registry.ts",
+          "src/core/templates/transforms/builtin-transforms.ts",
+          "src/core/templates/workflows/apply-change.ts",
+          "src/utils/command-references.ts",
+          "test/core/templates/apply-change.test.ts",
+          "test/core/templates/transforms.test.ts",
+          "test/utils/command-references.test.ts"
+        ],
+        "evidenceFingerprint": "b4b26f1d5184b1a68a53ec7d8bb93e1ac045a42f8753402774a683454e28c560",
+        "evidenceFingerprintEntries": [
+          {
+            "path": "CLAUDE.md",
+            "hash": "eca0b21d7e488e05f7ead1c3eb45278d908218cbe586baa266760caea2f24f05"
+          },
+          {
+            "path": "openspec/changes/adapt-tool-invocation-references/.apply-isolation.json",
+            "hash": "a0acb75a0875bc7d2d1713d0f999eda6083f1ce25b527e05e7a7a2ed14be217e"
+          },
+          {
+            "path": "openspec/changes/adapt-tool-invocation-references/design.md",
+            "hash": "1d2c328d75a678caad34661cddc6294bfa8a2724541b1cdb2de73767701b4593"
+          },
+          {
+            "path": "openspec/changes/adapt-tool-invocation-references/opsx-delta.yaml",
+            "hash": "421a86eed17162d2dad048262f28e24b55477bb307c05b8589b92c33c50f7613"
+          },
+          {
+            "path": "openspec/changes/adapt-tool-invocation-references/proposal.md",
+            "hash": "a83e934644e7d46dc1488a29938807f36d8f1ee70f1eb9aa3bd5e609e0e08ddd"
+          },
+          {
+            "path": "openspec/changes/adapt-tool-invocation-references/specs/opsx-apply-skill/spec.md",
+            "hash": "7259d6f86a34f5265c12642adb97a16e7396a25420de69b2e60cd412218e47ab"
+          },
+          {
+            "path": "openspec/changes/adapt-tool-invocation-references/specs/tool-invocation-references/spec.md",
+            "hash": "8372771c8b438368edb168bc2e4e163f6b379b09129b6a259cbf9bc735d67e7c"
+          },
+          {
+            "path": "openspec/changes/adapt-tool-invocation-references/tasks.md",
+            "hash": "d6a91689c70cad0a13277f70e37a9cdb96d69c2cb1ad387f8ad43ef6b4dc58c5"
+          },
+          {
+            "path": "src/core/config.ts",
+            "hash": "78599a7883ab922f3529cb16bc3e6ca7bd48e422aeef71c4308c8000b99d5e24"
+          },
+          {
+            "path": "src/core/templates/sync-engine.ts",
+            "hash": "ff595ad401e07f36df76913c7fa21adbfbcf21b767eb62345a06ada79dec84d7"
+          },
+          {
+            "path": "src/core/templates/tool-profile/registry.ts",
+            "hash": "23c0c3a2cb83be13bb4405e7a8e1a671f43550925285f162bc383835b04b32ae"
+          },
+          {
+            "path": "src/core/templates/transforms/builtin-transforms.ts",
+            "hash": "52ff11991808829872e220f59a4ceab3a82babc848ce7b78b8cc951aab4ade61"
+          },
+          {
+            "path": "src/core/templates/workflows/apply-change.ts",
+            "hash": "c333907e78175d348fca02b63a914fbe7eb66ce2b6c9ceda9fd5dfd4fe34878c"
+          },
+          {
+            "path": "src/utils/command-references.ts",
+            "hash": "c6d78cefbdb1b0407e05f838109f0e08ff9056069dd2121843f6127b46e780e7"
+          },
+          {
+            "path": "test/core/templates/apply-change.test.ts",
+            "hash": "15fa45c5dd359b474f8025c77e1246f9c4e3c370290b7672c6e88ccfa4c37dde"
+          },
+          {
+            "path": "test/core/templates/transforms.test.ts",
+            "hash": "e1e2eea8d571c70f4a8f57cea351611a82de6717f178546e35f3d61461fe198f"
+          },
+          {
+            "path": "test/utils/command-references.test.ts",
+            "hash": "8b35d06d4c3a82a3a1bbe52bd5c4080131bf52ff390902cad3747d5b9fb542f6"
+          }
+        ],
+        "skippedEvidenceFiles": [
+          "openspec/changes/adapt-tool-invocation-references/.verify-result.json"
+        ],
+        "gitHeadCommit": "db73c86367fd6efab87838bf08c9bf8b4a8fab69"
+      }
+    }
+  }
+}

@@ -11,17 +11,25 @@ import type { ArtifactTransform, GenerationContext } from './types.js';
 // Shared: build replacement map from workflow surfaces
 // ---------------------------------------------------------------------------
 
+const EXPLICIT_REFERENCE_TOOLS = new Set(['codex', 'opencode', 'pi', 'claude']);
+
 interface ReplacementPair {
   source: string;
   codexTarget: string;
+  claudeTarget: string;
+  piTarget: string;
   opencodeTarget: string;
+  neutralTarget: string;
 }
 
 function buildReplacementPairs(): ReplacementPair[] {
   return getWorkflowSurfaces().map((entry) => ({
     source: `/opsx:${entry.commandSlug}`,
     codexTarget: `$${entry.skillDirName}`,
+    claudeTarget: `/${entry.skillDirName}`,
+    piTarget: `/skill:${entry.skillDirName}`,
     opencodeTarget: `/opsx-${entry.commandSlug}`,
+    neutralTarget: `invoke the ${entry.skillDirName} skill`,
   }));
 }
 
@@ -70,7 +78,7 @@ const opencodeCommandRefsTransform: ArtifactTransform = {
 };
 
 // ---------------------------------------------------------------------------
-// Pi command reference transform (same hyphen format as OpenCode)
+// Pi command reference transform
 // ---------------------------------------------------------------------------
 
 const piCommandRefsTransform: ArtifactTransform = {
@@ -84,7 +92,7 @@ const piCommandRefsTransform: ArtifactTransform = {
   transform(content: string, _ctx: GenerationContext): string {
     let result = content;
     for (const pair of PAIRS) {
-      result = result.split(pair.source).join(pair.opencodeTarget);
+      result = result.split(pair.source).join(pair.piTarget);
     }
     return result;
   },
@@ -105,7 +113,28 @@ const claudeCommandRefsTransform: ArtifactTransform = {
   transform(content: string, _ctx: GenerationContext): string {
     let result = content;
     for (const pair of PAIRS) {
-      result = result.split(pair.source).join('/' + pair.codexTarget.slice(1));
+      result = result.split(pair.source).join(pair.claudeTarget);
+    }
+    return result;
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Neutral skill invocation transform
+// ---------------------------------------------------------------------------
+
+const neutralSkillRefsTransform: ArtifactTransform = {
+  id: 'neutral-skill-refs',
+  scope: 'both',
+  phase: 'preAdapter',
+  priority: 10,
+  applies(ctx: GenerationContext): boolean {
+    return !EXPLICIT_REFERENCE_TOOLS.has(ctx.toolId);
+  },
+  transform(content: string, _ctx: GenerationContext): string {
+    let result = content;
+    for (const pair of PAIRS) {
+      result = result.split(pair.source).join(pair.neutralTarget);
     }
     return result;
   },
@@ -119,3 +148,4 @@ TransformRegistry.register(codexCommandRefsTransform);
 TransformRegistry.register(opencodeCommandRefsTransform);
 TransformRegistry.register(piCommandRefsTransform);
 TransformRegistry.register(claudeCommandRefsTransform);
+TransformRegistry.register(neutralSkillRefsTransform);

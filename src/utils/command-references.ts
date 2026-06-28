@@ -21,23 +21,28 @@ const REGISTERED_WORKFLOW_REFERENCES: readonly RegisteredWorkflowReference[] = g
 );
 
 /**
- * Tools with precise, known skill invocation syntax.
- * Lookup is explicit; tools not in this map fall back to neutral text.
- */
-const PRECISE_SKILL_INVOCATION_TOOLS = new Set<string>(['codex']);
-
-/**
  * Render a workflow invocation for a specific tool.
  *
  * - Codex uses `$<skillDirName>` (precise skill invocation metadata).
- * - Other tools without precise metadata use a neutral skill invocation phrase
- *   that references the explicit skill directory name.
+ * - Claude uses `/<skillDirName>`.
+ * - Pi uses `/skill:<skillDirName>`.
+ * - OpenCode uses `/opsx-<commandSlug>`.
+ * - Other tools use a neutral skill invocation phrase.
  */
 export function renderWorkflowInvocation(toolId: string, workflowId: WorkflowId): string {
   const workflow = getWorkflowSurfaces([workflowId])[0];
 
-  if (PRECISE_SKILL_INVOCATION_TOOLS.has(toolId)) {
+  if (toolId === 'codex') {
     return `$${workflow.skillDirName}`;
+  }
+  if (toolId === 'claude') {
+    return `/${workflow.skillDirName}`;
+  }
+  if (toolId === 'pi') {
+    return `/skill:${workflow.skillDirName}`;
+  }
+  if (toolId === 'opencode') {
+    return `/opsx-${workflow.commandSlug}`;
   }
 
   return `invoke the ${workflow.skillDirName} skill`;
@@ -57,12 +62,6 @@ export function transformWorkflowReferences(text: string, toolId: string): strin
   return transformed;
 }
 
-/**
- * Returns the neutral skill invocation phrase for opencode-style transforms.
- *
- * Skills-only surface: opencode lacks precise metadata, so we emit a neutral
- * skill invocation phrase instead of `/opsx-*` command syntax.
- */
 export function transformToHyphenCommands(text: string): string {
   return transformWorkflowReferences(text, 'opencode');
 }
