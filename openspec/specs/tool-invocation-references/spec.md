@@ -23,7 +23,23 @@
 - **AND** `skillDirName` SHALL 来自共享 workflow surface manifest 的显式值
 - **AND** 系统 SHALL NOT 通过 `commandSlug`、字符串拼接或后缀猜测来生成 Claude skill 名称
 
-#### Scenario: Command-backed 工具保持各自的 command 语法
+#### Scenario: Pi 引用使用 skill 前缀格式
+
+- **WHEN** 系统为 `pi` 生成 workflow skill 或基于 skill 的 getting-started guidance
+- **AND** guidance 需要引用另一个已注册 workflow surface
+- **THEN** 渲染结果 SHALL 使用 `/skill:<skillDirName>` 形式（如 `/skill:openspec-archive-change`）
+- **AND** `skillDirName` SHALL 来自共享 workflow surface manifest 的显式值
+- **AND** 系统 SHALL NOT 通过 `commandSlug`、字符串拼接或后缀猜测来生成 Pi skill 名称
+
+#### Scenario: OpenCode 引用保持 command-backed 格式
+
+- **WHEN** 系统为 `opencode` 生成 workflow skill 或基于 skill 的 getting-started guidance
+- **AND** guidance 需要引用另一个已注册 workflow surface
+- **THEN** 渲染结果 SHALL 使用 `/opsx-<commandSlug>` 形式（如 `/opsx-archive`）
+- **AND** `commandSlug` SHALL 来自共享 workflow surface manifest 的显式值
+- **AND** 系统 SHALL NOT 通过 `skillDirName` 反推 OpenCode command 名称
+
+#### Scenario: 无精确语法的工具使用中性文案
 
 - **WHEN** 系统为没有精确 skill invocation metadata 的工具渲染 workflow 引用
 - **THEN** 渲染结果 SHALL 使用中性 skill invocation 文案

@@ -98,7 +98,7 @@ capabilities:
     status: active
     type: capability
   - id: cap.ai.tool-invocation-references
-    intent: 基于共享 workflow surface 元数据渲染不同 AI 工具的用户可调用 skill 引用；Codex 使用 $<skillDirName>，Claude Code 使用 /<skillDirName>，OpenCode/Pi 使用 /opsx-<commandSlug>；没有精确工具语法时使用中性 skill invocation 文案
+    intent: 基于共享 workflow surface 元数据渲染不同 AI 工具的用户可调用 skill 引用；Codex 使用 $<skillDirName>，Claude Code 使用 /<skillDirName>，Pi 使用 /skill:<skillDirName>，OpenCode 使用 /opsx-<commandSlug>；没有精确工具语法时使用中性 skill invocation 文案。
     type: capability
   - id: cap.ai.verify-writeback
     intent: 验证结果回写 tasks.md（unmark 未真正完成的任务）并生成分类 remediation 清单（code_fix / artifact_fix），同时让 write-back prose 遵守统一 runtime projection
